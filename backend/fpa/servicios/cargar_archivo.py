@@ -9,6 +9,7 @@ Reglas (ADR 0003):
 - Todo lo que escribe va en un SAVEPOINT: o se guarda completo o no se guarda nada.
 """
 
+from collections.abc import Collection
 from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from enum import StrEnum
@@ -16,6 +17,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from fpa.calidad.evaluacion import ReporteCalidad, evaluar
 from fpa.ingesta.contrato import Movimiento as MovimientoLeido
 from fpa.ingesta.contrato import ResultadoLectura
 from fpa.modelos.base import ahora_utc
@@ -56,15 +58,14 @@ class ResultadoCarga:
     conflictos: list[Conflicto] = field(default_factory=list)
     sin_cambio: list[str] = field(default_factory=list)
     motivos: list[str] = field(default_factory=list)
+    reporte: ReporteCalidad | None = None
 
 
-def _motivos_de_rechazo(resultado: ResultadoLectura) -> list[str]:
+def _motivos_basicos(resultado: ResultadoLectura) -> list[str]:
     if resultado.fuente is None:
         return ["La lectura no indica su fuente"]
     if not resultado.movimientos:
         return ["El archivo no trae movimientos"]
-    if not resultado.es_valido:
-        return list(resultado.errores) or ["Débito y Crédito no cuadran"]
     return []
 
 
@@ -88,7 +89,8 @@ def cargar_archivo(
     resultado: ResultadoLectura,
     archivo: DatosArchivo,
     confirmar_reemplazo: bool = False,
-    controles: dict[str, Any] | None = None,
+    periodos_esperados: Collection[str] | None = None,
+    cuentas_conocidas: Collection[str] | None = None,
 ) -> ResultadoCarga:
     """No lanza excepciones por condiciones de negocio; devuelve una `Resolucion`.
 
@@ -110,10 +112,19 @@ def cargar_archivo(
 
     base = {"archivo": archivo.nombre, "sha256": archivo.sha256}
 
-    motivos = _motivos_de_rechazo(resultado)
+    motivos = _motivos_basicos(resultado)
     if motivos:
         evento("carga.rechazada", None, {**base, "motivos": motivos[:10]})
         return ResultadoCarga(Resolucion.RECHAZADA, motivos=motivos)
+
+    reporte = evaluar(
+        resultado, periodos_esperados=periodos_esperados, cuentas_conocidas=cuentas_conocidas
+    )
+    if not reporte.aprobado:
+        motivos = reporte.motivos_de_rechazo()
+        evento("carga.rechazada", None, {**base, "motivos": motivos[:10]})
+        return ResultadoCarga(Resolucion.RECHAZADA, motivos=motivos, reporte=reporte)
+    controles = reporte.a_dict()
 
     por_periodo = _agrupar(resultado)
     nuevos: list[str] = []
@@ -149,7 +160,9 @@ def cargar_archivo(
             )
             for p, v in en_conflicto.items()
         ]
-        return ResultadoCarga(Resolucion.REQUIERE_CONFIRMACION, conflictos=conflictos)
+        return ResultadoCarga(
+            Resolucion.REQUIERE_CONFIRMACION, conflictos=conflictos, reporte=reporte
+        )
 
     a_guardar = {*nuevos, *en_conflicto}
     filtrado = replace(
@@ -209,4 +222,5 @@ def cargar_archivo(
         cargas=nuevas,
         reemplazadas=viejas,
         sin_cambio=[c.periodo for c in iguales],
+        reporte=reporte,
     )

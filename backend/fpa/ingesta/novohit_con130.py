@@ -76,7 +76,6 @@ class TotalGrupo:
 class ResultadoCon130(ResultadoLectura):
     fuente: Fuente | None = Fuente.CON130
     empresa: str | None = None
-    periodo_texto: str | None = None
     totales_grupo: list[TotalGrupo] = field(default_factory=list)
     filas_ignoradas: int = 0
 

@@ -73,6 +73,8 @@ class ResultadoLectura:
     # Las fuentes que son un libro completo deben cuadrar Débito = Crédito; las que son un
     # subconjunto de cuentas (p. ej. solo resultados) no.
     controla_balance: bool = True
+    # Texto del periodo que declara el propio reporte, si lo trae (ej. CON130)
+    periodo_texto: str | None = None
     movimientos: list[Movimiento] = field(default_factory=list)
     cuentas: dict[str, Cuenta] = field(default_factory=dict)
     titulos: list[Titulo] = field(default_factory=list)

@@ -2,6 +2,13 @@
 
 ## Fase 1 (en curso)
 
+### 1.5 — Calidad de datos (2026-09-30)
+- `fpa/calidad/evaluacion.py` (funciones puras): errores que rechazan la carga (errores de lectura, Débito ≠ Crédito en el CON130, total de cuenta que no coincide, fechas fuera del periodo del encabezado o del declarado) y avisos que se guardan (cuentas nuevas, filas repetidas, importes negativos, Débito y Crédito a la vez, asiento que no corresponde al mes, avisos del lector).
+- El reporte completo se guarda en `CargaArchivo.controles` y los rechazos explican qué falló y con ejemplos.
+- Medido con los archivos reales: filas repetidas (14 y 5) e importes negativos (257 y 92) son legítimos, por eso son avisos.
+- Un CON130 real alterado a propósito (un Débito cambiado; una fecha fuera de periodo) es rechazado.
+- Pruebas: 136 pasan y 1 se salta.
+
 ### 1.4 — Idempotencia, reemplazo y auditoría (2026-09-30)
 - `cargar_archivo`: mismo archivo = `duplicada` (no cambia nada); otro archivo para un periodo ya cargado = `requiere_confirmacion` (sin escribir); al confirmar, la carga anterior pasa a `reemplazada` (historial conservado); lecturas inválidas = `rechazada`.
 - Un archivo de varios meses reemplaza solo los periodos que chocan y omite los que ya eran idénticos.

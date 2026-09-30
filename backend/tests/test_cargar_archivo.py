@@ -180,10 +180,11 @@ def test_lectura_invalida_se_rechaza_y_queda_en_la_auditoria(db: Session, mundo:
     mala = lectura(JULIO)
     mala.errores.append("Fila 9: monto inválido")
     r = cargar(db, mundo, mala)
-    assert r.resolucion == Resolucion.RECHAZADA and r.motivos == ["Fila 9: monto inválido"]
+    assert r.resolucion == Resolucion.RECHAZADA
+    assert "Fila 9: monto inválido" in r.motivos  # mensaje claro, con el detalle del error
     assert n(db, CargaArchivo) == 0 and n(db, Movimiento) == 0
     (evento,) = RepositorioAuditoria(db, mundo.hotel_a).listar("carga.rechazada")
-    assert evento.detalle and evento.detalle["motivos"] == ["Fila 9: monto inválido"]
+    assert evento.detalle and "Fila 9: monto inválido" in evento.detalle["motivos"]
 
 
 def test_archivo_vacio_o_sin_fuente_se_rechaza(db: Session, mundo: Mundo) -> None:
