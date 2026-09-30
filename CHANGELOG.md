@@ -2,6 +2,13 @@
 
 ## Fase 1 (en curso)
 
+### 1.2 — Lector del Excel de Variance (2026-09-30)
+- `fpa/ingesta/variance_base_datos.py`: lee la hoja "Base de Datos" (julio + agosto) por nombre de columna, tolerando los caracteres dañados de Débito/Crédito.
+- Sin control Débito = Crédito (es un subconjunto de cuentas de resultados). Cantidad y costo se conservan con todos sus decimales.
+- Avisos (no errores): mes en texto distinto al de la fecha, cuenta con dos nombres, movimiento sin importe (fila 4389).
+- Prueba dorada: 6,860 movimientos (3,583 julio + 3,277 agosto), 296 cuentas, Débito 12,650,614.04 y Crédito 12,037,735.88.
+- Pruebas: 76 pasan y 1 se salta.
+
 ### 1.1 — Contrato común de lectura (2026-09-30)
 - `fpa/ingesta/contrato.py`: `Movimiento` (con `cantidad` y `costo` opcionales), `Cuenta`, `Titulo`, `ResultadoLectura` (periodos, rango de fechas, `controla_balance`) y `Fuente`.
 - `fpa/ingesta/utilidades.py`: conversiones comunes (montos con comas, fechas dd/mm/aaaa).
