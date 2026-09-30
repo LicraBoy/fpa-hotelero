@@ -28,8 +28,12 @@ Los puertos 8100 y 5180 son propios de este proyecto; no chocan con otros sistem
 ## Pruebas
 ```powershell
 cd backend
-.venv\Scripts\python -m pytest
+.venv\Scripts\python -m pytest      # API, reglas de negocio y seguridad
+
+cd ..\frontend
+npm run e2e                              # navegador real (Playwright)
 ```
+La primera vez, `npx playwright install chromium` descarga el navegador de pruebas. Las pruebas de navegador usan sus propios puertos (8101 y 5181) y una base temporal.
 Una de las pruebas lee el Excel real de Torres si lo encuentra en la carpeta de documentos (o en la ruta de `FPA_DATOS_REALES`); si no, se salta.
 
 ## API principal (`/api/v1`, con `X-Usuario-Dev` solo en desarrollo)

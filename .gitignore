@@ -25,3 +25,6 @@ dist/
 .DS_Store
 Thumbs.db
 *.log
+
+# Pruebas e2e: backend temporal
+.e2e/

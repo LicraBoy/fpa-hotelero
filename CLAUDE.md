@@ -15,6 +15,7 @@ Plataforma SaaS de FP&A para hoteles, independiente de PMS/ERP/POS. Primer hotel
 ## Cómo correrlo
 - Levantar todo: `iniciar_servidores.bat` (backend **8100**, frontend **5180**; no usar 8000/5173, son de otro sistema).
 - Pruebas: `cd backend` y `.venv\Scripts\python -m pytest`. Calidad: `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .` y `.venv\Scripts\mypy fpa` (deben quedar sin errores).
+- Pruebas de navegador: `cd frontend` y `npm run e2e` (Playwright; backend propio en 8101, base temporal). Siempre correrlas al tocar pantallas; `npm run build` y `npm run lint` deben quedar sin errores.
 - Base de datos: `.venv\Scripts\alembic upgrade head` (migraciones) y `.venv\Scripts\python -m fpa.semilla` (datos de desarrollo). Si cambias un modelo, genera la migración con `alembic revision --autogenerate`.
 - Identidad de desarrollo: `FPA_ENTORNO=desarrollo` y cabecera `X-Usuario-Dev: analista@torres.local` (por defecto el entorno es `produccion` y nadie entra).
 - Primera vez: ver `README.md`.
@@ -44,4 +45,4 @@ Carpeta: `C:\Users\mzamora\Desktop\PLATAFORMA FP&A E INTELIGENCIA HOTELERA\`. No
 - `backend/fpa/modelos/` (modelos y tipos `Dinero`/`Medida`), `backend/fpa/identidad/` (proveedor, permisos, dependencias), `backend/migraciones/` (Alembic, 0001 a 0005), `backend/fpa/semilla.py`.
 - `backend/fpa/ingesta/` (contrato común y lectores CON130 y Variance), `backend/fpa/calidad/` (controles), `backend/fpa/servicios/` (`cargar_archivo`, catálogo, saldos, auditoría), `backend/fpa/repositorios/` (siempre acotados por hotel), `backend/fpa/seguridad/archivos.py` (validación de subidas), `backend/fpa/api/v1/` (rutas; ver README).
 - Fase 1 terminada: cargar, validar y guardar movimientos con trazabilidad. Lo siguiente es la Fase 2 (líneas del reporte y mapeo de cuentas).
-- `frontend/` — pantalla inicial que consulta la API.
+- `frontend/src/` — pantallas de la Fase 1 (Cargas, Catálogo, Saldos, Auditoría) en `componentes/`, cliente de la API en `api/`, importes exactos en `util/dinero.ts` (nunca `number`), permisos de interfaz en `permisos.ts` (solo para mostrar u ocultar; el servidor autoriza). Pruebas en `frontend/e2e/`.

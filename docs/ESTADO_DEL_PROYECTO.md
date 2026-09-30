@@ -3,7 +3,7 @@
 Última actualización: 30-sep-2026
 
 ## Fase actual
-**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.8). Siguiente: **Fase 2 — Catálogo corporativo y mapeo** (líneas del reporte Variance y mapeo de cuentas locales a líneas).
+**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.8). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. Siguiente: **Fase 2 — Catálogo corporativo y mapeo** (líneas del reporte Variance y mapeo de cuentas locales a líneas).
 
 ## Avance por fase
 | Fase | Estado |
@@ -27,6 +27,13 @@
 | 1.6 Catálogo local (`CuentaLocal`, migración `0004`, árbol acumulado, `GET /api/v1/hoteles/{id}/catalogo/arbol`) | **Hecha** |
 | 1.7 Saldos mensuales (`SaldoMensualCuenta`, migración `0005`, `recalcular_saldos`, `GET /api/v1/hoteles/{id}/saldos?periodo=`) | **Hecha** |
 | 1.8 API de carga segura (`POST /cargas`, `GET /cargas`, `GET /cargas/{id}`, `GET /auditoria`; `fpa/seguridad/archivos.py`) | **Hecha** |
+
+## Frontend (Fase 1) y pruebas de navegador
+- Pantallas: **Cargas** (subir CON130 o Variance, aviso de reemplazo con confirmación, lista de cargas y su reporte de calidad), **Catálogo** (árbol con búsqueda), **Saldos** (por mes, con total exacto) y **Auditoría**. Cada rol ve solo sus secciones.
+- Modo desarrollo: el usuario se elige en un selector (cabecera `X-Usuario-Dev`); se reemplazará por el inicio de sesión corporativo.
+- Importes siempre como texto exacto y sumas en centavos (`BigInt`); nunca `number`.
+- `cd frontend` y `npm run e2e`: **10 pruebas de Playwright pasan**. Levantan su propio backend limpio (8101, base temporal) y frontend (5181); no tocan la base ni los puertos de desarrollo.
+- `npm run build` y `npm run lint` sin errores.
 
 ## Cómo verificar
 - **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **195 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).

@@ -29,7 +29,7 @@ Estados: `[DECIDIDO]` ya definido · `[PROPUESTA]` recomendación técnica · `[
 | Servidor de la API | `uvicorn --reload` (solo desarrollo) | Gunicorn con workers de Uvicorn detrás de un proxy con TLS (Nginx o Traefik) | Staging y producción |
 | Integración continua | Ninguna | CI con lint, tipos, pruebas en SQLite y PostgreSQL, `bandit`, `pip-audit`, `npm audit`, `gitleaks` | En cuanto exista el repositorio remoto que indique TI |
 | Calidad de código | Solo pruebas (`pytest`) | `ruff`, `mypy` estricto, ESLint y `pre-commit` | Al inicio de la Fase 1 (es barato y conviene temprano) |
-| Pruebas end-to-end | No hay | **Playwright** (TypeScript) | Con las primeras pantallas reales (Fase 4), o antes si se prefiere |
+| Pruebas end-to-end | **Playwright** ya en uso (10 pruebas, Chromium) con backend propio y Excel sintéticos | Sumar Firefox/WebKit, comparación visual y `axe` (accesibilidad); correrlas en la integración continua | Al montar el CI |
 | Autenticación | No hay (todo abierto, solo local) | OIDC con el proveedor de identidad de la empresa y MFA | Antes de exponer la plataforma a cualquier usuario; Fase 5 como máximo, `[POR VALIDAR con TI]` |
 | Autorización | No hay | Roles por hotel, deny by default, pruebas de matriz rol × endpoint | Fase 1.0 (base) y Fase 5 (completo) |
 | Separación por hotel | No hay | `organizacion_id` y `hotel_id` en cada tabla + RLS | Fase 1.0 |

@@ -2,6 +2,13 @@
 
 ## Fase 1 (en curso)
 
+### Frontend de la Fase 1 y Playwright (2026-09-30)
+- Pantallas de Cargas (con aviso y confirmación de reemplazo y reporte de calidad), Catálogo (árbol con búsqueda), Saldos (total exacto) y Auditoría; secciones según el rol.
+- Importes como texto y sumas en centavos con `BigInt`.
+- La pantalla y el script de arranque esperan a la API; la tabla de reemplazo compara también el Crédito.
+- Playwright: 10 pruebas de navegador contra un backend limpio propio (`backend/scripts/servidor_e2e.py`) con Excel sintéticos (`backend/scripts/crear_archivos_e2e.py`).
+- `vite.config.ts` toma la API y el puerto de variables (`FPA_API_URL`, `FPA_WEB_PUERTO`).
+
 ### 1.8 — API de carga segura (2026-09-30) — cierra la Fase 1
 - `POST /api/v1/hoteles/{id}/cargas` (archivo `.xlsx`, `fuente`, `confirmar_reemplazo`, `periodos` opcional). Respuestas: 201 creada/reemplazada, 200 duplicada, 409 requiere confirmación, 422 rechazada por calidad o lectura, 400/413/415 archivo inválido, 401/403/404.
 - `fpa/seguridad/archivos.py`: solo `.xlsx`; tamaño máximo por bloques; firma ZIP; sin macros, sin cifrado, sin rutas con `..`; límites anti zip-bomb (entradas, tamaño descomprimido real, razón de compresión) medidos con los Excel reales.
