@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     # Por defecto es "produccion": nadie se autentica hasta configurar OIDC (seguro por defecto).
     entorno: str = "produccion"
 
+    # Archivos subidos: se guardan fuera de cualquier carpeta pública (storage/ no se versiona).
+    storage_dir: str = "./storage"
+    carga_max_bytes: int = 25 * 1024 * 1024
+    # Límites anti zip-bomb (los Excel reales: razón ≈ 35, 9.5 MB, 351 entradas)
+    zip_max_entradas: int = 2000
+    zip_max_descomprimido: int = 200 * 1024 * 1024
+    zip_max_razon: int = 100
+
     app_nombre: str = "Plataforma FP&A Hotelera"
     app_version: str = "0.1.0"
 

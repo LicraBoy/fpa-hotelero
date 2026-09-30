@@ -309,7 +309,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 
 **Resultado:** 17 pruebas pasan; ningún secreto ni dato real en el repositorio.
 
-### Fase 1 — Data Hub: Actuals (L)
+### Fase 1 — Data Hub: Actuals `[HECHA]` (30-sep-2026)
 | Sub-fase | Qué se hace | Qué se prueba |
 |---|---|---|
 | 1.0 Cimientos de datos `[HECHO]` | Alembic con primera migración; modelos `organizacion`, `hotel`, `usuario`, `rol`, `asignacion`; tipo `Dinero`; dependencia que exige contexto de hotel; proveedor de identidad de desarrollo detrás de una interfaz (cerrado por defecto); `ruff` y `mypy` estricto | Migración sube y baja en SQLite (PostgreSQL con prueba lista, se salta hasta tener instancia) y no se desvía de los modelos. **Prueba de aislamiento**: un usuario del hotel A no lee datos del hotel B (404) y sin permiso recibe 403 |
@@ -320,7 +320,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 | 1.5 Calidad de datos `[HECHO]` | Reporte con controles por fuente. CON130: Débito = Crédito y total por cuenta. Variance: mes en texto = mes de la fecha. Ambas: fechas dentro del periodo, cuentas nuevas (aviso) y filas repetidas exactas (**aviso, no rechazo**: existen 5 en el Variance y 14 en el CON130) | Un archivo alterado a propósito es rechazado con mensaje claro |
 | 1.6 Catálogo local `[HECHO]` | Construir el árbol de cuentas desde el reporte (nivel 1 > 10 > 1000 > 1000001 > 1000001.001) | Todas las cuentas con movimiento existen en el árbol |
 | 1.7 Saldos mensuales `[HECHO]` | `saldo_mensual_cuenta` derivado y recalculable | Suma de saldos = suma de movimientos, propiedad verificada con `hypothesis` |
-| 1.8 API de carga segura | `POST` de archivo con validaciones (ver 8.5) | Archivos maliciosos rechazados; pruebas de tamaño, tipo y zip-bomb |
+| 1.8 API de carga segura `[HECHO]` | `POST` de archivo con validaciones (ver 8.5) | Archivos maliciosos rechazados; pruebas de tamaño, tipo y zip-bomb |
 
 **Salida:** septiembre y julio–agosto cargan y cuadran con sus controles. **Seguridad:** subida endurecida, auditoría de cada carga.
 

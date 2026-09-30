@@ -32,6 +32,18 @@ cd backend
 ```
 Una de las pruebas lee el Excel real de Torres si lo encuentra en la carpeta de documentos (o en la ruta de `FPA_DATOS_REALES`); si no, se salta.
 
+## API principal (`/api/v1`, con `X-Usuario-Dev` solo en desarrollo)
+| Método y ruta | Para qué |
+|---|---|
+| `GET /yo`, `GET /hoteles`, `GET /hoteles/{id}` | Quién soy y a qué hoteles tengo acceso |
+| `POST /hoteles/{id}/cargas` | Subir un CON130 o el Excel del Variance (`fuente`, `confirmar_reemplazo`, `periodos`) |
+| `GET /hoteles/{id}/cargas`, `GET /hoteles/{id}/cargas/{carga}` | Cargas y su reporte de calidad |
+| `GET /hoteles/{id}/catalogo/arbol` | Árbol de cuentas locales |
+| `GET /hoteles/{id}/saldos?periodo=AAAA-MM` | Saldo por cuenta del periodo |
+| `GET /hoteles/{id}/auditoria` | Bitácora (contralor y auditoría) |
+
+Documentación interactiva en http://localhost:8100/docs
+
 ## Estructura
 ```
 backend/    API en Python (FastAPI). fpa/ingesta/ contiene el lector del CON130 de Novohit

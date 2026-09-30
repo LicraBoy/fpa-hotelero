@@ -3,7 +3,7 @@
 Última actualización: 30-sep-2026
 
 ## Fase actual
-**Fase 1 — Data Hub: Actuals (en curso).** Sub-fases terminadas: **1.0** a **1.7** (saldos mensuales). Siguiente: **1.8 (API de carga segura)**, la última de la Fase 1.
+**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.8). Siguiente: **Fase 2 — Catálogo corporativo y mapeo** (líneas del reporte Variance y mapeo de cuentas locales a líneas).
 
 ## Avance por fase
 | Fase | Estado |
@@ -11,8 +11,9 @@
 | Blueprint funcional v1.1 | Hecho, aprobado por Contraloría |
 | Arquitectura técnica v1.0 | Hecha (`docs/Arquitectura_Tecnica_FPA_Hotelero.md`) |
 | 0 Repositorio full stack (alcance básico) | **Hecha** |
-| **1 Data Hub: Actuals** | **En curso** |
-| 2 a 14 | Pendientes |
+| **1 Data Hub: Actuals** | **Hecha** |
+| 2 Catálogo corporativo y mapeo | Por iniciar |
+| 3 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
 | Sub-fase | Estado |
@@ -25,10 +26,10 @@
 | 1.5 Calidad de datos (`fpa/calidad/evaluacion.py`; el reporte se guarda en cada carga) | **Hecha** |
 | 1.6 Catálogo local (`CuentaLocal`, migración `0004`, árbol acumulado, `GET /api/v1/hoteles/{id}/catalogo/arbol`) | **Hecha** |
 | 1.7 Saldos mensuales (`SaldoMensualCuenta`, migración `0005`, `recalcular_saldos`, `GET /api/v1/hoteles/{id}/saldos?periodo=`) | **Hecha** |
-| 1.8 API de carga segura | Pendiente |
+| 1.8 API de carga segura (`POST /cargas`, `GET /cargas`, `GET /cargas/{id}`, `GET /auditoria`; `fpa/seguridad/archivos.py`) | **Hecha** |
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **164 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **195 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -56,6 +57,8 @@
 
 ## Pendientes y avisos
 - No hay servidor remoto de código; lo define TI.
+- **Salida de la Fase 1 verificada por la API con los Excel reales** (también en vivo con el servidor): CON130 septiembre = 7,242 movimientos (57,835,193.08); Variance = 3,583 (julio) + 3,277 (agosto); repetir un archivo no cambia nada; 366 saldos de septiembre; catálogo con 145 títulos + 554 cuentas con movimientos; un usuario de otro hotel recibe 404 en todo.
+- Riesgo residual de la subida de archivos: hoy no hay límite de tasa ni antivirus (ver `CAMBIOS_FUTUROS_DE_TECNOLOGIA.md`).
 - La prueba de migración en PostgreSQL existe pero se salta: no hay PostgreSQL disponible en esta máquina.
 - Advertencia conocida de Starlette sobre `httpx` en las pruebas (no afecta).
 - El Blueprint en `docs/` contiene cifras agregadas de Torres; si el repositorio se comparte fuera de la empresa, revisar antes.
@@ -65,4 +68,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**1.8:** `POST /api/v1/hoteles/{hotel_id}/cargas` (archivo + `fuente` + `confirmar_reemplazo`) con `fpa/seguridad/archivos.py` (solo `.xlsx`, tamaño, firma `PK`, anti zip-bomb, sin macros, sin rutas con `..`), almacenamiento en `storage/` y `GET` de lista y detalle; respuestas 201/409/422/400/413/415/401/403/404. Cierra con la prueba de salida de la Fase 1 por la API.
+**Fase 2.1:** importar de la hoja `Ago` del Variance la estructura del reporte (secciones, líneas, orden, tipo detalle/subtotal/total) como `linea_reporte`; 409 líneas de detalle en agosto. Después 2.2 (reglas de suma), 2.3 (mapeo desde las columnas X a AJ con su signo), 2.4 a 2.6. Antes, confirmar con Contraloría las preguntas de signo, clave única de línea y origen del Budget.

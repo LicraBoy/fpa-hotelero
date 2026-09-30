@@ -41,5 +41,7 @@ Carpeta: `C:\Users\mzamora\Desktop\PLATAFORMA FP&A E INTELIGENCIA HOTELERA\`. No
 ## Código existente
 - `backend/fpa/ingesta/novohit_con130.py` — lector del CON130 (máquina de estados; valida Débito = Crédito y total por cuenta).
 - `backend/fpa/main.py`, `config.py`, `db.py`, `api/health.py` — API con `/api/health` y `/api/ready`.
-- `backend/fpa/modelos/` (modelos y tipo `Dinero`), `backend/fpa/identidad/` (proveedor, permisos, dependencias), `backend/fpa/api/v1/` (`/yo`, `/hoteles`), `backend/migraciones/` (Alembic), `backend/fpa/semilla.py`.
+- `backend/fpa/modelos/` (modelos y tipos `Dinero`/`Medida`), `backend/fpa/identidad/` (proveedor, permisos, dependencias), `backend/migraciones/` (Alembic, 0001 a 0005), `backend/fpa/semilla.py`.
+- `backend/fpa/ingesta/` (contrato común y lectores CON130 y Variance), `backend/fpa/calidad/` (controles), `backend/fpa/servicios/` (`cargar_archivo`, catálogo, saldos, auditoría), `backend/fpa/repositorios/` (siempre acotados por hotel), `backend/fpa/seguridad/archivos.py` (validación de subidas), `backend/fpa/api/v1/` (rutas; ver README).
+- Fase 1 terminada: cargar, validar y guardar movimientos con trazabilidad. Lo siguiente es la Fase 2 (líneas del reporte y mapeo de cuentas).
 - `frontend/` — pantalla inicial que consulta la API.

@@ -90,12 +90,13 @@ def _ubicar_encabezado(filas: Sequence[Sequence[object]]) -> tuple[int, int]:
 
 
 def leer_con130(ruta: str | Path, hoja: str | None = None) -> ResultadoCon130:
-    wb = load_workbook(ruta, read_only=True, data_only=True)
-    try:
-        ws = wb[hoja] if hoja else wb.worksheets[0]
-        filas = [tuple(r) for r in ws.iter_rows(values_only=True)]
-    finally:
-        wb.close()
+    with Path(ruta).open("rb") as archivo:
+        wb = load_workbook(archivo, read_only=True, data_only=True)
+        try:
+            ws = wb[hoja] if hoja else wb.worksheets[0]
+            filas = [tuple(r) for r in ws.iter_rows(values_only=True)]
+        finally:
+            wb.close()
     return leer_con130_filas(filas)
 
 

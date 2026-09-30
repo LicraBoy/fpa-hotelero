@@ -2,6 +2,16 @@
 
 ## Fase 1 (en curso)
 
+### 1.8 — API de carga segura (2026-09-30) — cierra la Fase 1
+- `POST /api/v1/hoteles/{id}/cargas` (archivo `.xlsx`, `fuente`, `confirmar_reemplazo`, `periodos` opcional). Respuestas: 201 creada/reemplazada, 200 duplicada, 409 requiere confirmación, 422 rechazada por calidad o lectura, 400/413/415 archivo inválido, 401/403/404.
+- `fpa/seguridad/archivos.py`: solo `.xlsx`; tamaño máximo por bloques; firma ZIP; sin macros, sin cifrado, sin rutas con `..`; límites anti zip-bomb (entradas, tamaño descomprimido real, razón de compresión) medidos con los Excel reales.
+- El nombre original nunca forma parte de una ruta; el archivo se guarda como `storage/cargas/<hotel>/<sha256>.xlsx`; los temporales se borran y los huérfanos se limpian.
+- Todo rechazo de archivo queda en la auditoría (`carga.archivo_rechazado`).
+- `GET /cargas`, `GET /cargas/{id}` (con el reporte de calidad) y `GET /auditoria` (contralor y auditoría).
+- Corregido: los lectores abren el archivo ellos mismos para que siempre se cierre (en Windows un archivo abierto no se puede borrar).
+- Prueba de salida de la Fase 1 por la API con los Excel reales, y en vivo con el servidor.
+- Pruebas: 195 pasan y 1 se salta.
+
 ### 1.7 — Saldos mensuales (2026-09-30)
 - `SaldoMensualCuenta` (migración `0005`): Débito, Crédito y número de movimientos por cuenta, hotel y periodo; Resultado = Débito − Crédito.
 - `recalcular_saldos`: desde la carga vigente, en Python con `Decimal`, idempotente; se invoca al cargar o reemplazar. Sin carga vigente no hay saldos.

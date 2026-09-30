@@ -107,13 +107,14 @@ def _codigo_cuenta(valor: object) -> str | None:
 
 
 def leer_variance_base_datos(ruta: str | Path, hoja: str = HOJA) -> ResultadoLectura:
-    wb = load_workbook(ruta, read_only=True, data_only=True)
-    try:
-        if hoja not in wb.sheetnames:
-            raise ValueError(f'El libro no tiene la hoja "{hoja}"')
-        filas = [tuple(r) for r in wb[hoja].iter_rows(values_only=True)]
-    finally:
-        wb.close()
+    with Path(ruta).open("rb") as archivo:
+        wb = load_workbook(archivo, read_only=True, data_only=True)
+        try:
+            if hoja not in wb.sheetnames:
+                raise ValueError(f'El libro no tiene la hoja "{hoja}"')
+            filas = [tuple(r) for r in wb[hoja].iter_rows(values_only=True)]
+        finally:
+            wb.close()
     return leer_variance_base_datos_filas(filas)
 
 
