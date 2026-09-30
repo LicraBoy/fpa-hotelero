@@ -122,8 +122,13 @@ def cargar_archivo(
 
     if cuentas_conocidas is None:
         cuentas_conocidas = RepositorioCatalogo(db, hotel_id).codigos_con_movimientos()
+    catalogo = RepositorioCatalogo(db, hotel_id)
     reporte = evaluar(
-        resultado, periodos_esperados=periodos_esperados, cuentas_conocidas=cuentas_conocidas
+        resultado,
+        periodos_esperados=periodos_esperados,
+        cuentas_conocidas=cuentas_conocidas,
+        cuentas_oficiales=catalogo.codigos_oficiales(),
+        cuentas_inactivas=catalogo.codigos_inactivos(),
     )
     if not reporte.aprobado:
         motivos = reporte.motivos_de_rechazo()

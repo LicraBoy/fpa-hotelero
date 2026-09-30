@@ -37,6 +37,8 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 ## Fase 2 — Catálogo corporativo y mapeo `[SIGUIENTE]` (M)
 
+**Avance:** el catálogo oficial de cuentas ya está importado (sub-fase 1.9). Trae TIPO (signo), departamento y grupo de cada cuenta, lo que permite **validar el mapeo** contra el Excel del contralor en vez de aceptarlo a ciegas, y derivar la sección del reporte desde el código (los grupos de 4 dígitos de la clase 6 son los departamentos).
+
 **Objetivo:** convertir las cuentas de Novohit en las líneas del reporte Variance, con las reglas que hoy están escondidas en las columnas X a AJ de la hoja `Ago`.
 
 | Sub-fase | Qué se hace | Qué se prueba |
@@ -187,6 +189,8 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 ## Fase 11 — Multi-hotel: Puerto Vallarta `[PENDIENTE]` (M, puede adelantarse)
 
+**Decisión:** cada hotel tiene su catálogo propio (aislado). Como ~70 % de las cuentas coincide con Torres, se agrega la función **"crear el catálogo de un hotel copiando el de otro"** y un reporte de diferencias; después se importa el catálogo de Vallarta para ajustar.
+
 **Objetivo:** incorporar el segundo hotel como **configuración**, no como código nuevo (el aislamiento por hotel ya existe desde la Fase 1.0).
 
 | Sub-fase | Qué se hace | Qué se prueba |
@@ -268,13 +272,14 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 | Quién | Pregunta | Afecta a |
 |---|---|---|
-| Contraloría | Convención de signo del Variance | 2, 3 |
+| Contraloría | Confirmar que el signo es la naturaleza de la cuenta (Deudor suma, Acreedor resta; ya validado con el Excel) | 2, 3 |
 | Contraloría | Clave única de una línea del reporte | 2 |
 | Contraloría | Origen, versión y responsable del Budget | 3, 7 |
 | Contraloría | Año fiscal (julio–junio) y horizonte del forecast | 3, 8 |
 | Contraloría | Árbol oficial de departamentos y centros de costo | 2, 5, 7 |
 | Contraloría | Línea sin importe de agosto (fila 4389, "INCENTIVOS CHEF"): ¿cero o dato faltante? | 3 |
-| Contraloría | Nombres oficiales de los niveles del catálogo de cuentas de 1, 2 y 4 dígitos | 2, 4 |
+| Contraloría | Por qué 87 cuentas del Variance (ej. `4001004.004`, `4002003`, `6003001.013`) no están en el catálogo de septiembre | 2 |
+| Contraloría | Significado de `Aux = S` y `DPTO. TI` del catálogo; catálogo de Puerto Vallarta para medir el ~70 % de coincidencia | 2, 11 |
 | TI | Dónde se aloja, proveedor de identidad, PostgreSQL u Oracle, respaldos, antivirus | 5, 6 |
 | TI | Sistema de Recepción, compras/almacén y encuestas: formatos y acceso | 9, 14, 15 |
 | Contraloría y RR. HH. | Política de privacidad de datos de huéspedes y empleados | 15 |

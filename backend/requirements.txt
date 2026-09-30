@@ -6,6 +6,7 @@ alembic==1.20.0
 pydantic-settings==2.15.0
 python-multipart==0.0.32
 openpyxl==3.1.5
+xlrd==2.0.2  # solo lectura de .xls (catálogo CON020 de Novohit)
 
 # Pruebas y calidad de código
 pytest==9.1.1
@@ -14,3 +15,4 @@ hypothesis==6.168.3
 ruff==0.16.9
 mypy==2.3.1
 types-openpyxl==3.1.5.20260827
+xlwt==1.3.0  # solo para crear .xls sintéticos en pruebas

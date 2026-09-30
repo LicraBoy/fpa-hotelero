@@ -135,7 +135,14 @@ export default function App() {
                   alCambiar={() => setVersion((v) => v + 1)}
                 />
               )}
-              {activa === 'catalogo' && <PanelCatalogo hotelId={hotel.id} version={version} />}
+              {activa === 'catalogo' && (
+                <PanelCatalogo
+                  hotelId={hotel.id}
+                  version={version}
+                  puedeImportar={puede(rol, 'catalogo:importar')}
+                  alCambiar={() => setVersion((v) => v + 1)}
+                />
+              )}
               {activa === 'saldos' && (
                 <PanelSaldos
                   hotelId={hotel.id}

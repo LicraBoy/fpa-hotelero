@@ -164,7 +164,7 @@ Toda tabla de negocio lleva `organizacion_id` y `hotel_id`. Los montos son `NUME
 |---|---|
 | `organizacion`, `hotel` | Jerarquía multi-tenant; moneda; inicio del año fiscal |
 | `departamento`, `centro_costo` | Estructura operativa `[POR VALIDAR]` (hoy el Excel solo muestra secciones del reporte) |
-| `cuenta_local` | Código (ej. `1000001.001`), descripción, nivel, clase, cuenta padre (la jerarquía viene en el propio CON130) |
+| `cuenta_local` | Código (ej. `1000001.001`), descripción, nivel, clase, cuenta padre, `con_movimientos`, `es_titulo`; del catálogo oficial CON020: **TIPO (Deudor/Acreedor)**, grupo del estado financiero, departamento, DPTO. TI, cuenta de terceros, código SAT, auxiliar, activa |
 | `linea_reporte` | Sección, orden, cuenta corporativa, descripción, tipo (detalle, subtotal, total), regla de suma |
 | `mapeo_cuenta` | `linea_reporte` ↔ `cuenta_local`, **signo** (+1/−1), vigencia y versión |
 | `periodo` | Año fiscal, mes, fechas de inicio y fin |
@@ -211,6 +211,8 @@ Dato honesto: el volumen de un hotel es pequeño (≈7,000 movimientos al mes). 
 ---
 
 ### 4.6 Departamentos y estructura organizacional
+
+**Hallazgo del catálogo oficial (CON020):** los grupos de 4 dígitos de la clase 6 **son los departamentos** del Variance (6005 Bar, 6006 Área Común, 6008 Cambio de Moneda, 6009 Gerencia y Recepción, 6010 Ama de Llaves, 6011 Contabilidad, 6012 Interior Apartamentos, 6013 Compras, 6014 Restaurante, 6015 Agencia de Viajes, 6016 Tienda, 6018 Cafetería, 6021 Sistemas), y la columna `DEPTO EdoFro` coincide con las secciones del reporte donde viene llena. El departamento de una cuenta se puede derivar de su código y validar contra esa columna. **El signo del Variance es la naturaleza de la cuenta (TIPO):** Acreedor se resta y Deudor se suma (validado con el Excel de Contraloría).
 
 **Lo que sabemos de Torres (PROCESO ACTUAL, del Variance de agosto):** el reporte agrupa las cuentas en secciones que hoy cumplen el papel de departamentos:
 
@@ -321,6 +323,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 | 1.6 Catálogo local `[HECHO]` | Construir el árbol de cuentas desde el reporte (nivel 1 > 10 > 1000 > 1000001 > 1000001.001) | Todas las cuentas con movimiento existen en el árbol |
 | 1.7 Saldos mensuales `[HECHO]` | `saldo_mensual_cuenta` derivado y recalculable | Suma de saldos = suma de movimientos, propiedad verificada con `hypothesis` |
 | 1.8 API de carga segura `[HECHO]` | `POST` de archivo con validaciones (ver 8.5) | Archivos maliciosos rechazados; pruebas de tamaño, tipo y zip-bomb |
+| 1.9 Catálogo oficial de cuentas `[HECHO]` | Importar el reporte CON020 de Novohit (`.xls`): nombres de la jerarquía, TIPO, departamento, grupo del estado financiero y código SAT; nuevos controles de calidad | Catálogo real: 1,238 cuentas y 68 títulos; 366 de 366 cuentas de septiembre; el signo del Variance coincide con TIPO en todos los casos del Excel |
 
 **Salida:** septiembre y julio–agosto cargan y cuadran con sus controles. **Seguridad:** subida endurecida, auditoría de cada carga.
 

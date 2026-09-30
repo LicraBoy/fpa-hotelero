@@ -8,6 +8,7 @@ class Permiso(StrEnum):
     CARGA_CREAR = "carga:crear"
     CARGA_LEER = "carga:leer"
     CATALOGO_LEER = "catalogo:leer"
+    CATALOGO_IMPORTAR = "catalogo:importar"
     SALDOS_LEER = "saldos:leer"
     AUDITORIA_LEER = "auditoria:leer"
 
@@ -37,6 +38,7 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.CARGA_CREAR,
             Permiso.CARGA_LEER,
             Permiso.CATALOGO_LEER,
+            Permiso.CATALOGO_IMPORTAR,
             Permiso.SALDOS_LEER,
         }
     ),

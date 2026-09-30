@@ -36,6 +36,7 @@ Estados: `[DECIDIDO]` ya definido · `[PROPUESTA]` recomendación técnica · `[
 | Migraciones | No hay | Alembic | Fase 1.0 |
 | Tareas en segundo plano | No hay | Cola sobre PostgreSQL (Procrastinate); Celery + Redis solo si el volumen lo exige | Cuando una carga o exportación tarde demasiado |
 | Caché | No hay | Caché de reportes por clave (hotel, versiones, periodo); Redis solo si hace falta | Fase 4 (rendimiento) |
+| Lectura de `.xls` | `xlrd` 2.0.2 (solo lectura, solo para el catálogo CON020) | Si Novohit ofrece exportar el catálogo como `.xlsx` o `.csv`, se puede retirar `xlrd`; si TI ve riesgo en el formato binario antiguo, revisar con ellos | Al definir las políticas de seguridad con TI |
 | Archivos subidos | `storage/` local, validaciones de tamaño, ZIP, macros y rutas (hecho en 1.8) | Antivirus (p. ej. ClamAV) `[POR VALIDAR con TI]`, límite de tasa por usuario, almacenamiento de objetos y cifrado en reposo, cuotas | Fase 6 / antes de producción |
 | Secretos | Archivo `.env` local (no se sube) | Gestor de secretos de TI | Antes de producción |
 | Auditoría | Bitácora de solo inserción, reforzada por la aplicación (`AuditoriaInmutable`) | En PostgreSQL: quitar UPDATE/DELETE al usuario de la aplicación y encadenar hashes entre eventos | Fase 5.5 / antes de producción |

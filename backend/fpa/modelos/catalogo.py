@@ -11,7 +11,7 @@ Por eso `con_movimientos` y `es_titulo` son independientes.
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, UniqueConstraint, false, true
 from sqlalchemy.orm import Mapped, mapped_column
 
 from fpa.modelos.base import Base, ahora_utc
@@ -37,6 +37,20 @@ class CuentaLocal(Base):
     # Cuenta con movimientos para la que ningún CON130 ha dado aún su jerarquía
     sin_jerarquia: Mapped[bool] = mapped_column(Boolean, default=False)
     origen: Mapped[str] = mapped_column(String(40))
+
+    # Datos del catálogo oficial (reporte CON020 de Novohit); vacíos si la cuenta solo se conoce
+    # por sus movimientos.
+    tipo: Mapped[str | None] = mapped_column(String(10), nullable=True)  # Deudor | Acreedor
+    grupo_ef: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    depto_ef: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    depto_ti: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    cuenta_terceros: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    cuenta_sat: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    auxiliar: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    activa: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
+    en_catalogo_oficial: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=false()
+    )
     creado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ahora_utc)
     actualizado_en: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=ahora_utc, onupdate=ahora_utc

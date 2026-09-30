@@ -73,12 +73,12 @@ def verificar_nombre(nombre: str) -> None:
 
 
 def guardar_en_temporal(
-    origen: BinaryIO, carpeta: Path, limites: LimitesArchivo
+    origen: BinaryIO, carpeta: Path, limites: LimitesArchivo, sufijo: str = ".xlsx"
 ) -> tuple[Path, str, int]:
     """Copia por bloques a un temporal de nombre aleatorio. Devuelve (ruta, sha256, bytes)."""
     carpeta.mkdir(parents=True, exist_ok=True)
-    # Debe terminar en .xlsx: openpyxl se niega a abrir otras extensiones.
-    ruta = carpeta / f"{os.urandom(16).hex()}.xlsx"
+    # Con .xlsx como sufijo predeterminado: openpyxl se niega a abrir otras extensiones.
+    ruta = carpeta / f"{os.urandom(16).hex()}{sufijo}"
     sha = hashlib.sha256()
     total = 0
     try:
@@ -104,12 +104,37 @@ def guardar_en_temporal(
     return ruta, sha.hexdigest(), total
 
 
+FIRMA_OLE2 = bytes.fromhex("D0CF11E0A1B11AE1")
+# Nombre del flujo donde Excel guarda las macros (VBA) dentro de un .xls, en UTF-16
+_MARCA_MACROS = "_VBA_PROJECT".encode("utf-16-le")
+
+
+def verificar_nombre_xls(nombre: str) -> None:
+    """El catálogo de Novohit (CON020) se exporta como .xls."""
+    minusculas = nombre.lower()
+    if minusculas.endswith(".xlsm"):
+        raise ArchivoRechazado(415, "Los archivos con macros (.xlsm) no se aceptan")
+    if not minusculas.endswith(".xls"):
+        raise ArchivoRechazado(
+            415, "El catálogo debe cargarse en formato .xls (el que exporta Novohit)"
+        )
+
+
+def inspeccionar_xls(ruta: Path) -> None:
+    """Rechaza lo que no sea un libro .xls (OLE2) sano y sin macros. Lanza `ArchivoRechazado`."""
+    contenido = ruta.read_bytes()  # ya acotado por el tamaño máximo de la subida
+    if contenido[:8] != FIRMA_OLE2:
+        raise ArchivoRechazado(415, "El contenido no es un libro de Excel .xls")
+    if _MARCA_MACROS in contenido:
+        raise ArchivoRechazado(415, "Los libros con macros no se aceptan")
+
+
 def limpiar_temporales(carpeta: Path, edad_maxima_s: float = 3600.0) -> None:
     """Borra temporales huérfanos (p. ej. tras una caída). Si uno está en uso, se omite."""
     if not carpeta.exists():
         return
     limite = time.time() - edad_maxima_s
-    for ruta in carpeta.glob("*.xlsx"):
+    for ruta in [*carpeta.glob("*.xlsx"), *carpeta.glob("*.xls")]:
         try:
             if ruta.stat().st_mtime < limite:
                 ruta.unlink()

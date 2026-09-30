@@ -1,11 +1,24 @@
 // Espejo de la matriz del backend (backend/fpa/identidad/permisos.py) SOLO para decidir qué
 // mostrar. La autorización real la hace siempre el servidor.
 
-export type Permiso = 'carga:crear' | 'carga:leer' | 'catalogo:leer' | 'saldos:leer' | 'auditoria:leer'
+export type Permiso =
+  | 'carga:crear'
+  | 'carga:leer'
+  | 'catalogo:leer'
+  | 'catalogo:importar'
+  | 'saldos:leer'
+  | 'auditoria:leer'
 
 const POR_ROL: Record<string, Permiso[]> = {
-  contralor: ['carga:crear', 'carga:leer', 'catalogo:leer', 'saldos:leer', 'auditoria:leer'],
-  analista: ['carga:crear', 'carga:leer', 'catalogo:leer', 'saldos:leer'],
+  contralor: [
+    'carga:crear',
+    'carga:leer',
+    'catalogo:leer',
+    'catalogo:importar',
+    'saldos:leer',
+    'auditoria:leer',
+  ],
+  analista: ['carga:crear', 'carga:leer', 'catalogo:leer', 'catalogo:importar', 'saldos:leer'],
   responsable_area: ['catalogo:leer'],
   direccion: ['carga:leer', 'catalogo:leer', 'saldos:leer'],
   auditoria: ['carga:leer', 'catalogo:leer', 'saldos:leer', 'auditoria:leer'],

@@ -60,8 +60,16 @@ def a_fecha(valor: object) -> date | None:
     return None
 
 
+def corregir_codificacion(texto: str) -> str:
+    """Novohit exporta la Ñ/ñ del juego DOS (CP850) como ¥ (0xA5) y ¤ (0xA4): 'DUE¥OS' -> 'DUEÑOS'.
+
+    Esos dos símbolos no existen en los nombres de cuentas ni en los conceptos de Torres.
+    """
+    return texto.replace("\xa5", "Ñ").replace("\xa4", "ñ")
+
+
 def a_texto(valor: object) -> str | None:
     if valor is None:
         return None
-    texto = str(valor).strip()
+    texto = corregir_codificacion(str(valor)).strip()
     return texto or None

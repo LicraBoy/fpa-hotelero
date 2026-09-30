@@ -83,7 +83,27 @@ export interface NodoCatalogo {
   con_movimientos: boolean
   es_titulo: boolean
   sin_jerarquia: boolean
+  tipo: 'Deudor' | 'Acreedor' | null
+  grupo_ef: string | null
+  depto_ef: string | null
+  cuenta_sat: string | null
+  activa: boolean
+  en_catalogo_oficial: boolean
   hijos: NodoCatalogo[]
+}
+
+export interface RespuestaImportacion {
+  resolucion: 'importado' | 'sin_cambio' | 'rechazado'
+  total_cuentas: number
+  total_titulos: number
+  creadas: number
+  actualizadas: number
+  sin_cambio: number
+  titulos_con_nombre_nuevo: number
+  fuera_del_catalogo: string[]
+  inactivas_con_movimientos: string[]
+  avisos: string[]
+  motivos: string[]
 }
 
 export interface Saldo {

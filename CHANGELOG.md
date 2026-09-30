@@ -2,6 +2,17 @@
 
 ## Fase 1 (en curso)
 
+### 1.9 — Catálogo oficial de cuentas, CON020 (2026-09-30)
+- Lector `.xls` (`xlrd`, solo lectura) del reporte "Catálogo Contable" de Novohit: ignora los encabezados que se repiten por página, normaliza títulos con letras espaciadas (`B A N C O S` → `BANCOS`) y corrige la Ñ exportada como `¥`.
+- `cuenta_local` ampliada (migración `0006`): TIPO (Deudor/Acreedor), grupo del estado financiero, departamento, DPTO. TI, cuenta de terceros, código SAT, auxiliar, activa y `en_catalogo_oficial`.
+- `importar_catalogo`: el catálogo oficial manda en nombre y clasificaciones; recalcula la jerarquía; idempotente; reporta cuentas con movimientos que no están en el catálogo.
+- Nuevos controles de calidad (avisos): cuentas fuera del catálogo oficial y movimientos en cuentas inactivas.
+- `POST /api/v1/hoteles/{id}/catalogo/importar` (permiso `catalogo:importar`: contralor y analista) con seguridad propia para `.xls` (firma OLE2, sin macros, tamaño máximo). El árbol devuelve tipo, departamento, grupo y SAT.
+- Pantalla: importar el catálogo y ver nombres, Deudor/Acreedor, departamento y código SAT; búsqueda también por esos campos.
+- Con el catálogo real: 1,306 nodos (1,238 cuentas + 68 títulos), 366 de 366 cuentas de septiembre, 87 cuentas del Variance fuera del catálogo; 0 nodos sin descripción.
+- Validación: el signo del Variance coincide con TIPO (Acreedor resta, Deudor suma) en todos los casos del Excel.
+- Pruebas: 239 del backend y 11 de navegador.
+
 ### Frontend de la Fase 1 y Playwright (2026-09-30)
 - Pantallas de Cargas (con aviso y confirmación de reemplazo y reporte de calidad), Catálogo (árbol con búsqueda), Saldos (total exacto) y Auditoría; secciones según el rol.
 - Importes como texto y sumas en centavos con `BigInt`.

@@ -25,3 +25,14 @@ class RepositorioCatalogo:
 
     def codigos_con_movimientos(self) -> set[str]:
         return {c.codigo for c in self.todas() if c.con_movimientos}
+
+    def codigos_oficiales(self) -> set[str]:
+        """Cuentas del catálogo oficial (sin los títulos de la jerarquía)."""
+        return {c.codigo for c in self.todas() if c.en_catalogo_oficial and c.tipo is not None}
+
+    def codigos_inactivos(self) -> set[str]:
+        return {
+            c.codigo
+            for c in self.todas()
+            if c.en_catalogo_oficial and c.tipo is not None and not c.activa
+        }

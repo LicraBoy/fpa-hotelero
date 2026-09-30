@@ -1,4 +1,4 @@
-import type { Fuente, RespuestaCarga } from './tipos'
+import type { Fuente, RespuestaCarga, RespuestaImportacion } from './tipos'
 
 /** Error de la API con el código HTTP y un mensaje listo para mostrar. */
 export class ErrorApi extends Error {
@@ -83,6 +83,25 @@ export async function subirCarga(
   const cuerpo = await leerJson(r)
   if (cuerpo && typeof cuerpo === 'object' && 'resolucion' in cuerpo) {
     return { estado: r.status, cuerpo: cuerpo as RespuestaCarga }
+  }
+  throw new ErrorApi(r.status, mensajeDeError(cuerpo, r.status))
+}
+
+/** Importa el catálogo contable oficial (.xls del reporte CON020 de Novohit). */
+export async function importarCatalogo(
+  hotelId: number,
+  archivo: File,
+): Promise<{ estado: number; cuerpo: RespuestaImportacion }> {
+  const formulario = new FormData()
+  formulario.append('archivo', archivo)
+  const r = await fetch(`/api/v1/hoteles/${hotelId}/catalogo/importar`, {
+    method: 'POST',
+    body: formulario,
+    headers: cabeceras(),
+  })
+  const cuerpo = await leerJson(r)
+  if (cuerpo && typeof cuerpo === 'object' && 'resolucion' in cuerpo) {
+    return { estado: r.status, cuerpo: cuerpo as RespuestaImportacion }
   }
   throw new ErrorApi(r.status, mensajeDeError(cuerpo, r.status))
 }

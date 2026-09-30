@@ -42,7 +42,8 @@ Una de las pruebas lee el Excel real de Torres si lo encuentra en la carpeta de 
 | `GET /yo`, `GET /hoteles`, `GET /hoteles/{id}` | Quién soy y a qué hoteles tengo acceso |
 | `POST /hoteles/{id}/cargas` | Subir un CON130 o el Excel del Variance (`fuente`, `confirmar_reemplazo`, `periodos`) |
 | `GET /hoteles/{id}/cargas`, `GET /hoteles/{id}/cargas/{carga}` | Cargas y su reporte de calidad |
-| `GET /hoteles/{id}/catalogo/arbol` | Árbol de cuentas locales |
+| `POST /hoteles/{id}/catalogo/importar` | Importar el catálogo oficial de Novohit (CON020, `.xls`) |
+| `GET /hoteles/{id}/catalogo/arbol` | Árbol de cuentas con nombres, Deudor/Acreedor, departamento y SAT |
 | `GET /hoteles/{id}/saldos?periodo=AAAA-MM` | Saldo por cuenta del periodo |
 | `GET /hoteles/{id}/auditoria` | Bitácora (contralor y auditoría) |
 

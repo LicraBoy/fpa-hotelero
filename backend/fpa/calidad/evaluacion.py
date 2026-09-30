@@ -135,6 +135,8 @@ def evaluar(
     *,
     periodos_esperados: Collection[str] | None = None,
     cuentas_conocidas: Collection[str] | None = None,
+    cuentas_oficiales: Collection[str] | None = None,
+    cuentas_inactivas: Collection[str] | None = None,
 ) -> ReporteCalidad:
     """Evalúa una lectura.
 
@@ -282,6 +284,37 @@ def evaluar(
             )
         else:
             c.append(_ok("cuentas_nuevas", "Todas las cuentas ya estaban en el catálogo"))
+
+    # 7b) Catálogo oficial (CON020): cuentas que no están en él y movimientos en cuentas inactivas
+    if cuentas_oficiales:
+        sin_catalogo = sorted(set(resultado.cuentas) - set(cuentas_oficiales))
+        if sin_catalogo:
+            c.append(
+                ControlCalidad(
+                    "cuentas_fuera_del_catalogo_oficial",
+                    Severidad.AVISO,
+                    f"{len(sin_catalogo)} cuenta(s) con movimientos fuera del catálogo oficial",
+                    sin_catalogo[:_MAX_EJEMPLOS],
+                )
+            )
+        else:
+            c.append(
+                _ok(
+                    "cuentas_fuera_del_catalogo_oficial",
+                    "Todas las cuentas están en el catálogo oficial",
+                )
+            )
+    if cuentas_inactivas:
+        inactivas = [m for m in movs if m.cuenta_codigo in set(cuentas_inactivas)]
+        if inactivas:
+            c.append(
+                ControlCalidad(
+                    "movimientos_en_cuentas_inactivas",
+                    Severidad.AVISO,
+                    f"{len(inactivas)} movimiento(s) en cuentas marcadas como inactivas",
+                    sorted({m.cuenta_codigo for m in inactivas})[:_MAX_EJEMPLOS],
+                )
+            )
 
     # 8) Filas repetidas exactas: existen legítimamente, se avisa pero no se rechaza
     repetidas = Counter(

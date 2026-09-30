@@ -11,6 +11,9 @@ from pathlib import Path
 
 from openpyxl import Workbook
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
+from xls_sintetico import a_xls, catalogo_basico
+
 ENCABEZADO_VARIANCE = [
     None, "Mes", "Fecha", "No Cuenta", "Nombre de la Cuenta", "Asiento - Salida",
     "Concepto - Nombre Articulo", "Cantidad", "Costo", "Débito", "Crédito",
@@ -49,6 +52,9 @@ def main(destino: Path) -> None:
     ]
     (destino / "variance_agosto.xlsx").write_bytes(variance(agosto))
     (destino / "variance_agosto_corregido.xlsx").write_bytes(variance(corregido))
+    # Catálogo contable (CON020) sintético en .xls, y un falso .xls de texto
+    (destino / "catalogo.xls").write_bytes(a_xls(catalogo_basico()))
+    (destino / "falso.xls").write_bytes(b"esto no es un libro de Excel")
     # Falso .xlsx: texto plano con extensión de Excel
     (destino / "falso.xlsx").write_bytes(b"esto no es un libro de Excel")
     # Zip que no es un libro de Excel

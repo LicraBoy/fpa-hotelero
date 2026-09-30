@@ -133,7 +133,11 @@ def actualizar_catalogo(
             resumen.creadas += 1
             continue
         cambios = {
-            "descripcion": descripcion if descripcion else fila.descripcion,
+            "descripcion": (
+                fila.descripcion
+                if fila.en_catalogo_oficial and fila.descripcion
+                else (descripcion or fila.descripcion)
+            ),
             "nivel": niveles.get(codigo),
             "padre_codigo": padre,
             "con_movimientos": con_movimientos,
@@ -157,6 +161,12 @@ class NodoCatalogo:
     con_movimientos: bool
     es_titulo: bool
     sin_jerarquia: bool
+    tipo: str | None = None
+    grupo_ef: str | None = None
+    depto_ef: str | None = None
+    cuenta_sat: str | None = None
+    activa: bool = True
+    en_catalogo_oficial: bool = False
     hijos: list[NodoCatalogo] = field(default_factory=list)
 
 
@@ -172,6 +182,12 @@ def construir_arbol(cuentas: Iterable[CuentaLocal]) -> list[NodoCatalogo]:
             con_movimientos=c.con_movimientos,
             es_titulo=c.es_titulo,
             sin_jerarquia=c.sin_jerarquia,
+            tipo=c.tipo,
+            grupo_ef=c.grupo_ef,
+            depto_ef=c.depto_ef,
+            cuenta_sat=c.cuenta_sat,
+            activa=c.activa,
+            en_catalogo_oficial=c.en_catalogo_oficial,
         )
         for c in lista
     }

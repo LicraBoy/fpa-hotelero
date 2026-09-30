@@ -101,6 +101,40 @@ test('el catálogo muestra las cuentas y se puede buscar', async ({ page }) => {
   await expect(page.getByText('4001002.001')).toHaveCount(0)
 })
 
+test('importar el catálogo oficial da nombres, tipo y departamento a las cuentas', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await elegirUsuario(page, 'Analista')
+  await pestana(page, 'Catálogo').click()
+  const importar = page.getByRole('region', { name: 'Importar catálogo oficial' })
+
+  // un archivo que no es un Excel se rechaza con un mensaje claro
+  await importar.getByLabel('Catálogo (.xls)').setInputFiles(archivo('falso.xls'))
+  await importar.getByRole('button', { name: 'Importar catálogo' }).click()
+  await expect(importar.getByRole('alert')).toContainText('no es un libro de Excel')
+
+  await importar.getByLabel('Catálogo (.xls)').setInputFiles(archivo('catalogo.xls'))
+  await importar.getByRole('button', { name: 'Importar catálogo' }).click()
+  const resumen = importar.getByRole('status')
+  await expect(resumen).toContainText('Catálogo importado')
+  await expect(resumen).toContainText('5 cuentas y 6 títulos')
+
+  // los títulos ya tienen nombre y las cuentas traen tipo y departamento
+  const buscador = page.getByLabel('Buscar cuenta')
+  await buscador.fill('GERENCIA')
+  await expect(page.getByText('GERENCIA Y RECEPCION')).toBeVisible()
+  await buscador.fill('MGT & CHECK IN')
+  await expect(page.getByText('6009001.001')).toBeVisible()
+  await buscador.fill('Acreedor')
+  await expect(page.getByText('Acreedor').first()).toBeVisible()
+  await expect(page.getByText('sin descripción')).toHaveCount(0)
+
+  // importar lo mismo otra vez no cambia nada
+  await importar.getByRole('button', { name: 'Importar catálogo' }).click()
+  await expect(importar.getByRole('status')).toContainText('ya estaba importado')
+})
+
 test('los saldos del mes suman exacto, con el reemplazo aplicado', async ({ page }) => {
   await page.goto('/')
   await elegirUsuario(page, 'Analista')
@@ -136,6 +170,8 @@ test('cada rol ve solo lo que le corresponde', async ({ page }) => {
 
   await elegirUsuario(page, 'Responsable de área')
   await expect(pestana(page, 'Catálogo')).toBeVisible()
+  await pestana(page, 'Catálogo').click()
+  await expect(page.getByRole('region', { name: 'Importar catálogo oficial' })).toHaveCount(0)
   for (const nombre of ['Cargas', 'Saldos', 'Auditoría']) {
     await expect(pestana(page, nombre)).toHaveCount(0)
   }
@@ -144,4 +180,6 @@ test('cada rol ve solo lo que le corresponde', async ({ page }) => {
   await expect(pestana(page, 'Cargas')).toBeVisible()
   await expect(pestana(page, 'Saldos')).toBeVisible()
   await expect(page.getByRole('region', { name: 'Subir archivo' })).toHaveCount(0) // no puede cargar
+  await pestana(page, 'Catálogo').click()
+  await expect(page.getByRole('region', { name: 'Importar catálogo oficial' })).toHaveCount(0)
 })
