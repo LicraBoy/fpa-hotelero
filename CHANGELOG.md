@@ -2,6 +2,13 @@
 
 ## Fase 1 (en curso)
 
+### 1.4 — Idempotencia, reemplazo y auditoría (2026-09-30)
+- `cargar_archivo`: mismo archivo = `duplicada` (no cambia nada); otro archivo para un periodo ya cargado = `requiere_confirmacion` (sin escribir); al confirmar, la carga anterior pasa a `reemplazada` (historial conservado); lecturas inválidas = `rechazada`.
+- Un archivo de varios meses reemplaza solo los periodos que chocan y omite los que ya eran idénticos.
+- `EventoAuditoria` de solo inserción (modificar o borrar lanza `AuditoriaInmutable`); eventos `carga.creada`, `carga.duplicada`, `carga.rechazada`, `carga.reemplazada` con usuario, hotel y detalle. Migración `0003`.
+- Si el reemplazo falla a la mitad, la carga anterior sigue vigente.
+- Pruebas: 109 pasan y 1 se salta.
+
 ### 1.3 — Persistencia de cargas (2026-09-30)
 - Modelos `CargaArchivo` (una por archivo y periodo; una sola vigente por hotel y periodo, garantizado por un índice parcial) y `Movimiento`. Migración `0002`.
 - Tipo `Medida` (hasta 6 decimales exactos) para cantidades y costos unitarios.

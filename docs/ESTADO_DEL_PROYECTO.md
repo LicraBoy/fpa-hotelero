@@ -3,7 +3,7 @@
 Última actualización: 30-sep-2026
 
 ## Fase actual
-**Fase 1 — Data Hub: Actuals (en curso).** Sub-fases terminadas: **1.0** a **1.3** (persistencia de cargas). Siguiente: **1.4 (idempotencia, reemplazo y auditoría)**.
+**Fase 1 — Data Hub: Actuals (en curso).** Sub-fases terminadas: **1.0** a **1.4** (idempotencia, reemplazo y auditoría). Siguiente: **1.5 (calidad de datos)**.
 
 ## Avance por fase
 | Fase | Estado |
@@ -21,14 +21,14 @@
 | 1.1 Lector CON130 con contrato común (`fpa/ingesta/contrato.py`) y títulos de jerarquía | **Hecha** |
 | 1.2 Lector del Excel de Variance (`fpa/ingesta/variance_base_datos.py`) | **Hecha** |
 | 1.3 Persistencia de cargas (`CargaArchivo`, `Movimiento`, migración `0002`, `registrar_carga`) | **Hecha** |
-| 1.4 Idempotencia, reemplazo y auditoría | Pendiente |
+| 1.4 Idempotencia, reemplazo con confirmación y auditoría (`cargar_archivo`, `EventoAuditoria`, migración `0003`) | **Hecha** |
 | 1.5 Calidad de datos | Pendiente |
 | 1.6 Catálogo local | Pendiente |
 | 1.7 Saldos mensuales | Pendiente |
 | 1.8 API de carga segura | Pendiente |
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **97 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **109 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -62,4 +62,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**1.4:** `cargar_archivo` (orquesta hash, idempotencia, reemplazo con confirmación) y `EventoAuditoria` (migración `0003`). Después 1.5 a 1.8 en orden.
+**1.5:** paquete `fpa/calidad/` (controles por fuente, funciones puras) que produce el reporte de calidad; un `error` rechaza la carga, un `aviso` se guarda en `controles`. Después 1.6 a 1.8 en orden.

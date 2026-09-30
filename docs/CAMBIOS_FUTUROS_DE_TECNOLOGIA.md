@@ -38,6 +38,7 @@ Estados: `[DECIDIDO]` ya definido · `[PROPUESTA]` recomendación técnica · `[
 | Caché | No hay | Caché de reportes por clave (hotel, versiones, periodo); Redis solo si hace falta | Fase 4 (rendimiento) |
 | Archivos subidos | No hay | Almacenamiento fuera de la raíz web, hash SHA-256, límites de tamaño, sin macros | Fase 1.8 |
 | Secretos | Archivo `.env` local (no se sube) | Gestor de secretos de TI | Antes de producción |
+| Auditoría | Bitácora de solo inserción, reforzada por la aplicación (`AuditoriaInmutable`) | En PostgreSQL: quitar UPDATE/DELETE al usuario de la aplicación y encadenar hashes entre eventos | Fase 5.5 / antes de producción |
 | Observabilidad | Logs de consola | Logs JSON con `request_id`, métricas y alertas (OpenTelemetry, Prometheus, Grafana) | Fase 6 |
 | Respaldos | No aplica | Respaldos cifrados y restauración probada | Fase 6 |
 | Componentes del frontend | Solo React + CSS propio | Una librería MIT (Mantine o MUI), TanStack Query, TanStack Table, cliente API generado desde OpenAPI | Fase 4 |
