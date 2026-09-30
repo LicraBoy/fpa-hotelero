@@ -63,7 +63,7 @@ def test_rechaza_mas_de_dos_decimales() -> None:
     eng = _engine()
     with Session(eng) as s:
         s.add(_Prueba(id=1, monto=Decimal("1.234")))
-        with pytest.raises(Exception, match="más de dos decimales"):
+        with pytest.raises(Exception, match="más de 2 decimales"):
             s.commit()
 
 

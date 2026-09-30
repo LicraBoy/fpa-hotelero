@@ -2,6 +2,14 @@
 
 ## Fase 1 (en curso)
 
+### 1.3 — Persistencia de cargas (2026-09-30)
+- Modelos `CargaArchivo` (una por archivo y periodo; una sola vigente por hotel y periodo, garantizado por un índice parcial) y `Movimiento`. Migración `0002`.
+- Tipo `Medida` (hasta 6 decimales exactos) para cantidades y costos unitarios.
+- `registrar_carga`: todo o nada dentro de un SAVEPOINT; rechaza lecturas sin fuente, sin movimientos o con errores.
+- `RepositorioCargas`: exige `hotel_id`; los cálculos leen solo la carga vigente de cada periodo.
+- Con los Excel reales: Variance = 2 cargas (3,583 + 3,277); CON130 = 1 carga (7,242). Los textos reales caben en las columnas.
+- Pruebas: 97 pasan y 1 se salta.
+
 ### 1.2 — Lector del Excel de Variance (2026-09-30)
 - `fpa/ingesta/variance_base_datos.py`: lee la hoja "Base de Datos" (julio + agosto) por nombre de columna, tolerando los caracteres dañados de Débito/Crédito.
 - Sin control Débito = Crédito (es un subconjunto de cuentas de resultados). Cantidad y costo se conservan con todos sus decimales.
