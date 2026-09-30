@@ -8,7 +8,8 @@ Plataforma SaaS de FP&A para hoteles, independiente de PMS/ERP/POS. Primer hotel
 ## Lee esto primero, en orden
 1. `docs/ESTADO_DEL_PROYECTO.md` — en qué fase va el proyecto y qué sigue.
 2. `docs/Arquitectura_Tecnica_FPA_Hotelero.md` — stack, arquitectura, seguridad, pruebas y fases (0 a 14).
-3. `docs/CAMBIOS_FUTUROS_DE_TECNOLOGIA.md` — qué es provisional hoy y cómo cambiará (base de datos, Docker, autenticación, etc.).
+3. `docs/FASES_FUTURAS.md` — resumen de las fases que faltan (2 a 15), con sub-fases, pruebas y decisiones pendientes.
+   `docs/CAMBIOS_FUTUROS_DE_TECNOLOGIA.md` — qué es provisional hoy y cómo cambiará (base de datos, Docker, autenticación, etc.).
 4. `docs/Blueprint_Funcional_FPA_Hotelero_Torres_Mazatlan.docx` — requisitos funcionales aprobados por Contraloría.
 5. `docs/contexto.md` — requerimientos originales. Decisiones técnicas en `docs/adr/`.
 
