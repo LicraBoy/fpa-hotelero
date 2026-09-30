@@ -2,6 +2,14 @@
 
 ## Fase 1 (en curso)
 
+### 1.7 — Saldos mensuales (2026-09-30)
+- `SaldoMensualCuenta` (migración `0005`): Débito, Crédito y número de movimientos por cuenta, hotel y periodo; Resultado = Débito − Crédito.
+- `recalcular_saldos`: desde la carga vigente, en Python con `Decimal`, idempotente; se invoca al cargar o reemplazar. Sin carga vigente no hay saldos.
+- Pruebas de propiedades (`hypothesis`): suma de saldos = suma de movimientos, el orden no importa, agregar por partes = agregar todo.
+- `GET /api/v1/hoteles/{id}/saldos?periodo=AAAA-MM` (permiso `saldos:leer`; importes como texto exacto).
+- Con el CON130 real: los 366 saldos coinciden con la fila "Total" de cada cuenta del reporte.
+- Pruebas: 164 pasan y 1 se salta.
+
 ### 1.6 — Catálogo local (2026-09-30)
 - `CuentaLocal` (migración `0004`): código, descripción, clase, nivel, padre, `con_movimientos`, `es_titulo`, `sin_jerarquia`. Se acumula entre cargas y recalcula la jerarquía de todas las cuentas conocidas.
 - Padre = título más largo que sea prefijo del código (o el código base de una subcuenta con punto). Con el CON130 real: 145 títulos + 366 cuentas = 511 nodos, todas las cuentas con ancestro.

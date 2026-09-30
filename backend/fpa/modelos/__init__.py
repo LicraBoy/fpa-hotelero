@@ -6,6 +6,7 @@ from fpa.modelos.cargas import CargaArchivo, EstadoCarga, Movimiento
 from fpa.modelos.catalogo import CuentaLocal
 from fpa.modelos.identidad import Asignacion, Rol, Usuario
 from fpa.modelos.organizacion import Hotel, Organizacion
+from fpa.modelos.saldos import SaldoMensualCuenta
 
 __all__ = [
     "Asignacion",
@@ -18,5 +19,6 @@ __all__ = [
     "Movimiento",
     "Organizacion",
     "Rol",
+    "SaldoMensualCuenta",
     "Usuario",
 ]

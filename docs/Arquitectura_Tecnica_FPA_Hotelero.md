@@ -319,7 +319,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 | 1.4 Idempotencia y reemplazo `[HECHO]` | Mismo archivo no duplica (hash); una **carga vigente por hotel y periodo**; recargar un periodo con otro archivo exige confirmación y conserva historial (la anterior pasa a `reemplazada`) | Cargar dos veces = mismo resultado; el reemplazo queda en la auditoría |
 | 1.5 Calidad de datos `[HECHO]` | Reporte con controles por fuente. CON130: Débito = Crédito y total por cuenta. Variance: mes en texto = mes de la fecha. Ambas: fechas dentro del periodo, cuentas nuevas (aviso) y filas repetidas exactas (**aviso, no rechazo**: existen 5 en el Variance y 14 en el CON130) | Un archivo alterado a propósito es rechazado con mensaje claro |
 | 1.6 Catálogo local `[HECHO]` | Construir el árbol de cuentas desde el reporte (nivel 1 > 10 > 1000 > 1000001 > 1000001.001) | Todas las cuentas con movimiento existen en el árbol |
-| 1.7 Saldos mensuales | `saldo_mensual_cuenta` derivado y recalculable | Suma de saldos = suma de movimientos, propiedad verificada con `hypothesis` |
+| 1.7 Saldos mensuales `[HECHO]` | `saldo_mensual_cuenta` derivado y recalculable | Suma de saldos = suma de movimientos, propiedad verificada con `hypothesis` |
 | 1.8 API de carga segura | `POST` de archivo con validaciones (ver 8.5) | Archivos maliciosos rechazados; pruebas de tamaño, tipo y zip-bomb |
 
 **Salida:** septiembre y julio–agosto cargan y cuadran con sus controles. **Seguridad:** subida endurecida, auditoría de cada carga.

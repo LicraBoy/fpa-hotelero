@@ -3,7 +3,7 @@
 Última actualización: 30-sep-2026
 
 ## Fase actual
-**Fase 1 — Data Hub: Actuals (en curso).** Sub-fases terminadas: **1.0** a **1.6** (catálogo local). Siguiente: **1.7 (saldos mensuales)**.
+**Fase 1 — Data Hub: Actuals (en curso).** Sub-fases terminadas: **1.0** a **1.7** (saldos mensuales). Siguiente: **1.8 (API de carga segura)**, la última de la Fase 1.
 
 ## Avance por fase
 | Fase | Estado |
@@ -24,11 +24,11 @@
 | 1.4 Idempotencia, reemplazo con confirmación y auditoría (`cargar_archivo`, `EventoAuditoria`, migración `0003`) | **Hecha** |
 | 1.5 Calidad de datos (`fpa/calidad/evaluacion.py`; el reporte se guarda en cada carga) | **Hecha** |
 | 1.6 Catálogo local (`CuentaLocal`, migración `0004`, árbol acumulado, `GET /api/v1/hoteles/{id}/catalogo/arbol`) | **Hecha** |
-| 1.7 Saldos mensuales | Pendiente |
+| 1.7 Saldos mensuales (`SaldoMensualCuenta`, migración `0005`, `recalcular_saldos`, `GET /api/v1/hoteles/{id}/saldos?periodo=`) | **Hecha** |
 | 1.8 API de carga segura | Pendiente |
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **150 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **164 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -65,4 +65,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**1.7:** modelo `SaldoMensualCuenta` (migración `0005`) y `recalcular_saldos` en Python con `Decimal` (idempotente, se invoca al cargar o reemplazar), con pruebas de propiedades (`hypothesis`). Después 1.8 (API de carga segura).
+**1.8:** `POST /api/v1/hoteles/{hotel_id}/cargas` (archivo + `fuente` + `confirmar_reemplazo`) con `fpa/seguridad/archivos.py` (solo `.xlsx`, tamaño, firma `PK`, anti zip-bomb, sin macros, sin rutas con `..`), almacenamiento en `storage/` y `GET` de lista y detalle; respuestas 201/409/422/400/413/415/401/403/404. Cierra con la prueba de salida de la Fase 1 por la API.

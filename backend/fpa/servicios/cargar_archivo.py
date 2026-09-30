@@ -27,6 +27,7 @@ from fpa.repositorios.catalogo import RepositorioCatalogo
 from fpa.servicios.auditoria import auditar
 from fpa.servicios.cargas import DatosArchivo, registrar_carga
 from fpa.servicios.catalogo import actualizar_catalogo
+from fpa.servicios.saldos import recalcular_saldos
 
 
 class Resolucion(StrEnum):
@@ -194,6 +195,8 @@ def cargar_archivo(
         for vieja in viejas:
             vieja.reemplazada_por_id = por_periodo_nueva[vieja.periodo].id
         db.flush()
+        for periodo in sorted(a_guardar):
+            recalcular_saldos(db, hotel_id=hotel_id, periodo=periodo)
         for carga in nuevas:
             evento(
                 "carga.creada",
