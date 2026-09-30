@@ -9,20 +9,44 @@ from fpa.ingesta.novohit_con130 import leer_con130, leer_con130_filas
 
 # El Excel real de Torres NO vive en el repositorio. Se busca en la carpeta de documentos
 # (o en la ruta de la variable FPA_DATOS_REALES). Si no existe, la prueba se salta.
-_CARPETA_DOCUMENTOS = Path(os.environ.get(
-    "FPA_DATOS_REALES",
-    Path.home() / "Desktop" / "PLATAFORMA FP&A E INTELIGENCIA HOTELERA"))
+_CARPETA_DOCUMENTOS = Path(
+    os.environ.get(
+        "FPA_DATOS_REALES", Path.home() / "Desktop" / "PLATAFORMA FP&A E INTELIGENCIA HOTELERA"
+    )
+)
 BASE_DATOS = _CARPETA_DOCUMENTOS / "BASE DATOS.xlsx"
 D = Decimal
 
 # Columnas: G=# ASIENTO/cuenta, H=Fecha, I=Tp.Asiento, J=Oper., K=Tp.Doc., L=Número,
 # M=Fecha, N=Concepto, O=Débito, P=Crédito, Q=Saldo (como el export real de Novohit)
-ENCABEZADO = ("# ASIENTO", "Fecha", "Tp.Asiento", "Oper.", "Tp.Doc.", "Número", "Fecha",
-              "Concepto", "Débito", "Crédito", "Saldo")
+ENCABEZADO = (
+    "# ASIENTO",
+    "Fecha",
+    "Tp.Asiento",
+    "Oper.",
+    "Tp.Doc.",
+    "Número",
+    "Fecha",
+    "Concepto",
+    "Débito",
+    "Crédito",
+    "Saldo",
+)
 
 
-def fila(asiento=None, fecha=None, tp=None, oper=None, doc=None, numero=None, fecha2=None,
-         concepto=None, debito=None, credito=None, saldo=None):
+def fila(
+    asiento=None,
+    fecha=None,
+    tp=None,
+    oper=None,
+    doc=None,
+    numero=None,
+    fecha2=None,
+    concepto=None,
+    debito=None,
+    credito=None,
+    saldo=None,
+):
     return (asiento, fecha, tp, oper, doc, numero, fecha2, concepto, debito, credito, saldo)
 
 
@@ -34,7 +58,7 @@ def reporte(*cuerpo):
     ]
     filas = [fila(*(c[0],) + (None,) * 10) for c in cabecera]
     filas.append(ENCABEZADO)
-    filas.append(fila("1"))          # título de jerarquía
+    filas.append(fila("1"))  # título de jerarquía
     filas.append(fila("1000"))
     filas.append(fila("1000001 BANCOS MONEDA NACIONAL"))  # grupo: sin Saldo anterior
     filas.extend(cuerpo)
@@ -44,18 +68,41 @@ def reporte(*cuerpo):
 def cuenta_simple():
     return [
         fila("1000001.001  BANBAJIO PS", concepto="Saldo anterior", credito="2,171,953.32"),
-        fila("9.2.1", "01/09/2026", "BANCOS/CAJA", "REGISTRO", "POLIZA", "T0106", "01/09/2026",
-             "TRASPASO", credito=4499993.3, saldo=-2328039.98),
-        fila("9.2.2", "01/09/2026", "BANCOS/CAJA", "REGISTRO", "POLIZA", "D0105", "01/09/2026",
-             "Dep factura 4474", debito=3000000, saldo=671960.02),
+        fila(
+            "9.2.1",
+            "01/09/2026",
+            "BANCOS/CAJA",
+            "REGISTRO",
+            "POLIZA",
+            "T0106",
+            "01/09/2026",
+            "TRASPASO",
+            credito=4499993.3,
+            saldo=-2328039.98,
+        ),
+        fila(
+            "9.2.2",
+            "01/09/2026",
+            "BANCOS/CAJA",
+            "REGISTRO",
+            "POLIZA",
+            "D0105",
+            "01/09/2026",
+            "Dep factura 4474",
+            debito=3000000,
+            saldo=671960.02,
+        ),
         fila(concepto="Total  BANBAJIO PS", debito=3000000, credito="4,499,993.30"),
     ]
 
 
 def test_clasifica_movimientos_y_omite_titulos_saldos_y_totales():
-    r = leer_con130_filas(reporte(*cuenta_simple(),
-                                  fila(concepto="Total BANCOS MONEDA NACIONAL",
-                                       debito=3000000, credito=4499993.3)))
+    r = leer_con130_filas(
+        reporte(
+            *cuenta_simple(),
+            fila(concepto="Total BANCOS MONEDA NACIONAL", debito=3000000, credito=4499993.3),
+        )
+    )
     assert len(r.movimientos) == 2
     assert [m.asiento for m in r.movimientos] == ["9.2.1", "9.2.2"]
     assert r.movimientos[0].cuenta_codigo == "1000001.001"
@@ -128,9 +175,12 @@ def test_cuenta_sin_fila_total_genera_aviso():
 
 
 def test_monto_invalido_es_error():
-    r = leer_con130_filas(reporte(
-        fila("1000003 X", concepto="Saldo anterior", debito=0),
-        fila("9.2.1", "01/09/2026", concepto="X", debito="abc")))
+    r = leer_con130_filas(
+        reporte(
+            fila("1000003 X", concepto="Saldo anterior", debito=0),
+            fila("9.2.1", "01/09/2026", concepto="X", debito="abc"),
+        )
+    )
     assert any("monto inválido" in e for e in r.errores)
 
 

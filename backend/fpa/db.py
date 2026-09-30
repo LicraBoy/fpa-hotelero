@@ -3,6 +3,7 @@
 La URL viene de `settings.database_url`. Cambiar de motor = cambiar esa variable
 (y agregar el driver correspondiente); no hay SQL exclusivo de un motor aquí.
 """
+
 from collections.abc import Iterator
 
 from sqlalchemy import create_engine

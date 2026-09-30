@@ -14,7 +14,9 @@ Plataforma SaaS de FP&A para hoteles, independiente de PMS/ERP/POS. Primer hotel
 
 ## Cómo correrlo
 - Levantar todo: `iniciar_servidores.bat` (backend **8100**, frontend **5180**; no usar 8000/5173, son de otro sistema).
-- Pruebas: `cd backend` y `.venv\Scripts\python -m pytest`.
+- Pruebas: `cd backend` y `.venv\Scripts\python -m pytest`. Calidad: `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .` y `.venv\Scripts\mypy fpa` (deben quedar sin errores).
+- Base de datos: `.venv\Scripts\alembic upgrade head` (migraciones) y `.venv\Scripts\python -m fpa.semilla` (datos de desarrollo). Si cambias un modelo, genera la migración con `alembic revision --autogenerate`.
+- Identidad de desarrollo: `FPA_ENTORNO=desarrollo` y cabecera `X-Usuario-Dev: analista@torres.local` (por defecto el entorno es `produccion` y nadie entra).
 - Primera vez: ver `README.md`.
 
 ## Reglas de trabajo
@@ -26,7 +28,7 @@ Plataforma SaaS de FP&A para hoteles, independiente de PMS/ERP/POS. Primer hotel
 - **No inventar procesos de Torres.** Marcar lo no confirmado como `[POR VALIDAR]`.
 - El trabajo se hace **por fases**; no se abre una fase sin cerrar la anterior.
 - **Una sub-fase no termina hasta actualizar `docs/ESTADO_DEL_PROYECTO.md`** y marcarla en la arquitectura.
-- No hacer `git commit` sin que el usuario lo pida.
+- Git: **un commit por sub-fase** terminada (el usuario lo autorizó para la Fase 1), con mensaje en español. No subir a ningún servidor sin pedirlo.
 - Respuestas al usuario: cortas y claras, en español.
 - Este proyecto es independiente de `DataContabilidad\sistema-analisis-contable`; no usarlo como evidencia ni modificarlo.
 
@@ -38,5 +40,6 @@ Carpeta: `C:\Users\mzamora\Desktop\PLATAFORMA FP&A E INTELIGENCIA HOTELERA\`. No
 
 ## Código existente
 - `backend/fpa/ingesta/novohit_con130.py` — lector del CON130 (máquina de estados; valida Débito = Crédito y total por cuenta).
-- `backend/fpa/main.py`, `config.py`, `db.py`, `api/health.py` — API mínima con `/api/health` y `/api/ready`.
+- `backend/fpa/main.py`, `config.py`, `db.py`, `api/health.py` — API con `/api/health` y `/api/ready`.
+- `backend/fpa/modelos/` (modelos y tipo `Dinero`), `backend/fpa/identidad/` (proveedor, permisos, dependencias), `backend/fpa/api/v1/` (`/yo`, `/hoteles`), `backend/migraciones/` (Alembic), `backend/fpa/semilla.py`.
 - `frontend/` — pantalla inicial que consulta la API.

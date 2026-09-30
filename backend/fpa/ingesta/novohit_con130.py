@@ -13,9 +13,11 @@ Reglas (ver Blueprint, sección 12.1):
   cuenta en la columna "# ASIENTO" y "Saldo anterior" en Concepto.
 - El Saldo anterior no entra al cálculo del Actual.
 """
+
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -26,8 +28,19 @@ from openpyxl import load_workbook
 CENTAVO = Decimal("0.01")
 _RE_CUENTA = re.compile(r"^(\d+(?:\.\d+)*)\s+(.*\S)\s*$")
 _RE_FECHA = re.compile(r"^\s*(\d{2})/(\d{2})/(\d{4})\s*$")
-CAMPOS = ("asiento", "fecha", "tp_asiento", "operacion", "tp_doc", "numero",
-          "fecha_doc", "concepto", "debito", "credito", "saldo")
+CAMPOS = (
+    "asiento",
+    "fecha",
+    "tp_asiento",
+    "operacion",
+    "tp_doc",
+    "numero",
+    "fecha_doc",
+    "concepto",
+    "debito",
+    "credito",
+    "saldo",
+)
 
 
 @dataclass
@@ -97,7 +110,7 @@ class ResultadoCon130:
         return not self.errores and self.cuadra_debito_credito
 
 
-def _dinero(valor) -> Decimal | None:
+def _dinero(valor: object) -> Decimal | None:
     """Número o texto con comas (ej. '16,189.85') -> Decimal; vacío -> None."""
     if valor is None:
         return None
@@ -114,7 +127,7 @@ def _dinero(valor) -> Decimal | None:
         raise ValueError(f"monto inválido: {valor!r}") from None
 
 
-def _fecha(valor) -> date | None:
+def _fecha(valor: object) -> date | None:
     if isinstance(valor, datetime):
         return valor.date()
     if isinstance(valor, date):
@@ -130,14 +143,14 @@ def _fecha(valor) -> date | None:
     return None
 
 
-def _texto(valor) -> str | None:
+def _texto(valor: object) -> str | None:
     if valor is None:
         return None
     texto = str(valor).strip()
     return texto or None
 
 
-def _ubicar_encabezado(filas: list[tuple]) -> tuple[int, int]:
+def _ubicar_encabezado(filas: Sequence[Sequence[object]]) -> tuple[int, int]:
     """Devuelve (índice de fila, índice de columna) del encabezado '# ASIENTO'."""
     for i, fila in enumerate(filas[:40]):
         for j, celda in enumerate(fila):
@@ -156,7 +169,7 @@ def leer_con130(ruta: str | Path, hoja: str | None = None) -> ResultadoCon130:
     return leer_con130_filas(filas)
 
 
-def leer_con130_filas(filas: list[tuple]) -> ResultadoCon130:
+def leer_con130_filas(filas: Sequence[Sequence[object]]) -> ResultadoCon130:
     res = ResultadoCon130()
     i_enc, c0 = _ubicar_encabezado(filas)
 
@@ -170,23 +183,27 @@ def leer_con130_filas(filas: list[tuple]) -> ResultadoCon130:
                 res.periodo_texto = texto
         if res.empresa is None:
             for celda in fila:
-                if isinstance(celda, str) and celda.strip() and not celda.strip().lower().startswith("novohit"):
+                if (
+                    isinstance(celda, str)
+                    and celda.strip()
+                    and not celda.strip().lower().startswith("novohit")
+                ):
                     res.empresa = celda.strip()
                     break
 
-    def col(fila: tuple, campo: str):
+    def col(fila: Sequence[object], campo: str) -> object:
         idx = c0 + CAMPOS.index(campo)
         return fila[idx] if idx < len(fila) else None
 
     abierta: Cuenta | None = None
 
-    def cerrar_sin_total():
+    def cerrar_sin_total() -> None:
         nonlocal abierta
         if abierta is not None and abierta.total_verificado is None:
             res.avisos.append(f"Cuenta {abierta.codigo} (fila {abierta.fila}) no trae fila 'Total'")
         abierta = None
 
-    for n, fila in enumerate(filas[i_enc + 1:], start=i_enc + 2):
+    for n, fila in enumerate(filas[i_enc + 1 :], start=i_enc + 2):
         asiento_o_cuenta = _texto(col(fila, "asiento"))
         concepto = _texto(col(fila, "concepto"))
         fecha = _fecha(col(fila, "fecha"))
@@ -208,8 +225,12 @@ def leer_con130_filas(filas: list[tuple]) -> ResultadoCon130:
             codigo, descripcion = m.group(1), m.group(2)
             if codigo in res.cuentas:
                 res.errores.append(f"Fila {n}: la cuenta {codigo} aparece más de una vez")
-            abierta = Cuenta(codigo=codigo, descripcion=descripcion, fila=n,
-                             saldo_anterior=debito if debito is not None else credito)
+            abierta = Cuenta(
+                codigo=codigo,
+                descripcion=descripcion,
+                fila=n,
+                saldo_anterior=debito if debito is not None else credito,
+            )
             res.cuentas[codigo] = abierta
             continue
 
@@ -218,18 +239,23 @@ def leer_con130_filas(filas: list[tuple]) -> ResultadoCon130:
             if abierta is not None:
                 abierta.total_debito_reporte = debito or Decimal("0")
                 abierta.total_credito_reporte = credito or Decimal("0")
-                coincide = (abs(abierta.total_debito_reporte - abierta.suma_debito) < CENTAVO
-                            and abs(abierta.total_credito_reporte - abierta.suma_credito) < CENTAVO)
+                coincide = (
+                    abs(abierta.total_debito_reporte - abierta.suma_debito) < CENTAVO
+                    and abs(abierta.total_credito_reporte - abierta.suma_credito) < CENTAVO
+                )
                 abierta.total_verificado = coincide
                 if not coincide:
                     res.errores.append(
                         f"Fila {n}: el Total de {abierta.codigo} ({abierta.total_debito_reporte}/"
-                        f"{abierta.total_credito_reporte}) no coincide con la suma de sus movimientos "
-                        f"({abierta.suma_debito}/{abierta.suma_credito})")
+                        f"{abierta.total_credito_reporte}) no coincide con la suma de sus "
+                        "movimientos "
+                        f"({abierta.suma_debito}/{abierta.suma_credito})"
+                    )
                 abierta = None
             else:
-                res.totales_grupo.append(TotalGrupo(concepto, debito or Decimal("0"),
-                                                    credito or Decimal("0"), n))
+                res.totales_grupo.append(
+                    TotalGrupo(concepto, debito or Decimal("0"), credito or Decimal("0"), n)
+                )
             continue
 
         # 3) Movimiento
@@ -241,12 +267,23 @@ def leer_con130_filas(filas: list[tuple]) -> ResultadoCon130:
                 res.errores.append(f"Fila {n}: movimiento sin Débito ni Crédito")
                 continue
             d, c = debito or Decimal("0"), credito or Decimal("0")
-            res.movimientos.append(Movimiento(
-                cuenta_codigo=abierta.codigo, cuenta_descripcion=abierta.descripcion,
-                asiento=asiento_o_cuenta or "", fecha=fecha,
-                tp_asiento=_texto(col(fila, "tp_asiento")), operacion=_texto(col(fila, "operacion")),
-                tp_doc=_texto(col(fila, "tp_doc")), numero=_texto(col(fila, "numero")),
-                concepto=concepto, debito=d, credito=c, saldo=saldo, fila=n))
+            res.movimientos.append(
+                Movimiento(
+                    cuenta_codigo=abierta.codigo,
+                    cuenta_descripcion=abierta.descripcion,
+                    asiento=asiento_o_cuenta or "",
+                    fecha=fecha,
+                    tp_asiento=_texto(col(fila, "tp_asiento")),
+                    operacion=_texto(col(fila, "operacion")),
+                    tp_doc=_texto(col(fila, "tp_doc")),
+                    numero=_texto(col(fila, "numero")),
+                    concepto=concepto,
+                    debito=d,
+                    credito=c,
+                    saldo=saldo,
+                    fila=n,
+                )
+            )
             abierta.suma_debito += d
             abierta.suma_credito += c
             continue
@@ -259,5 +296,6 @@ def leer_con130_filas(filas: list[tuple]) -> ResultadoCon130:
 
     if not res.cuadra_debito_credito:
         res.errores.append(
-            f"Débito total {res.total_debito} distinto de Crédito total {res.total_credito}")
+            f"Débito total {res.total_debito} distinto de Crédito total {res.total_credito}"
+        )
     return res

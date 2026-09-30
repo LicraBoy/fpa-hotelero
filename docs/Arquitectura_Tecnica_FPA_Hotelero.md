@@ -168,7 +168,7 @@ Toda tabla de negocio lleva `organizacion_id` y `hotel_id`. Los montos son `NUME
 | `linea_reporte` | Sección, orden, cuenta corporativa, descripción, tipo (detalle, subtotal, total), regla de suma |
 | `mapeo_cuenta` | `linea_reporte` ↔ `cuenta_local`, **signo** (+1/−1), vigencia y versión |
 | `periodo` | Año fiscal, mes, fechas de inicio y fin |
-| `carga_archivo` | Fuente, nombre, hash SHA-256, periodo, estado, totales de control, usuario, fecha |
+| `carga_archivo` | Una por (archivo, periodo): fuente, nombre, hash SHA-256, periodo, estado (vigente o reemplazada), totales de control, usuario, fecha |
 | `movimiento` (hecho) | Hotel, cuenta local, fecha, asiento, tipo de asiento, operación, número, concepto, débito, crédito, `carga_id` |
 | `saldo_mensual_cuenta` (derivado) | Hotel, cuenta local, periodo, suma débito, suma crédito (recalculable desde `movimiento`) |
 | `version_plan` | Tipo (Budget, Forecast, Escenario), nombre, estado de workflow, bloqueada, origen |
@@ -312,12 +312,12 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 ### Fase 1 — Data Hub: Actuals (L)
 | Sub-fase | Qué se hace | Qué se prueba |
 |---|---|---|
-| 1.0 Cimientos de datos | Alembic con primera migración; modelos `organizacion`, `hotel`, `usuario`, `rol`; dependencia que exige contexto de tenant; proveedor de identidad de desarrollo detrás de una interfaz | Migración sube y baja en SQLite y PostgreSQL. **Prueba de aislamiento**: un usuario del hotel A no lee datos del hotel B |
+| 1.0 Cimientos de datos `[HECHO]` | Alembic con primera migración; modelos `organizacion`, `hotel`, `usuario`, `rol`, `asignacion`; tipo `Dinero`; dependencia que exige contexto de hotel; proveedor de identidad de desarrollo detrás de una interfaz (cerrado por defecto); `ruff` y `mypy` estricto | Migración sube y baja en SQLite (PostgreSQL con prueba lista, se salta hasta tener instancia) y no se desvía de los modelos. **Prueba de aislamiento**: un usuario del hotel A no lee datos del hotel B (404) y sin permiso recibe 403 |
 | 1.1 Lector CON130 | `[HECHO]` | 13 pruebas; septiembre real: 7,242 / 366 / 57,835,193.08 |
-| 1.2 Lector del Excel de Variance | Leer la hoja de movimientos (julio–agosto) con el mismo contrato de salida que el CON130 | Mismos totales que el libro; 6,860 movimientos y 296 cuentas de agosto |
+| 1.2 Lector del Excel de Variance | Leer la hoja "Base de Datos" (**julio y agosto**) con el mismo contrato de salida que el CON130. Es un subconjunto de cuentas de resultados (clases 4, 5 y 6), por eso **Débito ≠ Crédito** en esta fuente | Mismos totales que el libro: 6,860 movimientos (Julio 3,583 + Agosto 3,277), 296 cuentas, Débito 12,650,614.04 y Crédito 12,037,735.88 |
 | 1.3 Persistencia de cargas | `carga_archivo` + `movimiento` en una sola transacción; hash SHA-256 | Carga atómica: si falla a la mitad no queda nada; `Decimal` ida y vuelta exacto |
-| 1.4 Idempotencia y reemplazo | Mismo archivo no duplica; recargar un periodo exige confirmación y conserva historial | Cargar dos veces = mismo resultado; el reemplazo queda en auditoría |
-| 1.5 Calidad de datos | Reporte con controles (Débito = Crédito, total por cuenta), cuentas nuevas, fechas fuera del periodo, duplicados de asiento | Un archivo alterado a propósito es rechazado con mensaje claro |
+| 1.4 Idempotencia y reemplazo | Mismo archivo no duplica (hash); una **carga vigente por hotel y periodo**; recargar un periodo con otro archivo exige confirmación y conserva historial (la anterior pasa a `reemplazada`) | Cargar dos veces = mismo resultado; el reemplazo queda en la auditoría |
+| 1.5 Calidad de datos | Reporte con controles por fuente. CON130: Débito = Crédito y total por cuenta. Variance: mes en texto = mes de la fecha. Ambas: fechas dentro del periodo, cuentas nuevas (aviso) y filas repetidas exactas (**aviso, no rechazo**: existen 5 en el Variance y 14 en el CON130) | Un archivo alterado a propósito es rechazado con mensaje claro |
 | 1.6 Catálogo local | Construir el árbol de cuentas desde el reporte (nivel 1 > 10 > 1000 > 1000001 > 1000001.001) | Todas las cuentas con movimiento existen en el árbol |
 | 1.7 Saldos mensuales | `saldo_mensual_cuenta` derivado y recalculable | Suma de saldos = suma de movimientos, propiedad verificada con `hypothesis` |
 | 1.8 API de carga segura | `POST` de archivo con validaciones (ver 8.5) | Archivos maliciosos rechazados; pruebas de tamaño, tipo y zip-bomb |

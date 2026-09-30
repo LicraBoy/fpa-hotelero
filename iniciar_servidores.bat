@@ -17,7 +17,9 @@ if not exist "%RAIZ%frontend\node_modules" (
   exit /b 1
 )
 
-start "FPA backend (8100)" cmd /k "cd /d %RAIZ%backend && .venv\Scripts\python.exe -m uvicorn fpa.main:app --reload --port 8100"
+REM Backend: aplica migraciones, siembra datos de desarrollo y arranca. FPA_ENTORNO=desarrollo
+REM habilita la identidad de desarrollo (cabecera X-Usuario-Dev); NUNCA usarlo fuera de local.
+start "FPA backend (8100)" cmd /k "cd /d %RAIZ%backend && set FPA_ENTORNO=desarrollo&& .venv\Scripts\alembic.exe upgrade head && .venv\Scripts\python.exe -m fpa.semilla && .venv\Scripts\python.exe -m uvicorn fpa.main:app --reload --port 8100"
 start "FPA frontend (5180)" cmd /k "cd /d %RAIZ%frontend && npm run dev"
 
 timeout /t 6 /nobreak >nul

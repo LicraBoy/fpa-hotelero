@@ -1,6 +1,4 @@
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from fpa.db import get_db
 from fpa.main import app
@@ -35,9 +33,13 @@ def test_ready_devuelve_503_sin_filtrar_detalle_si_la_bd_falla():
 
 
 def test_cors_solo_permite_el_frontend_local():
-    ok = client.options("/api/health", headers={
-        "Origin": "http://localhost:5180", "Access-Control-Request-Method": "GET"})
+    ok = client.options(
+        "/api/health",
+        headers={"Origin": "http://localhost:5180", "Access-Control-Request-Method": "GET"},
+    )
     assert ok.headers.get("access-control-allow-origin") == "http://localhost:5180"
-    ajeno = client.options("/api/health", headers={
-        "Origin": "http://sitio-malicioso.com", "Access-Control-Request-Method": "GET"})
+    ajeno = client.options(
+        "/api/health",
+        headers={"Origin": "http://sitio-malicioso.com", "Access-Control-Request-Method": "GET"},
+    )
     assert "access-control-allow-origin" not in ajeno.headers
