@@ -2,6 +2,14 @@
 
 ## Fase 1 (en curso)
 
+### 1.6 — Catálogo local (2026-09-30)
+- `CuentaLocal` (migración `0004`): código, descripción, clase, nivel, padre, `con_movimientos`, `es_titulo`, `sin_jerarquia`. Se acumula entre cargas y recalcula la jerarquía de todas las cuentas conocidas.
+- Padre = título más largo que sea prefijo del código (o el código base de una subcuenta con punto). Con el CON130 real: 145 títulos + 366 cuentas = 511 nodos, todas las cuentas con ancestro.
+- Un código puede ser cuenta con movimientos y título a la vez (`4002007`); el catálogo lo soporta.
+- `cargar_archivo` actualiza el catálogo en la misma transacción y usa las cuentas conocidas para avisar de cuentas nuevas.
+- `GET /api/v1/hoteles/{id}/catalogo/arbol` (permiso `catalogo:leer`, 404 para hoteles ajenos).
+- Pruebas: 150 pasan y 1 se salta.
+
 ### 1.5 — Calidad de datos (2026-09-30)
 - `fpa/calidad/evaluacion.py` (funciones puras): errores que rechazan la carga (errores de lectura, Débito ≠ Crédito en el CON130, total de cuenta que no coincide, fechas fuera del periodo del encabezado o del declarado) y avisos que se guardan (cuentas nuevas, filas repetidas, importes negativos, Débito y Crédito a la vez, asiento que no corresponde al mes, avisos del lector).
 - El reporte completo se guarda en `CargaArchivo.controles` y los rechazos explican qué falló y con ejemplos.

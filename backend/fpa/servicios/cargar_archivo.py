@@ -23,8 +23,10 @@ from fpa.ingesta.contrato import ResultadoLectura
 from fpa.modelos.base import ahora_utc
 from fpa.modelos.cargas import CargaArchivo, EstadoCarga
 from fpa.repositorios.cargas import RepositorioCargas
+from fpa.repositorios.catalogo import RepositorioCatalogo
 from fpa.servicios.auditoria import auditar
 from fpa.servicios.cargas import DatosArchivo, registrar_carga
+from fpa.servicios.catalogo import actualizar_catalogo
 
 
 class Resolucion(StrEnum):
@@ -117,6 +119,8 @@ def cargar_archivo(
         evento("carga.rechazada", None, {**base, "motivos": motivos[:10]})
         return ResultadoCarga(Resolucion.RECHAZADA, motivos=motivos)
 
+    if cuentas_conocidas is None:
+        cuentas_conocidas = RepositorioCatalogo(db, hotel_id).codigos_con_movimientos()
     reporte = evaluar(
         resultado, periodos_esperados=periodos_esperados, cuentas_conocidas=cuentas_conocidas
     )
@@ -182,6 +186,9 @@ def cargar_archivo(
             resultado=filtrado,
             archivo=archivo,
             controles=controles,
+        )
+        actualizar_catalogo(
+            db, hotel_id=hotel_id, resultado=resultado, movimientos=filtrado.movimientos
         )
         por_periodo_nueva = {c.periodo: c for c in nuevas}
         for vieja in viejas:
