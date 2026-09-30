@@ -22,6 +22,14 @@ REM habilita la identidad de desarrollo (cabecera X-Usuario-Dev); NUNCA usarlo f
 start "FPA backend (8100)" cmd /k "cd /d %RAIZ%backend && set FPA_ENTORNO=desarrollo&& .venv\Scripts\alembic.exe upgrade head && .venv\Scripts\python.exe -m fpa.semilla && .venv\Scripts\python.exe -m uvicorn fpa.main:app --reload --port 8100"
 start "FPA frontend (5180)" cmd /k "cd /d %RAIZ%frontend && npm run dev"
 
-timeout /t 6 /nobreak >nul
+REM Espera a que la API responda (migrar + sembrar tarda unos segundos) antes de abrir el navegador.
+set INTENTOS=0
+:esperar
+curl -s -o nul http://127.0.0.1:8100/api/health && goto listo
+set /a INTENTOS+=1
+if %INTENTOS% GEQ 40 goto listo
+timeout /t 1 /nobreak >nul
+goto esperar
+:listo
 start "" http://localhost:5180
 endlocal
