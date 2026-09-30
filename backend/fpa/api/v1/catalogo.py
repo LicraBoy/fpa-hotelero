@@ -86,6 +86,7 @@ class RespuestaImportacion(BaseModel):
     titulos_con_nombre_nuevo: int
     fuera_del_catalogo: list[str]
     inactivas_con_movimientos: list[str]
+    ya_no_vienen: list[str]
     avisos: list[str]
     motivos: list[str]
 
@@ -101,6 +102,7 @@ def _vacia(motivos: list[str]) -> RespuestaImportacion:
         titulos_con_nombre_nuevo=0,
         fuera_del_catalogo=[],
         inactivas_con_movimientos=[],
+        ya_no_vienen=[],
         avisos=[],
         motivos=motivos,
     )
@@ -177,6 +179,7 @@ def importar_catalogo_oficial(
                     "creadas": resumen.creadas,
                     "actualizadas": resumen.actualizadas,
                     "fuera_del_catalogo": len(resumen.fuera_del_catalogo),
+                    "ya_no_vienen": len(resumen.ya_no_vienen),
                 },
             )
         db.commit()
@@ -202,6 +205,7 @@ def importar_catalogo_oficial(
             titulos_con_nombre_nuevo=resumen.titulos_con_nombre_nuevo,
             fuera_del_catalogo=resumen.fuera_del_catalogo[:200],
             inactivas_con_movimientos=resumen.inactivas_con_movimientos[:200],
+            ya_no_vienen=resumen.ya_no_vienen[:200],
             avisos=catalogo.avisos[:20],
             motivos=[],
         )

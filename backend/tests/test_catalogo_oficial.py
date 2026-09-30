@@ -168,6 +168,22 @@ def test_sin_catalogo_oficial_no_hay_esos_controles(db: Session, mundo: Mundo) -
     assert control(r, "cuentas_fuera_del_catalogo_oficial") is None
 
 
+def test_el_catalogo_acumula_las_cuentas_de_catalogos_anteriores(db: Session, mundo: Mundo) -> None:
+    """Cada catálogo es una foto de un mes: una cuenta que hoy no viene puede venir en otro."""
+    importar(db, mundo.hotel_a)
+    sin_sueldos = [f for f in catalogo_basico() if f[0] != "6009001"]
+    cargar(db, mundo, [mov("6009001.001", "SUELDOS")])  # con movimientos, como en el Variance
+    resumen = importar(db, mundo.hotel_a, sin_sueldos)
+    cat = RepositorioCatalogo(db, mundo.hotel_a).por_codigo()
+    sueldos = cat["6009001.001"]
+    assert sueldos.en_catalogo_oficial and sueldos.tipo == "Deudor"  # se conserva completa
+    assert sueldos.depto_ef == "MGT & CHECK IN" and sueldos.padre_codigo == "6009001"
+    assert sorted(resumen.ya_no_vienen) == ["6009001", "6009001.001"]
+    assert resumen.fuera_del_catalogo == []  # no es "desconocida": estuvo en un catálogo oficial
+    # y si un catálogo posterior la vuelve a traer, no cambia nada
+    assert not importar(db, mundo.hotel_a).hubo_cambios
+
+
 def test_el_catalogo_de_cada_hotel_es_independiente(db: Session, mundo: Mundo) -> None:
     importar(db, mundo.hotel_a)
     assert RepositorioCatalogo(db, mundo.hotel_b).todas() == []

@@ -278,7 +278,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | Contraloría | Año fiscal (julio–junio) y horizonte del forecast | 3, 8 |
 | Contraloría | Árbol oficial de departamentos y centros de costo | 2, 5, 7 |
 | Contraloría | Línea sin importe de agosto (fila 4389, "INCENTIVOS CHEF"): ¿cero o dato faltante? | 3 |
-| Contraloría | Por qué 87 cuentas del Variance (ej. `4001004.004`, `4002003`, `6003001.013`) no están en el catálogo de septiembre | 2 |
+| Contraloría | Por qué 87 cuentas del Variance (el catálogo ahora acumula: al importar los de otros meses deberían cubrirse; las que sigan faltando se le preguntan) (ej. `4001004.004`, `4002003`, `6003001.013`) no están en el catálogo de septiembre | 2 |
 | Contraloría | Significado de `Aux = S` y `DPTO. TI` del catálogo; catálogo de Puerto Vallarta para medir el ~70 % de coincidencia | 2, 11 |
 | TI | Dónde se aloja, proveedor de identidad, PostgreSQL u Oracle, respaldos, antivirus | 5, 6 |
 | TI | Sistema de Recepción, compras/almacén y encuestas: formatos y acceso | 9, 14, 15 |

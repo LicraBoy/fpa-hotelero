@@ -102,6 +102,10 @@ export function ImportarCatalogo({ hotelId, alCambiar }: { hotelId: number; alCa
             titulo="Cuentas inactivas que tienen movimientos"
             codigos={resultado.cuerpo.inactivas_con_movimientos}
           />
+          <Lista
+            titulo="Estaban en un catálogo anterior y este no las trae (se conservan)"
+            codigos={resultado.cuerpo.ya_no_vienen}
+          />
           <Lista titulo="Avisos" codigos={resultado.cuerpo.avisos} />
         </div>
       )}

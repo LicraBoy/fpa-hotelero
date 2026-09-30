@@ -2,6 +2,9 @@
 
 ## Fase 1 (en curso)
 
+### Catálogo acumulativo (2026-09-30)
+- Cada catálogo CON020 es la foto de un mes: una cuenta que ya estuvo en un catálogo oficial se conserva (con tipo, departamento y SAT) aunque el siguiente no la traiga. Se avisa en `ya_no_vienen`; `fuera_del_catalogo` solo lista las que nunca estuvieron en uno oficial. Pruebas: 240 backend.
+
 ### 1.9 — Catálogo oficial de cuentas, CON020 (2026-09-30)
 - Lector `.xls` (`xlrd`, solo lectura) del reporte "Catálogo Contable" de Novohit: ignora los encabezados que se repiten por página, normaliza títulos con letras espaciadas (`B A N C O S` → `BANCOS`) y corrige la Ñ exportada como `¥`.
 - `cuenta_local` ampliada (migración `0006`): TIPO (Deudor/Acreedor), grupo del estado financiero, departamento, DPTO. TI, cuenta de terceros, código SAT, auxiliar, activa y `en_catalogo_oficial`.

@@ -102,6 +102,7 @@ export interface RespuestaImportacion {
   titulos_con_nombre_nuevo: number
   fuera_del_catalogo: string[]
   inactivas_con_movimientos: string[]
+  ya_no_vienen: string[]
   avisos: string[]
   motivos: string[]
 }

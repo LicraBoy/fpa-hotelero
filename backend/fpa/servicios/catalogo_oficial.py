@@ -3,6 +3,10 @@
 El catálogo oficial manda en nombre, tipo (Deudor/Acreedor) y clasificaciones. Las cuentas que el
 hotel ya conocía solo por sus movimientos se conservan y se marcan como fuera del catálogo oficial.
 Es idempotente: importar el mismo contenido otra vez no cambia nada.
+
+**Acumula entre catálogos:** cada catálogo es una foto de un mes y una cuenta que hoy no aparece
+puede venir en otro. Por eso una cuenta que ya estuvo en un catálogo oficial se conserva (con su
+tipo, departamento y demás datos) aunque el siguiente no la traiga; solo se avisa.
 """
 
 from __future__ import annotations
@@ -28,6 +32,8 @@ class ResumenImportacion:
     titulos_con_nombre_nuevo: int = 0
     fuera_del_catalogo: list[str] = field(default_factory=list)
     inactivas_con_movimientos: list[str] = field(default_factory=list)
+    # Estaban en un catálogo oficial anterior y este no las trae: se conservan
+    ya_no_vienen: list[str] = field(default_factory=list)
 
     @property
     def hubo_cambios(self) -> bool:
@@ -83,7 +89,9 @@ def importar_catalogo(
             "es_titulo": codigo in codigos_titulo,
             "con_movimientos": con_movimientos,
             "sin_jerarquia": con_movimientos and padre is None,
-            "en_catalogo_oficial": oficial is not None or codigo in titulos,
+            "en_catalogo_oficial": oficial is not None
+            or codigo in titulos
+            or (fila is not None and fila.en_catalogo_oficial),
         }
         if oficial is not None:
             valores.update(
@@ -130,8 +138,15 @@ def importar_catalogo(
         else:
             resumen.sin_cambio += 1
 
+        if (
+            fila is not None
+            and fila.en_catalogo_oficial
+            and oficial is None
+            and codigo not in titulos
+        ):
+            resumen.ya_no_vienen.append(codigo)
         if fila is not None and fila.con_movimientos:
-            if oficial is None and codigo not in titulos:
+            if oficial is None and codigo not in titulos and not fila.en_catalogo_oficial:
                 resumen.fuera_del_catalogo.append(codigo)
             elif oficial is not None and not oficial.activa:
                 resumen.inactivas_con_movimientos.append(codigo)

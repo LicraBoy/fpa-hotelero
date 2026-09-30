@@ -61,6 +61,7 @@
 - Un mismo código puede ser a la vez cuenta con movimientos y título de grupo (`4002007`: cuenta en julio–agosto, título en septiembre): el catálogo guarda `con_movimientos` y `es_titulo` por separado. Las subcuentas con punto (`X.NNN`) cuelgan de su código base si se conoce.
 - Existe una línea sin Débito ni Crédito en el Variance (fila 4389, "INCENTIVOS CHEF", agosto): se conserva en cero con aviso; **por confirmar con Contraloría** si es un cero o un dato faltante.
 - **Catálogo oficial (CON020, 30/09/2026):** 1,238 cuentas y 68 títulos con nombre. Cubre las 366 cuentas del CON130 de septiembre (nombres idénticos) y 209 de las 296 del Variance; **87 cuentas del Variance no están** (se avisan). Resuelve los 50 títulos que el CON130 no traía con nombre.
+- **El catálogo acumula entre meses:** cada CON020 es una foto mensual; las cuentas de catálogos anteriores se conservan y solo se avisa cuáles no vienen en el nuevo.
 - **El signo del Variance es la naturaleza de la cuenta (TIPO):** en las fórmulas del Excel toda cuenta Acreedor se resta (16/16) y toda Deudor se suma (187/187). Validado con una prueba; falta la confirmación de Contraloría.
 - **Departamentos:** los grupos de 4 dígitos de la clase 6 del catálogo son los departamentos del Variance (6009 Gerencia y Recepción, 6010 Ama de Llaves, 6011 Contabilidad, 6014 Restaurante, 6005 Bar…) y `DEPTO EdoFro` coincide con las secciones del reporte donde viene lleno.
 - **Puerto Vallarta:** catálogo propio por hotel; al llegar, se crea copiando el de Torres (~70 % coincide) y se ajusta (Fase 11).
