@@ -2,6 +2,12 @@
 
 ## Fase 1 (en curso)
 
+### 1.1 — Contrato común de lectura (2026-09-30)
+- `fpa/ingesta/contrato.py`: `Movimiento` (con `cantidad` y `costo` opcionales), `Cuenta`, `Titulo`, `ResultadoLectura` (periodos, rango de fechas, `controla_balance`) y `Fuente`.
+- `fpa/ingesta/utilidades.py`: conversiones comunes (montos con comas, fechas dd/mm/aaaa).
+- El lector del CON130 devuelve también los 145 títulos de la jerarquía de cuentas.
+- Pruebas: 62 pasan y 1 se salta.
+
 ### 1.0 — Cimientos de datos (2026-09-30)
 - Herramientas de calidad: `ruff` (estilo) y `mypy` estricto, configurados en `backend/pyproject.toml`.
 - Modelos `Organizacion`, `Hotel`, `Usuario`, `Rol`, `Asignacion` y el tipo `Dinero` (decimales exactos también en SQLite).
