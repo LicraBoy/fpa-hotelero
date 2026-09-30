@@ -1,0 +1,59 @@
+:root {
+  --fondo: #f6f8fb;
+  --texto: #1f2937;
+  --suave: #6b7280;
+  --borde: #d8dee8;
+  --ok: #1e6b3a;
+  --error: #b42318;
+  color-scheme: light dark;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0f172a;
+    --texto: #e5e7eb;
+    --suave: #9ca3af;
+    --borde: #334155;
+    --ok: #4ade80;
+    --error: #f87171;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+.pagina {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.sub {
+  margin: 4px 0 24px;
+  color: var(--suave);
+}
+
+.tarjeta {
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.ok {
+  color: var(--ok);
+  margin: 0;
+}
+
+.error {
+  color: var(--error);
+  margin: 0;
+}

@@ -1,0 +1,27 @@
+# Excel y datos reales de Torres: nunca al repositorio
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+!datos_prueba/**/*.csv
+
+# Secretos y bases locales
+.env
+*.db
+*.sqlite3
+storage/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log

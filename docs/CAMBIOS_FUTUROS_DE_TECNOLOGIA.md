@@ -1,0 +1,51 @@
+# Cambios futuros de tecnología
+
+La Fase 0 usa **lo mínimo para levantar el servidor**. Este documento dice qué cambiará después, cuándo y cómo, para hablarlo con TI y con Contraloría **antes** de hacerlo. Ningún cambio de esta lista se hace sin avisar y sin aprobación.
+
+Estados: `[DECIDIDO]` ya definido · `[PROPUESTA]` recomendación técnica · `[POR VALIDAR]` depende de TI o Contraloría.
+
+## 1. Base de datos (el cambio más importante)
+
+| | Hoy (Fase 0) | Futuro |
+|---|---|---|
+| Motor | **SQLite** (`sqlite:///./fpa_dev.db`) `[DECIDIDO]` para desarrollo y pruebas | **PostgreSQL 16+** en staging y producción `[PROPUESTA]`. Oracle solo si la política de TI lo exige `[POR VALIDAR]` |
+| Dónde se configura | Variable `FPA_DATABASE_URL` en `backend/.env` | La misma variable |
+| Migraciones | No hay tablas de negocio todavía | **Alembic** desde la sub-fase 1.0 |
+
+**Cómo se hará el cambio a PostgreSQL**
+1. Instalar el driver (`psycopg[binary]`) y cambiar `FPA_DATABASE_URL` a `postgresql+psycopg://usuario:clave@servidor:5432/fpa`.
+2. Agregar Alembic y crear la primera migración (sub-fase 1.0). Las tablas se crean con migraciones, no con `create_all`.
+3. Correr **las mismas pruebas en SQLite y en PostgreSQL**. SQLite puede ocultar diferencias (tipos, bloqueos, `ON CONFLICT`).
+4. Usar `NUMERIC(18,2)` para dinero. En Python siempre `Decimal`, nunca `float`.
+5. Para el aislamiento entre hoteles, activar **Row Level Security** en PostgreSQL (SQLite no lo tiene; se prueba solo ahí).
+
+**Qué no hay que hacer desde hoy:** escribir SQL propio de un solo motor, ni usar funciones exclusivas de SQLite. Todo acceso pasa por SQLAlchemy.
+
+## 2. Resto de cambios previstos
+
+| Tema | Hoy | Futuro | Cuándo `[PROPUESTA]` |
+|---|---|---|---|
+| Arranque | `iniciar_servidores.bat` (dos ventanas) | **Docker Compose** (API + PostgreSQL + frontend) | Cuando TI defina dónde se aloja; a más tardar en la Fase 6 |
+| Servidor de la API | `uvicorn --reload` (solo desarrollo) | Gunicorn con workers de Uvicorn detrás de un proxy con TLS (Nginx o Traefik) | Staging y producción |
+| Integración continua | Ninguna | CI con lint, tipos, pruebas en SQLite y PostgreSQL, `bandit`, `pip-audit`, `npm audit`, `gitleaks` | En cuanto exista el repositorio remoto que indique TI |
+| Calidad de código | Solo pruebas (`pytest`) | `ruff`, `mypy` estricto, ESLint y `pre-commit` | Al inicio de la Fase 1 (es barato y conviene temprano) |
+| Pruebas end-to-end | No hay | **Playwright** (TypeScript) | Con las primeras pantallas reales (Fase 4), o antes si se prefiere |
+| Autenticación | No hay (todo abierto, solo local) | OIDC con el proveedor de identidad de la empresa y MFA | Antes de exponer la plataforma a cualquier usuario; Fase 5 como máximo, `[POR VALIDAR con TI]` |
+| Autorización | No hay | Roles por hotel, deny by default, pruebas de matriz rol × endpoint | Fase 1.0 (base) y Fase 5 (completo) |
+| Separación por hotel | No hay | `organizacion_id` y `hotel_id` en cada tabla + RLS | Fase 1.0 |
+| Migraciones | No hay | Alembic | Fase 1.0 |
+| Tareas en segundo plano | No hay | Cola sobre PostgreSQL (Procrastinate); Celery + Redis solo si el volumen lo exige | Cuando una carga o exportación tarde demasiado |
+| Caché | No hay | Caché de reportes por clave (hotel, versiones, periodo); Redis solo si hace falta | Fase 4 (rendimiento) |
+| Archivos subidos | No hay | Almacenamiento fuera de la raíz web, hash SHA-256, límites de tamaño, sin macros | Fase 1.8 |
+| Secretos | Archivo `.env` local (no se sube) | Gestor de secretos de TI | Antes de producción |
+| Observabilidad | Logs de consola | Logs JSON con `request_id`, métricas y alertas (OpenTelemetry, Prometheus, Grafana) | Fase 6 |
+| Respaldos | No aplica | Respaldos cifrados y restauración probada | Fase 6 |
+| Componentes del frontend | Solo React + CSS propio | Una librería MIT (Mantine o MUI), TanStack Query, TanStack Table, cliente API generado desde OpenAPI | Fase 4 |
+| Lenguaje del backend | Python | Se mantiene; Java/Spring solo si TI lo exige `[POR VALIDAR]` | — |
+
+## 3. Avisos técnicos conocidos de hoy
+- Al correr las pruebas aparece una advertencia de Starlette sobre `httpx` (se sugiere `httpx2`). No afecta el funcionamiento; se revisa al actualizar dependencias.
+- El frontend se creó con la plantilla actual de Vite (React 19, TypeScript 6, Vite 8). Las versiones quedan fijas en `package-lock.json`.
+
+## 4. Regla para el equipo
+Antes de cambiar cualquiera de estas piezas: (1) se habla con TI/Contraloría, (2) se registra la decisión en `docs/adr/`, (3) se actualiza este documento y `docs/ESTADO_DEL_PROYECTO.md`.
