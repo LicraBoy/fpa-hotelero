@@ -345,7 +345,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 | 3.1 Budget como versión `[HECHO]` | Cargar Budget del Excel de agosto (mes, YTD, anual) como `version_plan` inmutable | El Budget cargado es idéntico al del Excel, línea por línea |
 | 3.2 Motor de Actual `[HECHO]` | `Actual(línea, mes)` desde movimientos + mapeo (función pura) | Pruebas unitarias con casos pequeños y propiedades (signo, suma) |
 | 3.3 YTD y año fiscal `[HECHO]` | Acumulado julio–junio | Fronteras: primer mes, cierre de año, mes sin datos |
-| 3.4 Totales y subtotales | Reglas de suma; Commercial Services (Net Income, Expenses, Profit, Allocations) | Totales iguales a los del reporte |
+| 3.4 Totales y subtotales `[HECHO]` | Reglas de suma; Commercial Services (Net Income, Expenses, Profit, Allocations) | Totales iguales a los del reporte |
 | 3.5 Variance y Variance % | Convención de signo configurable | División entre cero y presupuesto cero devuelven un valor definido, no error |
 | 3.6 **Prueba dorada: agosto 2026** | Reproducir columnas D a Q de la hoja `Ago` | **Diferencia cero** en las 253 líneas vinculadas y en los totales |
 | 3.7 Segunda prueba: septiembre 2026 | Mismo proceso con el CON130 y el Variance de septiembre | Diferencia cero |

@@ -33,6 +33,11 @@ HOJA = "Ago"
 
 _RE_CODIGO_CORPORATIVO = re.compile(r"^\d+(?:-\d+)+$")
 # "T o t a l   O t h e r": cada letra separada por un espacio
+# Fórmula que solo suma o resta otras filas de la columna S (`=S438`, `=SUM(S1:S5)`, `=S6-S7`)
+_REF_S = r"(?:SUM\(\s*S\d+\s*:\s*S\d+\s*\)|S\d+)"
+_RE_FORMULA_DE_SUMA = re.compile(
+    rf"^=\s*[+-]?\s*{_REF_S}(?:\s*[+-]\s*{_REF_S})*\s*$", re.IGNORECASE
+)
 _RE_ESPACIADO = re.compile(r"^(?:\S +){2,}\S")
 
 
@@ -147,7 +152,9 @@ def leer_variance_estructura_filas(filas: Sequence[Sequence[object]]) -> Resulta
     for n, fila in enumerate(filas[inicio:], start=inicio + 1):
         celdas = [*fila, *([None] * 19)][:19]
         b, c, d = a_texto(celdas[1]), a_texto(celdas[2]), celdas[3]
-        con_formula = isinstance(celdas[18], str) and celdas[18].startswith("=")
+        formula = celdas[18] if isinstance(celdas[18], str) else ""
+        con_formula = formula.startswith("=")
+        es_suma = _RE_FORMULA_DE_SUMA.match(formula) is not None
         if b is None and c is None:
             if d is not None:
                 sin_etiqueta.append(n)  # cifras sin nombre (p. ej. un porcentaje suelto)
@@ -172,6 +179,8 @@ def leer_variance_estructura_filas(filas: Sequence[Sequence[object]]) -> Resulta
                 tipo = TipoLinea.TOTAL if _es_total(texto) else TipoLinea.SUBTOTAL
             elif _es_total(texto):
                 tipo = TipoLinea.TOTAL
+            elif es_suma and d is not None:  # vínculo a otra línea (p. ej. `=S438`)
+                tipo = TipoLinea.SUBTOTAL
             else:
                 tipo = TipoLinea.INFORMATIVA
 

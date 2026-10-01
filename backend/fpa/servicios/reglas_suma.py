@@ -1,57 +1,20 @@
 """Reglas de suma del reporte: importarlas y evaluarlas.
 
-`evaluar_totales` es una función **pura y determinística** (Decimal): dados los valores de las
-líneas de detalle, calcula cada total y subtotal siguiendo sus reglas, en el orden que exijan las
-dependencias. Una regla que depende de sí misma (directa o indirectamente) es un error.
+El cálculo (`evaluar_totales`) vive en `fpa.calculo.totales` y se re-exporta aquí.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from decimal import Decimal
-
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
+from fpa.calculo.totales import CicloEnReglas, evaluar_totales
 from fpa.ingesta.variance_reglas import ResultadoReglas
 from fpa.modelos.reporte import LineaReporte, ReglaSumaLinea, VersionEstructuraReporte
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.servicios.auditoria import auditar
 
-CERO = Decimal("0")
-
-
-class CicloEnReglas(ValueError):
-    """Los totales se referencian en círculo y no se pueden calcular."""
-
-
-def evaluar_totales(
-    reglas: Mapping[int, Sequence[tuple[int, int]]],
-    valores: Mapping[int, Decimal],
-) -> dict[int, Decimal]:
-    """`reglas`: línea total -> [(línea componente, signo)]. `valores`: línea -> importe.
-
-    Devuelve el importe de cada línea con regla. Un componente sin valor ni regla cuenta 0.
-    """
-    resultado: dict[int, Decimal] = {}
-    en_curso: set[int] = set()
-
-    def valor(linea: int) -> Decimal:
-        if linea in resultado:
-            return resultado[linea]
-        if linea not in reglas:
-            return valores.get(linea, CERO)
-        if linea in en_curso:
-            raise CicloEnReglas(f"La línea {linea} depende de sí misma")
-        en_curso.add(linea)
-        total = sum((signo * valor(c) for c, signo in reglas[linea]), CERO)
-        en_curso.discard(linea)
-        resultado[linea] = total
-        return total
-
-    for linea in reglas:
-        valor(linea)
-    return resultado
+__all__ = ["CicloEnReglas", "evaluar_totales", "importar_reglas_suma", "reglas_como_mapa"]
 
 
 def importar_reglas_suma(

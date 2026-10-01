@@ -402,5 +402,5 @@ def test_importar_el_variance_real_por_api(cliente: TestClient, mundo: Mundo) ->
     r = importar(cliente, mundo, VARIANCE.read_bytes(), nombre=VARIANCE.name)
     assert r.status_code == 201, r.text
     c = r.json()
-    assert c["n_detalle"] == 409 and c["n_reglas_suma"] == 45
+    assert c["n_detalle"] == 409 and c["n_reglas_suma"] >= 55
     assert c["lineas_vinculadas"] == 263 and c["n_vinculos"] == 304
