@@ -158,7 +158,7 @@ export default function App() {
               )}
               {activa === 'variance' && (
                 <RutaProtegida rol={rol} permiso={permisoDeRuta(ruta) ?? 'variance:leer'}>
-                  <PanelVariance />
+                  <PanelVariance hotelId={hotel.id} rol={rol} />
                 </RutaProtegida>
               )}
               {activa === 'auditoria' && <PanelAuditoria hotelId={hotel.id} version={version} />}

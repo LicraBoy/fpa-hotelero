@@ -409,3 +409,168 @@ input[type='file'] {
   display: inline-block;
   width: 22px;
 }
+
+/* ---------- Variance ---------- */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: end;
+  margin: 0.75rem 0;
+}
+
+.filtros label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  color: var(--suave);
+}
+
+.filtros .casilla {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--texto);
+}
+
+.resumen-variance {
+  margin: 0.5rem 0;
+}
+
+.advertencias {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.nota-pie {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.tabla-variance-contenedor {
+  overflow: auto;
+  max-height: 70vh;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+}
+
+.tabla-variance {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-variance th,
+.tabla-variance td {
+  padding: 0.3rem 0.6rem;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+  white-space: nowrap;
+}
+
+.tabla-variance thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--neutro-fondo);
+  border-bottom: 2px solid var(--borde);
+  text-align: right;
+}
+
+.tabla-variance thead tr:nth-child(2) th {
+  top: 2.1rem;
+}
+
+.tabla-variance .grupo-bloque {
+  text-align: center;
+  border-left: 2px solid var(--borde);
+}
+
+.tabla-variance .col-linea {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 22rem;
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  font-weight: normal;
+  border-right: 2px solid var(--borde);
+}
+
+.tabla-variance thead .col-linea {
+  z-index: 4;
+}
+
+.tabla-variance .num {
+  text-align: right;
+}
+
+.tabla-variance .num:nth-child(5n + 2) {
+  border-left: 2px solid var(--borde);
+}
+
+.tabla-variance .desfavorable {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.tabla-variance .fila-seccion th {
+  background: var(--info-fondo);
+  font-weight: 600;
+}
+
+.tabla-variance .boton-seccion {
+  all: unset;
+  cursor: pointer;
+  color: var(--info);
+}
+
+.tabla-variance .boton-seccion:focus-visible,
+.tabla-variance-contenedor:focus-visible,
+.tabla-variance a:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
+}
+
+.tabla-variance .fila-total th,
+.tabla-variance .fila-total td,
+.tabla-variance .fila-subtotal th,
+.tabla-variance .fila-subtotal td {
+  font-weight: 700;
+  background: var(--neutro-fondo);
+}
+
+.tabla-variance .fila-total td,
+.tabla-variance .fila-total th {
+  border-top: 2px solid var(--texto);
+}
+
+.tabla-variance .fila-informativa th,
+.tabla-variance .fila-informativa td {
+  font-style: italic;
+  color: var(--suave);
+}
+
+.tabla-variance .codigo {
+  font-size: 0.75rem;
+}
+
+.tabla-variance a {
+  color: var(--primario);
+  text-decoration: underline dotted;
+}

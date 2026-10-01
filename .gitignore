@@ -28,3 +28,4 @@ Thumbs.db
 
 # Pruebas e2e: backend temporal
 .e2e/
+frontend/e2e/archivos/golden_real.json
