@@ -16,6 +16,8 @@ interface Props {
 }
 
 const ESPERA_BUSQUEDA_MS = 300
+// Texto con el que la API avisa que no hay mapeo aprobado (servicios/actual.py, version_de_mapeo)
+const SIN_MAPEO = /No hay un mapeo aprobado/
 
 /** Pantalla de Variance: el reporte del mes, el acumulado del año fiscal y el Budget anual. */
 function ReporteVariance({ hotelId, rol }: Props) {
@@ -33,9 +35,25 @@ function ReporteVariance({ hotelId, rol }: Props) {
         .reverse(),
     [cargas.datos],
   )
-  // El mes activo se deriva: el de la ruta si existe, si no el más reciente cargado.
+  // El Budget vigente dice de qué mes es el reporte armado: ahí hay mapeo, Budget y movimientos.
+  // Si ese mes no está entre los cargados, se usa el más reciente.
+  const presupuestos = useDatos(
+    () => obtenerTipado('/api/v1/hoteles/{hotel_id}/budget/versiones', { path: { hotel_id: hotelId } }),
+    [hotelId],
+  )
+  const mesDelBudget = useMemo(
+    () =>
+      (presupuestos.datos ?? [])
+        .filter((v) => v.estado === 'vigente')
+        .sort((a, b) => b.numero - a.numero)[0]?.periodo_corte,
+    [presupuestos.datos],
+  )
+  // El mes activo se deriva: el de la ruta si existe; si no, el del Budget vigente; si no, el más
+  // reciente cargado. Se espera a conocer el Budget para no abrir primero en otro mes.
+  const porOmision =
+    mesDelBudget && periodos.includes(mesDelBudget) ? mesDelBudget : (periodos[0] ?? '')
   const periodo =
-    rutaPeriodo && periodos.includes(rutaPeriodo) ? rutaPeriodo : (periodos[0] ?? '')
+    rutaPeriodo && periodos.includes(rutaPeriodo) ? rutaPeriodo : presupuestos.cargando ? '' : porOmision
 
   const [seccionId, setSeccionId] = useState<number | null>(null)
   const [soloTotales, setSoloTotales] = useState(false)
@@ -176,7 +194,18 @@ function ReporteVariance({ hotelId, rol }: Props) {
         <p className="suave">Aún no hay meses cargados: sube un archivo en la pestaña Cargas.</p>
       )}
       {variance.cargando && periodo !== '' && <Cargando texto="Calculando el reporte…" />}
-      {variance.error && <MensajeError texto={variance.error} />}
+      {variance.error &&
+        (SIN_MAPEO.test(variance.error) ? (
+          <div className="mensaje mensaje-aviso" role="alert">
+            <strong>Todavía no hay un reporte armado para este hotel.</strong> Falta un mapeo de
+            cuentas aprobado por Contraloría. Pídele a TI que cargue los datos (para la revisión de
+            agosto 2026: <code>python -m fpa.demo_agosto</code>) o a un analista que importe el
+            Excel del Variance para que el contralor lo apruebe. Si ya lo hicieron, recarga la
+            página.
+          </div>
+        ) : (
+          <MensajeError texto={variance.error} />
+        ))}
 
       {datos && (
         <>
