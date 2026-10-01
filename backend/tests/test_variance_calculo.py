@@ -43,11 +43,16 @@ def test_porcentaje_normal() -> None:
     assert variance_pct(D("-25"), D("100")) == D("-0.25")
 
 
-def test_porcentaje_usa_el_valor_absoluto_del_budget() -> None:
-    # Fila 530 del Excel: Budget −36,672 y Var −219,475 dan −5.98, no +5.98
-    assert variance_pct(D("-219475.364413557"), D("-36672.4955864428")) == pytest.approx(
-        D("-5.98474"), abs=D("0.00001")
-    )
+def test_porcentaje_con_budget_negativo_conserva_su_signo_como_el_excel() -> None:
+    # "Allocated Expenses": Budget −36,672 y Var −219,475 dan +5.98 en el reporte de Contraloría
+    resultado = variance_pct(D("-219475.364413557"), D("-36672.4955864428"))
+    assert resultado == pytest.approx(D("5.98474"), abs=D("0.00001"))
+
+
+def test_porcentaje_sobre_valor_absoluto_es_opcional() -> None:
+    resultado = variance_pct(D("-219475.36"), D("-36672.49"), base_absoluta=True)
+    assert resultado == pytest.approx(D("-5.98474"), abs=D("0.00001"))
+    assert variance_pct(D("25"), D("100"), base_absoluta=True) == D("0.25")
 
 
 @pytest.mark.parametrize(

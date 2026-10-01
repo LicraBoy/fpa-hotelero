@@ -72,7 +72,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 3.3 Acumulado y año fiscal `[HECHA]` | YTD desde julio hasta el mes de corte | Primer mes, cierre de año, mes sin datos |
 | 3.4 Totales y subtotales `[HECHA]` | Reglas de suma; resumen de Commercial Services (Net Income, Expenses, Profit, Allocations) | Totales iguales a los del reporte |
 | 3.5 Variance y Variance % `[HECHA]` | Convención de signo configurable | División entre cero y presupuesto cero devuelven un valor definido |
-| **3.6 Prueba dorada: agosto** | Reproducir las columnas D a Q de la hoja `Ago` | **Diferencia cero** en las 253 líneas vinculadas y en los totales |
+| **3.6 Prueba dorada: agosto** `[HECHA con excepciones documentadas]` | Reproducir las columnas D a Q de la hoja `Ago` | **Diferencia cero** en las 253 líneas vinculadas y en los totales |
 | 3.7 Segunda prueba: septiembre | Mismo proceso con el CON130 y el Variance de septiembre | Diferencia cero |
 
 **Salida:** el motor reproduce agosto sin ninguno de los 14 pasos manuales.

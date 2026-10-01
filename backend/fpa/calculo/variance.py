@@ -13,9 +13,11 @@ Se deduce de la propia estructura, sin tabla aparte, y se puede corregir línea 
 - total o subtotal: por la de su **primer componente positivo** (así `Profit = Ingresos − Gastos`
   sigue a los ingresos y `Total Gastos` a los gastos).
 
-**Variance %** = `Var / |Budget|`. Con Budget 0 no hay división: vale `+1` si el Variance es
-positivo, `−1` si es negativo y `0` si es cero (lo mismo que hace el reporte). Sin Budget
-(`None`) no hay Variance ni %: se devuelve `None`, nunca un cero inventado.
+**Variance %** = `Var / Budget` **con el signo del Budget**, igual que el reporte de Contraloría
+(así lo hacen ~970 de sus celdas; con un Budget negativo, como las "Allocated Expenses", el signo
+del % se invierte). `base_absoluta=True` lo cambia a `Var / |Budget|` **[POR VALIDAR]**. Con
+Budget 0 no hay división: vale `+1` si el Variance es positivo, `−1` si es negativo y `0` si es
+cero. Sin Budget (`None`) no hay Variance ni %: se devuelve `None`, nunca un cero inventado.
 
 Todo es **puro y determinístico** (`Decimal`).
 """
@@ -45,13 +47,15 @@ def variance(actual: Decimal, budget: Decimal | None, convencion: Convencion) ->
     return budget - actual
 
 
-def variance_pct(var: Decimal | None, budget: Decimal | None) -> Decimal | None:
-    """`Var / |Budget|`; con Budget 0, `+1`, `-1` o `0` según el signo del Variance."""
+def variance_pct(
+    var: Decimal | None, budget: Decimal | None, base_absoluta: bool = False
+) -> Decimal | None:
+    """`Var / Budget`; con Budget 0, `+1`, `-1` o `0` según el signo del Variance."""
     if var is None or budget is None:
         return None
     if budget == CERO:
         return UNO if var > CERO else -UNO if var < CERO else CERO
-    return var / abs(budget)
+    return var / (abs(budget) if base_absoluta else budget)
 
 
 @dataclass(frozen=True)

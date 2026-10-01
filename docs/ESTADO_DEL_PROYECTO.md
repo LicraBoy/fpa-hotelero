@@ -3,7 +3,7 @@
 Última actualización: 01-oct-2026
 
 ## Fase actual
-**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: sub-fases 2.1 a 2.6 HECHAS; falta la aprobación de Contraloría** (ver Pendientes). **Fase 3 — Motor de Variance: en curso** (3.1 a 3.5 hechas).
+**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: sub-fases 2.1 a 2.6 HECHAS; falta la aprobación de Contraloría** (ver Pendientes). **Fase 3 — Motor de Variance: en curso** (3.1 a 3.6 hechas).
 
 ## Avance por fase
 | Fase | Estado |
@@ -13,7 +13,7 @@
 | 0 Repositorio full stack (alcance básico) | **Hecha** |
 | **1 Data Hub: Actuals** | **Hecha** |
 | 2 Catálogo corporativo y mapeo | **Código listo** (2.1 a 2.6); falta aprobación de Contraloría |
-| 3 Motor de Variance | **En curso** (3.1 a 3.5 hechas) |
+| 3 Motor de Variance | **En curso** (3.1 a 3.6 hechas) |
 | 4 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
@@ -48,7 +48,8 @@
 | 3.3 YTD y año fiscal (`calculo/ano_fiscal.py`, `calculo/ytd.py`, `actual_ytd_del_periodo`) | **Hecha** |
 | 3.4 Totales y subtotales (`calculo/totales.py`: `evaluar_totales` movido aquí, `completar_con_totales`) | **Hecha** |
 | 3.5 Variance y Variance % (`calculo/variance.py`) | **Hecha** |
-| 3.6 Prueba dorada agosto · 3.7 Septiembre | Pendientes |
+| 3.6 Prueba dorada de agosto (`calculo/motor.py`, `servicios/variance.py`, `GET /hoteles/{id}/variance`, `tests/test_variance_dorada.py`) | **Hecha, con 19 excepciones documentadas** |
+| 3.7 Segunda prueba: septiembre | Pendiente |
 
 ## Frontend (Fase 1) y pruebas de navegador
 - Pantallas: **Cargas** (subir CON130 o Variance, aviso de reemplazo con confirmación, lista de cargas y su reporte de calidad), **Catálogo** (árbol con búsqueda), **Saldos** (por mes, con total exacto) y **Auditoría**. Cada rol ve solo sus secciones.
@@ -58,7 +59,7 @@
 - `npm run build` y `npm run lint` sin errores.
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **393 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **404 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -110,7 +111,9 @@
 
 - **Totales (3.4):** el evaluador de reglas pasó a `fpa/calculo/totales.py` (puro; `servicios/reglas_suma.py` lo re-exporta). **Corrección a la 2.1/2.2 que destapó la prueba real:** las 13 filas de Commercial Services de la forma `=S438` (Money Exchg Inc, Bar Income, Restrnt Expenses…) estaban clasificadas como "informativas" y quedaban sin regla; ahora son subtotales (vínculos) y las reglas pasaron de 45 a 58, así que Total Income, Total Expenses, Profit, Allocations y Net Profit Commercial Services ya se calculan. **Budget:** los totales calculados con las reglas coinciden con los pegados en el Excel (mes, YTD y anual, tolerancia 0.01). **Actual de agosto:** quedan 10 totales con diferencia en el mes y 5 en el YTD, todos explicados y fijados en `tests/test_totales.py` (25 ← fila 12; 294, 336, 533, 535, 573 ← cuentas fuera del Base de Datos; 451, 495, 497, 507 ← centavos). Un total que aparezca o desaparezca de esa lista hace fallar la prueba.
 
-- **Variance y % (3.5):** `variance(actual, budget, convención)` y `variance_pct` puros. **Convención favorable-positivo** (`[POR VALIDAR]`): ingresos y utilidades `Actual − Budget`, gastos `Budget − Actual`; se **deduce** sin tabla (detalle: signo mayoritario de sus cuentas de resultados, clases 4 a 6 — una cuenta de pasivo como el IVA por pagar no vuelve ingreso a la línea; sin cuentas: mayoría de su sección; total: su primer componente positivo) y se corrige con `excepciones` por línea. **% = Var / |Budget|**; Budget 0 → +1, −1 o 0 según el Variance (nunca error); sin Budget → `None`. Contra el Excel real (más de 600 comparaciones mes y YTD) la deducción coincide en todo salvo **fila 8** (tipo de cambio, no es dinero) y **fila 344 Telephone Profit** (el Excel la trata como gasto aunque es una utilidad; **pregunta para Contraloría**).
+- **Variance y % (3.5):** `variance(actual, budget, convención)` y `variance_pct` puros. **Convención favorable-positivo** (`[POR VALIDAR]`): ingresos y utilidades `Actual − Budget`, gastos `Budget − Actual`; se **deduce** sin tabla (detalle: signo mayoritario de sus cuentas de resultados, clases 4 a 6 — una cuenta de pasivo como el IVA por pagar no vuelve ingreso a la línea; sin cuentas: mayoría de su sección; total: su primer componente positivo) y se corrige con `excepciones` por línea. **% = Var / Budget con el signo del Budget** (así lo hace el Excel en ~970 celdas; `base_absoluta=True` da Var / |Budget|, por validar); Budget 0 → +1, −1 o 0 según el Variance (nunca error); sin Budget → `None`. Contra el Excel real (más de 600 comparaciones mes y YTD) la deducción coincide en todo salvo **fila 8** (tipo de cambio, no es dinero) y **fila 344 Telephone Profit** (el Excel la trata como gasto aunque es una utilidad; **pregunta para Contraloría**).
+
+- **Prueba dorada de agosto (3.6):** `calcular_variance` arma el reporte completo (mes, YTD y anual: Actual, Budget, Variance y %) y `GET /hoteles/{id}/variance?periodo=` lo entrega (importes a centavos, % a 6 decimales; permiso `variance:leer`). Contra la hoja `Ago` se comparan **5,822 celdas** (columnas D a Q de todas las líneas): cuadran todas salvo **19 líneas**, fijadas con su causa en `tests/test_variance_dorada.py` (una diferencia fuera de esa lista, o una excepción que deje de serlo, falla la prueba). De las 263 líneas con cuentas, **256 cuadran en las 12 columnas** (tolerancia 0.10 en importes —el Excel acumula centavos en sus columnas de control— y 1e-5 relativo en %). **Causas:** (a) el Base de Datos no trae el dato: fila 12 (el Excel deja fuera 5,000), IVA Taxes y Lodging Tax (cuentas de pasivo), Bank Commissions, Audit Fees e Income Taxes (cuentas corporativas), y los totales que arrastran (25, 294, 336, 533, 535, 573); Administration Fee y las dos "Allocated" (valores pegados sin fórmula); tipo de cambio (no es dinero); un residuo de un centavo en Employee Dining; (b) convenciones del Excel distintas de la regla general: Telephone Profit (344) se trata como gasto y el % de NET PROFIT COMMERCIAL SERVICES (530) usa |Budget|. **Hallazgo:** el Budget del mes y del YTD solo es válido para el corte del archivo; para otro periodo el motor devuelve solo el anual y avisa (nunca un cero inventado). **Corrección a lo dicho antes:** el YTD de las 10 líneas "solo en T" **sí** coincide con el Excel (incluye julio); no es una diferencia.
 
 ## Pendientes y avisos
 - No hay servidor remoto de código; lo define TI.
@@ -125,4 +128,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**Fase 3.6:** prueba dorada de agosto 2026 (motor completo + `GET /variance`, columnas D a Q contra la hoja `Ago`). Después 3.7. Pendientes de Contraloría que no bloquean: `4002013`/`4003003` sin línea, clave única de una línea, origen del Budget, año fiscal y convención de signo. La Fase 2 se cierra formalmente cuando Contraloría apruebe el mapeo.
+**Fase 3.7:** segunda prueba con septiembre (CON130 de septiembre; falta el Variance y el Budget de septiembre de Contraloría para comparar). Pendientes de Contraloría que no bloquean: `4002013`/`4003003` sin línea, clave única de una línea, origen del Budget, año fiscal y convención de signo. La Fase 2 se cierra formalmente cuando Contraloría apruebe el mapeo.

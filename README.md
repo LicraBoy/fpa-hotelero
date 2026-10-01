@@ -50,6 +50,7 @@ Una de las pruebas lee el Excel real de Torres si lo encuentra en la carpeta de 
 | `POST …/mapeo/versiones/{version}/aprobar` · `/descartar` | Aprobar (solo contralor; 409 si quedan cuentas con movimiento sin mapear) o descartar un borrador |
 | `POST /hoteles/{id}/budget/importar` | Cargar el Budget del Excel del Variance como versión inmutable (`periodo_corte`, `ano_fiscal`, `confirmar_reemplazo`) |
 | `GET /hoteles/{id}/budget/versiones`, `…/{version}` | Versiones del Budget y sus cifras por línea (mes, YTD, anual) |
+| `GET /hoteles/{id}/variance?periodo=AAAA-MM` | Variance del periodo (mes, YTD y anual: Actual, Budget, Variance y %), con el mapeo aprobado y el Budget vigente (`version_mapeo_id`, `version_plan_id` opcionales) |
 | `POST /hoteles/{id}/catalogo/importar` | Importar el catálogo oficial de Novohit (CON020, `.xls`) |
 | `GET /hoteles/{id}/catalogo/arbol` | Árbol de cuentas con nombres, Deudor/Acreedor, departamento y SAT |
 | `GET /hoteles/{id}/saldos?periodo=AAAA-MM` | Saldo por cuenta del periodo |
