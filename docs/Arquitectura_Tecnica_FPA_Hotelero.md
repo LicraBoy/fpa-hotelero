@@ -348,7 +348,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 | 3.4 Totales y subtotales `[HECHO]` | Reglas de suma; Commercial Services (Net Income, Expenses, Profit, Allocations) | Totales iguales a los del reporte |
 | 3.5 Variance y Variance % `[HECHO]` | Convención de signo configurable | División entre cero y presupuesto cero devuelven un valor definido, no error |
 | 3.6 `[HECHO]` **Prueba dorada: agosto 2026** | Reproducir columnas D a Q de la hoja `Ago` | **Diferencia cero** en las 253 líneas vinculadas y en los totales |
-| 3.7 Segunda prueba: septiembre 2026 | Mismo proceso con el CON130 y el Variance de septiembre | Diferencia cero |
+| 3.7 `[HECHO el arnés; falta el Excel de septiembre]` Segunda prueba: septiembre 2026 | Mismo proceso con el CON130 y el Variance de septiembre | Diferencia cero |
 
 **Salida:** el motor reproduce agosto cifra por cifra sin ninguno de los 14 pasos manuales. **Seguridad:** el motor no realiza E/S; entradas validadas.
 

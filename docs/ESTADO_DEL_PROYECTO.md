@@ -3,7 +3,7 @@
 Última actualización: 01-oct-2026
 
 ## Fase actual
-**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: sub-fases 2.1 a 2.6 HECHAS; falta la aprobación de Contraloría** (ver Pendientes). **Fase 3 — Motor de Variance: en curso** (3.1 a 3.6 hechas).
+**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: sub-fases 2.1 a 2.6 HECHAS; falta la aprobación de Contraloría** (ver Pendientes). **Fase 3 — Motor de Variance: sub-fases 3.1 a 3.7 hechas** (agosto reproducido con 19 excepciones documentadas; septiembre sin referencia de Contraloría todavía).
 
 ## Avance por fase
 | Fase | Estado |
@@ -13,7 +13,7 @@
 | 0 Repositorio full stack (alcance básico) | **Hecha** |
 | **1 Data Hub: Actuals** | **Hecha** |
 | 2 Catálogo corporativo y mapeo | **Código listo** (2.1 a 2.6); falta aprobación de Contraloría |
-| 3 Motor de Variance | **En curso** (3.1 a 3.6 hechas) |
+| 3 Motor de Variance | **Código listo** (3.1 a 3.7); falta el Excel de septiembre de Contraloría |
 | 4 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
@@ -49,7 +49,7 @@
 | 3.4 Totales y subtotales (`calculo/totales.py`: `evaluar_totales` movido aquí, `completar_con_totales`) | **Hecha** |
 | 3.5 Variance y Variance % (`calculo/variance.py`) | **Hecha** |
 | 3.6 Prueba dorada de agosto (`calculo/motor.py`, `servicios/variance.py`, `GET /hoteles/{id}/variance`, `tests/test_variance_dorada.py`) | **Hecha, con 19 excepciones documentadas** |
-| 3.7 Segunda prueba: septiembre | Pendiente |
+| 3.7 Segunda prueba: septiembre (`tests/test_variance_septiembre.py`: consistencia del YTD, Budget no inventado, validación; arnés de diferencia cero) | **Hecha el arnés; falta el Excel de septiembre** |
 
 ## Frontend (Fase 1) y pruebas de navegador
 - Pantallas: **Cargas** (subir CON130 o Variance, aviso de reemplazo con confirmación, lista de cargas y su reporte de calidad), **Catálogo** (árbol con búsqueda), **Saldos** (por mes, con total exacto) y **Auditoría**. Cada rol ve solo sus secciones.
@@ -59,7 +59,7 @@
 - `npm run build` y `npm run lint` sin errores.
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **404 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **408 pasan y 2 se saltan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -115,6 +115,8 @@
 
 - **Prueba dorada de agosto (3.6):** `calcular_variance` arma el reporte completo (mes, YTD y anual: Actual, Budget, Variance y %) y `GET /hoteles/{id}/variance?periodo=` lo entrega (importes a centavos, % a 6 decimales; permiso `variance:leer`). Contra la hoja `Ago` se comparan **5,822 celdas** (columnas D a Q de todas las líneas): cuadran todas salvo **19 líneas**, fijadas con su causa en `tests/test_variance_dorada.py` (una diferencia fuera de esa lista, o una excepción que deje de serlo, falla la prueba). De las 263 líneas con cuentas, **256 cuadran en las 12 columnas** (tolerancia 0.10 en importes —el Excel acumula centavos en sus columnas de control— y 1e-5 relativo en %). **Causas:** (a) el Base de Datos no trae el dato: fila 12 (el Excel deja fuera 5,000), IVA Taxes y Lodging Tax (cuentas de pasivo), Bank Commissions, Audit Fees e Income Taxes (cuentas corporativas), y los totales que arrastran (25, 294, 336, 533, 535, 573); Administration Fee y las dos "Allocated" (valores pegados sin fórmula); tipo de cambio (no es dinero); un residuo de un centavo en Employee Dining; (b) convenciones del Excel distintas de la regla general: Telephone Profit (344) se trata como gasto y el % de NET PROFIT COMMERCIAL SERVICES (530) usa |Budget|. **Hallazgo:** el Budget del mes y del YTD solo es válido para el corte del archivo; para otro periodo el motor devuelve solo el anual y avisa (nunca un cero inventado). **Corrección a lo dicho antes:** el YTD de las 10 líneas "solo en T" **sí** coincide con el Excel (incluye julio); no es una diferencia.
 
+- **Septiembre (3.7):** no hay Variance ni Budget de septiembre de Contraloría, así que **no se puede probar la "diferencia cero" de septiembre**; el arnés (`test_septiembre_contra_el_excel_de_contraloria`) se activa solo cuando haya un `*Variance*Sep*.xlsx` en la carpeta de datos reales. Con el CON130 de septiembre cargado se prueba lo que sí se puede: el acumulado julio–septiembre es **exactamente** el de agosto más el mes de septiembre en cada línea; el Budget del mes y del YTD no se inventa (solo el anual, con aviso); agosto no cambia al cargar septiembre. **Hallazgos:** (1) el mapeo de agosto no conoce **154 cuentas con movimiento en septiembre** (cuentas nuevas como `4001006.x` y `4003001.010`, un ingreso de ≈ 4.6 millones): hay que ampliar el mapeo con Contraloría antes de dar por bueno el Variance de septiembre, y la validación ya lo bloquea; (2) el CON130 de septiembre es **parcial** (262 cuentas de resultados con movimiento, de las que 108 están en el mapeo; p. ej. Salaries sale en 0 y IVA/Lodging Tax tampoco aparecen): si es el reporte completo del mes, falta confirmar con quién lo exporta.
+
 ## Pendientes y avisos
 - No hay servidor remoto de código; lo define TI.
 - **Salida de la Fase 1 verificada por la API con los Excel reales** (también en vivo con el servidor): CON130 septiembre = 7,242 movimientos (57,835,193.08); Variance = 3,583 (julio) + 3,277 (agosto); repetir un archivo no cambia nada; 366 saldos de septiembre; catálogo con 145 títulos + 554 cuentas con movimientos; un usuario de otro hotel recibe 404 en todo.
@@ -128,4 +130,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**Fase 3.7:** segunda prueba con septiembre (CON130 de septiembre; falta el Variance y el Budget de septiembre de Contraloría para comparar). Pendientes de Contraloría que no bloquean: `4002013`/`4003003` sin línea, clave única de una línea, origen del Budget, año fiscal y convención de signo. La Fase 2 se cierra formalmente cuando Contraloría apruebe el mapeo.
+**Para cerrar la Fase 3 (Contraloría):** (1) el Variance y el Budget de septiembre para la prueba de diferencia cero; (2) ampliar el mapeo con las 154 cuentas nuevas de septiembre; (3) confirmar las causas de las 19 excepciones de agosto (ver `FASES_FUTURAS.md`). Pendientes anteriores que siguen abiertos: `4002013`/`4003003` sin línea, clave única de una línea, origen del Budget, año fiscal julio–junio y convención de signo. Con eso, **Fase 4 — Reporting y frontend definitivo** (la API del Variance ya existe: `GET /hoteles/{id}/variance`).

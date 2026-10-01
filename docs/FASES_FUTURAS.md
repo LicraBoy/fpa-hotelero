@@ -73,7 +73,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 3.4 Totales y subtotales `[HECHA]` | Reglas de suma; resumen de Commercial Services (Net Income, Expenses, Profit, Allocations) | Totales iguales a los del reporte |
 | 3.5 Variance y Variance % `[HECHA]` | Convención de signo configurable | División entre cero y presupuesto cero devuelven un valor definido |
 | **3.6 Prueba dorada: agosto** `[HECHA con excepciones documentadas]` | Reproducir las columnas D a Q de la hoja `Ago` | **Diferencia cero** en las 253 líneas vinculadas y en los totales |
-| 3.7 Segunda prueba: septiembre | Mismo proceso con el CON130 y el Variance de septiembre | Diferencia cero |
+| 3.7 Segunda prueba: septiembre `[ARNÉS LISTO; falta el Excel de Contraloría]` | Mismo proceso con el CON130 y el Variance de septiembre | Diferencia cero |
 
 **Salida:** el motor reproduce agosto sin ninguno de los 14 pasos manuales.
 
@@ -276,6 +276,8 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 |---|---|---|
 | Contraloría | Confirmar que el signo es la naturaleza de la cuenta (Deudor suma, Acreedor resta; ya validado con el Excel) | 2, 3 |
 | Contraloría | Clave única de una línea del reporte | 2 |
+| Contraloría | **Septiembre:** el Variance y el Budget de septiembre (para la prueba de diferencia cero) y ampliar el mapeo: 154 cuentas con movimiento en septiembre no están en el mapeo de agosto (p. ej. `4003001.010`, ≈ −4.6 millones, y `4001006.x`) | 3.7 |
+| Contraloría | Fuera del Base de Datos de agosto: filas 12 (5,000), 272, 277, 285, 289, 292 y Administration Fee/Allocated pegadas; `Telephone Profit` (344) como gasto y % de la fila 530 con |Budget|: ¿intencional? | 3.6 |
 | Contraloría | Las cuentas `4002013` (−20,000 al mes) y `4003003` (≈ −2.9 a −3.2 millones al mes, julio y agosto) tienen movimientos pero **ninguna línea de la hoja `Ago` las toma**: ¿se excluyen a propósito del reporte o es una omisión? | 2 |
 | Contraloría | Origen, versión y responsable del Budget | 3, 7 |
 | Contraloría | Año fiscal (julio–junio) y horizonte del forecast | 3, 8 |
