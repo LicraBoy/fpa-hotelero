@@ -44,7 +44,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | Sub-fase | Qué se hace | Qué se prueba |
 |---|---|---|
 | 2.1 Estructura del reporte `[HECHA]` | Importar de la hoja `Ago` las secciones, líneas, orden y tipo (detalle, subtotal, total) | 409 líneas de detalle importadas en el mismo orden que el Excel |
-| 2.2 Reglas de suma | Modelar cómo se arma cada total (por ejemplo Total Operation Expenses = suma de 9 secciones) | Las reglas reproducen 3,711,624.81 |
+| 2.2 Reglas de suma `[HECHA]` | Modelar cómo se arma cada total (por ejemplo Total Operation Expenses = suma de 9 secciones) | Las reglas reproducen 3,711,624.81 |
 | 2.3 Mapeo | Importar de las columnas X a AJ: línea del reporte ↔ cuentas locales, con su signo | 253 líneas vinculadas; signos iguales a las fórmulas del Excel |
 | 2.4 Validación del mapeo | Reporte de cuentas con movimiento sin mapear y de cuentas mapeadas a más de una línea | Cero cuentas con Actual distinto de cero sin vínculo (como en agosto) |
 | 2.5 Versionado | Cada cambio del mapeo crea una versión; vigencia y auditoría | No se puede editar una versión aprobada |

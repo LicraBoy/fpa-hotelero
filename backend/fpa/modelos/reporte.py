@@ -66,3 +66,17 @@ class LineaReporte(Base):
     # Provisional hasta que Contraloría confirme la clave natural de una línea
     clave: Mapped[str] = mapped_column(String(120))
     fila_origen: Mapped[int] = mapped_column(Integer)
+
+
+class ReglaSumaLinea(Base):
+    """Un componente de un total o subtotal: `linea` = Σ signo × `componente`."""
+
+    __tablename__ = "regla_suma_linea"
+    __table_args__ = (UniqueConstraint("linea_id", "componente_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version_id: Mapped[int] = mapped_column(ForeignKey("version_estructura_reporte.id"), index=True)
+    hotel_id: Mapped[int] = mapped_column(ForeignKey("hotel.id"), index=True)
+    linea_id: Mapped[int] = mapped_column(ForeignKey("linea_reporte.id"))
+    componente_id: Mapped[int] = mapped_column(ForeignKey("linea_reporte.id"))
+    signo: Mapped[int] = mapped_column(Integer)  # +1 o -1

@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from fpa.modelos.reporte import LineaReporte, VersionEstructuraReporte
+from fpa.modelos.reporte import LineaReporte, ReglaSumaLinea, VersionEstructuraReporte
 
 
 class RepositorioReporte:
@@ -46,5 +46,17 @@ class RepositorioReporte:
                     LineaReporte.version_id == version_id, LineaReporte.hotel_id == self.hotel_id
                 )
                 .order_by(LineaReporte.orden)
+            )
+        )
+
+    def reglas(self, version_id: int) -> list[ReglaSumaLinea]:
+        return list(
+            self._db.scalars(
+                select(ReglaSumaLinea)
+                .where(
+                    ReglaSumaLinea.version_id == version_id,
+                    ReglaSumaLinea.hotel_id == self.hotel_id,
+                )
+                .order_by(ReglaSumaLinea.linea_id, ReglaSumaLinea.id)
             )
         )

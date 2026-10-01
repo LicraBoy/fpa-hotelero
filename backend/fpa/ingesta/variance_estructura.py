@@ -9,6 +9,7 @@ tiene encabezados fiables:
 - B: código corporativo (`029-0101-45010-000`, **se repite** entre líneas) o título de sección.
 - C: descripción de la línea, o texto del subtotal/total.
 - D: Actual del mes (solo se usa para distinguir una fila informativa de un título).
+- S: fórmula de control; con importe y fórmula es subtotal/total, sin fórmula es informativa.
 
 Solo se importa la **estructura** (qué líneas hay y en qué orden); las cifras y el mapeo a cuentas
 llegan en las sub-fases siguientes.
@@ -32,7 +33,7 @@ HOJA = "Ago"
 
 _RE_CODIGO_CORPORATIVO = re.compile(r"^\d+(?:-\d+)+$")
 # "T o t a l   O t h e r": cada letra separada por un espacio
-_RE_ESPACIADO = re.compile(r"^(?:\S ){2,}\S")
+_RE_ESPACIADO = re.compile(r"^(?:\S +){2,}\S")
 
 
 class TipoLinea(StrEnum):
@@ -113,7 +114,7 @@ def leer_variance_estructura(ruta: str | Path, hoja: str = HOJA) -> ResultadoEst
         try:
             if hoja not in wb.sheetnames:
                 raise ValueError(f'El libro no tiene la hoja "{hoja}"')
-            filas = [tuple(r) for r in wb[hoja].iter_rows(max_col=4, values_only=True)]
+            filas = [tuple(r) for r in wb[hoja].iter_rows(max_col=19, values_only=True)]
         finally:
             wb.close()
     return leer_variance_estructura_filas(filas)
@@ -130,8 +131,9 @@ def leer_variance_estructura_filas(filas: Sequence[Sequence[object]]) -> Resulta
     seccion_actual: int | None = None
     sin_etiqueta: list[int] = []
     for n, fila in enumerate(filas[inicio:], start=inicio + 1):
-        celdas = [*fila, None, None, None, None][:4]
+        celdas = [*fila, *([None] * 19)][:19]
         b, c, d = a_texto(celdas[1]), a_texto(celdas[2]), celdas[3]
+        con_formula = isinstance(celdas[18], str) and celdas[18].startswith("=")
         if b is None and c is None:
             if d is not None:
                 sin_etiqueta.append(n)  # cifras sin nombre (p. ej. un porcentaje suelto)
@@ -144,7 +146,12 @@ def leer_variance_estructura_filas(filas: Sequence[Sequence[object]]) -> Resulta
             texto = c or b
         elif b is not None and _es_espaciado(b):
             texto = normalizar_texto_espaciado(b)
-            tipo = TipoLinea.INFORMATIVA if d is not None else TipoLinea.SECCION
+            if d is None:
+                tipo = TipoLinea.SECCION
+            elif con_formula:  # subtotal con el título en la columna B (p. ej. PUERTO VALLARTA)
+                tipo = TipoLinea.TOTAL if _es_total(texto) else TipoLinea.SUBTOTAL
+            else:
+                tipo = TipoLinea.INFORMATIVA
         else:
             texto = normalizar_texto_espaciado(c or b or "")
             if _es_espaciado(c):
