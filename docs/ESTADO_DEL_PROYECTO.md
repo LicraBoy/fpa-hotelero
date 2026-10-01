@@ -14,7 +14,7 @@
 | **1 Data Hub: Actuals** | **Hecha** |
 | 2 Catálogo corporativo y mapeo | **Código listo** (2.1 a 2.6); falta aprobación de Contraloría |
 | 3 Motor de Variance | **Código listo** (3.1 a 3.7); falta el Excel de septiembre de Contraloría |
-| 4 Reporting y frontend | **En curso** (4.1 a 4.4 hechas) |
+| 4 Reporting y frontend | **En curso** (4.1 a 4.5 hechas) |
 | 5 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
@@ -59,14 +59,15 @@
 | 4.2 Drill-down (`servicios/drilldown.py`, `api/v1/drilldown.py`, permiso `drilldown:leer`) | **Hecha** |
 | 4.3 Base del frontend (tipos generados, ruteo por hash con rutas protegidas, CSP estricta, ADR 0004) | **Hecha** |
 | 4.4 Pantalla de Variance (`src/pantallas/variance/`) | **Hecha** |
-| 4.5 Drill-down en pantalla · 4.6 Exportación a Excel · 4.7 Rendimiento · 4.8 Pruebas con usuarios | Pendientes |
+| 4.5 Drill-down en pantalla (`Desglose`, `Movimientos`, `AsientoVista`) | **Hecha** |
+| 4.6 Exportación a Excel · 4.7 Rendimiento · 4.8 Pruebas con usuarios | Pendientes |
 
 ## Frontend (Fase 1) y pruebas de navegador
 - Pantallas: **Cargas** (subir CON130 o Variance, aviso de reemplazo con confirmación, lista de cargas y su reporte de calidad), **Catálogo** (árbol con búsqueda), **Saldos** (por mes, con total exacto) y **Auditoría**. Cada rol ve solo sus secciones.
 - Modo desarrollo: el usuario se elige en un selector (cabecera `X-Usuario-Dev`); se reemplazará por el inicio de sesión corporativo.
 - Importes siempre como texto exacto y sumas en centavos (`BigInt`); nunca `number`.
 - `cd frontend` y `npm run e2e`: **11 pruebas de Playwright pasan**. Levantan su propio backend limpio (8101, base temporal) y frontend (5181); no tocan la base ni los puertos de desarrollo.
-- `npm run build` y `npm run lint` sin errores. **Desde la 4.3:** `npm run test:unit` (29 pruebas con `node --test`, sin dependencias), `npm run api:tipos` (regenera los tipos del OpenAPI) y **28 pruebas de Playwright** que corren contra el **build de producción** servido con su CSP.
+- `npm run build` y `npm run lint` sin errores. **Desde la 4.3:** `npm run test:unit` (31 pruebas con `node --test`, sin dependencias), `npm run api:tipos` (regenera los tipos del OpenAPI) y **36 pruebas de Playwright** que corren contra el **build de producción** servido con su CSP.
 
 ## Cómo verificar
 - **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **483 pasan y 2 se saltan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
@@ -135,6 +136,8 @@
 
 - **Pantalla de Variance (4.4):** pestaña **Variance** (contralor, analista, dirección y auditoría): selector de mes (de las cargas vigentes), tabla con **descripción fija a la izquierda y encabezados fijos**, tres bloques (Mes · Acumulado del año fiscal · Presupuesto anual) × (Actual, Presupuesto, Variación, % var.), **secciones plegables** (al plegar quedan visibles sus totales y subtotales), totales y subtotales en negrita con borde, formato contable (miles, negativos entre paréntesis, `—` si no hay Budget) con cifras exactas formateadas sin `number`, **variación desfavorable marcada con ▼ y texto para lectores de pantalla (no solo con color)**, filtros (sección, texto con espera de 300 ms, solo totales), avisos del servidor (acumulado incompleto, Budget de otro corte, **cuentas excluidas a propósito**) y nota de la convención de signo. Las líneas informativas (tipo de cambio) muestran `—` en Actual, Variación y %, porque el motor no las calcula. Las cifras de Actual son enlaces al desglose solo si el rol tiene `drilldown:leer` (la pantalla del desglose es la 4.5). **Comparación contra el Excel de agosto:** con datos sintéticos (cifras conocidas, `variance.spec.ts`, 8 pruebas) y, si están los archivos reales, **`variance_real.spec.ts` importa el Excel real, aprueba el mapeo con las dos cuentas excluidas de forma provisional y compara en pantalla 14 líneas de referencia (12 cifras cada una) contra la hoja `Ago`: coinciden** (tolerancia 0.11); la captura queda en `frontend/test-results/variance_agosto_real.png` (no se versiona: trae cifras reales).
 
+- **Drill-down en pantalla (4.5):** desde cualquier cifra de **Actual** (mes o acumulado) → **cuentas** de la línea (con signo, neto y aporte) o **componentes** de un total (se puede bajar nivel por nivel hasta las cuentas) → **movimientos** de la cuenta de 50 en 50 con "Cargar más" (cursor) → **asiento**. Cada pantalla tiene su ruta por hash (copiable) y migas de pan. **Indicador de cuadre en cada paso, recalculado en el navegador con enteros exactos:** cifra del reporte = suma de las cuentas; neto de la cuenta = suma de los movimientos mostrados (mientras faltan por cargar dice "Faltan N"; al terminar, "Cuadra con el neto de la cuenta"). Los conceptos (los escribe un tercero) se muestran como texto: una prueba confirma que `<b>` no se interpreta. Sin `drilldown:leer` (dirección, responsable de área) no se monta nada ni se consulta. **Con agosto real:** "Cargar más" recorre todos los movimientos de una cuenta de cientos de filas sin repetir ninguno y cuadra con su neto. **Defectos que encontró la prueba (corregidos):** (1) sumas de **1,000 o más** se comparaban como texto con separadores de miles y rompían la pantalla: ahora se comparan en centavos enteros (`sumarCentavos`/`aTextoPlano`, con prueba); (2) al cambiar de usuario, durante la recarga el rol del anterior seguía decidiendo qué pantallas se montaban (el servidor igual respondía 403): ahora no hay hotel ni rol hasta que llegan los del nuevo usuario.
+
 ## Pendientes y avisos
 - No hay servidor remoto de código; lo define TI.
 - **Salida de la Fase 1 verificada por la API con los Excel reales** (también en vivo con el servidor): CON130 septiembre = 7,242 movimientos (57,835,193.08); Variance = 3,583 (julio) + 3,277 (agosto); repetir un archivo no cambia nada; 366 saldos de septiembre; catálogo con 145 títulos + 554 cuentas con movimientos; un usuario de otro hotel recibe 404 en todo.
@@ -148,4 +151,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**Fase 4.5:** pantalla de drill-down (cifra → cuentas → movimientos con "cargar más" → asiento) con indicador de cuadre y prueba end-to-end. Después 4.6 a 4.8. Pendientes de Contraloría que siguen abiertos: Variance y Budget de septiembre y ampliar el mapeo con 154 cuentas; causas de las 19 excepciones de agosto; `4002013`/`4003003`; clave única de línea; origen del Budget; año fiscal julio–junio; convención de signo; quién ve los movimientos.
+**Fase 4.6:** exportación a Excel (mismo formato del reporte, cifras iguales a la pantalla). Después 4.7 (caché y rendimiento) y 4.8 (guía y datos de demostración para la sesión con Contraloría). Pendientes de Contraloría que siguen abiertos: Variance y Budget de septiembre y ampliar el mapeo con 154 cuentas; causas de las 19 excepciones de agosto; `4002013`/`4003003`; clave única de línea; origen del Budget; año fiscal julio–junio; convención de signo; quién ve los movimientos.
