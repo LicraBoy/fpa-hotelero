@@ -79,7 +79,9 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 ---
 
-## Fase 4 — Reporting y frontend definitivo `[PENDIENTE]` (L)
+## Fase 4 — Reporting y frontend definitivo `[CÓDIGO LISTO; falta la sesión con Contraloría]` (L)
+
+**Estado (01-oct-2026):** 4.1 a 4.7 hechas y 4.8 preparada (datos de demostración, guía y plantilla de hallazgos). La Fase 4 se cierra cuando Contraloría haga la sesión y la lista de hallazgos Alta y Media quede cerrada (`docs/HALLAZGOS_CONTRALORIA.md`).
 
 **Objetivo:** la interfaz real. El frontend actual es provisional y solo sirve para ver la Fase 1.
 
@@ -92,7 +94,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 4.5 Drill-down en pantalla `[HECHA]` | Del número hasta el asiento | Prueba de navegador (Playwright) |
 | 4.6 Exportación a Excel `[HECHA]` | Mismo formato del reporte actual | El Excel exportado abre y coincide con la pantalla |
 | 4.7 Rendimiento `[HECHA]` | Caché de reportes y agregados | Variance mensual (~400 líneas) p95 < 500 ms con caché |
-| 4.8 Pruebas con usuarios | Sesión con Contraloría usando agosto | Lista de hallazgos cerrada |
+| 4.8 Pruebas con usuarios `[PREPARADA]` | Sesión con Contraloría usando agosto | Lista de hallazgos cerrada |
 
 ---
 
