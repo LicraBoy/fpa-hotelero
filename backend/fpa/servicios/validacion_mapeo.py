@@ -48,6 +48,8 @@ class ReporteMapeo:
     sin_catalogo: list[str] = field(default_factory=list)
     discrepancias_signo: list[dict[str, Any]] = field(default_factory=list)
     lineas_sin_cuentas: list[int] = field(default_factory=list)
+    # Cuentas con movimiento que se dejaron fuera a propósito (con motivo registrado)
+    excluidas_con_movimiento: list[str] = field(default_factory=list)
 
     @property
     def bloqueantes(self) -> list[str]:
@@ -84,6 +86,7 @@ class ReporteMapeo:
             "sin_catalogo": self.sin_catalogo,
             "discrepancias_signo": self.discrepancias_signo,
             "lineas_sin_cuentas": self.lineas_sin_cuentas,
+            "excluidas_con_movimiento": self.excluidas_con_movimiento,
         }
 
 
@@ -109,11 +112,14 @@ def validar_mapeo(
         )
     ).all()
     catalogo = {c.codigo: c for c in RepositorioCatalogo(db, hotel_id).todas()}
+    excluidas = {e.cuenta_codigo for e in repo.excluidas(version.id)}
     for saldo in sorted(saldos, key=lambda s: s.cuenta_codigo):
         if saldo.cuenta_codigo[:1] not in CLASES_DE_RESULTADOS:
             continue
         reporte.cuentas_con_movimiento += 1
-        if saldo.neto != CERO and saldo.cuenta_codigo not in por_cuenta:
+        if saldo.neto != CERO and saldo.cuenta_codigo in excluidas:
+            reporte.excluidas_con_movimiento.append(saldo.cuenta_codigo)
+        elif saldo.neto != CERO and saldo.cuenta_codigo not in por_cuenta:
             cuenta = catalogo.get(saldo.cuenta_codigo)
             reporte.sin_mapear.append(
                 CuentaSinMapear(

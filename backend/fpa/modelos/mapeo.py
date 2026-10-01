@@ -73,3 +73,22 @@ class MapeoLineaCuenta(Base):
     cuenta_codigo: Mapped[str] = mapped_column(String(40), index=True)
     signo: Mapped[int] = mapped_column(Integer)  # +1 o -1
     origen: Mapped[str] = mapped_column(String(10), default="excel")  # excel | manual
+
+
+class CuentaExcluidaMapeo(Base):
+    """Cuenta con movimientos que **a propósito** no entra a ninguna línea (con su motivo).
+
+    Sin esto, el mapeo no se podría aprobar mientras exista una cuenta sin vínculo; así la
+    decisión queda escrita, con quién la tomó y por qué.
+    """
+
+    __tablename__ = "cuenta_excluida_mapeo"
+    __table_args__ = (UniqueConstraint("version_mapeo_id", "cuenta_codigo"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version_mapeo_id: Mapped[int] = mapped_column(ForeignKey("version_mapeo.id"), index=True)
+    hotel_id: Mapped[int] = mapped_column(ForeignKey("hotel.id"), index=True)
+    cuenta_codigo: Mapped[str] = mapped_column(String(40))
+    motivo: Mapped[str] = mapped_column(String(500))
+    usuario_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), nullable=True)
+    creada_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ahora_utc)

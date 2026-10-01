@@ -334,7 +334,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 | 2.2 Reglas de suma `[HECHO]` | Modelar cómo se construye cada total (p. ej. Total Operation Expenses = suma de 9 secciones) | Reglas reproducen 3,711,624.81 |
 | 2.3 Mapeo `[HECHO]` | Importar de las columnas X a AJ: línea ↔ cuentas locales, con signo | 253 líneas vinculadas; signos iguales a las fórmulas del Excel |
 | 2.4 Validación del mapeo `[HECHO]` | Reporte de cuentas con movimiento sin mapear y de cuentas mapeadas a más de una línea | Cero cuentas con Actual ≠ 0 sin vínculo (como en agosto) |
-| 2.5 Versionado | Cada cambio crea nueva versión; vigencia; auditoría | No se puede editar una versión aprobada |
+| 2.5 Versionado `[HECHO]` | Cada cambio crea nueva versión; vigencia; auditoría | No se puede editar una versión aprobada |
 | 2.6 API de mapeo | Consulta y cambio con permiso de analista | Solo el rol autorizado cambia el mapeo; queda bitácora |
 
 **Salida:** mapeo completo y aprobado por Contraloría.

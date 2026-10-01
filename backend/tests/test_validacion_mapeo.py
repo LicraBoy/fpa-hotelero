@@ -217,3 +217,22 @@ def test_agosto_real_no_deja_cuentas_con_actual_sin_vinculo(db: Session, mundo: 
         # esta prueba debe actualizarse.
         assert [c.cuenta_codigo for c in r.sin_mapear] == ["4002013", "4003003"]
         assert r.discrepancias_signo == []
+
+    # Con las dos cuentas excluidas a propósito (decisión de Contraloría pendiente), se aprueba
+    from fpa.servicios.versionado_mapeo import aprobar, excluir_cuenta
+
+    kw: dict[str, int | None] = {
+        "organizacion_id": mundo.org1,
+        "hotel_id": mundo.hotel_a,
+        "usuario_id": None,
+    }
+    for cuenta in ("4002013", "4003003"):
+        excluir_cuenta(
+            db,
+            version_id=version.id,
+            cuenta_codigo=cuenta,
+            motivo="Prueba: sin línea en la hoja Ago, pendiente de Contraloría",
+            **kw,  # type: ignore[arg-type]
+        )
+    aprobada = aprobar(db, version_id=version.id, **kw)  # type: ignore[arg-type]
+    assert aprobada.estado == "aprobada"

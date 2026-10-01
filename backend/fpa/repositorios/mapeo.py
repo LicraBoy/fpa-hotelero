@@ -3,7 +3,13 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from fpa.modelos.mapeo import APROBADA, BORRADOR, MapeoLineaCuenta, VersionMapeo
+from fpa.modelos.mapeo import (
+    APROBADA,
+    BORRADOR,
+    CuentaExcluidaMapeo,
+    MapeoLineaCuenta,
+    VersionMapeo,
+)
 
 
 class RepositorioMapeo:
@@ -57,5 +63,17 @@ class RepositorioMapeo:
                     MapeoLineaCuenta.hotel_id == self.hotel_id,
                 )
                 .order_by(MapeoLineaCuenta.linea_id, MapeoLineaCuenta.cuenta_codigo)
+            )
+        )
+
+    def excluidas(self, version_id: int) -> list[CuentaExcluidaMapeo]:
+        return list(
+            self._db.scalars(
+                select(CuentaExcluidaMapeo)
+                .where(
+                    CuentaExcluidaMapeo.version_mapeo_id == version_id,
+                    CuentaExcluidaMapeo.hotel_id == self.hotel_id,
+                )
+                .order_by(CuentaExcluidaMapeo.cuenta_codigo)
             )
         )

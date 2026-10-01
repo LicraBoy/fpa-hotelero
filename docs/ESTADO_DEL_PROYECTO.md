@@ -3,7 +3,7 @@
 Última actualización: 01-oct-2026
 
 ## Fase actual
-**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: en curso** (2.1 a 2.4 hechas; sigue 2.5).
+**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: en curso** (2.1 a 2.5 hechas; sigue 2.6).
 
 ## Avance por fase
 | Fase | Estado |
@@ -12,7 +12,7 @@
 | Arquitectura técnica v1.0 | Hecha (`docs/Arquitectura_Tecnica_FPA_Hotelero.md`) |
 | 0 Repositorio full stack (alcance básico) | **Hecha** |
 | **1 Data Hub: Actuals** | **Hecha** |
-| 2 Catálogo corporativo y mapeo | **En curso** (2.1 a 2.4 hechas) |
+| 2 Catálogo corporativo y mapeo | **En curso** (2.1 a 2.5 hechas) |
 | 3 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
@@ -36,7 +36,8 @@
 | 2.2 Reglas de suma (`variance_reglas.py`, `ReglaSumaLinea`, migración `0008`, `evaluar_totales` pura) | **Hecha** |
 | 2.3 Mapeo línea ↔ cuenta (`variance_mapeo.py`, `VersionMapeo` + `MapeoLineaCuenta`, migración `0009`, `importar_mapeo`, `discrepancias_de_signo`) | **Hecha** |
 | 2.4 Validación del mapeo (`servicios/validacion_mapeo.py`, `validar_mapeo` → `ReporteMapeo`) | **Hecha** |
-| 2.5 Versionado · 2.6 API | Pendientes |
+| 2.5 Versionado y aprobación (`servicios/versionado_mapeo.py`, `CuentaExcluidaMapeo`, migración `0010`) | **Hecha** |
+| 2.6 API | Pendiente |
 
 ## Frontend (Fase 1) y pruebas de navegador
 - Pantallas: **Cargas** (subir CON130 o Variance, aviso de reemplazo con confirmación, lista de cargas y su reporte de calidad), **Catálogo** (árbol con búsqueda), **Saldos** (por mes, con total exacto) y **Auditoría**. Cada rol ve solo sus secciones.
@@ -46,7 +47,7 @@
 - `npm run build` y `npm run lint` sin errores.
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **280 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **291 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -86,6 +87,8 @@
 
 - **Validación (2.4):** solo mira cuentas de resultados (clases 4, 5, 6) con neto ≠ 0 y devuelve: sin mapear (**bloqueante**), cuentas en varias líneas (informativo), sin catálogo, discrepancias de signo y líneas sin cuentas. **Hallazgo real:** en julio y agosto, `4002013` (−20,000) y `4003003` (≈ −2.9 y −3.2 millones) tienen movimientos y ninguna línea de `Ago` las toma (existen como hojas de trabajo pero ningún total las cita). Todo lo demás cuadra y no hay discrepancias de signo. La prueba real fija ese resultado; **pregunta abierta a Contraloría** (ver `FASES_FUTURAS.md`). Para poder aprobar mientras tanto, la 2.5 permite registrar una cuenta como **excluida a propósito**, con motivo y auditoría.
 
+- **Versionado (2.5):** estados `borrador` → `aprobada` → `reemplazada` (o `descartada`); un borrador y una aprobada por hotel, también por índice en la base. Solo se edita un borrador (agregar/quitar vínculo, cambiar signo, excluir cuenta); una aprobada lanza `VersionInmutable` y se cambia copiándola a un borrador nuevo (`crear_borrador_desde`). `aprobar` valida contra todos los periodos con movimientos y se bloquea si queda una cuenta con movimiento sin mapear; para dejar una fuera **a propósito** se registra como cuenta excluida (motivo, usuario, fecha; queda en la bitácora). Con los Excel reales, excluir `4002013` y `4003003` permite aprobar el mapeo de agosto; esa exclusión es provisional hasta la respuesta de Contraloría.
+
 ## Pendientes y avisos
 - No hay servidor remoto de código; lo define TI.
 - **Salida de la Fase 1 verificada por la API con los Excel reales** (también en vivo con el servidor): CON130 septiembre = 7,242 movimientos (57,835,193.08); Variance = 3,583 (julio) + 3,277 (agosto); repetir un archivo no cambia nada; 366 saldos de septiembre; catálogo con 145 títulos + 554 cuentas con movimientos; un usuario de otro hotel recibe 404 en todo.
@@ -99,4 +102,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**Fase 2.5:** versionado y aprobación del mapeo (incluye cuentas excluidas a propósito). Después (mapeo desde las columnas X a AJ con su signo), 2.4 a 2.6. Antes, confirmar con Contraloría la clave única de una línea y el origen del Budget (el signo ya lo respalda el TIPO de cuenta del catálogo oficial).
+**Fase 2.6:** API del mapeo (permisos, rutas, subida del Excel). Después (mapeo desde las columnas X a AJ con su signo), 2.4 a 2.6. Antes, confirmar con Contraloría la clave única de una línea y el origen del Budget (el signo ya lo respalda el TIPO de cuenta del catálogo oficial).
