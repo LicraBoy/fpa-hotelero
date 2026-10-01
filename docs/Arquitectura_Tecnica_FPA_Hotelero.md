@@ -357,7 +357,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 |---|---|---|
 | 4.1 Endpoints de reporte `[HECHO]` | Variance por periodo y sección; filtros | Contrato OpenAPI; pruebas con Schemathesis |
 | 4.2 Drill-down `[HECHO]` | Línea → cuentas locales → movimientos, paginado por cursor | La suma de los movimientos mostrados = cifra de origen |
-| 4.3 Base del frontend | React + TS, rutas protegidas, cliente generado de OpenAPI | Sin acceso a pantallas sin rol; tipos sin `any` |
+| 4.3 Base del frontend `[HECHO]` | React + TS, rutas protegidas, cliente generado de OpenAPI | Sin acceso a pantallas sin rol; tipos sin `any` |
 | 4.4 Pantalla de Variance | Tabla por secciones con subtotales, formato contable, columnas fijas | Comparación visual y de valores contra el Excel de agosto |
 | 4.5 Pantalla de drill-down | Navegación desde la cifra hasta el asiento | Prueba end-to-end con Playwright |
 | 4.6 Exportación a Excel | Mismo formato del reporte actual | El Excel exportado abre y sus cifras coinciden con la pantalla |

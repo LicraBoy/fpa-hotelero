@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { obtener } from '../api/cliente'
-import type { Carga, CargaDetalle } from '../api/tipos'
+import { obtenerTipado } from '../api/cliente'
 import { useDatos } from '../api/useDatos'
 import { formatoDinero } from '../util/dinero'
 import { Cargando, Insignia, MensajeError } from './Insignia'
@@ -22,7 +21,7 @@ interface Props {
 export function PanelCargas({ hotelId, puedeCargar, version, alCambiar }: Props) {
   const [seleccionada, setSeleccionada] = useState<number | null>(null)
   const cargas = useDatos(
-    () => obtener<Carga[]>(`/hoteles/${hotelId}/cargas`),
+    () => obtenerTipado('/api/v1/hoteles/{hotel_id}/cargas', { path: { hotel_id: hotelId } }),
     [hotelId, version],
   )
 
@@ -87,7 +86,9 @@ export function PanelCargas({ hotelId, puedeCargar, version, alCambiar }: Props)
 
 function DetalleCarga({ hotelId, cargaId }: { hotelId: number; cargaId: number }) {
   const detalle = useDatos(
-    () => obtener<CargaDetalle>(`/hoteles/${hotelId}/cargas/${cargaId}`),
+    () => obtenerTipado('/api/v1/hoteles/{hotel_id}/cargas/{carga_id}', {
+        path: { hotel_id: hotelId, carga_id: cargaId },
+      }),
     [hotelId, cargaId],
   )
   if (detalle.cargando) return <Cargando />

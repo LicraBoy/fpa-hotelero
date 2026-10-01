@@ -16,7 +16,7 @@ Plataforma SaaS de FP&A para hoteles, independiente de PMS/ERP/POS. Primer hotel
 ## Cómo correrlo
 - Levantar todo: `iniciar_servidores.bat` (backend **8100**, frontend **5180**; no usar 8000/5173, son de otro sistema).
 - Pruebas: `cd backend` y `.venv\Scripts\python -m pytest`. Calidad: `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .` y `.venv\Scripts\mypy fpa` (deben quedar sin errores).
-- Pruebas de navegador: `cd frontend` y `npm run e2e` (Playwright; backend propio en 8101, base temporal). Siempre correrlas al tocar pantallas; `npm run build` y `npm run lint` deben quedar sin errores.
+- Pruebas de navegador: `cd frontend` y `npm run e2e` (Playwright; backend propio en 8101, base temporal; corre contra el **build de producción con su CSP**). Siempre correrlas al tocar pantallas; `npm run build`, `npm run lint` (incluye la verificación de seguridad) y `npm run test:unit` deben quedar sin errores. Si cambias la API: `npm run api:tipos` y commitea `src/api/openapi.json` y `schema.d.ts` (una prueba del backend lo exige).
 - Base de datos: `.venv\Scripts\alembic upgrade head` (migraciones) y `.venv\Scripts\python -m fpa.semilla` (datos de desarrollo). Si cambias un modelo, genera la migración con `alembic revision --autogenerate`.
 - Identidad de desarrollo: `FPA_ENTORNO=desarrollo` y cabecera `X-Usuario-Dev: analista@torres.local` (por defecto el entorno es `produccion` y nadie entra).
 - Primera vez: ver `README.md`.

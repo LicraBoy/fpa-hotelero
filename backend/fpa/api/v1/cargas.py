@@ -5,7 +5,7 @@ import re
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
@@ -67,8 +67,21 @@ class CargaSalida(BaseModel):
     reemplazada_por_id: int | None
 
 
+class ControlCalidadSalida(BaseModel):
+    codigo: str
+    severidad: Literal["ok", "aviso", "error"]
+    resumen: str
+    ejemplos: list[str]
+
+
+class ReporteCalidadSalida(BaseModel):
+    fuente: str | None
+    aprobado: bool
+    controles: list[ControlCalidadSalida]
+
+
 class CargaDetalle(CargaSalida):
-    controles: dict[str, Any] | None
+    controles: ReporteCalidadSalida | None
 
 
 class ConflictoSalida(BaseModel):
@@ -84,13 +97,13 @@ class ConflictoSalida(BaseModel):
 
 
 class RespuestaCarga(BaseModel):
-    resolucion: str
+    resolucion: Literal["creada", "duplicada", "requiere_confirmacion", "reemplazada", "rechazada"]
     cargas: list[CargaSalida]
     reemplazadas: list[CargaSalida]
     conflictos: list[ConflictoSalida]
     sin_cambio: list[str]
     motivos: list[str]
-    reporte: dict[str, Any] | None
+    reporte: ReporteCalidadSalida | None
 
 
 class EventoSalida(BaseModel):
@@ -130,7 +143,7 @@ def _respuesta(r: ResultadoCarga) -> RespuestaCarga:
         conflictos=[ConflictoSalida(**vars(c)) for c in r.conflictos],
         sin_cambio=r.sin_cambio,
         motivos=r.motivos,
-        reporte=r.reporte.a_dict() if r.reporte else None,
+        reporte=ReporteCalidadSalida.model_validate(r.reporte.a_dict()) if r.reporte else None,
     )
 
 
@@ -156,7 +169,16 @@ def _ruta_final(hotel_id: int, sha256: str) -> Path:
     return Path(settings.storage_dir) / "cargas" / str(hotel_id) / f"{sha256}.xlsx"
 
 
-@router.post("/hoteles/{hotel_id}/cargas")
+@router.post(
+    "/hoteles/{hotel_id}/cargas",
+    responses={
+        200: {"model": RespuestaCarga, "description": "El mismo archivo ya estaba cargado"},
+        201: {"model": RespuestaCarga, "description": "Carga creada o reemplazada"},
+        409: {"model": RespuestaCarga, "description": "Pide confirmar el reemplazo"},
+        413: {"description": "El archivo supera el tamaño máximo"},
+        415: {"description": "No es un libro .xlsx válido o trae macros"},
+    },
+)
 def subir_carga(
     request: Request,
     contexto: Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.CARGA_CREAR))],
@@ -263,7 +285,10 @@ def detalle_carga(
     carga = RepositorioCargas(db, contexto.hotel_id).obtener(carga_id)
     if carga is None:
         raise HTTPException(status_code=404, detail="Carga no encontrada")
-    return CargaDetalle(**_carga_salida(carga).model_dump(), controles=carga.controles)
+    return CargaDetalle(
+        **_carga_salida(carga).model_dump(),
+        controles=ReporteCalidadSalida.model_validate(carga.controles) if carga.controles else None,
+    )
 
 
 @router.get("/hoteles/{hotel_id}/auditoria", response_model=list[EventoSalida])

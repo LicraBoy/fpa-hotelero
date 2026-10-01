@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { fijarUsuarioDev, obtener } from './api/cliente'
-import type { Hotel } from './api/tipos'
+import { fijarUsuarioDev, obtenerTipado } from './api/cliente'
 import { useDatos } from './api/useDatos'
 import { EstadoApi } from './componentes/EstadoApi'
 import { Cargando, Insignia, MensajeError } from './componentes/Insignia'
@@ -8,19 +7,18 @@ import { PanelAuditoria } from './componentes/PanelAuditoria'
 import { PanelCargas } from './componentes/PanelCargas'
 import { PanelCatalogo } from './componentes/PanelCatalogo'
 import { PanelSaldos } from './componentes/PanelSaldos'
+import { PanelVariance } from './pantallas/variance/PanelVariance'
+import { RutaProtegida } from './ruta/RutaProtegida'
+import { permisoDeRuta } from './ruta/ruta'
+import { useRuta } from './ruta/useRuta'
 import { NOMBRE_ROL, USUARIOS_DESARROLLO, puede } from './permisos'
+import { guardarUsuarioDev, leerUsuarioDev } from './util/preferencias'
 
-type Pestana = 'cargas' | 'catalogo' | 'saldos' | 'auditoria'
-
-const CLAVE_USUARIO = 'fpa_usuario_dev'
+type Pestana = 'cargas' | 'catalogo' | 'saldos' | 'variance' | 'auditoria'
 
 function usuarioInicial(): string {
-  try {
-    const guardado = localStorage.getItem(CLAVE_USUARIO)
-    if (guardado && USUARIOS_DESARROLLO.some((u) => u.email === guardado)) return guardado
-  } catch {
-    // sin almacenamiento local (modo privado): se usa el predeterminado
-  }
+  const guardado = leerUsuarioDev()
+  if (guardado && USUARIOS_DESARROLLO.some((u) => u.email === guardado)) return guardado
   return USUARIOS_DESARROLLO[0].email
 }
 
@@ -34,7 +32,7 @@ export default function App() {
   const [pestana, setPestana] = useState<Pestana>('cargas')
   const [version, setVersion] = useState(0)
 
-  const hoteles = useDatos(() => obtener<Hotel[]>('/hoteles'), [usuario])
+  const hoteles = useDatos(() => obtenerTipado('/api/v1/hoteles', {}), [usuario])
 
   // El hotel activo se deriva: el elegido si sigue disponible, si no el primero del usuario.
   const hotel = hoteles.datos?.find((h) => h.id === hotelId) ?? hoteles.datos?.[0]
@@ -44,18 +42,23 @@ export default function App() {
     { id: 'cargas', nombre: 'Cargas', visible: puede(rol, 'carga:leer') || puede(rol, 'carga:crear') },
     { id: 'catalogo', nombre: 'Catálogo', visible: puede(rol, 'catalogo:leer') },
     { id: 'saldos', nombre: 'Saldos', visible: puede(rol, 'saldos:leer') },
+    { id: 'variance', nombre: 'Variance', visible: puede(rol, 'variance:leer') },
     { id: 'auditoria', nombre: 'Auditoría', visible: puede(rol, 'auditoria:leer') },
   ]
   const visibles = pestanas.filter((p) => p.visible)
-  const activa = visibles.some((p) => p.id === pestana) ? pestana : visibles[0]?.id
+  // Una ruta de Variance (#/variance/...) manda: abre esa pestaña aunque el rol no la tenga
+  // visible; `RutaProtegida` decide si se muestra o responde "Sin acceso" (sin consultar nada).
+  const { ruta } = useRuta()
+  const enRutaVariance = ['variance', 'desglose', 'cuenta', 'asiento'].includes(ruta.tipo)
+  const activa = enRutaVariance
+    ? 'variance'
+    : visibles.some((p) => p.id === pestana)
+      ? pestana
+      : visibles[0]?.id
 
   function cambiarUsuario(email: string) {
     fijarUsuarioDev(email) // antes de que los paneles vuelvan a consultar
-    try {
-      localStorage.setItem(CLAVE_USUARIO, email)
-    } catch {
-      // sin almacenamiento local: solo vale para esta sesión
-    }
+    guardarUsuarioDev(email)
     setUsuario(email)
     setHotelId(null)
   }
@@ -120,7 +123,10 @@ export default function App() {
                   type="button"
                   className={p.id === activa ? 'pestana activa' : 'pestana'}
                   aria-current={p.id === activa ? 'page' : undefined}
-                  onClick={() => setPestana(p.id)}
+                  onClick={() => {
+                    setPestana(p.id)
+                    window.location.hash = p.id === 'variance' ? '#/variance' : ''
+                  }}
                 >
                   {p.nombre}
                 </button>
@@ -149,6 +155,11 @@ export default function App() {
                   version={version}
                   puedeVerCargas={puede(rol, 'carga:leer')}
                 />
+              )}
+              {activa === 'variance' && (
+                <RutaProtegida rol={rol} permiso={permisoDeRuta(ruta) ?? 'variance:leer'}>
+                  <PanelVariance />
+                </RutaProtegida>
               )}
               {activa === 'auditoria' && <PanelAuditoria hotelId={hotel.id} version={version} />}
             </div>

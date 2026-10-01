@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { obtener } from '../api/cliente'
+import { obtenerTipado } from '../api/cliente'
 import type { NodoCatalogo } from '../api/tipos'
 import { useDatos } from '../api/useDatos'
 import { ImportarCatalogo } from './ImportarCatalogo'
@@ -38,7 +38,9 @@ interface Props {
 
 export function PanelCatalogo({ hotelId, version, puedeImportar, alCambiar }: Props) {
   const arbol = useDatos(
-    () => obtener<NodoCatalogo[]>(`/hoteles/${hotelId}/catalogo/arbol`),
+    () => obtenerTipado('/api/v1/hoteles/{hotel_id}/catalogo/arbol', {
+        path: { hotel_id: hotelId },
+      }),
     [hotelId, version],
   )
   const [consulta, setConsulta] = useState('')

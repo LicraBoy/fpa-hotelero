@@ -1,4 +1,8 @@
+import { credencialesActuales } from './sesion'
+import type { paths } from './schema'
 import type { Fuente, RespuestaCarga, RespuestaImportacion } from './tipos'
+
+export { fijarUsuarioDev } from './sesion'
 
 /** Error de la API con el código HTTP y un mensaje listo para mostrar. */
 export class ErrorApi extends Error {
@@ -12,17 +16,9 @@ export class ErrorApi extends Error {
   }
 }
 
-// Identidad de DESARROLLO: el backend acepta esta cabecera solo con FPA_ENTORNO=desarrollo.
-// Se reemplazará por el inicio de sesión corporativo (OIDC) cuando TI lo defina.
-let usuarioDev: string | null = null
-
-export function fijarUsuarioDev(email: string | null): void {
-  usuarioDev = email
-}
-
 function cabeceras(): Headers {
   const h = new Headers()
-  if (usuarioDev) h.set('X-Usuario-Dev', usuarioDev)
+  for (const [nombre, valor] of Object.entries(credencialesActuales())) h.set(nombre, valor)
   return h
 }
 
@@ -47,12 +43,52 @@ async function leerJson(r: Response): Promise<unknown> {
   }
 }
 
-export async function obtener<T>(ruta: string, parametros?: Record<string, string>): Promise<T> {
-  const consulta = parametros ? `?${new URLSearchParams(parametros).toString()}` : ''
-  const r = await fetch(`/api/v1${ruta}${consulta}`, { headers: cabeceras() })
+type Rutas = paths
+type RutaGet = {
+  [R in keyof Rutas]: Rutas[R] extends { get: { responses: { 200: unknown } } } ? R : never
+}[keyof Rutas]
+type ParametrosGet<R extends RutaGet> = Rutas[R] extends { get: { parameters: infer P } } ? P : never
+type ParteDe<P, K extends string> = P extends { [clave in K]?: infer V } ? NonNullable<V> : never
+type RespuestaGet<R extends RutaGet> = Rutas[R] extends {
+  get: { responses: { 200: { content: { 'application/json': infer T } } } }
+}
+  ? T
+  : never
+
+/** Opciones de una consulta: los parámetros de ruta y de query que el OpenAPI declara. */
+export type OpcionesGet<R extends RutaGet> = (ParteDe<ParametrosGet<R>, 'path'> extends never
+  ? { path?: undefined }
+  : { path: ParteDe<ParametrosGet<R>, 'path'> }) &
+  (ParteDe<ParametrosGet<R>, 'query'> extends never
+    ? { query?: undefined }
+    : { query?: ParteDe<ParametrosGet<R>, 'query'> })
+
+function armarUrl(ruta: string, path?: object, query?: object): string {
+  let url = ruta
+  for (const [clave, valor] of Object.entries(path ?? {})) {
+    url = url.replace(`{${clave}}`, encodeURIComponent(String(valor)))
+  }
+  const consulta = new URLSearchParams()
+  for (const [clave, valor] of Object.entries(query ?? {})) {
+    if (valor === undefined || valor === null) continue
+    for (const v of Array.isArray(valor) ? valor : [valor]) consulta.append(clave, String(v))
+  }
+  const texto = consulta.toString()
+  return texto ? `${url}?${texto}` : url
+}
+
+/**
+ * GET con tipos del OpenAPI: la ruta, sus parámetros y la forma de la respuesta se comprueban al
+ * compilar. Un cambio en la API que rompa a un llamador falla en `npm run build`.
+ */
+export async function obtenerTipado<R extends RutaGet>(
+  ruta: R,
+  opciones: OpcionesGet<R>,
+): Promise<RespuestaGet<R>> {
+  const r = await fetch(armarUrl(ruta, opciones.path, opciones.query), { headers: cabeceras() })
   const cuerpo = await leerJson(r)
   if (!r.ok) throw new ErrorApi(r.status, mensajeDeError(cuerpo, r.status))
-  return cuerpo as T
+  return cuerpo as RespuestaGet<R>
 }
 
 export interface DatosCarga {

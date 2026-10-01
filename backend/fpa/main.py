@@ -16,6 +16,7 @@ from fpa.api.v1 import (
     variance,
 )
 from fpa.config import settings
+from fpa.seguridad.cabeceras import CabecerasDeSeguridad
 
 
 def _openapi_con_errores_de_negocio(app: FastAPI) -> dict[str, Any]:
@@ -34,6 +35,7 @@ def _openapi_con_errores_de_negocio(app: FastAPI) -> dict[str, Any]:
 def crear_app() -> FastAPI:
     app = FastAPI(title=settings.app_nombre, version=settings.app_version)
     app.openapi = lambda: _openapi_con_errores_de_negocio(app)  # type: ignore[method-assign]
+    app.add_middleware(CabecerasDeSeguridad)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

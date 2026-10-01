@@ -109,7 +109,15 @@ def _vacia(motivos: list[str]) -> RespuestaImportacion:
     )
 
 
-@router.post("/hoteles/{hotel_id}/catalogo/importar")
+@router.post(
+    "/hoteles/{hotel_id}/catalogo/importar",
+    responses={
+        200: {"model": RespuestaImportacion, "description": "Sin cambios"},
+        201: {"model": RespuestaImportacion, "description": "Catálogo importado"},
+        413: {"description": "El archivo supera el tamaño máximo"},
+        415: {"description": "No es un libro .xls válido o trae macros"},
+    },
+)
 def importar_catalogo_oficial(
     contexto: Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.CATALOGO_IMPORTAR))],
     archivo: Annotated[UploadFile, File(description="Catálogo contable (CON020) en formato .xls")],

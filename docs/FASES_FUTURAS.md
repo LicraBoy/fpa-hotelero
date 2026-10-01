@@ -87,7 +87,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 |---|---|---|
 | 4.1 Endpoints de reporte `[HECHA]` | Variance por periodo y sección, con filtros | Contrato de la API; pruebas automáticas de entradas inválidas |
 | 4.2 Drill-down `[HECHA]` | Línea → cuentas → movimientos, paginado | La suma de los movimientos mostrados = la cifra de origen |
-| 4.3 Base del frontend | Elegir librería de componentes; rutas protegidas; cliente tipado | Sin acceso a pantallas sin rol |
+| 4.3 Base del frontend `[HECHA]` | Elegir librería de componentes; rutas protegidas; cliente tipado | Sin acceso a pantallas sin rol |
 | 4.4 Pantalla de Variance | Tabla por secciones con subtotales, formato contable, columnas fijas | Cifras en pantalla = Excel de agosto |
 | 4.5 Drill-down en pantalla | Del número hasta el asiento | Prueba de navegador (Playwright) |
 | 4.6 Exportación a Excel | Mismo formato del reporte actual | El Excel exportado abre y coincide con la pantalla |

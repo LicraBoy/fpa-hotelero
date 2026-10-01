@@ -31,10 +31,12 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      command: 'npm run dev',
+      // El build de producción servido con su CSP estricta (`vite preview`): cualquier script o
+      // estilo en línea rompe la prueba, igual que rompería en producción.
+      command: 'npm run build && npm run preview',
       url: 'http://localhost:5181',
       reuseExistingServer: false,
-      timeout: 60_000,
+      timeout: 120_000,
       env: { FPA_WEB_PUERTO: '5181', FPA_API_URL: 'http://127.0.0.1:8101' },
     },
   ],

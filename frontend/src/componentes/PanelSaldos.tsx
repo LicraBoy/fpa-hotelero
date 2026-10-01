@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
-import { obtener } from '../api/cliente'
-import type { Carga, Saldo } from '../api/tipos'
+import { obtenerTipado } from '../api/cliente'
 import { useDatos } from '../api/useDatos'
 import { formatoDinero, sumar } from '../util/dinero'
 import { Cargando, MensajeError } from './Insignia'
@@ -13,7 +12,7 @@ interface Props {
 
 export function PanelSaldos({ hotelId, version, puedeVerCargas }: Props) {
   const cargas = useDatos(
-    () => (puedeVerCargas ? obtener<Carga[]>(`/hoteles/${hotelId}/cargas`) : Promise.resolve([])),
+    () => (puedeVerCargas ? obtenerTipado('/api/v1/hoteles/{hotel_id}/cargas', { path: { hotel_id: hotelId } }) : Promise.resolve([])),
     [hotelId, version, puedeVerCargas],
   )
   const periodos = useMemo(
@@ -64,7 +63,10 @@ function TablaSaldos({
   version: number
 }) {
   const saldos = useDatos(
-    () => obtener<Saldo[]>(`/hoteles/${hotelId}/saldos`, { periodo }),
+    () => obtenerTipado('/api/v1/hoteles/{hotel_id}/saldos', {
+        path: { hotel_id: hotelId },
+        query: { periodo },
+      }),
     [hotelId, periodo, version],
   )
   const [consulta, setConsulta] = useState('')

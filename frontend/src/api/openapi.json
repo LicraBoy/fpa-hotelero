@@ -1,0 +1,4421 @@
+{
+  "components": {
+    "schemas": {
+      "AprobacionEntrada": {
+        "properties": {
+          "notas": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notas"
+          },
+          "periodos": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Periodos"
+          }
+        },
+        "title": "AprobacionEntrada",
+        "type": "object"
+      },
+      "AsientoSalida": {
+        "properties": {
+          "asiento": {
+            "title": "Asiento",
+            "type": "string"
+          },
+          "credito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Credito",
+            "type": "string"
+          },
+          "cuadra": {
+            "title": "Cuadra",
+            "type": "boolean"
+          },
+          "debito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debito",
+            "type": "string"
+          },
+          "movimientos": {
+            "items": {
+              "$ref": "#/components/schemas/MovimientoSalida"
+            },
+            "title": "Movimientos",
+            "type": "array"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "truncado": {
+            "title": "Truncado",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "asiento",
+          "periodo",
+          "debito",
+          "credito",
+          "cuadra",
+          "truncado",
+          "movimientos"
+        ],
+        "title": "AsientoSalida",
+        "type": "object"
+      },
+      "Body_importar_api_v1_hoteles__hotel_id__budget_importar_post": {
+        "properties": {
+          "ano_fiscal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Por omisión se deduce del corte",
+            "title": "Ano Fiscal"
+          },
+          "archivo": {
+            "contentMediaType": "application/octet-stream",
+            "description": "Excel del Variance (.xlsx), hoja `Ago`",
+            "title": "Archivo",
+            "type": "string"
+          },
+          "confirmar_reemplazo": {
+            "default": false,
+            "title": "Confirmar Reemplazo",
+            "type": "boolean"
+          },
+          "periodo_corte": {
+            "description": "AAAA-MM del archivo, p. ej. 2026-08",
+            "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+            "title": "Periodo Corte",
+            "type": "string"
+          }
+        },
+        "required": [
+          "archivo",
+          "periodo_corte"
+        ],
+        "title": "Body_importar_api_v1_hoteles__hotel_id__budget_importar_post",
+        "type": "object"
+      },
+      "Body_importar_catalogo_oficial_api_v1_hoteles__hotel_id__catalogo_importar_post": {
+        "properties": {
+          "archivo": {
+            "contentMediaType": "application/octet-stream",
+            "description": "Catálogo contable (CON020) en formato .xls",
+            "title": "Archivo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_importar_catalogo_oficial_api_v1_hoteles__hotel_id__catalogo_importar_post",
+        "type": "object"
+      },
+      "Body_importar_reporte_api_v1_hoteles__hotel_id__reporte_importar_post": {
+        "properties": {
+          "archivo": {
+            "contentMediaType": "application/octet-stream",
+            "description": "Excel del Variance (.xlsx), hoja `Ago`",
+            "title": "Archivo",
+            "type": "string"
+          },
+          "confirmar_reemplazo": {
+            "default": false,
+            "title": "Confirmar Reemplazo",
+            "type": "boolean"
+          },
+          "periodo_referencia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "AAAA-MM del archivo",
+            "title": "Periodo Referencia"
+          }
+        },
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_importar_reporte_api_v1_hoteles__hotel_id__reporte_importar_post",
+        "type": "object"
+      },
+      "Body_subir_carga_api_v1_hoteles__hotel_id__cargas_post": {
+        "properties": {
+          "archivo": {
+            "contentMediaType": "application/octet-stream",
+            "description": "Libro .xlsx exportado de Novohit o el Variance",
+            "title": "Archivo",
+            "type": "string"
+          },
+          "confirmar_reemplazo": {
+            "default": false,
+            "title": "Confirmar Reemplazo",
+            "type": "boolean"
+          },
+          "fuente": {
+            "$ref": "#/components/schemas/Fuente",
+            "description": "con130 o variance_base_datos"
+          },
+          "periodos": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opcional: AAAA-MM,AAAA-MM que declara el archivo",
+            "title": "Periodos"
+          }
+        },
+        "required": [
+          "archivo",
+          "fuente"
+        ],
+        "title": "Body_subir_carga_api_v1_hoteles__hotel_id__cargas_post",
+        "type": "object"
+      },
+      "CargaDetalle": {
+        "properties": {
+          "controles": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReporteCalidadSalida"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "creado_en": {
+            "format": "date-time",
+            "title": "Creado En",
+            "type": "string"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "fecha_max": {
+            "format": "date",
+            "title": "Fecha Max",
+            "type": "string"
+          },
+          "fecha_min": {
+            "format": "date",
+            "title": "Fecha Min",
+            "type": "string"
+          },
+          "fuente": {
+            "title": "Fuente",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "n_movimientos": {
+            "title": "N Movimientos",
+            "type": "integer"
+          },
+          "nombre_archivo": {
+            "title": "Nombre Archivo",
+            "type": "string"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "reemplazada_por_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reemplazada Por Id"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "total_credito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Credito",
+            "type": "string"
+          },
+          "total_debito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Debito",
+            "type": "string"
+          },
+          "usuario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usuario Id"
+          }
+        },
+        "required": [
+          "id",
+          "periodo",
+          "fuente",
+          "estado",
+          "nombre_archivo",
+          "sha256",
+          "n_movimientos",
+          "total_debito",
+          "total_credito",
+          "fecha_min",
+          "fecha_max",
+          "creado_en",
+          "usuario_id",
+          "reemplazada_por_id",
+          "controles"
+        ],
+        "title": "CargaDetalle",
+        "type": "object"
+      },
+      "CargaSalida": {
+        "properties": {
+          "creado_en": {
+            "format": "date-time",
+            "title": "Creado En",
+            "type": "string"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "fecha_max": {
+            "format": "date",
+            "title": "Fecha Max",
+            "type": "string"
+          },
+          "fecha_min": {
+            "format": "date",
+            "title": "Fecha Min",
+            "type": "string"
+          },
+          "fuente": {
+            "title": "Fuente",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "n_movimientos": {
+            "title": "N Movimientos",
+            "type": "integer"
+          },
+          "nombre_archivo": {
+            "title": "Nombre Archivo",
+            "type": "string"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "reemplazada_por_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reemplazada Por Id"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "total_credito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Credito",
+            "type": "string"
+          },
+          "total_debito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Debito",
+            "type": "string"
+          },
+          "usuario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usuario Id"
+          }
+        },
+        "required": [
+          "id",
+          "periodo",
+          "fuente",
+          "estado",
+          "nombre_archivo",
+          "sha256",
+          "n_movimientos",
+          "total_debito",
+          "total_credito",
+          "fecha_min",
+          "fecha_max",
+          "creado_en",
+          "usuario_id",
+          "reemplazada_por_id"
+        ],
+        "title": "CargaSalida",
+        "type": "object"
+      },
+      "CifrasSalida": {
+        "properties": {
+          "actual": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Actual",
+            "type": "string"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget"
+          },
+          "pct": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct"
+          },
+          "var": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Var"
+          }
+        },
+        "required": [
+          "actual",
+          "budget",
+          "var",
+          "pct"
+        ],
+        "title": "CifrasSalida",
+        "type": "object"
+      },
+      "ComponenteSalida": {
+        "properties": {
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "importe": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Importe",
+            "type": "string"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "signo": {
+            "title": "Signo",
+            "type": "integer"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "linea_id",
+          "descripcion",
+          "tipo",
+          "signo",
+          "importe"
+        ],
+        "title": "ComponenteSalida",
+        "type": "object"
+      },
+      "ConflictoSalida": {
+        "properties": {
+          "archivo_vigente": {
+            "title": "Archivo Vigente",
+            "type": "string"
+          },
+          "carga_vigente_id": {
+            "title": "Carga Vigente Id",
+            "type": "integer"
+          },
+          "credito_nuevo": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Credito Nuevo",
+            "type": "string"
+          },
+          "credito_vigente": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Credito Vigente",
+            "type": "string"
+          },
+          "debito_nuevo": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debito Nuevo",
+            "type": "string"
+          },
+          "debito_vigente": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debito Vigente",
+            "type": "string"
+          },
+          "n_nuevo": {
+            "title": "N Nuevo",
+            "type": "integer"
+          },
+          "n_vigente": {
+            "title": "N Vigente",
+            "type": "integer"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "periodo",
+          "carga_vigente_id",
+          "archivo_vigente",
+          "n_vigente",
+          "debito_vigente",
+          "credito_vigente",
+          "n_nuevo",
+          "debito_nuevo",
+          "credito_nuevo"
+        ],
+        "title": "ConflictoSalida",
+        "type": "object"
+      },
+      "ControlCalidadSalida": {
+        "properties": {
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          },
+          "ejemplos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Ejemplos",
+            "type": "array"
+          },
+          "resumen": {
+            "title": "Resumen",
+            "type": "string"
+          },
+          "severidad": {
+            "enum": [
+              "ok",
+              "aviso",
+              "error"
+            ],
+            "title": "Severidad",
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo",
+          "severidad",
+          "resumen",
+          "ejemplos"
+        ],
+        "title": "ControlCalidadSalida",
+        "type": "object"
+      },
+      "CopiaEntrada": {
+        "properties": {
+          "version_origen_id": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Origen Id"
+          }
+        },
+        "title": "CopiaEntrada",
+        "type": "object"
+      },
+      "CuentaDesgloseSalida": {
+        "properties": {
+          "aporte": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Aporte",
+            "type": "string"
+          },
+          "cuenta_codigo": {
+            "title": "Cuenta Codigo",
+            "type": "string"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "n_movimientos": {
+            "title": "N Movimientos",
+            "type": "integer"
+          },
+          "neto": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Neto",
+            "type": "string"
+          },
+          "signo": {
+            "title": "Signo",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cuenta_codigo",
+          "descripcion",
+          "signo",
+          "neto",
+          "aporte",
+          "n_movimientos"
+        ],
+        "title": "CuentaDesgloseSalida",
+        "type": "object"
+      },
+      "DesgloseSalida": {
+        "properties": {
+          "bloque": {
+            "title": "Bloque",
+            "type": "string"
+          },
+          "cifra": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cifra",
+            "type": "string"
+          },
+          "componentes": {
+            "items": {
+              "$ref": "#/components/schemas/ComponenteSalida"
+            },
+            "title": "Componentes",
+            "type": "array"
+          },
+          "cuadra": {
+            "title": "Cuadra",
+            "type": "boolean"
+          },
+          "cuentas": {
+            "items": {
+              "$ref": "#/components/schemas/CuentaDesgloseSalida"
+            },
+            "title": "Cuentas",
+            "type": "array"
+          },
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "periodos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Periodos",
+            "type": "array"
+          },
+          "suma": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Suma",
+            "type": "string"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "linea_id",
+          "descripcion",
+          "tipo",
+          "periodo",
+          "bloque",
+          "periodos",
+          "cifra",
+          "suma",
+          "cuadra",
+          "cuentas",
+          "componentes"
+        ],
+        "title": "DesgloseSalida",
+        "type": "object"
+      },
+      "EstructuraSalida": {
+        "properties": {
+          "creado_en": {
+            "format": "date-time",
+            "title": "Creado En",
+            "type": "string"
+          },
+          "lineas": {
+            "items": {
+              "$ref": "#/components/schemas/LineaSalida"
+            },
+            "title": "Lineas",
+            "type": "array"
+          },
+          "n_detalle": {
+            "title": "N Detalle",
+            "type": "integer"
+          },
+          "n_lineas": {
+            "title": "N Lineas",
+            "type": "integer"
+          },
+          "nombre_archivo": {
+            "title": "Nombre Archivo",
+            "type": "string"
+          },
+          "periodo_referencia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Periodo Referencia"
+          },
+          "version_id": {
+            "title": "Version Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version_id",
+          "nombre_archivo",
+          "periodo_referencia",
+          "creado_en",
+          "n_lineas",
+          "n_detalle",
+          "lineas"
+        ],
+        "title": "EstructuraSalida",
+        "type": "object"
+      },
+      "EventoSalida": {
+        "properties": {
+          "accion": {
+            "title": "Accion",
+            "type": "string"
+          },
+          "creado_en": {
+            "format": "date-time",
+            "title": "Creado En",
+            "type": "string"
+          },
+          "detalle": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detalle"
+          },
+          "entidad": {
+            "title": "Entidad",
+            "type": "string"
+          },
+          "entidad_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entidad Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "usuario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usuario Id"
+          }
+        },
+        "required": [
+          "id",
+          "accion",
+          "entidad",
+          "entidad_id",
+          "usuario_id",
+          "detalle",
+          "creado_en"
+        ],
+        "title": "EventoSalida",
+        "type": "object"
+      },
+      "ExclusionEntrada": {
+        "properties": {
+          "cuenta_codigo": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Cuenta Codigo",
+            "type": "string"
+          },
+          "motivo": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Motivo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cuenta_codigo",
+          "motivo"
+        ],
+        "title": "ExclusionEntrada",
+        "type": "object"
+      },
+      "ExclusionSalida": {
+        "properties": {
+          "creada_en": {
+            "format": "date-time",
+            "title": "Creada En",
+            "type": "string"
+          },
+          "cuenta_codigo": {
+            "title": "Cuenta Codigo",
+            "type": "string"
+          },
+          "motivo": {
+            "title": "Motivo",
+            "type": "string"
+          },
+          "usuario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usuario Id"
+          }
+        },
+        "required": [
+          "cuenta_codigo",
+          "motivo",
+          "usuario_id",
+          "creada_en"
+        ],
+        "title": "ExclusionSalida",
+        "type": "object"
+      },
+      "Fuente": {
+        "enum": [
+          "con130",
+          "variance_base_datos"
+        ],
+        "title": "Fuente",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "title": "Detail",
+                "type": "array"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HotelSalida": {
+        "properties": {
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "rol": {
+            "title": "Rol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "codigo",
+          "nombre",
+          "rol"
+        ],
+        "title": "HotelSalida",
+        "type": "object"
+      },
+      "LineaPlanSalida": {
+        "properties": {
+          "anual": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anual"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "mes": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mes"
+          },
+          "ytd": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ytd"
+          }
+        },
+        "required": [
+          "linea_id",
+          "mes",
+          "ytd",
+          "anual"
+        ],
+        "title": "LineaPlanSalida",
+        "type": "object"
+      },
+      "LineaSalida": {
+        "properties": {
+          "clave": {
+            "title": "Clave",
+            "type": "string"
+          },
+          "codigo_corporativo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo Corporativo"
+          },
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "fila_origen": {
+            "title": "Fila Origen",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "nivel": {
+            "title": "Nivel",
+            "type": "integer"
+          },
+          "orden": {
+            "title": "Orden",
+            "type": "integer"
+          },
+          "seccion_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seccion Id"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "orden",
+          "tipo",
+          "nivel",
+          "seccion_id",
+          "codigo_corporativo",
+          "descripcion",
+          "clave",
+          "fila_origen"
+        ],
+        "title": "LineaSalida",
+        "type": "object"
+      },
+      "LineaVarianceSalida": {
+        "properties": {
+          "anual": {
+            "$ref": "#/components/schemas/CifrasSalida"
+          },
+          "codigo_corporativo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo Corporativo"
+          },
+          "convencion": {
+            "title": "Convencion",
+            "type": "string"
+          },
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "mes": {
+            "$ref": "#/components/schemas/CifrasSalida"
+          },
+          "nivel": {
+            "title": "Nivel",
+            "type": "integer"
+          },
+          "orden": {
+            "title": "Orden",
+            "type": "integer"
+          },
+          "seccion_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seccion Id"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          },
+          "ytd": {
+            "$ref": "#/components/schemas/CifrasSalida"
+          }
+        },
+        "required": [
+          "linea_id",
+          "orden",
+          "tipo",
+          "nivel",
+          "seccion_id",
+          "codigo_corporativo",
+          "descripcion",
+          "convencion",
+          "mes",
+          "ytd",
+          "anual"
+        ],
+        "title": "LineaVarianceSalida",
+        "type": "object"
+      },
+      "MovimientoSalida": {
+        "properties": {
+          "asiento": {
+            "title": "Asiento",
+            "type": "string"
+          },
+          "cantidad": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cantidad"
+          },
+          "concepto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concepto"
+          },
+          "costo": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Costo"
+          },
+          "credito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Credito",
+            "type": "string"
+          },
+          "cuenta_codigo": {
+            "title": "Cuenta Codigo",
+            "type": "string"
+          },
+          "cuenta_descripcion": {
+            "title": "Cuenta Descripcion",
+            "type": "string"
+          },
+          "debito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debito",
+            "type": "string"
+          },
+          "fecha": {
+            "format": "date",
+            "title": "Fecha",
+            "type": "string"
+          },
+          "fila_origen": {
+            "title": "Fila Origen",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "neto": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Neto",
+            "type": "string"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "tp_asiento": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tp Asiento"
+          }
+        },
+        "required": [
+          "id",
+          "periodo",
+          "fecha",
+          "cuenta_codigo",
+          "cuenta_descripcion",
+          "asiento",
+          "tp_asiento",
+          "concepto",
+          "debito",
+          "credito",
+          "neto",
+          "cantidad",
+          "costo",
+          "fila_origen"
+        ],
+        "title": "MovimientoSalida",
+        "type": "object"
+      },
+      "NodoSalida": {
+        "properties": {
+          "activa": {
+            "title": "Activa",
+            "type": "boolean"
+          },
+          "clase": {
+            "title": "Clase",
+            "type": "string"
+          },
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          },
+          "con_movimientos": {
+            "title": "Con Movimientos",
+            "type": "boolean"
+          },
+          "cuenta_sat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cuenta Sat"
+          },
+          "depto_ef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depto Ef"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "en_catalogo_oficial": {
+            "title": "En Catalogo Oficial",
+            "type": "boolean"
+          },
+          "es_titulo": {
+            "title": "Es Titulo",
+            "type": "boolean"
+          },
+          "grupo_ef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grupo Ef"
+          },
+          "hijos": {
+            "items": {
+              "$ref": "#/components/schemas/NodoSalida"
+            },
+            "title": "Hijos",
+            "type": "array"
+          },
+          "nivel": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nivel"
+          },
+          "sin_jerarquia": {
+            "title": "Sin Jerarquia",
+            "type": "boolean"
+          },
+          "tipo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo"
+          }
+        },
+        "required": [
+          "codigo",
+          "descripcion",
+          "clase",
+          "nivel",
+          "con_movimientos",
+          "es_titulo",
+          "sin_jerarquia",
+          "tipo",
+          "grupo_ef",
+          "depto_ef",
+          "cuenta_sat",
+          "activa",
+          "en_catalogo_oficial",
+          "hijos"
+        ],
+        "title": "NodoSalida",
+        "type": "object"
+      },
+      "PaginaSalida": {
+        "properties": {
+          "bloque": {
+            "title": "Bloque",
+            "type": "string"
+          },
+          "cuenta_codigo": {
+            "title": "Cuenta Codigo",
+            "type": "string"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "movimientos": {
+            "items": {
+              "$ref": "#/components/schemas/MovimientoSalida"
+            },
+            "title": "Movimientos",
+            "type": "array"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "periodos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Periodos",
+            "type": "array"
+          },
+          "resumen": {
+            "$ref": "#/components/schemas/ResumenSalida"
+          },
+          "siguiente_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Siguiente Cursor"
+          }
+        },
+        "required": [
+          "cuenta_codigo",
+          "descripcion",
+          "periodo",
+          "bloque",
+          "periodos",
+          "resumen",
+          "movimientos",
+          "siguiente_cursor"
+        ],
+        "title": "PaginaSalida",
+        "type": "object"
+      },
+      "ReporteCalidadSalida": {
+        "properties": {
+          "aprobado": {
+            "title": "Aprobado",
+            "type": "boolean"
+          },
+          "controles": {
+            "items": {
+              "$ref": "#/components/schemas/ControlCalidadSalida"
+            },
+            "title": "Controles",
+            "type": "array"
+          },
+          "fuente": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fuente"
+          }
+        },
+        "required": [
+          "fuente",
+          "aprobado",
+          "controles"
+        ],
+        "title": "ReporteCalidadSalida",
+        "type": "object"
+      },
+      "RespuestaCarga": {
+        "properties": {
+          "cargas": {
+            "items": {
+              "$ref": "#/components/schemas/CargaSalida"
+            },
+            "title": "Cargas",
+            "type": "array"
+          },
+          "conflictos": {
+            "items": {
+              "$ref": "#/components/schemas/ConflictoSalida"
+            },
+            "title": "Conflictos",
+            "type": "array"
+          },
+          "motivos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Motivos",
+            "type": "array"
+          },
+          "reemplazadas": {
+            "items": {
+              "$ref": "#/components/schemas/CargaSalida"
+            },
+            "title": "Reemplazadas",
+            "type": "array"
+          },
+          "reporte": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReporteCalidadSalida"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolucion": {
+            "enum": [
+              "creada",
+              "duplicada",
+              "requiere_confirmacion",
+              "reemplazada",
+              "rechazada"
+            ],
+            "title": "Resolucion",
+            "type": "string"
+          },
+          "sin_cambio": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sin Cambio",
+            "type": "array"
+          }
+        },
+        "required": [
+          "resolucion",
+          "cargas",
+          "reemplazadas",
+          "conflictos",
+          "sin_cambio",
+          "motivos",
+          "reporte"
+        ],
+        "title": "RespuestaCarga",
+        "type": "object"
+      },
+      "RespuestaImportacion": {
+        "properties": {
+          "actualizadas": {
+            "title": "Actualizadas",
+            "type": "integer"
+          },
+          "avisos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Avisos",
+            "type": "array"
+          },
+          "creadas": {
+            "title": "Creadas",
+            "type": "integer"
+          },
+          "fuera_del_catalogo": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fuera Del Catalogo",
+            "type": "array"
+          },
+          "inactivas_con_movimientos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Inactivas Con Movimientos",
+            "type": "array"
+          },
+          "motivos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Motivos",
+            "type": "array"
+          },
+          "resolucion": {
+            "title": "Resolucion",
+            "type": "string"
+          },
+          "sin_cambio": {
+            "title": "Sin Cambio",
+            "type": "integer"
+          },
+          "titulos_con_nombre_nuevo": {
+            "title": "Titulos Con Nombre Nuevo",
+            "type": "integer"
+          },
+          "total_cuentas": {
+            "title": "Total Cuentas",
+            "type": "integer"
+          },
+          "total_titulos": {
+            "title": "Total Titulos",
+            "type": "integer"
+          },
+          "ya_no_vienen": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Ya No Vienen",
+            "type": "array"
+          }
+        },
+        "required": [
+          "resolucion",
+          "total_cuentas",
+          "total_titulos",
+          "creadas",
+          "actualizadas",
+          "sin_cambio",
+          "titulos_con_nombre_nuevo",
+          "fuera_del_catalogo",
+          "inactivas_con_movimientos",
+          "ya_no_vienen",
+          "avisos",
+          "motivos"
+        ],
+        "title": "RespuestaImportacion",
+        "type": "object"
+      },
+      "ResumenSalida": {
+        "properties": {
+          "credito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Credito",
+            "type": "string"
+          },
+          "debito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debito",
+            "type": "string"
+          },
+          "n_movimientos": {
+            "title": "N Movimientos",
+            "type": "integer"
+          },
+          "neto": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Neto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "n_movimientos",
+          "debito",
+          "credito",
+          "neto"
+        ],
+        "title": "ResumenSalida",
+        "type": "object"
+      },
+      "SaldoSalida": {
+        "properties": {
+          "cuenta_codigo": {
+            "title": "Cuenta Codigo",
+            "type": "string"
+          },
+          "n_movimientos": {
+            "title": "N Movimientos",
+            "type": "integer"
+          },
+          "neto": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Neto",
+            "type": "string"
+          },
+          "suma_credito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Suma Credito",
+            "type": "string"
+          },
+          "suma_debito": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Suma Debito",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cuenta_codigo",
+          "suma_debito",
+          "suma_credito",
+          "neto",
+          "n_movimientos"
+        ],
+        "title": "SaldoSalida",
+        "type": "object"
+      },
+      "SeccionSalida": {
+        "properties": {
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "linea_total_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linea Total Id"
+          }
+        },
+        "required": [
+          "id",
+          "descripcion",
+          "linea_total_id"
+        ],
+        "title": "SeccionSalida",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VarianceSalida": {
+        "properties": {
+          "advertencias": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Advertencias",
+            "type": "array"
+          },
+          "ano_fiscal": {
+            "title": "Ano Fiscal",
+            "type": "string"
+          },
+          "lineas": {
+            "items": {
+              "$ref": "#/components/schemas/LineaVarianceSalida"
+            },
+            "title": "Lineas",
+            "type": "array"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "periodos_sin_datos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Periodos Sin Datos",
+            "type": "array"
+          },
+          "periodos_ytd": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Periodos Ytd",
+            "type": "array"
+          },
+          "secciones": {
+            "items": {
+              "$ref": "#/components/schemas/SeccionSalida"
+            },
+            "title": "Secciones",
+            "type": "array"
+          },
+          "version_mapeo_id": {
+            "title": "Version Mapeo Id",
+            "type": "integer"
+          },
+          "version_plan_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Plan Id"
+          }
+        },
+        "required": [
+          "periodo",
+          "ano_fiscal",
+          "version_mapeo_id",
+          "version_plan_id",
+          "periodos_ytd",
+          "periodos_sin_datos",
+          "advertencias",
+          "secciones",
+          "lineas"
+        ],
+        "title": "VarianceSalida",
+        "type": "object"
+      },
+      "VersionDetalle": {
+        "properties": {
+          "aprobada_en": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aprobada En"
+          },
+          "aprobada_por_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aprobada Por Id"
+          },
+          "creada_en": {
+            "format": "date-time",
+            "title": "Creada En",
+            "type": "string"
+          },
+          "creada_por_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creada Por Id"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "excluidas": {
+            "items": {
+              "$ref": "#/components/schemas/ExclusionSalida"
+            },
+            "title": "Excluidas",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "notas": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notas"
+          },
+          "numero": {
+            "title": "Numero",
+            "type": "integer"
+          },
+          "origen": {
+            "title": "Origen",
+            "type": "string"
+          },
+          "version_estructura_id": {
+            "title": "Version Estructura Id",
+            "type": "integer"
+          },
+          "vinculos": {
+            "items": {
+              "$ref": "#/components/schemas/VinculoSalida"
+            },
+            "title": "Vinculos",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "estado",
+          "origen",
+          "version_estructura_id",
+          "notas",
+          "creada_en",
+          "creada_por_id",
+          "aprobada_en",
+          "aprobada_por_id",
+          "vinculos",
+          "excluidas"
+        ],
+        "title": "VersionDetalle",
+        "type": "object"
+      },
+      "VersionPlanDetalle": {
+        "properties": {
+          "ano_fiscal": {
+            "title": "Ano Fiscal",
+            "type": "string"
+          },
+          "creada_en": {
+            "format": "date-time",
+            "title": "Creada En",
+            "type": "string"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "lineas": {
+            "items": {
+              "$ref": "#/components/schemas/LineaPlanSalida"
+            },
+            "title": "Lineas",
+            "type": "array"
+          },
+          "n_lineas": {
+            "title": "N Lineas",
+            "type": "integer"
+          },
+          "nombre_archivo": {
+            "title": "Nombre Archivo",
+            "type": "string"
+          },
+          "numero": {
+            "title": "Numero",
+            "type": "integer"
+          },
+          "periodo_corte": {
+            "title": "Periodo Corte",
+            "type": "string"
+          },
+          "reemplazada_en": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reemplazada En"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          },
+          "usuario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usuario Id"
+          },
+          "version_estructura_id": {
+            "title": "Version Estructura Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "numero",
+          "ano_fiscal",
+          "periodo_corte",
+          "estado",
+          "nombre_archivo",
+          "sha256",
+          "n_lineas",
+          "version_estructura_id",
+          "creada_en",
+          "usuario_id",
+          "reemplazada_en",
+          "lineas"
+        ],
+        "title": "VersionPlanDetalle",
+        "type": "object"
+      },
+      "VersionPlanSalida": {
+        "properties": {
+          "ano_fiscal": {
+            "title": "Ano Fiscal",
+            "type": "string"
+          },
+          "creada_en": {
+            "format": "date-time",
+            "title": "Creada En",
+            "type": "string"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "n_lineas": {
+            "title": "N Lineas",
+            "type": "integer"
+          },
+          "nombre_archivo": {
+            "title": "Nombre Archivo",
+            "type": "string"
+          },
+          "numero": {
+            "title": "Numero",
+            "type": "integer"
+          },
+          "periodo_corte": {
+            "title": "Periodo Corte",
+            "type": "string"
+          },
+          "reemplazada_en": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reemplazada En"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          },
+          "usuario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usuario Id"
+          },
+          "version_estructura_id": {
+            "title": "Version Estructura Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "numero",
+          "ano_fiscal",
+          "periodo_corte",
+          "estado",
+          "nombre_archivo",
+          "sha256",
+          "n_lineas",
+          "version_estructura_id",
+          "creada_en",
+          "usuario_id",
+          "reemplazada_en"
+        ],
+        "title": "VersionPlanSalida",
+        "type": "object"
+      },
+      "VersionSalida": {
+        "properties": {
+          "aprobada_en": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aprobada En"
+          },
+          "aprobada_por_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aprobada Por Id"
+          },
+          "creada_en": {
+            "format": "date-time",
+            "title": "Creada En",
+            "type": "string"
+          },
+          "creada_por_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creada Por Id"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "notas": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notas"
+          },
+          "numero": {
+            "title": "Numero",
+            "type": "integer"
+          },
+          "origen": {
+            "title": "Origen",
+            "type": "string"
+          },
+          "version_estructura_id": {
+            "title": "Version Estructura Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "estado",
+          "origen",
+          "version_estructura_id",
+          "notas",
+          "creada_en",
+          "creada_por_id",
+          "aprobada_en",
+          "aprobada_por_id"
+        ],
+        "title": "VersionSalida",
+        "type": "object"
+      },
+      "VinculoEntrada": {
+        "properties": {
+          "cuenta_codigo": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Cuenta Codigo",
+            "type": "string"
+          },
+          "linea_id": {
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "signo": {
+            "title": "Signo",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "linea_id",
+          "cuenta_codigo",
+          "signo"
+        ],
+        "title": "VinculoEntrada",
+        "type": "object"
+      },
+      "VinculoSalida": {
+        "properties": {
+          "cuenta_codigo": {
+            "title": "Cuenta Codigo",
+            "type": "string"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "origen": {
+            "title": "Origen",
+            "type": "string"
+          },
+          "signo": {
+            "title": "Signo",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "linea_id",
+          "cuenta_codigo",
+          "signo",
+          "origen"
+        ],
+        "title": "VinculoSalida",
+        "type": "object"
+      },
+      "YoSalida": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "organizacion_id": {
+            "title": "Organizacion Id",
+            "type": "integer"
+          },
+          "roles_por_hotel": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Roles Por Hotel",
+            "type": "object"
+          },
+          "usuario_id": {
+            "title": "Usuario Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "usuario_id",
+          "email",
+          "organizacion_id",
+          "roles_por_hotel"
+        ],
+        "title": "YoSalida",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Plataforma FP&A Hotelera",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/health": {
+      "get": {
+        "description": "El proceso está vivo (no consulta la base de datos).",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health Api Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "salud"
+        ]
+      }
+    },
+    "/api/ready": {
+      "get": {
+        "description": "La aplicación puede atender peticiones: responde si la base de datos contesta.",
+        "operationId": "ready_api_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Ready Api Ready Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ready",
+        "tags": [
+          "salud"
+        ]
+      }
+    },
+    "/api/v1/hoteles": {
+      "get": {
+        "description": "Solo los hoteles a los que el usuario tiene acceso.",
+        "operationId": "mis_hoteles_api_v1_hoteles_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HotelSalida"
+                  },
+                  "title": "Response Mis Hoteles Api V1 Hoteles Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Mis Hoteles",
+        "tags": [
+          "identidad"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}": {
+      "get": {
+        "operationId": "detalle_hotel_api_v1_hoteles__hotel_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotelSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "404": {
+            "description": "Hotel no encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detalle Hotel",
+        "tags": [
+          "identidad"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/asientos/{asiento}": {
+      "get": {
+        "description": "Todas las líneas de un asiento en el periodo, con sus totales de Débito y Crédito.",
+        "operationId": "asiento_api_v1_hoteles__hotel_id__asientos__asiento__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "asiento",
+            "required": true,
+            "schema": {
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[0-9A-Za-z][0-9A-Za-z.\\-]*$",
+              "title": "Asiento",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "AAAA-MM",
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "description": "AAAA-MM",
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsientoSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Asiento",
+        "tags": [
+          "drilldown"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/auditoria": {
+      "get": {
+        "operationId": "listar_auditoria_api_v1_hoteles__hotel_id__auditoria_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EventoSalida"
+                  },
+                  "title": "Response Listar Auditoria Api V1 Hoteles  Hotel Id  Auditoria Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar Auditoria",
+        "tags": [
+          "cargas"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/budget/importar": {
+      "post": {
+        "description": "Carga el Budget (mes, YTD y anual) pegado en el Excel como una versión nueva e inmutable.",
+        "operationId": "importar_api_v1_hoteles__hotel_id__budget_importar_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_importar_api_v1_hoteles__hotel_id__budget_importar_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Importar",
+        "tags": [
+          "budget"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/budget/versiones": {
+      "get": {
+        "operationId": "listar_versiones_api_v1_hoteles__hotel_id__budget_versiones_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VersionPlanSalida"
+                  },
+                  "title": "Response Listar Versiones Api V1 Hoteles  Hotel Id  Budget Versiones Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar Versiones",
+        "tags": [
+          "budget"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/budget/versiones/{version_id}": {
+      "get": {
+        "operationId": "detalle_version_api_v1_hoteles__hotel_id__budget_versiones__version_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionPlanDetalle"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detalle Version",
+        "tags": [
+          "budget"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/cargas": {
+      "get": {
+        "operationId": "listar_cargas_api_v1_hoteles__hotel_id__cargas_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CargaSalida"
+                  },
+                  "title": "Response Listar Cargas Api V1 Hoteles  Hotel Id  Cargas Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar Cargas",
+        "tags": [
+          "cargas"
+        ]
+      },
+      "post": {
+        "operationId": "subir_carga_api_v1_hoteles__hotel_id__cargas_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_subir_carga_api_v1_hoteles__hotel_id__cargas_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaCarga"
+                }
+              }
+            },
+            "description": "El mismo archivo ya estaba cargado"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaCarga"
+                }
+              }
+            },
+            "description": "Carga creada o reemplazada"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaCarga"
+                }
+              }
+            },
+            "description": "Pide confirmar el reemplazo"
+          },
+          "413": {
+            "description": "El archivo supera el tamaño máximo"
+          },
+          "415": {
+            "description": "No es un libro .xlsx válido o trae macros"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Subir Carga",
+        "tags": [
+          "cargas"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/cargas/{carga_id}": {
+      "get": {
+        "operationId": "detalle_carga_api_v1_hoteles__hotel_id__cargas__carga_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "carga_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Carga Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargaDetalle"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detalle Carga",
+        "tags": [
+          "cargas"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/catalogo/arbol": {
+      "get": {
+        "description": "Árbol de cuentas locales del hotel (títulos de la jerarquía y cuentas).",
+        "operationId": "arbol_del_catalogo_api_v1_hoteles__hotel_id__catalogo_arbol_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NodoSalida"
+                  },
+                  "title": "Response Arbol Del Catalogo Api V1 Hoteles  Hotel Id  Catalogo Arbol Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Arbol Del Catalogo",
+        "tags": [
+          "catalogo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/catalogo/importar": {
+      "post": {
+        "description": "Importa el catálogo contable oficial de Novohit (reporte CON020, .xls).",
+        "operationId": "importar_catalogo_oficial_api_v1_hoteles__hotel_id__catalogo_importar_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_importar_catalogo_oficial_api_v1_hoteles__hotel_id__catalogo_importar_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaImportacion"
+                }
+              }
+            },
+            "description": "Sin cambios"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaImportacion"
+                }
+              }
+            },
+            "description": "Catálogo importado"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "413": {
+            "description": "El archivo supera el tamaño máximo"
+          },
+          "415": {
+            "description": "No es un libro .xls válido o trae macros"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Importar Catalogo Oficial",
+        "tags": [
+          "catalogo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/mapeo/versiones": {
+      "get": {
+        "operationId": "listar_versiones_api_v1_hoteles__hotel_id__mapeo_versiones_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VersionSalida"
+                  },
+                  "title": "Response Listar Versiones Api V1 Hoteles  Hotel Id  Mapeo Versiones Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar Versiones",
+        "tags": [
+          "mapeo"
+        ]
+      },
+      "post": {
+        "description": "Crea un borrador copiando la versión aprobada (o la indicada).",
+        "operationId": "crear_borrador_api_v1_hoteles__hotel_id__mapeo_versiones_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/CopiaEntrada"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Entrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Crear Borrador",
+        "tags": [
+          "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/mapeo/versiones/{version_id}": {
+      "get": {
+        "operationId": "detalle_version_api_v1_hoteles__hotel_id__mapeo_versiones__version_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionDetalle"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detalle Version",
+        "tags": [
+          "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/mapeo/versiones/{version_id}/aprobar": {
+      "post": {
+        "description": "Aprueba un borrador (solo Contraloría). 409 si deja cuentas con movimiento sin mapear.",
+        "operationId": "aprobar_version_api_v1_hoteles__hotel_id__mapeo_versiones__version_id__aprobar_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AprobacionEntrada"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Entrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Aprobar Version",
+        "tags": [
+          "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/mapeo/versiones/{version_id}/descartar": {
+      "post": {
+        "operationId": "descartar_api_v1_hoteles__hotel_id__mapeo_versiones__version_id__descartar_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Descartar",
+        "tags": [
+          "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/mapeo/versiones/{version_id}/exclusiones": {
+      "delete": {
+        "operationId": "borrar_exclusion_api_v1_hoteles__hotel_id__mapeo_versiones__version_id__exclusiones_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cuenta_codigo",
+            "required": true,
+            "schema": {
+              "maxLength": 40,
+              "minLength": 1,
+              "title": "Cuenta Codigo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Borrar Exclusion",
+        "tags": [
+          "mapeo"
+        ]
+      },
+      "put": {
+        "operationId": "poner_exclusion_api_v1_hoteles__hotel_id__mapeo_versiones__version_id__exclusiones_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExclusionEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExclusionSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Poner Exclusion",
+        "tags": [
+          "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/mapeo/versiones/{version_id}/validacion": {
+      "get": {
+        "operationId": "validacion_api_v1_hoteles__hotel_id__mapeo_versiones__version_id__validacion_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "AAAA-MM",
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "description": "AAAA-MM",
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Validacion Api V1 Hoteles  Hotel Id  Mapeo Versiones  Version Id  Validacion Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validacion",
+        "tags": [
+          "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/mapeo/versiones/{version_id}/vinculos": {
+      "delete": {
+        "operationId": "borrar_vinculo_api_v1_hoteles__hotel_id__mapeo_versiones__version_id__vinculos_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cuenta_codigo",
+            "required": true,
+            "schema": {
+              "maxLength": 40,
+              "minLength": 1,
+              "title": "Cuenta Codigo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Borrar Vinculo",
+        "tags": [
+          "mapeo"
+        ]
+      },
+      "put": {
+        "operationId": "poner_vinculo_api_v1_hoteles__hotel_id__mapeo_versiones__version_id__vinculos_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VinculoEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VinculoSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Poner Vinculo",
+        "tags": [
+          "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/reporte/estructura": {
+      "get": {
+        "operationId": "estructura_vigente_api_v1_hoteles__hotel_id__reporte_estructura_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstructuraSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Estructura Vigente",
+        "tags": [
+          "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/reporte/importar": {
+      "post": {
+        "description": "Importa estructura, reglas de suma y un **borrador** de mapeo desde el Excel del Variance.",
+        "operationId": "importar_reporte_api_v1_hoteles__hotel_id__reporte_importar_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_importar_reporte_api_v1_hoteles__hotel_id__reporte_importar_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Importar Reporte",
+        "tags": [
+          "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/saldos": {
+      "get": {
+        "description": "Saldo de cada cuenta en el periodo, calculado desde la carga vigente.",
+        "operationId": "saldos_del_periodo_api_v1_hoteles__hotel_id__saldos_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "AAAA-MM",
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "description": "AAAA-MM",
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SaldoSalida"
+                  },
+                  "title": "Response Saldos Del Periodo Api V1 Hoteles  Hotel Id  Saldos Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Saldos Del Periodo",
+        "tags": [
+          "saldos"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/variance": {
+      "get": {
+        "description": "Variance del periodo con el mapeo aprobado y el Budget vigente (o las indicadas).",
+        "operationId": "variance_api_v1_hoteles__hotel_id__variance_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "AAAA-MM",
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "description": "AAAA-MM",
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version_mapeo_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version Mapeo Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version_plan_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version Plan Id"
+            }
+          },
+          {
+            "description": "Solo las líneas de esa sección",
+            "in": "query",
+            "name": "seccion_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Solo las líneas de esa sección",
+              "title": "Seccion Id"
+            }
+          },
+          {
+            "description": "Solo líneas de estos tipos (repetible)",
+            "in": "query",
+            "name": "tipo",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "enum": [
+                      "detalle",
+                      "subtotal",
+                      "total",
+                      "informativa"
+                    ],
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Solo líneas de estos tipos (repetible)",
+              "title": "Tipo"
+            }
+          },
+          {
+            "description": "Texto contenido en la descripción de la línea",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Texto contenido en la descripción de la línea",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VarianceSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Variance",
+        "tags": [
+          "variance"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/variance/cuentas/{cuenta_codigo}/movimientos": {
+      "get": {
+        "description": "Movimientos de una cuenta, paginados por cursor (keyset, nunca OFFSET).",
+        "operationId": "movimientos_api_v1_hoteles__hotel_id__variance_cuentas__cuenta_codigo__movimientos_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cuenta_codigo",
+            "required": true,
+            "schema": {
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[0-9A-Za-z][0-9A-Za-z.\\-]*$",
+              "title": "Cuenta Codigo",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "AAAA-MM",
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "description": "AAAA-MM",
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          },
+          {
+            "description": "mes = solo ese mes; ytd = año fiscal acumulado",
+            "in": "query",
+            "name": "bloque",
+            "required": false,
+            "schema": {
+              "default": "mes",
+              "description": "mes = solo ese mes; ytd = año fiscal acumulado",
+              "enum": [
+                "mes",
+                "ytd"
+              ],
+              "title": "Bloque",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`siguiente_cursor` de la página anterior",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`siguiente_cursor` de la página anterior",
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limite",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limite",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "description": "Cursor inválido, periodo o límite fuera de rango"
+          }
+        },
+        "summary": "Movimientos",
+        "tags": [
+          "drilldown"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/variance/lineas/{linea_id}/desglose": {
+      "get": {
+        "description": "Qué hay detrás de la cifra de una línea: sus cuentas, o los componentes de un total.",
+        "operationId": "desglose_api_v1_hoteles__hotel_id__variance_lineas__linea_id__desglose_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "AAAA-MM",
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "description": "AAAA-MM",
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          },
+          {
+            "description": "mes = solo ese mes; ytd = año fiscal acumulado",
+            "in": "query",
+            "name": "bloque",
+            "required": false,
+            "schema": {
+              "default": "mes",
+              "description": "mes = solo ese mes; ytd = año fiscal acumulado",
+              "enum": [
+                "mes",
+                "ytd"
+              ],
+              "title": "Bloque",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DesgloseSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Desglose",
+        "tags": [
+          "drilldown"
+        ]
+      }
+    },
+    "/api/v1/yo": {
+      "get": {
+        "operationId": "yo_api_v1_yo_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YoSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Yo",
+        "tags": [
+          "identidad"
+        ]
+      }
+    }
+  }
+}

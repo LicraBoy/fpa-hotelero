@@ -1,5 +1,4 @@
-import { obtener } from '../api/cliente'
-import type { EventoAuditoria } from '../api/tipos'
+import { obtenerTipado } from '../api/cliente'
 import { useDatos } from '../api/useDatos'
 import { Cargando, Insignia, MensajeError } from './Insignia'
 
@@ -23,7 +22,7 @@ function resumen(detalle: Record<string, unknown> | null): string {
 
 export function PanelAuditoria({ hotelId, version }: { hotelId: number; version: number }) {
   const eventos = useDatos(
-    () => obtener<EventoAuditoria[]>(`/hoteles/${hotelId}/auditoria`),
+    () => obtenerTipado('/api/v1/hoteles/{hotel_id}/auditoria', { path: { hotel_id: hotelId } }),
     [hotelId, version],
   )
   return (
