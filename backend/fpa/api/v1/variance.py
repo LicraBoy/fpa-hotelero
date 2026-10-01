@@ -25,7 +25,8 @@ from fpa.modelos.organizacion import Hotel
 from fpa.modelos.reporte import LineaReporte
 from fpa.servicios.auditoria import auditar
 from fpa.servicios.exportar_variance import generar_excel, nombre_de_archivo
-from fpa.servicios.variance import PlanIncompatible, calcular_variance
+from fpa.servicios.reportes import cache_variance
+from fpa.servicios.variance import PlanIncompatible, ReporteVariance, calcular_variance
 
 router = APIRouter(tags=["variance"])
 _RE_PERIODO = re.compile(r"^20\d{2}-(0[1-9]|1[0-2])$")
@@ -89,7 +90,10 @@ def _cifras(c: Cifras) -> CifrasSalida:
 
 
 def _pasa(
-    linea: LineaReporte, seccion_id: int | None, tipos: Sequence[str] | None, q: str | None
+    linea: LineaReporte | LineaVarianceSalida,
+    seccion_id: int | None,
+    tipos: Sequence[str] | None,
+    q: str | None,
 ) -> bool:
     if seccion_id is not None and linea.seccion_id != seccion_id:
         return False
@@ -120,24 +124,56 @@ def variance(
         Query(max_length=100, description="Texto contenido en la descripción de la línea"),
     ] = None,
     db: Session = Depends(get_db),
-) -> VarianceSalida:
-    """Variance del periodo con el mapeo aprobado y el Budget vigente (o las indicadas)."""
+) -> Response:
+    """Variance del periodo con el mapeo aprobado y el Budget vigente (o las indicadas).
+
+    El reporte completo se guarda en la caché del servidor (se invalida al cargar o aprobar); los
+    filtros se aplican sobre él. La cabecera `X-Cache` dice si salió de la caché (`hit`) o se
+    calculó (`miss`); el resultado es el mismo.
+    """
     if not _RE_PERIODO.match(periodo):
         raise HTTPException(status_code=422, detail="El periodo debe ser AAAA-MM")
-    try:
-        r = calcular_variance(
-            db,
-            hotel_id=contexto.hotel_id,
-            periodo=periodo,
-            version_mapeo_id=version_mapeo_id,
-            version_plan_id=version_plan_id,
+    clave = cache_variance.clave(
+        organizacion_id=contexto.organizacion_id,
+        hotel_id=contexto.hotel_id,
+        version_mapeo_id=version_mapeo_id,
+        version_plan_id=version_plan_id,
+        periodo=periodo,
+    )
+    guardado = cache_variance.obtener(clave)
+    if guardado is None:
+        try:
+            r = calcular_variance(
+                db,
+                hotel_id=contexto.hotel_id,
+                periodo=periodo,
+                version_mapeo_id=version_mapeo_id,
+                version_plan_id=version_plan_id,
+            )
+        except LookupError as e:
+            raise HTTPException(
+                status_code=404, detail=str(e.args[0]) if e.args else "No encontrado"
+            ) from None
+        except PlanIncompatible as e:
+            raise HTTPException(status_code=409, detail=str(e)) from None
+        modelo = _salida(r)
+        guardado = (modelo, modelo.model_dump_json().encode())
+        cache_variance.guardar(clave, guardado)
+        estado = "miss"
+    else:
+        estado = "hit"
+    modelo, crudo = guardado
+    if seccion_id is None and not tipo and not q:
+        contenido = crudo
+    else:
+        filtrado = modelo.model_copy(
+            update={"lineas": [x for x in modelo.lineas if _pasa(x, seccion_id, tipo, q)]}
         )
-    except LookupError as e:
-        raise HTTPException(
-            status_code=404, detail=str(e.args[0]) if e.args else "No encontrado"
-        ) from None
-    except PlanIncompatible as e:
-        raise HTTPException(status_code=409, detail=str(e)) from None
+        contenido = filtrado.model_dump_json().encode()
+    return Response(content=contenido, media_type="application/json", headers={"X-Cache": estado})
+
+
+def _salida(r: ReporteVariance) -> VarianceSalida:
     return VarianceSalida(
         periodo=r.periodo,
         ano_fiscal=r.ano_fiscal,
@@ -162,7 +198,6 @@ def variance(
                 anual=_cifras(r.resultado[x.id].anual),
             )
             for x in r.lineas
-            if _pasa(x, seccion_id, tipo, q)
         ],
     )
 

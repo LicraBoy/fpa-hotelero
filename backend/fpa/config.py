@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     zip_max_descomprimido: int = 200 * 1024 * 1024
     zip_max_razon: int = 100
 
+    # Caché en memoria de los reportes (un proceso). 0 = apagada. Ver servicios/cache_reportes.py
+    cache_reportes_ttl_s: float = 300.0
+    cache_reportes_max: int = 128
+
     app_nombre: str = "Plataforma FP&A Hotelera"
     app_version: str = "0.1.0"
 

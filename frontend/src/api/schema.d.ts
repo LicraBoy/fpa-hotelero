@@ -442,6 +442,10 @@ export interface paths {
         /**
          * Variance
          * @description Variance del periodo con el mapeo aprobado y el Budget vigente (o las indicadas).
+         *
+         *     El reporte completo se guarda en la caché del servidor (se invalida al cargar o aprobar); los
+         *     filtros se aplican sobre él. La cabecera `X-Cache` dice si salió de la caché (`hit`) o se
+         *     calculó (`miss`); el resultado es el mismo.
          */
         get: operations["variance_api_v1_hoteles__hotel_id__variance_get"];
         put?: never;

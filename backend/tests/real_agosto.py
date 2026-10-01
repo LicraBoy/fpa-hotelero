@@ -25,8 +25,9 @@ from fpa.ingesta.variance_estructura import (
 from fpa.ingesta.variance_mapeo import leer_variance_mapeo_filas
 from fpa.ingesta.variance_reglas import leer_variance_reglas_filas
 from fpa.ingesta.variance_valores import ValoresFila, leer_variance_valores
-from fpa.modelos import Base, Hotel, LineaReporte, Organizacion
+from fpa.modelos import Asignacion, Base, Hotel, LineaReporte, Organizacion, Usuario
 from fpa.repositorios.reporte import RepositorioReporte
+from fpa.semilla import sembrar_roles
 from fpa.servicios.budget import importar_budget
 from fpa.servicios.cargar_archivo import Resolucion, cargar_archivo
 from fpa.servicios.cargas import DatosArchivo
@@ -55,6 +56,8 @@ class AgostoReal:
     version_plan_id: int
     reglas: dict[int, list[tuple[int, int]]]
     valores: dict[int, ValoresFila]  # por fila de Excel
+    sesiones: sessionmaker[Session]  # para probar la API HTTP contra esta misma base
+    email_analista: str
 
     @property
     def por_fila(self) -> dict[int, LineaReporte]:
@@ -69,13 +72,21 @@ def agosto_real() -> Iterator[AgostoReal]:
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
     Base.metadata.create_all(engine)
-    db = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)()
+    fabrica = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+    db = fabrica()
     org = Organizacion(nombre="Real")
     db.add(org)
     db.flush()
     hotel = Hotel(organizacion_id=org.id, codigo="T", nombre="Torres")
     db.add(hotel)
     db.flush()
+    roles = sembrar_roles(db)
+    usuario = Usuario(
+        organizacion_id=org.id, email="analista_real@test.local", nombre="Analista", activo=True
+    )
+    db.add(usuario)
+    db.flush()
+    db.add(Asignacion(usuario_id=usuario.id, hotel_id=hotel.id, rol_id=roles["analista"].id))
     kw = {"organizacion_id": org.id, "hotel_id": hotel.id, "usuario_id": None}
     archivo = DatosArchivo(nombre=VARIANCE.name, sha256="a" * 64)
 
@@ -125,6 +136,8 @@ def agosto_real() -> Iterator[AgostoReal]:
         version_plan_id=plan.id,
         reglas=reglas_como_mapa(db, hotel.id, version.id),
         valores=valores,
+        sesiones=fabrica,
+        email_analista="analista_real@test.local",
     )
     db.close()
     engine.dispose()

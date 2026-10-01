@@ -91,7 +91,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 4.4 Pantalla de Variance `[HECHA]` | Tabla por secciones con subtotales, formato contable, columnas fijas | Cifras en pantalla = Excel de agosto |
 | 4.5 Drill-down en pantalla `[HECHA]` | Del número hasta el asiento | Prueba de navegador (Playwright) |
 | 4.6 Exportación a Excel `[HECHA]` | Mismo formato del reporte actual | El Excel exportado abre y coincide con la pantalla |
-| 4.7 Rendimiento | Caché de reportes y agregados | Variance mensual (~400 líneas) p95 < 500 ms con caché |
+| 4.7 Rendimiento `[HECHA]` | Caché de reportes y agregados | Variance mensual (~400 líneas) p95 < 500 ms con caché |
 | 4.8 Pruebas con usuarios | Sesión con Contraloría usando agosto | Lista de hallazgos cerrada |
 
 ---

@@ -13,6 +13,15 @@ from fpa.identidad.proveedor import ProveedorDesarrollo
 from fpa.main import app
 from fpa.modelos import Asignacion, Base, Hotel, Organizacion, Usuario
 from fpa.semilla import sembrar_roles
+from fpa.servicios.reportes import cache_variance
+
+
+@pytest.fixture(autouse=True)
+def cache_limpia() -> Iterator[None]:
+    """Cada prueba usa su propia base en memoria (con los mismos ids): la caché no se comparte."""
+    cache_variance.limpiar()
+    yield
+    cache_variance.limpiar()
 
 
 @pytest.fixture
