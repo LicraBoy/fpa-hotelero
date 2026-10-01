@@ -110,8 +110,9 @@ function FilaLinea({
       <CeldasBloque
         calculada={calculada}
         cifras={linea.anual}
-        enlace={enlace('ytd')}
-        etiquetaEnlace={`Ver el desglose de ${linea.descripcion}, acumulado del año`}
+        // el Actual del bloque anual es el mismo acumulado: su desglose está en el bloque YTD
+        enlace={null}
+        etiquetaEnlace=''
       />
     </tr>
   )

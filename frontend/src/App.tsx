@@ -35,7 +35,11 @@ export default function App() {
   const hoteles = useDatos(() => obtenerTipado('/api/v1/hoteles', {}), [usuario])
 
   // El hotel activo se deriva: el elegido si sigue disponible, si no el primero del usuario.
-  const hotel = hoteles.datos?.find((h) => h.id === hotelId) ?? hoteles.datos?.[0]
+  // Mientras se recarga (cambio de usuario) no hay hotel ni rol: los datos que quedan en memoria son
+  // del usuario anterior y no deben decidir qué pantallas se montan ni qué consultas se hacen.
+  const hotel = hoteles.cargando
+    ? undefined
+    : (hoteles.datos?.find((h) => h.id === hotelId) ?? hoteles.datos?.[0])
   const rol = hotel?.rol
 
   const pestanas: { id: Pestana; nombre: string; visible: boolean }[] = [

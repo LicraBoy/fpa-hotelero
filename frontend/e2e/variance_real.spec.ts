@@ -142,3 +142,25 @@ test('el reporte real carga completo: secciones, totales y sin errores', async (
   expect(await page.getByRole('row').count()).toBeGreaterThan(400)
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
+
+test('"Cargar más" recorre todos los movimientos de una cuenta grande y cuadra con su neto', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  await page.goto('/#/variance/2026-08/cuenta/6006035.001?bloque=ytd')
+  await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Analista' })
+  const cuadre = page.getByRole('status', { name: 'Cuadre de la cuenta' })
+  await expect(cuadre).toContainText('Mostrados 50 de')
+  const total = Number(/de (\d+)/.exec((await cuadre.innerText()).replace(/\s+/g, ' '))?.[1])
+  expect(total).toBeGreaterThan(100) // la cuenta tiene cientos de movimientos: hacen falta varias páginas
+  const boton = page.getByRole('button', { name: /Cargar más/ })
+  while (await boton.count()) {
+    await boton.click()
+    await expect(boton).toBeEnabled({ timeout: 20_000 }).catch(() => undefined)
+  }
+  await expect(cuadre).toContainText(`Mostrados ${total} de ${total}`)
+  await expect(cuadre).toContainText('Cuadra con el neto de la cuenta')
+  // nunca se repiten movimientos: tantas filas como movimientos
+  const filas = page.getByRole('region', { name: 'Movimientos', exact: true }).getByRole('row')
+  await expect(filas).toHaveCount(total + 1)
+})

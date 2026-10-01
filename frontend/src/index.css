@@ -574,3 +574,74 @@ input[type='file'] {
   color: var(--primario);
   text-decoration: underline dotted;
 }
+
+/* ---------- Drill-down ---------- */
+.migas ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.migas li + li::before {
+  content: '›';
+  margin-right: 0.4rem;
+  color: var(--suave);
+}
+
+.migas a {
+  color: var(--primario);
+}
+
+.migas-bloque {
+  margin: 0.2rem 0 0.6rem;
+  font-size: 0.8rem;
+}
+
+.cuadre {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  align-items: center;
+  margin: 0.75rem 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--neutro-fondo);
+  border-radius: 6px;
+}
+
+.tabla-simple {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-simple th,
+.tabla-simple td {
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+  font-weight: normal;
+}
+
+.tabla-simple thead th {
+  background: var(--neutro-fondo);
+  font-weight: 600;
+}
+
+.tabla-simple .num {
+  text-align: right;
+}
+
+.tabla-simple tfoot th,
+.tabla-simple tfoot td {
+  font-weight: 700;
+  border-top: 2px solid var(--texto);
+}
+
+.tabla-simple a {
+  color: var(--primario);
+}

@@ -5,6 +5,9 @@ import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { puede } from '../../permisos'
 import { useRuta } from '../../ruta/useRuta'
 import { agruparPorSeccion } from './agrupar'
+import { AsientoVista } from './AsientoVista'
+import { Desglose } from './Desglose'
+import { Movimientos } from './Movimientos'
 import { TablaVariance } from './TablaVariance'
 
 interface Props {
@@ -15,7 +18,7 @@ interface Props {
 const ESPERA_BUSQUEDA_MS = 300
 
 /** Pantalla de Variance: el reporte del mes, el acumulado del año fiscal y el Budget anual. */
-export function PanelVariance({ hotelId, rol }: Props) {
+function ReporteVariance({ hotelId, rol }: Props) {
   const { ruta, navegar } = useRuta()
   const rutaPeriodo = ruta.tipo === 'variance' ? ruta.periodo : null
 
@@ -73,18 +76,6 @@ export function PanelVariance({ hotelId, rol }: Props) {
       else nuevas.add(id)
       return nuevas
     })
-  }
-
-  if (ruta.tipo !== 'variance') {
-    // El desglose (cuentas, movimientos y asientos) llega en la sub-fase 4.5.
-    return (
-      <section className="tarjeta" aria-label="Desglose">
-        <p className="suave">
-          Esta pantalla (<span>{ruta.tipo}</span>) se construye en la sub-fase 4.5.
-        </p>
-        <a href="#/variance">Volver al Variance</a>
-      </section>
-    )
   }
 
   const datos = variance.datos
@@ -185,4 +176,42 @@ export function PanelVariance({ hotelId, rol }: Props) {
       )}
     </section>
   )
+}
+
+/**
+ * Pantalla de Variance y su recorrido de desglose. Cada ruta monta SOLO su pantalla: ir al detalle
+ * de una cuenta no vuelve a pedir el reporte completo.
+ */
+export function PanelVariance({ hotelId, rol }: Props) {
+  const { ruta } = useRuta()
+  switch (ruta.tipo) {
+    case 'variance':
+      return <ReporteVariance hotelId={hotelId} rol={rol} />
+    case 'desglose':
+      return (
+        <Desglose
+          hotelId={hotelId}
+          periodo={ruta.periodo}
+          lineaId={ruta.lineaId}
+          bloque={ruta.bloque}
+        />
+      )
+    case 'cuenta':
+      return (
+        <Movimientos
+          hotelId={hotelId}
+          periodo={ruta.periodo}
+          codigo={ruta.codigo}
+          bloque={ruta.bloque}
+        />
+      )
+    case 'asiento':
+      return <AsientoVista hotelId={hotelId} periodo={ruta.periodo} asiento={ruta.asiento} />
+    default:
+      return (
+        <section className="mensaje mensaje-aviso" role="alert" aria-label="Ruta no válida">
+          La dirección no es válida. <a href="#/variance">Volver al Variance</a>
+        </section>
+      )
+  }
 }

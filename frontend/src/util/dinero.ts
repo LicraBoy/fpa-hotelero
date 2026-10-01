@@ -22,6 +22,27 @@ export function formatoDinero(texto: string): string {
   return deCentavos(aCentavos(texto))
 }
 
+/** Suma exacta, como texto FORMATEADO para mostrar (con miles). Para comparar usa `sumarCentavos`. */
 export function sumar(textos: string[]): string {
   return deCentavos(textos.reduce((acc, t) => acc + aCentavos(t), 0n))
+}
+
+/** Centavos -> texto plano, SIN separadores de miles ("-123450" -> "-1234.50"), para seguir operando. */
+export function aTextoPlano(centavos: bigint): string {
+  const negativo = centavos < 0n
+  const digitos = (negativo ? -centavos : centavos).toString().padStart(3, '0')
+  return `${negativo ? '-' : ''}${digitos.slice(0, -2)}.${digitos.slice(-2)}`
+}
+
+/** Suma exacta en centavos. A diferencia de `sumar`, devuelve el entero para poder comparar. */
+export function sumarCentavos(textos: string[]): bigint {
+  return textos.reduce((acc, t) => acc + aCentavos(t), 0n)
+}
+
+/**
+ * Cambia el signo de un importe exacto, sin separadores de miles (para seguir operando con él):
+ * "5.00" -> "-5.00"; "-1234.50" -> "1234.50".
+ */
+export function negar(texto: string): string {
+  return aTextoPlano(-aCentavos(texto))
 }
