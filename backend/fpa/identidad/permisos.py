@@ -11,6 +11,10 @@ class Permiso(StrEnum):
     CATALOGO_IMPORTAR = "catalogo:importar"
     SALDOS_LEER = "saldos:leer"
     AUDITORIA_LEER = "auditoria:leer"
+    REPORTE_LEER = "reporte:leer"
+    MAPEO_LEER = "mapeo:leer"
+    MAPEO_EDITAR = "mapeo:editar"
+    MAPEO_APROBAR = "mapeo:aprobar"
 
 
 class RolCodigo(StrEnum):
@@ -40,11 +44,23 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.CATALOGO_LEER,
             Permiso.CATALOGO_IMPORTAR,
             Permiso.SALDOS_LEER,
+            Permiso.REPORTE_LEER,
+            Permiso.MAPEO_LEER,
+            Permiso.MAPEO_EDITAR,
         }
     ),
-    RolCodigo.RESPONSABLE_AREA: frozenset({Permiso.HOTEL_LEER, Permiso.CATALOGO_LEER}),
+    RolCodigo.RESPONSABLE_AREA: frozenset(
+        {Permiso.HOTEL_LEER, Permiso.CATALOGO_LEER, Permiso.REPORTE_LEER}
+    ),
     RolCodigo.DIRECCION: frozenset(
-        {Permiso.HOTEL_LEER, Permiso.CARGA_LEER, Permiso.CATALOGO_LEER, Permiso.SALDOS_LEER}
+        {
+            Permiso.HOTEL_LEER,
+            Permiso.CARGA_LEER,
+            Permiso.CATALOGO_LEER,
+            Permiso.SALDOS_LEER,
+            Permiso.REPORTE_LEER,
+            Permiso.MAPEO_LEER,
+        }
     ),
     RolCodigo.AUDITORIA: frozenset(
         {
@@ -53,6 +69,8 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.CATALOGO_LEER,
             Permiso.SALDOS_LEER,
             Permiso.AUDITORIA_LEER,
+            Permiso.REPORTE_LEER,
+            Permiso.MAPEO_LEER,
         }
     ),
 }

@@ -285,6 +285,33 @@ def excluir_cuenta(
     return existente
 
 
+def quitar_exclusion(
+    db: Session,
+    *,
+    organizacion_id: int,
+    hotel_id: int,
+    usuario_id: int | None,
+    version_id: int,
+    cuenta_codigo: str,
+) -> None:
+    ctx = _Contexto(db, organizacion_id, hotel_id, usuario_id)
+    version = ctx.borrador_editable(version_id)
+    existente = db.scalar(
+        select(CuentaExcluidaMapeo).where(
+            CuentaExcluidaMapeo.version_mapeo_id == version.id,
+            CuentaExcluidaMapeo.hotel_id == hotel_id,
+            CuentaExcluidaMapeo.cuenta_codigo == cuenta_codigo,
+        )
+    )
+    if existente is None:
+        raise LookupError("La cuenta no está excluida en esta versión")
+    db.delete(existente)
+    db.flush()
+    ctx.auditar(
+        "mapeo.editado", version.id, {"cambio": "exclusion_quitada", "cuenta": cuenta_codigo}
+    )
+
+
 def periodos_con_movimientos(db: Session, hotel_id: int) -> list[str]:
     return sorted(
         db.scalars(

@@ -108,6 +108,20 @@ def _ubicar_inicio(filas: Sequence[Sequence[object]]) -> int:
     raise ValueError('No se encontró el encabezado "Account #" de la hoja del Variance')
 
 
+def leer_filas_hoja(
+    ruta: str | Path, hoja: str = HOJA, max_col: int = 20
+) -> list[tuple[object, ...]]:
+    """Filas de la hoja con **fórmulas** (no valores), hasta la columna T. Se lee una sola vez."""
+    with Path(ruta).open("rb") as archivo:
+        wb = load_workbook(archivo, read_only=True, data_only=False)
+        try:
+            if hoja not in wb.sheetnames:
+                raise ValueError(f'El libro no tiene la hoja "{hoja}"')
+            return [tuple(r) for r in wb[hoja].iter_rows(max_col=max_col, values_only=True)]
+        finally:
+            wb.close()
+
+
 def leer_variance_estructura(ruta: str | Path, hoja: str = HOJA) -> ResultadoEstructura:
     with Path(ruta).open("rb") as archivo:
         wb = load_workbook(archivo, read_only=True, data_only=False)

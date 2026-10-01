@@ -8,6 +8,10 @@ export type Permiso =
   | 'catalogo:importar'
   | 'saldos:leer'
   | 'auditoria:leer'
+  | 'reporte:leer'
+  | 'mapeo:leer'
+  | 'mapeo:editar'
+  | 'mapeo:aprobar'
 
 const POR_ROL: Record<string, Permiso[]> = {
   contralor: [
@@ -17,11 +21,31 @@ const POR_ROL: Record<string, Permiso[]> = {
     'catalogo:importar',
     'saldos:leer',
     'auditoria:leer',
+    'reporte:leer',
+    'mapeo:leer',
+    'mapeo:editar',
+    'mapeo:aprobar',
   ],
-  analista: ['carga:crear', 'carga:leer', 'catalogo:leer', 'catalogo:importar', 'saldos:leer'],
-  responsable_area: ['catalogo:leer'],
-  direccion: ['carga:leer', 'catalogo:leer', 'saldos:leer'],
-  auditoria: ['carga:leer', 'catalogo:leer', 'saldos:leer', 'auditoria:leer'],
+  analista: [
+    'carga:crear',
+    'carga:leer',
+    'catalogo:leer',
+    'catalogo:importar',
+    'saldos:leer',
+    'reporte:leer',
+    'mapeo:leer',
+    'mapeo:editar',
+  ],
+  responsable_area: ['catalogo:leer', 'reporte:leer'],
+  direccion: ['carga:leer', 'catalogo:leer', 'saldos:leer', 'reporte:leer', 'mapeo:leer'],
+  auditoria: [
+    'carga:leer',
+    'catalogo:leer',
+    'saldos:leer',
+    'auditoria:leer',
+    'reporte:leer',
+    'mapeo:leer',
+  ],
 }
 
 export const NOMBRE_ROL: Record<string, string> = {
