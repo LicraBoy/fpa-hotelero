@@ -2,7 +2,7 @@
 
 import logging
 import re
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Any
@@ -12,6 +12,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from fpa.api.v1.respuestas import RESPUESTAS_HOTEL
+from fpa.api.v1.tipos import FechaHoraUtc, IdRuta
 from fpa.config import settings
 from fpa.db import get_db
 from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
@@ -35,9 +37,9 @@ from fpa.servicios.auditoria import auditar
 from fpa.servicios.cargar_archivo import Resolucion, ResultadoCarga, cargar_archivo
 from fpa.servicios.cargas import DatosArchivo
 
-router = APIRouter(tags=["cargas"])
+router = APIRouter(tags=["cargas"], responses=RESPUESTAS_HOTEL)
 log = logging.getLogger(__name__)
-_RE_PERIODO = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
+_RE_PERIODO = re.compile(r"^20\d{2}-(0[1-9]|1[0-2])$")
 
 _HTTP_POR_RESOLUCION = {
     Resolucion.CREADA: 201,
@@ -60,7 +62,7 @@ class CargaSalida(BaseModel):
     total_credito: Decimal
     fecha_min: date
     fecha_max: date
-    creado_en: datetime
+    creado_en: FechaHoraUtc
     usuario_id: int | None
     reemplazada_por_id: int | None
 
@@ -98,7 +100,7 @@ class EventoSalida(BaseModel):
     entidad_id: int | None
     usuario_id: int | None
     detalle: dict[str, Any] | None
-    creado_en: datetime
+    creado_en: FechaHoraUtc
 
 
 def _carga_salida(c: CargaArchivo) -> CargaSalida:
@@ -254,7 +256,7 @@ def listar_cargas(
 
 @router.get("/hoteles/{hotel_id}/cargas/{carga_id}", response_model=CargaDetalle)
 def detalle_carga(
-    carga_id: int,
+    carga_id: IdRuta,
     contexto: Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.CARGA_LEER))],
     db: Session = Depends(get_db),
 ) -> CargaDetalle:

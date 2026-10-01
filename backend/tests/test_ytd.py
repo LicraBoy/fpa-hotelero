@@ -51,7 +51,7 @@ def test_mes_de_inicio_invalido(mes_inicio: int) -> None:
         periodos_ytd("2026-08", mes_inicio=mes_inicio)
 
 
-@given(st.integers(2000, 2100), st.integers(1, 12), st.integers(1, 12))
+@given(st.integers(2000, 2099), st.integers(1, 12), st.integers(1, 12))
 def test_propiedades_de_periodos_ytd(anio: int, mes: int, inicio: int) -> None:
     periodo = f"{anio:04d}-{mes:02d}"
     ytd = periodos_ytd(periodo, inicio)

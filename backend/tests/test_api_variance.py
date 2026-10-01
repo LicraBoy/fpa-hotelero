@@ -141,3 +141,102 @@ def test_el_resultado_es_deterministico(
 ) -> None:
     _preparar(db, mundo)
     assert _pedir(cliente, mundo, usuario=usuario).json() == _pedir(cliente, mundo).json()
+
+
+# --- Filtros y secciones (4.1) ------------------------------------------------------------------
+
+
+def _descripciones(r) -> list[str]:  # type: ignore[no-untyped-def]
+    return [x["descripcion"] for x in r.json()["lineas"]]
+
+
+def test_filtros_por_tipo_texto_y_seccion(cliente: TestClient, mundo: Mundo, db: Session) -> None:
+    _preparar(db, mundo)
+    base = f"/api/v1/hoteles/{mundo.hotel_a}/variance?periodo=2026-08"
+    h = como(ANALISTA)
+    todas = cliente.get(base, headers=h).json()
+    assert [x["descripcion"] for x in todas["lineas"]] == ["Ingreso", "Gasto", "Total"]
+    solo_totales = cliente.get(f"{base}&tipo=total", headers=h)
+    assert _descripciones(solo_totales) == ["Total"]
+    detalle_y_total = cliente.get(f"{base}&tipo=total&tipo=detalle", headers=h)
+    assert _descripciones(detalle_y_total) == ["Ingreso", "Gasto", "Total"]
+    assert _descripciones(cliente.get(f"{base}&q=ING", headers=h)) == ["Ingreso"]  # sin mayúsculas
+    assert _descripciones(cliente.get(f"{base}&q=zzz", headers=h)) == []
+    # El reporte de ejemplo no tiene secciones: ninguna línea pertenece a una sección inexistente
+    assert todas["secciones"] == []
+    assert _descripciones(cliente.get(f"{base}&seccion_id=999", headers=h)) == []
+
+
+def test_filtros_invalidos_son_422(cliente: TestClient, mundo: Mundo, db: Session) -> None:
+    _preparar(db, mundo)
+    base = f"/api/v1/hoteles/{mundo.hotel_a}/variance?periodo=2026-08"
+    h = como(ANALISTA)
+    assert cliente.get(f"{base}&tipo=inventado", headers=h).status_code == 422
+    assert cliente.get(f"{base}&q={'x' * 101}", headers=h).status_code == 422
+    assert cliente.get(f"{base}&seccion_id=abc", headers=h).status_code == 422
+
+
+def test_la_exclusion_a_proposito_se_advierte(
+    cliente: TestClient, mundo: Mundo, db: Session
+) -> None:
+    from fpa.servicios.versionado_mapeo import excluir_cuenta
+
+    esc = Escenario(db, mundo, [_mov("4001002.001", "0", "100"), _mov("4999999", "0", "5")])
+    excluir_cuenta(
+        db,
+        version_id=esc.borrador.id,  # type: ignore[union-attr]
+        cuenta_codigo="4999999",
+        motivo="Prueba",
+        **esc.kw,  # type: ignore[arg-type]
+    )
+    aprobar(db, version_id=esc.borrador.id, **esc.kw)  # type: ignore[union-attr, arg-type]
+    db.commit()
+    r = _pedir(cliente, mundo)
+    assert any("4999999" in a and "a propósito" in a for a in r.json()["advertencias"])
+
+
+def test_secciones_con_su_total() -> None:
+    from types import SimpleNamespace as L
+
+    from fpa.servicios.variance import secciones_del_reporte
+
+    lineas = [
+        L(id=1, tipo="seccion", descripcion="Ingresos", seccion_id=None),
+        L(id=2, tipo="detalle", descripcion="a", seccion_id=1),
+        L(id=3, tipo="total", descripcion="Total Ingresos", seccion_id=1),
+        L(id=4, tipo="seccion", descripcion="Sin total", seccion_id=None),
+        L(id=5, tipo="detalle", descripcion="b", seccion_id=4),
+        L(id=6, tipo="seccion", descripcion="Solo subtotal", seccion_id=None),
+        L(id=7, tipo="subtotal", descripcion="s", seccion_id=6),
+    ]
+    r = secciones_del_reporte(lineas)  # type: ignore[arg-type]
+    assert [(s.id, s.linea_total_id) for s in r] == [(1, 3), (4, None), (6, 7)]
+
+
+def test_ids_y_periodos_fuera_de_rango_son_422_no_500(
+    cliente: TestClient, mundo: Mundo, db: Session
+) -> None:
+    _preparar(db, mundo)
+    base = f"/api/v1/hoteles/{mundo.hotel_a}/variance"
+    h = como(ANALISTA)
+    assert cliente.get(f"{base}?periodo=1999-12", headers=h).status_code == 422
+    assert cliente.get(f"{base}?periodo=2100-01", headers=h).status_code == 422
+    assert (
+        cliente.get(
+            f"{base}?periodo=2026-08&version_mapeo_id=9223372036854775808", headers=h
+        ).status_code
+        == 422
+    )
+    assert cliente.get(f"{base}?periodo=2026-08&version_plan_id=0", headers=h).status_code == 422
+    assert (
+        cliente.get(
+            "/api/v1/hoteles/9223372036854775808/variance?periodo=2026-08", headers=h
+        ).status_code
+        == 422
+    )
+    assert (
+        cliente.get(
+            f"/api/v1/hoteles/{mundo.hotel_a}/mapeo/versiones/9223372036854775808", headers=h
+        ).status_code
+        == 422
+    )

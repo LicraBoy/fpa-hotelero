@@ -8,8 +8,9 @@ Reglas (ADR 0003):
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException, Path, Request
 from sqlalchemy.orm import Session
 
 from fpa.db import get_db
@@ -50,7 +51,8 @@ def hotel_autorizado(permiso: Permiso) -> Callable[..., ContextoHotel]:
     """Fábrica de dependencia: exige acceso al hotel de la ruta y un permiso en él."""
 
     def dependencia(
-        hotel_id: int, principal: Principal = Depends(principal_actual)
+        hotel_id: Annotated[int, Path(ge=1, le=2_147_483_647)],
+        principal: Principal = Depends(principal_actual),
     ) -> ContextoHotel:
         if not principal.tiene_acceso_a(hotel_id):
             raise HTTPException(status_code=404, detail="Hotel no encontrado")

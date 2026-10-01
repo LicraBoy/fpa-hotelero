@@ -6,7 +6,6 @@ en la bitácora. Solo se edita un borrador; una versión aprobada es inmutable (
 
 import logging
 import re
-from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -15,6 +14,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from fpa.api.v1.respuestas import RESPUESTAS_HOTEL
+from fpa.api.v1.tipos import ID_MAX, FechaHoraUtc, IdConsulta, IdRuta
 from fpa.config import settings
 from fpa.db import get_db
 from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
@@ -54,9 +55,9 @@ from fpa.servicios.versionado_mapeo import (
     quitar_vinculo,
 )
 
-router = APIRouter(tags=["mapeo"])
+router = APIRouter(tags=["mapeo"], responses=RESPUESTAS_HOTEL)
 log = logging.getLogger(__name__)
-_RE_PERIODO = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
+_RE_PERIODO = re.compile(r"^20\d{2}-(0[1-9]|1[0-2])$")
 
 Lectura = Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.MAPEO_LEER))]
 LecturaReporte = Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.REPORTE_LEER))]
@@ -83,7 +84,7 @@ class EstructuraSalida(BaseModel):
     version_id: int
     nombre_archivo: str
     periodo_referencia: str | None
-    creado_en: datetime
+    creado_en: FechaHoraUtc
     n_lineas: int
     n_detalle: int
     lineas: list[LineaSalida]
@@ -96,9 +97,9 @@ class VersionSalida(BaseModel):
     origen: str
     version_estructura_id: int
     notas: str | None
-    creada_en: datetime
+    creada_en: FechaHoraUtc
     creada_por_id: int | None
-    aprobada_en: datetime | None
+    aprobada_en: FechaHoraUtc | None
     aprobada_por_id: int | None
 
 
@@ -113,7 +114,7 @@ class ExclusionSalida(BaseModel):
     cuenta_codigo: str
     motivo: str
     usuario_id: int | None
-    creada_en: datetime
+    creada_en: FechaHoraUtc
 
 
 class VersionDetalle(VersionSalida):
@@ -122,7 +123,7 @@ class VersionDetalle(VersionSalida):
 
 
 class VinculoEntrada(BaseModel):
-    linea_id: int
+    linea_id: Annotated[int, Field(ge=1, le=ID_MAX)]
     cuenta_codigo: str = Field(min_length=1, max_length=40)
     signo: int
 
@@ -133,7 +134,7 @@ class ExclusionEntrada(BaseModel):
 
 
 class CopiaEntrada(BaseModel):
-    version_origen_id: int | None = None
+    version_origen_id: Annotated[int | None, Field(ge=1, le=ID_MAX)] = None
 
 
 class AprobacionEntrada(BaseModel):
@@ -207,7 +208,7 @@ def listar_versiones(contexto: Lectura, db: Session = Depends(get_db)) -> list[V
 
 @router.get("/hoteles/{hotel_id}/mapeo/versiones/{version_id}", response_model=VersionDetalle)
 def detalle_version(
-    version_id: int, contexto: Lectura, db: Session = Depends(get_db)
+    version_id: IdRuta, contexto: Lectura, db: Session = Depends(get_db)
 ) -> VersionDetalle:
     repo = RepositorioMapeo(db, contexto.hotel_id)
     version = repo.obtener(version_id)
@@ -235,9 +236,9 @@ def detalle_version(
 
 @router.get("/hoteles/{hotel_id}/mapeo/versiones/{version_id}/validacion")
 def validacion(
-    version_id: int,
+    version_id: IdRuta,
     contexto: Lectura,
-    periodo: Annotated[str, Query(description="AAAA-MM")],
+    periodo: Annotated[str, Query(pattern=r"^20\d{2}-(0[1-9]|1[0-2])$", description="AAAA-MM")],
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     if not _RE_PERIODO.match(periodo):
@@ -283,7 +284,7 @@ def crear_borrador(
     "/hoteles/{hotel_id}/mapeo/versiones/{version_id}/vinculos", response_model=VinculoSalida
 )
 def poner_vinculo(
-    version_id: int, entrada: VinculoEntrada, contexto: Edicion, db: Session = Depends(get_db)
+    version_id: IdRuta, entrada: VinculoEntrada, contexto: Edicion, db: Session = Depends(get_db)
 ) -> VinculoSalida:
     try:
         v = agregar_vinculo(
@@ -305,9 +306,9 @@ def poner_vinculo(
 
 @router.delete("/hoteles/{hotel_id}/mapeo/versiones/{version_id}/vinculos", status_code=204)
 def borrar_vinculo(
-    version_id: int,
+    version_id: IdRuta,
     contexto: Edicion,
-    linea_id: Annotated[int, Query()],
+    linea_id: IdConsulta,
     cuenta_codigo: Annotated[str, Query(min_length=1, max_length=40)],
     db: Session = Depends(get_db),
 ) -> None:
@@ -329,7 +330,7 @@ def borrar_vinculo(
     "/hoteles/{hotel_id}/mapeo/versiones/{version_id}/exclusiones", response_model=ExclusionSalida
 )
 def poner_exclusion(
-    version_id: int, entrada: ExclusionEntrada, contexto: Edicion, db: Session = Depends(get_db)
+    version_id: IdRuta, entrada: ExclusionEntrada, contexto: Edicion, db: Session = Depends(get_db)
 ) -> ExclusionSalida:
     try:
         e = excluir_cuenta(
@@ -353,7 +354,7 @@ def poner_exclusion(
 
 @router.delete("/hoteles/{hotel_id}/mapeo/versiones/{version_id}/exclusiones", status_code=204)
 def borrar_exclusion(
-    version_id: int,
+    version_id: IdRuta,
     contexto: Edicion,
     cuenta_codigo: Annotated[str, Query(min_length=1, max_length=40)],
     db: Session = Depends(get_db),
@@ -367,7 +368,7 @@ def borrar_exclusion(
 
 
 @router.post("/hoteles/{hotel_id}/mapeo/versiones/{version_id}/descartar", status_code=204)
-def descartar(version_id: int, contexto: Edicion, db: Session = Depends(get_db)) -> None:
+def descartar(version_id: IdRuta, contexto: Edicion, db: Session = Depends(get_db)) -> None:
     try:
         descartar_borrador(db, version_id=version_id, **_kw(contexto))
         db.commit()
@@ -380,7 +381,7 @@ def descartar(version_id: int, contexto: Edicion, db: Session = Depends(get_db))
     "/hoteles/{hotel_id}/mapeo/versiones/{version_id}/aprobar", response_model=VersionSalida
 )
 def aprobar_version(
-    version_id: int,
+    version_id: IdRuta,
     contexto: Aprobacion,
     entrada: AprobacionEntrada | None = None,
     db: Session = Depends(get_db),

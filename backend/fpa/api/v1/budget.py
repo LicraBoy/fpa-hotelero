@@ -6,7 +6,6 @@ edita: reimportar crea otra y deja la anterior como `reemplazada`.
 
 import logging
 import re
-from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Annotated
@@ -16,6 +15,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from fpa.api.v1.respuestas import RESPUESTAS_HOTEL
+from fpa.api.v1.tipos import FechaHoraUtc, IdRuta
 from fpa.calculo.ano_fiscal import etiqueta_ano_fiscal
 from fpa.config import settings
 from fpa.db import get_db
@@ -39,9 +40,9 @@ from fpa.servicios.budget import importar_budget
 from fpa.servicios.cargar_archivo import Resolucion
 from fpa.servicios.cargas import DatosArchivo
 
-router = APIRouter(tags=["budget"])
+router = APIRouter(tags=["budget"], responses=RESPUESTAS_HOTEL)
 log = logging.getLogger(__name__)
-_RE_PERIODO = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
+_RE_PERIODO = re.compile(r"^20\d{2}-(0[1-9]|1[0-2])$")
 _HTTP = {
     Resolucion.CREADA: 201,
     Resolucion.REEMPLAZADA: 201,
@@ -65,9 +66,9 @@ class VersionPlanSalida(BaseModel):
     sha256: str
     n_lineas: int
     version_estructura_id: int
-    creada_en: datetime
+    creada_en: FechaHoraUtc
     usuario_id: int | None
-    reemplazada_en: datetime | None
+    reemplazada_en: FechaHoraUtc | None
 
 
 class LineaPlanSalida(BaseModel):
@@ -106,7 +107,7 @@ def listar_versiones(contexto: Lectura, db: Session = Depends(get_db)) -> list[V
 
 @router.get("/hoteles/{hotel_id}/budget/versiones/{version_id}", response_model=VersionPlanDetalle)
 def detalle_version(
-    version_id: int, contexto: Lectura, db: Session = Depends(get_db)
+    version_id: IdRuta, contexto: Lectura, db: Session = Depends(get_db)
 ) -> VersionPlanDetalle:
     repo = RepositorioPlan(db, contexto.hotel_id)
     version = repo.obtener(version_id)
@@ -126,7 +127,12 @@ def importar(
     request: Request,
     contexto: Importacion,
     archivo: Annotated[UploadFile, File(description="Excel del Variance (.xlsx), hoja `Ago`")],
-    periodo_corte: Annotated[str, Form(description="AAAA-MM del archivo, p. ej. 2026-08")],
+    periodo_corte: Annotated[
+        str,
+        Form(
+            pattern=r"^20\d{2}-(0[1-9]|1[0-2])$", description="AAAA-MM del archivo, p. ej. 2026-08"
+        ),
+    ],
     ano_fiscal: Annotated[str | None, Form(description="Por omisión se deduce del corte")] = None,
     confirmar_reemplazo: Annotated[bool, Form()] = False,
     db: Session = Depends(get_db),

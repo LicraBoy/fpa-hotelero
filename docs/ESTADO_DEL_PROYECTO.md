@@ -14,7 +14,8 @@
 | **1 Data Hub: Actuals** | **Hecha** |
 | 2 Catálogo corporativo y mapeo | **Código listo** (2.1 a 2.6); falta aprobación de Contraloría |
 | 3 Motor de Variance | **Código listo** (3.1 a 3.7); falta el Excel de septiembre de Contraloría |
-| 4 a 14 | Pendientes |
+| 4 Reporting y frontend | **En curso** (4.1 hecha) |
+| 5 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
 | Sub-fase | Estado |
@@ -51,6 +52,12 @@
 | 3.6 Prueba dorada de agosto (`calculo/motor.py`, `servicios/variance.py`, `GET /hoteles/{id}/variance`, `tests/test_variance_dorada.py`) | **Hecha, con 19 excepciones documentadas** |
 | 3.7 Segunda prueba: septiembre (`tests/test_variance_septiembre.py`: consistencia del YTD, Budget no inventado, validación; arnés de diferencia cero) | **Hecha el arnés; falta el Excel de septiembre** |
 
+### Sub-fases de la Fase 4
+| Sub-fase | Estado |
+|---|---|
+| 4.1 Endpoints de reporte (filtros y secciones en `GET /variance`, contrato con Schemathesis) | **Hecha** |
+| 4.2 Drill-down · 4.3 Base del frontend · 4.4 Pantalla de Variance · 4.5 Drill-down en pantalla · 4.6 Exportación a Excel · 4.7 Rendimiento · 4.8 Pruebas con usuarios | Pendientes |
+
 ## Frontend (Fase 1) y pruebas de navegador
 - Pantallas: **Cargas** (subir CON130 o Variance, aviso de reemplazo con confirmación, lista de cargas y su reporte de calidad), **Catálogo** (árbol con búsqueda), **Saldos** (por mes, con total exacto) y **Auditoría**. Cada rol ve solo sus secciones.
 - Modo desarrollo: el usuario se elige en un selector (cabecera `X-Usuario-Dev`); se reemplazará por el inicio de sesión corporativo.
@@ -59,7 +66,7 @@
 - `npm run build` y `npm run lint` sin errores.
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **408 pasan y 2 se saltan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **431 pasan y 2 se saltan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -117,6 +124,8 @@
 
 - **Septiembre (3.7):** no hay Variance ni Budget de septiembre de Contraloría, así que **no se puede probar la "diferencia cero" de septiembre**; el arnés (`test_septiembre_contra_el_excel_de_contraloria`) se activa solo cuando haya un `*Variance*Sep*.xlsx` en la carpeta de datos reales. Con el CON130 de septiembre cargado se prueba lo que sí se puede: el acumulado julio–septiembre es **exactamente** el de agosto más el mes de septiembre en cada línea; el Budget del mes y del YTD no se inventa (solo el anual, con aviso); agosto no cambia al cargar septiembre. **Hallazgos:** (1) el mapeo de agosto no conoce **154 cuentas con movimiento en septiembre** (cuentas nuevas como `4001006.x` y `4003001.010`, un ingreso de ≈ 4.6 millones): hay que ampliar el mapeo con Contraloría antes de dar por bueno el Variance de septiembre, y la validación ya lo bloquea; (2) el CON130 de septiembre es **parcial** (262 cuentas de resultados con movimiento, de las que 108 están en el mapeo; p. ej. Salaries sale en 0 y IVA/Lodging Tax tampoco aparecen): si es el reporte completo del mes, falta confirmar con quién lo exporta.
 
+- **Endpoints de reporte (4.1):** `GET /hoteles/{id}/variance` acepta `seccion_id`, `tipo` (repetible: detalle, subtotal, total, informativa) y `q` (texto, sin distinguir mayúsculas), y devuelve `secciones` con su línea de total; avisa cuando el mapeo deja cuentas fuera a propósito. **Contrato:** `tests/test_contrato_api.py` corre Schemathesis (dependencia solo de desarrollo, `requirements.txt`) sobre todas las rutas de lectura con entradas generadas. Encontró y se corrigieron **defectos reales**: (1) un periodo como `0000-01` o un id gigante (`9223372036854775808`) daba **500**; ahora los ids son enteros de 32 bits positivos y los periodos van de 2000-01 a 2099-12, con **422**; (2) las fechas salían **sin zona horaria** en SQLite (`2026-10-01T10:38:43`): ahora siempre UTC; (3) el OpenAPI no documentaba los 401/403/404/409 ni que un 422 puede traer un texto de negocio. Se excluye una sola comprobación (`Allow` en un 405) por una limitación de Starlette con rutas de varios métodos.
+
 ## Pendientes y avisos
 - No hay servidor remoto de código; lo define TI.
 - **Salida de la Fase 1 verificada por la API con los Excel reales** (también en vivo con el servidor): CON130 septiembre = 7,242 movimientos (57,835,193.08); Variance = 3,583 (julio) + 3,277 (agosto); repetir un archivo no cambia nada; 366 saldos de septiembre; catálogo con 145 títulos + 554 cuentas con movimientos; un usuario de otro hotel recibe 404 en todo.
@@ -130,4 +139,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**Para cerrar la Fase 3 (Contraloría):** (1) el Variance y el Budget de septiembre para la prueba de diferencia cero; (2) ampliar el mapeo con las 154 cuentas nuevas de septiembre; (3) confirmar las causas de las 19 excepciones de agosto (ver `FASES_FUTURAS.md`). Pendientes anteriores que siguen abiertos: `4002013`/`4003003` sin línea, clave única de una línea, origen del Budget, año fiscal julio–junio y convención de signo. Con eso, **Fase 4 — Reporting y frontend definitivo** (la API del Variance ya existe: `GET /hoteles/{id}/variance`).
+**Fase 4.2:** drill-down (línea → cuentas → movimientos paginados por cursor → asiento), con la propiedad de que la suma de los movimientos = la cifra del reporte. Pendientes de Contraloría que siguen abiertos: Variance y Budget de septiembre y ampliar el mapeo con 154 cuentas; causas de las 19 excepciones de agosto; `4002013`/`4003003`; clave única de línea; origen del Budget; año fiscal julio–junio; convención de signo.

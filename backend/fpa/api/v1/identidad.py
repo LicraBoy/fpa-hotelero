@@ -60,7 +60,11 @@ def mis_hoteles(
     ]
 
 
-@router.get("/hoteles/{hotel_id}", response_model=HotelSalida)
+@router.get(
+    "/hoteles/{hotel_id}",
+    response_model=HotelSalida,
+    responses={401: {"description": "No autenticado"}, 404: {"description": "Hotel no encontrado"}},
+)
 def detalle_hotel(
     contexto: Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.HOTEL_LEER))],
     db: Session = Depends(get_db),

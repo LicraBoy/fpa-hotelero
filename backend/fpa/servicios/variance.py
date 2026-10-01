@@ -23,6 +23,15 @@ class PlanIncompatible(ValueError):
     """El Budget pertenece a otra estructura del reporte que el mapeo."""
 
 
+@dataclass(frozen=True)
+class SeccionReporte:
+    """Una sección del reporte y la línea que la totaliza (si tiene)."""
+
+    id: int
+    descripcion: str
+    linea_total_id: int | None
+
+
 @dataclass
 class ReporteVariance:
     hotel_id: int
@@ -34,6 +43,7 @@ class ReporteVariance:
     periodos_sin_datos: list[str]
     lineas: list[LineaReporte]
     resultado: dict[int, LineaVariance]
+    secciones: list[SeccionReporte] = field(default_factory=list)
     advertencias: list[str] = field(default_factory=list)
 
 
@@ -47,6 +57,20 @@ def _plan(
             raise LookupError("Versión de Budget no encontrada")
         return version
     return repo.vigente(TIPO_BUDGET, etiqueta_ano_fiscal(periodo))
+
+
+def secciones_del_reporte(lineas: list[LineaReporte]) -> list[SeccionReporte]:
+    """Secciones en orden; su línea de total es el último `total` de la sección (o subtotal)."""
+    salida: list[SeccionReporte] = []
+    for seccion in (x for x in lineas if x.tipo == "seccion"):
+        propias = [x for x in lineas if x.seccion_id == seccion.id]
+        totales = [x for x in propias if x.tipo == "total"] or [
+            x for x in propias if x.tipo == "subtotal"
+        ]
+        salida.append(
+            SeccionReporte(seccion.id, seccion.descripcion, totales[-1].id if totales else None)
+        )
+    return salida
 
 
 def calcular_variance(
@@ -73,7 +97,9 @@ def calcular_variance(
         )
 
     reportes = RepositorioReporte(db, hotel_id)
-    lineas = [x for x in reportes.lineas(mapeo.version_estructura_id) if x.tipo != "seccion"]
+    todas = reportes.lineas(mapeo.version_estructura_id)
+    lineas = [x for x in todas if x.tipo != "seccion"]
+    secciones = secciones_del_reporte(todas)
     reglas = reglas_como_mapa(db, hotel_id, mapeo.version_estructura_id)
 
     mes = actual_del_periodo(db, hotel_id=hotel_id, periodo=periodo, version_mapeo_id=mapeo.id)
@@ -111,6 +137,13 @@ def calcular_variance(
                 f"El Budget cargado es del corte {plan.periodo_corte}: el Budget del mes y del "
                 f"acumulado de {periodo} no está disponible (solo el anual)"
             )
+    excluidas = RepositorioMapeo(db, hotel_id).excluidas(mapeo.id)
+    if excluidas:
+        codigos = ", ".join(e.cuenta_codigo for e in excluidas[:5])
+        advertencias.append(
+            f"El mapeo (versión {mapeo.numero}) deja fuera a propósito {len(excluidas)} cuentas "
+            f"({codigos}): sus movimientos no entran al reporte"
+        )
     if ytd.sin_datos:
         advertencias.append(
             "El acumulado está incompleto: faltan movimientos de " + ", ".join(ytd.sin_datos)
@@ -129,5 +162,6 @@ def calcular_variance(
         periodos_sin_datos=ytd.sin_datos,
         lineas=lineas,
         resultado=resultado,
+        secciones=secciones,
         advertencias=advertencias,
     )

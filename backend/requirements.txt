@@ -15,4 +15,5 @@ hypothesis==6.168.3
 ruff==0.16.9
 mypy==2.3.1
 types-openpyxl==3.1.5.20260827
+schemathesis==4.28.0  # solo pruebas de contrato de la API (desarrollo)
 xlwt==1.3.0  # solo para crear .xls sintéticos en pruebas

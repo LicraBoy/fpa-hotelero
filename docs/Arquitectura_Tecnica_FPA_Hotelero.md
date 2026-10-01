@@ -355,7 +355,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 ### Fase 4 — API de reporting y frontend (L)
 | Sub-fase | Qué se hace | Qué se prueba |
 |---|---|---|
-| 4.1 Endpoints de reporte | Variance por periodo y sección; filtros | Contrato OpenAPI; pruebas con Schemathesis |
+| 4.1 Endpoints de reporte `[HECHO]` | Variance por periodo y sección; filtros | Contrato OpenAPI; pruebas con Schemathesis |
 | 4.2 Drill-down | Línea → cuentas locales → movimientos, paginado por cursor | La suma de los movimientos mostrados = cifra de origen |
 | 4.3 Base del frontend | React + TS, rutas protegidas, cliente generado de OpenAPI | Sin acceso a pantallas sin rol; tipos sin `any` |
 | 4.4 Pantalla de Variance | Tabla por secciones con subtotales, formato contable, columnas fijas | Comparación visual y de valores contra el Excel de agosto |

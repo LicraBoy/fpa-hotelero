@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from fpa.api.v1.respuestas import RESPUESTAS_HOTEL
 from fpa.config import settings
 from fpa.db import get_db
 from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
@@ -26,7 +27,7 @@ from fpa.servicios.auditoria import auditar
 from fpa.servicios.catalogo import NodoCatalogo, construir_arbol
 from fpa.servicios.catalogo_oficial import importar_catalogo
 
-router = APIRouter(tags=["catalogo"])
+router = APIRouter(tags=["catalogo"], responses=RESPUESTAS_HOTEL)
 log = logging.getLogger(__name__)
 
 

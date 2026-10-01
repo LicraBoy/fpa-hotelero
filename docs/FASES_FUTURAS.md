@@ -85,7 +85,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 | Sub-fase | Qué se hace | Qué se prueba |
 |---|---|---|
-| 4.1 Endpoints de reporte | Variance por periodo y sección, con filtros | Contrato de la API; pruebas automáticas de entradas inválidas |
+| 4.1 Endpoints de reporte `[HECHA]` | Variance por periodo y sección, con filtros | Contrato de la API; pruebas automáticas de entradas inválidas |
 | 4.2 Drill-down | Línea → cuentas → movimientos, paginado | La suma de los movimientos mostrados = la cifra de origen |
 | 4.3 Base del frontend | Elegir librería de componentes; rutas protegidas; cliente tipado | Sin acceso a pantallas sin rol |
 | 4.4 Pantalla de Variance | Tabla por secciones con subtotales, formato contable, columnas fijas | Cifras en pantalla = Excel de agosto |

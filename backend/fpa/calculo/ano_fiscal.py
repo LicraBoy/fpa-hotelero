@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 
 MES_INICIO_POR_DEFECTO = 7
-_RE_PERIODO = re.compile(r"^(\d{4})-(0[1-9]|1[0-2])$")
+_RE_PERIODO = re.compile(r"^([1-9]\d{3})-(0[1-9]|1[0-2])$")  # la API acota a 2000-2099
 
 
 def _partes(periodo: str) -> tuple[int, int]:
