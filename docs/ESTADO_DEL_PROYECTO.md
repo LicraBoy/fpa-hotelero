@@ -3,7 +3,7 @@
 Última actualización: 01-oct-2026
 
 ## Fase actual
-**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: sub-fases 2.1 a 2.6 HECHAS; falta la aprobación de Contraloría** (ver Pendientes). **Fase 3 — Motor de Variance: en curso** (3.1 hecha).
+**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: sub-fases 2.1 a 2.6 HECHAS; falta la aprobación de Contraloría** (ver Pendientes). **Fase 3 — Motor de Variance: en curso** (3.1 y 3.2 hechas).
 
 ## Avance por fase
 | Fase | Estado |
@@ -13,7 +13,7 @@
 | 0 Repositorio full stack (alcance básico) | **Hecha** |
 | **1 Data Hub: Actuals** | **Hecha** |
 | 2 Catálogo corporativo y mapeo | **Código listo** (2.1 a 2.6); falta aprobación de Contraloría |
-| 3 Motor de Variance | **En curso** (3.1 hecha) |
+| 3 Motor de Variance | **En curso** (3.1 y 3.2 hechas) |
 | 4 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
@@ -44,7 +44,8 @@
 | Sub-fase | Estado |
 |---|---|
 | 3.1 Budget como versión inmutable (`VersionPlan` + `LineaPlan`, migración `0011`, `servicios/budget.py`, `api/v1/budget.py`) | **Hecha** |
-| 3.2 Motor de Actual · 3.3 YTD y año fiscal · 3.4 Totales · 3.5 Variance y % · 3.6 Prueba dorada agosto · 3.7 Septiembre | Pendientes |
+| 3.2 Motor de Actual (`calculo/actual.py` pura, `servicios/actual.py`) | **Hecha** |
+| 3.3 YTD y año fiscal · 3.4 Totales · 3.5 Variance y % · 3.6 Prueba dorada agosto · 3.7 Septiembre | Pendientes |
 
 ## Frontend (Fase 1) y pruebas de navegador
 - Pantallas: **Cargas** (subir CON130 o Variance, aviso de reemplazo con confirmación, lista de cargas y su reporte de calidad), **Catálogo** (árbol con búsqueda), **Saldos** (por mes, con total exacto) y **Auditoría**. Cada rol ve solo sus secciones.
@@ -54,7 +55,7 @@
 - `npm run build` y `npm run lint` sin errores.
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **330 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **345 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -100,6 +101,8 @@
 
 - **Budget (3.1):** `POST /hoteles/{id}/budget/importar` carga el Budget pegado en el Excel (mes = columna E, YTD = J, anual = O) como `VersionPlan` **inmutable**: no existe forma de editarla; reimportar otro archivo del mismo año fiscal pide confirmación y deja la anterior como `reemplazada`. Real: 400+ líneas, idénticas al Excel celda por celda. **Se guarda con 6 decimales** (`Medida`, no `Dinero`) porque el Budget del Excel trae decimales de más (`20639.6489456203`) y recortarlo a centavos movería los totales; los reportes redondean al mostrar. Tres filas con cifras y sin nombre (395, 520, 528) se ignoran con aviso. Permisos nuevos `budget:leer`, `budget:importar` y `variance:leer` (analista y contralor importan; dirección y auditoría leen). El año fiscal por omisión sale del corte (agosto 2026 → `2026/27`, **julio–junio por validar**).
 
+- **Motor de Actual (3.2):** `calcular_actual(vinculos, netos)` = Σ signo × (Débito − Crédito) por línea; pura, `Decimal`, sin base de datos. Propiedades con `hypothesis`: invertir los signos invierte el resultado, la suma de las líneas = Σ de los vínculos con signo, el orden de entrada no importa y es lineal en los netos. `servicios/actual.py` lee los saldos del periodo y el mapeo **aprobado** (o la versión que se indique; sin mapeo aprobado es error, no un cero silencioso).
+
 ## Pendientes y avisos
 - No hay servidor remoto de código; lo define TI.
 - **Salida de la Fase 1 verificada por la API con los Excel reales** (también en vivo con el servidor): CON130 septiembre = 7,242 movimientos (57,835,193.08); Variance = 3,583 (julio) + 3,277 (agosto); repetir un archivo no cambia nada; 366 saldos de septiembre; catálogo con 145 títulos + 554 cuentas con movimientos; un usuario de otro hotel recibe 404 en todo.
@@ -113,4 +116,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**Fase 3.2:** motor de Actual (`Actual(línea, mes)` = Σ signo × neto de las cuentas mapeadas; función pura con propiedades). Después 3.3 a 3.7. Pendientes de Contraloría que no bloquean: `4002013`/`4003003` sin línea, clave única de una línea, origen del Budget, año fiscal y convención de signo. La Fase 2 se cierra formalmente cuando Contraloría apruebe el mapeo.
+**Fase 3.3:** YTD y año fiscal (acumulado julio–junio, mes sin datos, cierre de año). Después 3.4 a 3.7. Pendientes de Contraloría que no bloquean: `4002013`/`4003003` sin línea, clave única de una línea, origen del Budget, año fiscal y convención de signo. La Fase 2 se cierra formalmente cuando Contraloría apruebe el mapeo.

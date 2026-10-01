@@ -343,7 +343,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 | Sub-fase | Qué se hace | Qué se prueba |
 |---|---|---|
 | 3.1 Budget como versión `[HECHO]` | Cargar Budget del Excel de agosto (mes, YTD, anual) como `version_plan` inmutable | El Budget cargado es idéntico al del Excel, línea por línea |
-| 3.2 Motor de Actual | `Actual(línea, mes)` desde movimientos + mapeo (función pura) | Pruebas unitarias con casos pequeños y propiedades (signo, suma) |
+| 3.2 Motor de Actual `[HECHO]` | `Actual(línea, mes)` desde movimientos + mapeo (función pura) | Pruebas unitarias con casos pequeños y propiedades (signo, suma) |
 | 3.3 YTD y año fiscal | Acumulado julio–junio | Fronteras: primer mes, cierre de año, mes sin datos |
 | 3.4 Totales y subtotales | Reglas de suma; Commercial Services (Net Income, Expenses, Profit, Allocations) | Totales iguales a los del reporte |
 | 3.5 Variance y Variance % | Convención de signo configurable | División entre cero y presupuesto cero devuelven un valor definido, no error |
