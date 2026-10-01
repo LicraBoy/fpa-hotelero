@@ -360,7 +360,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 | 4.3 Base del frontend `[HECHO]` | React + TS, rutas protegidas, cliente generado de OpenAPI | Sin acceso a pantallas sin rol; tipos sin `any` |
 | 4.4 Pantalla de Variance `[HECHO]` | Tabla por secciones con subtotales, formato contable, columnas fijas | Comparación visual y de valores contra el Excel de agosto |
 | 4.5 Pantalla de drill-down `[HECHO]` | Navegación desde la cifra hasta el asiento | Prueba end-to-end con Playwright |
-| 4.6 Exportación a Excel | Mismo formato del reporte actual | El Excel exportado abre y sus cifras coinciden con la pantalla |
+| 4.6 Exportación a Excel `[HECHO]` | Mismo formato del reporte actual | El Excel exportado abre y sus cifras coinciden con la pantalla |
 | 4.7 Rendimiento | Caché de reportes y agregados | Objetivos de la sección 4.5 |
 | 4.8 Pruebas con usuarios | Sesión con Contraloría usando agosto | Lista de hallazgos cerrada |
 

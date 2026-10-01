@@ -141,3 +141,21 @@ export async function importarCatalogo(
   }
   throw new ErrorApi(r.status, mensajeDeError(cuerpo, r.status))
 }
+
+const RUTA_EXPORTAR = '/api/v1/hoteles/{hotel_id}/variance/exportar' as const
+
+/**
+ * Descarga el Variance en Excel con los mismos filtros que la pantalla. Devuelve el archivo y el
+ * nombre que sugiere el servidor (ya saneado). El archivo nunca se guarda en el navegador: se
+ * entrega al usuario y se libera.
+ */
+export async function descargarVarianceExcel(
+  opciones: OpcionesGet<typeof RUTA_EXPORTAR>,
+): Promise<{ archivo: Blob; nombre: string }> {
+  const r = await fetch(armarUrl(RUTA_EXPORTAR, opciones.path, opciones.query), {
+    headers: cabeceras(),
+  })
+  if (!r.ok) throw new ErrorApi(r.status, mensajeDeError(await leerJson(r), r.status))
+  const sugerido = /filename="([A-Za-z0-9._-]+)"/.exec(r.headers.get('content-disposition') ?? '')
+  return { archivo: await r.blob(), nombre: sugerido?.[1] ?? 'variance.xlsx' }
+}

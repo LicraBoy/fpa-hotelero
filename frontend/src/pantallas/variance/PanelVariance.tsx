@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { obtenerTipado } from '../../api/cliente'
+import { ErrorApi, descargarVarianceExcel, obtenerTipado } from '../../api/cliente'
 import { useDatos } from '../../api/useDatos'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { puede } from '../../permisos'
@@ -42,6 +42,8 @@ function ReporteVariance({ hotelId, rol }: Props) {
   const [textoBusqueda, setTextoBusqueda] = useState('')
   const [busqueda, setBusqueda] = useState('')
   const [plegadas, setPlegadas] = useState<ReadonlySet<number | null>>(new Set())
+  const [exportando, setExportando] = useState(false)
+  const [errorExportar, setErrorExportar] = useState<string | null>(null)
 
   useEffect(() => {
     const espera = setTimeout(() => setBusqueda(textoBusqueda.trim()), ESPERA_BUSQUEDA_MS)
@@ -68,6 +70,33 @@ function ReporteVariance({ hotelId, rol }: Props) {
     () => (variance.datos ? agruparPorSeccion(variance.datos.lineas, variance.datos.secciones) : []),
     [variance.datos],
   )
+
+  // Descarga el Excel con los mismos filtros que se ven en pantalla
+  async function exportar() {
+    setExportando(true)
+    setErrorExportar(null)
+    try {
+      const { archivo, nombre } = await descargarVarianceExcel({
+        path: { hotel_id: hotelId },
+        query: {
+          periodo,
+          seccion_id: seccionId ?? undefined,
+          tipo: soloTotales ? ['total', 'subtotal'] : undefined,
+          q: busqueda === '' ? undefined : busqueda,
+        },
+      })
+      const url = URL.createObjectURL(archivo)
+      const enlace = document.createElement('a')
+      enlace.href = url
+      enlace.download = nombre
+      enlace.click()
+      URL.revokeObjectURL(url)
+    } catch (e: unknown) {
+      setErrorExportar(e instanceof ErrorApi ? e.detalle : 'No se pudo exportar el reporte')
+    } finally {
+      setExportando(false)
+    }
+  }
 
   function alternar(id: number | null) {
     setPlegadas((anteriores) => {
@@ -130,7 +159,16 @@ function ReporteVariance({ hotelId, rol }: Props) {
           />
           Solo totales y subtotales
         </label>
+        <button
+          type="button"
+          className="boton-exportar"
+          disabled={exportando || periodo === ''}
+          onClick={() => void exportar()}
+        >
+          {exportando ? 'Exportando…' : 'Exportar a Excel'}
+        </button>
       </form>
+      {errorExportar && <MensajeError texto={errorExportar} />}
 
       {cargas.cargando && <Cargando />}
       {cargas.error && <MensajeError texto={cargas.error} />}

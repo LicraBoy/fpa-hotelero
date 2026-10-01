@@ -51,6 +51,7 @@ Una de las pruebas lee el Excel real de Torres si lo encuentra en la carpeta de 
 | `POST /hoteles/{id}/budget/importar` | Cargar el Budget del Excel del Variance como versión inmutable (`periodo_corte`, `ano_fiscal`, `confirmar_reemplazo`) |
 | `GET /hoteles/{id}/budget/versiones`, `…/{version}` | Versiones del Budget y sus cifras por línea (mes, YTD, anual) |
 | `GET /hoteles/{id}/variance?periodo=AAAA-MM` | Variance del periodo (mes, YTD y anual: Actual, Budget, Variance y %), con el mapeo aprobado y el Budget vigente (`version_mapeo_id`, `version_plan_id` opcionales; filtros `seccion_id`, `tipo`, `q`) |
+| `GET /hoteles/{id}/variance/exportar?periodo=` | Descarga el Variance en Excel (mismo formato que el reporte; acepta los filtros de la pantalla) |
 | `GET /hoteles/{id}/variance/lineas/{linea}/desglose?periodo&bloque=mes\|ytd` | Qué hay detrás de una cifra: las cuentas de una línea o los componentes de un total (permiso `drilldown:leer`) |
 | `GET /hoteles/{id}/variance/cuentas/{codigo}/movimientos?periodo&bloque&cursor&limite` | Movimientos de una cuenta, paginados por cursor |
 | `GET /hoteles/{id}/asientos/{asiento}?periodo` | Las líneas de un asiento |

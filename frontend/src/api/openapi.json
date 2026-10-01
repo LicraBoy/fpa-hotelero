@@ -4300,6 +4300,172 @@
         ]
       }
     },
+    "/api/v1/hoteles/{hotel_id}/variance/exportar": {
+      "get": {
+        "description": "Descarga el Variance en Excel con los filtros de la pantalla; queda en la bitácora.",
+        "operationId": "exportar_api_v1_hoteles__hotel_id__variance_exportar_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "AAAA-MM",
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "description": "AAAA-MM",
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version_mapeo_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version Mapeo Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version_plan_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version Plan Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "seccion_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Seccion Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tipo",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "enum": [
+                      "detalle",
+                      "subtotal",
+                      "total",
+                      "informativa"
+                    ],
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tipo"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Libro de Excel con el reporte (mismo orden y bloques que la pantalla)"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Exportar",
+        "tags": [
+          "variance"
+        ]
+      }
+    },
     "/api/v1/hoteles/{hotel_id}/variance/lineas/{linea_id}/desglose": {
       "get": {
         "description": "Qué hay detrás de la cifra de una línea: sus cuentas, o los componentes de un total.",

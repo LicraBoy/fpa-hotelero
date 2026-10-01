@@ -11,6 +11,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -20,7 +21,10 @@ from fpa.calculo.motor import Cifras
 from fpa.db import get_db
 from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
 from fpa.identidad.permisos import Permiso
+from fpa.modelos.organizacion import Hotel
 from fpa.modelos.reporte import LineaReporte
+from fpa.servicios.auditoria import auditar
+from fpa.servicios.exportar_variance import generar_excel, nombre_de_archivo
 from fpa.servicios.variance import PlanIncompatible, calcular_variance
 
 router = APIRouter(tags=["variance"])
@@ -160,4 +164,77 @@ def variance(
             for x in r.lineas
             if _pasa(x, seccion_id, tipo, q)
         ],
+    )
+
+
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+@router.get(
+    "/hoteles/{hotel_id}/variance/exportar",
+    responses={
+        **RESPUESTAS_REPORTE,
+        200: {
+            "description": "Libro de Excel con el reporte (mismo orden y bloques que la pantalla)",
+            "content": {XLSX: {"schema": {"type": "string", "format": "binary"}}},
+        },
+    },
+    response_class=Response,
+)
+def exportar(
+    contexto: Lectura,
+    periodo: Annotated[str, Query(pattern=r"^20\d{2}-(0[1-9]|1[0-2])$", description="AAAA-MM")],
+    version_mapeo_id: Annotated[int | None, Query(ge=1, le=ID_MAX)] = None,
+    version_plan_id: Annotated[int | None, Query(ge=1, le=ID_MAX)] = None,
+    seccion_id: Annotated[int | None, Query(ge=1, le=ID_MAX)] = None,
+    tipo: Annotated[list[TipoLineaFiltro] | None, Query()] = None,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    db: Session = Depends(get_db),
+) -> Response:
+    """Descarga el Variance en Excel con los filtros de la pantalla; queda en la bitácora."""
+    try:
+        r = calcular_variance(
+            db,
+            hotel_id=contexto.hotel_id,
+            periodo=periodo,
+            version_mapeo_id=version_mapeo_id,
+            version_plan_id=version_plan_id,
+        )
+    except LookupError as e:
+        raise HTTPException(
+            status_code=404, detail=str(e.args[0]) if e.args else "No encontrado"
+        ) from None
+    except PlanIncompatible as e:
+        raise HTTPException(status_code=409, detail=str(e)) from None
+    lineas = [x for x in r.lineas if _pasa(x, seccion_id, tipo, q)]
+    hotel = db.get(Hotel, contexto.hotel_id)
+    contenido = generar_excel(
+        hotel=hotel.nombre if hotel else f"Hotel {contexto.hotel_id}",
+        periodo=r.periodo,
+        ano_fiscal=r.ano_fiscal,
+        lineas=lineas,
+        secciones=r.secciones,
+        resultado=r.resultado,
+        advertencias=r.advertencias,
+        version_mapeo=r.version_mapeo_id,
+        version_budget=r.version_plan_id,
+        periodos_ytd=r.periodos_ytd,
+    )
+    auditar(
+        db,
+        organizacion_id=contexto.organizacion_id,
+        hotel_id=contexto.hotel_id,
+        usuario_id=contexto.principal.usuario_id,
+        accion="variance.exportado",
+        entidad="variance",
+        detalle={"periodo": periodo, "n_lineas": len(lineas), "bytes": len(contenido)},
+    )
+    db.commit()
+    return Response(
+        content=contenido,
+        media_type=XLSX,
+        headers={
+            "Content-Disposition": f'attachment; filename="{nombre_de_archivo(periodo)}"',
+            "Cache-Control": "no-store",
+        },
     )

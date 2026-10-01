@@ -1,4 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { abrirVariance, prepararReporteSintetico } from './datos'
 
 // Pantalla de Variance con un reporte SINTÉTICO de cifras conocidas (ver
@@ -112,4 +115,65 @@ test('el analista ve enlaces de desglose en las cifras de Actual', async ({ page
   await abrirVariance(page, 'Analista')
   const enlace = page.getByRole('link', { name: 'Ver el desglose de Room Revenue, mes' })
   await expect(enlace).toHaveAttribute('href', /#\/variance\/2026-08\/linea\/\d+\?bloque=mes/)
+})
+
+test('"Exportar a Excel" descarga un libro cuyas cifras son las de la pantalla', async ({ page }, info) => {
+  await abrirVariance(page)
+  const [descarga] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Exportar a Excel' }).click(),
+  ])
+  expect(descarga.suggestedFilename()).toBe('variance_2026-08.xlsx')
+  const ruta = info.outputPath('variance_exportado.xlsx')
+  await descarga.saveAs(ruta)
+  expect(readFileSync(ruta).subarray(0, 2).toString()).toBe('PK') // un .xlsx es un zip
+
+  // El libro se abre con openpyxl (script del backend) y se compara con lo que muestra la pantalla
+  const python = process.env.FPA_PYTHON ?? resolve('../backend/.venv/Scripts/python.exe')
+  const salida = execFileSync(python, ['scripts/leer_excel_exportado.py', ruta], {
+    cwd: resolve('../backend'),
+    encoding: 'utf8',
+  })
+  const filas: { descripcion: string; cifras: (string | null)[] }[] = JSON.parse(salida)
+  const excel = new Map(filas.map((f) => [f.descripcion, f.cifras]))
+  for (const [descripcion, esperado] of [
+    ['Room Revenue', ['1000.00', '900.00', '100.00', '0.111111']],
+    ['Salaries', ['400.00', '380.00', '-20.00', '-0.052632']],
+    ['Total Expenses', ['550.25', '520.00', '-30.25', '-0.058173']],
+    ['Net Profit', ['950.25', '980.00', '-29.75', '-0.030357']],
+  ] as const) {
+    expect(excel.get(descripcion)?.slice(0, 4), descripcion).toEqual(esperado)
+  }
+  // y esas mismas cifras son las que muestra la tabla
+  expect((await celdas(page, 'Room Revenue')).slice(0, 4)).toEqual(['1,000.00', '900.00', '100.00', '11.1%'])
+})
+
+test('con un filtro, el Excel trae solo lo que muestra la pantalla', async ({ page }, info) => {
+  await abrirVariance(page)
+  await page.getByLabel('Solo totales y subtotales').check()
+  await expect(page.getByRole('rowheader', { name: 'Room Revenue' })).toHaveCount(0)
+  const [descarga] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Exportar a Excel' }).click(),
+  ])
+  const ruta = info.outputPath('variance_filtrado.xlsx')
+  await descarga.saveAs(ruta)
+  const python = process.env.FPA_PYTHON ?? resolve('../backend/.venv/Scripts/python.exe')
+  const filas: { descripcion: string }[] = JSON.parse(
+    execFileSync(python, ['scripts/leer_excel_exportado.py', ruta], {
+      cwd: resolve('../backend'),
+      encoding: 'utf8',
+    }),
+  )
+  expect(filas.map((f) => f.descripcion).filter((d) => !['Revenue', 'Expenses'].includes(d))).toEqual([
+    'Total Revenue',
+    'Total Expenses',
+    'Net Profit',
+  ])
+})
+
+test('sin permiso para ver el reporte no hay botón de exportar', async ({ page }) => {
+  await page.goto('/')
+  await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Responsable de área' })
+  await expect(page.getByRole('button', { name: 'Exportar a Excel' })).toHaveCount(0)
 })

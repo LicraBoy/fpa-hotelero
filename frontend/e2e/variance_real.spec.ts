@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -163,4 +164,50 @@ test('"Cargar más" recorre todos los movimientos de una cuenta grande y cuadra 
   // nunca se repiten movimientos: tantas filas como movimientos
   const filas = page.getByRole('region', { name: 'Movimientos', exact: true }).getByRole('row')
   await expect(filas).toHaveCount(total + 1)
+})
+
+test('el Excel exportado de agosto real trae las mismas cifras de referencia que la hoja Ago', async ({
+  page,
+}, info) => {
+  test.setTimeout(120_000)
+  const referencias: Referencia[] = JSON.parse(readFileSync(GOLDEN, 'utf8'))
+  await page.setViewportSize({ width: 1600, height: 900 })
+  await page.goto('/')
+  await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Analista' })
+  await page
+    .getByRole('navigation', { name: 'Secciones' })
+    .getByRole('button', { name: 'Variance' })
+    .click()
+  await expect(page.getByRole('region', { name: 'Tabla de Variance' })).toBeVisible()
+  const [descarga] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Exportar a Excel' }).click(),
+  ])
+  const ruta = info.outputPath('variance_real_exportado.xlsx')
+  await descarga.saveAs(ruta)
+  const python = process.env.FPA_PYTHON ?? resolve('../backend/.venv/Scripts/python.exe')
+  const filas: { descripcion: string; cifras: (string | null)[] }[] = JSON.parse(
+    execFileSync(python, ['scripts/leer_excel_exportado.py', ruta], {
+      cwd: resolve('../backend'),
+      encoding: 'utf8',
+      maxBuffer: 50 * 1024 * 1024,
+    }),
+  )
+  expect(filas.length).toBeGreaterThan(400)
+  const excel = new Map(filas.map((f) => [f.descripcion, f.cifras]))
+  const diferencias: string[] = []
+  for (const ref of referencias) {
+    const cifras = excel.get(ref.descripcion)
+    expect(cifras, ref.descripcion).toBeDefined()
+    ref.cifras.forEach((esperado, i) => {
+      if (esperado === null || cifras?.[i] === null || cifras?.[i] === undefined) return
+      const objetivo = Number(esperado)
+      const visto = Number(cifras[i])
+      const tolerancia = campoEsPorcentaje(i) ? 0.0011 + 0.00001 * Math.abs(objetivo) : 0.11
+      if (Math.abs(visto - objetivo) > tolerancia) {
+        diferencias.push(`${ref.descripcion} [col ${i}]: Excel exportado ${cifras[i]} / hoja Ago ${esperado}`)
+      }
+    })
+  }
+  expect(diferencias).toEqual([])
 })

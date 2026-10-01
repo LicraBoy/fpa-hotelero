@@ -472,6 +472,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/variance/exportar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar
+         * @description Descarga el Variance en Excel con los filtros de la pantalla; queda en la bitácora.
+         */
+        get: operations["exportar_api_v1_hoteles__hotel_id__variance_exportar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/variance/lineas/{linea_id}/desglose": {
         parameters: {
             query?: never;
@@ -2851,6 +2871,73 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    exportar_api_v1_hoteles__hotel_id__variance_exportar_get: {
+        parameters: {
+            query: {
+                /** @description AAAA-MM */
+                periodo: string;
+                version_mapeo_id?: number | null;
+                version_plan_id?: number | null;
+                seccion_id?: number | null;
+                tipo?: ("detalle" | "subtotal" | "total" | "informativa")[] | null;
+                q?: string | null;
+            };
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Libro de Excel con el reporte (mismo orden y bloques que la pantalla) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
