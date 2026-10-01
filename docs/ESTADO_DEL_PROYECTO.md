@@ -3,7 +3,7 @@
 Última actualización: 01-oct-2026
 
 ## Fase actual
-**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: en curso** (2.1 y 2.2 hechas; sigue 2.3).
+**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: en curso** (2.1 a 2.3 hechas; sigue 2.4).
 
 ## Avance por fase
 | Fase | Estado |
@@ -12,7 +12,7 @@
 | Arquitectura técnica v1.0 | Hecha (`docs/Arquitectura_Tecnica_FPA_Hotelero.md`) |
 | 0 Repositorio full stack (alcance básico) | **Hecha** |
 | **1 Data Hub: Actuals** | **Hecha** |
-| 2 Catálogo corporativo y mapeo | **En curso** (2.1 y 2.2 hechas) |
+| 2 Catálogo corporativo y mapeo | **En curso** (2.1 a 2.3 hechas) |
 | 3 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
@@ -34,7 +34,8 @@
 |---|---|
 | 2.1 Estructura del reporte (`fpa/ingesta/variance_estructura.py`, `VersionEstructuraReporte` + `LineaReporte`, migración `0007`, `importar_estructura_reporte`) | **Hecha** |
 | 2.2 Reglas de suma (`variance_reglas.py`, `ReglaSumaLinea`, migración `0008`, `evaluar_totales` pura) | **Hecha** |
-| 2.3 Mapeo · 2.4 Validación · 2.5 Versionado · 2.6 API | Pendientes |
+| 2.3 Mapeo línea ↔ cuenta (`variance_mapeo.py`, `VersionMapeo` + `MapeoLineaCuenta`, migración `0009`, `importar_mapeo`, `discrepancias_de_signo`) | **Hecha** |
+| 2.4 Validación · 2.5 Versionado · 2.6 API | Pendientes |
 
 ## Frontend (Fase 1) y pruebas de navegador
 - Pantallas: **Cargas** (subir CON130 o Variance, aviso de reemplazo con confirmación, lista de cargas y su reporte de calidad), **Catálogo** (árbol con búsqueda), **Saldos** (por mes, con total exacto) y **Auditoría**. Cada rol ve solo sus secciones.
@@ -44,7 +45,7 @@
 - `npm run build` y `npm run lint` sin errores.
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **265 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **274 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -80,6 +81,8 @@
 
 - **Reglas de suma (2.2):** se leen de las fórmulas de la columna S de `Ago` con un analizador propio (solo `SUM(rango)`, sumas y restas de celdas; nunca se evalúa texto). 45 reglas (totales y subtotales) que, con los importes pegados de la columna D, reproducen todos los totales del Excel (diferencia < 0.05). Sin regla: 2 filas "Allocated" (576 y 577) que no traen fórmula. La clasificación de la 2.1 se afinó: una fila con importe y fórmula en S es subtotal/total (p. ej. PUERTO VALLARTA, fila 535); ahora son 26 totales + 21 subtotales + 32 informativas.
 
+- **Mapeo (2.3):** se lee de las fórmulas S (Actual) y T (Budget) de `Ago`, no de las columnas X a AJ (Excel pierde el cero final de `4002001.010`). Real: 304 vínculos a 302 cuentas en 263 líneas = **253 con fórmula en S y T** (las que cita el plan) + **10 solo en T** (tienen Budget y Actual 0 en agosto; se importan). Signo −1 en 31 vínculos y +1 en 273. **Contra el catálogo oficial: 0 discrepancias de signo** en las 210 cuentas que sí están en él; 92 cuentas del mapeo no están en el catálogo (se avisan, se siguen vinculando). El mapeo se importa como **borrador** (`VersionMapeo`, un solo borrador por hotel; otro importe pide confirmación y descarta el anterior). Aprobación y edición: 2.5.
+
 ## Pendientes y avisos
 - No hay servidor remoto de código; lo define TI.
 - **Salida de la Fase 1 verificada por la API con los Excel reales** (también en vivo con el servidor): CON130 septiembre = 7,242 movimientos (57,835,193.08); Variance = 3,583 (julio) + 3,277 (agosto); repetir un archivo no cambia nada; 366 saldos de septiembre; catálogo con 145 títulos + 554 cuentas con movimientos; un usuario de otro hotel recibe 404 en todo.
@@ -93,4 +96,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**Fase 2.3:** importar el mapeo línea ↔ cuentas con su signo desde las fórmulas S/T de `Ago`. Después (mapeo desde las columnas X a AJ con su signo), 2.4 a 2.6. Antes, confirmar con Contraloría la clave única de una línea y el origen del Budget (el signo ya lo respalda el TIPO de cuenta del catálogo oficial).
+**Fase 2.4:** validación del mapeo (cuentas con movimiento sin vínculo, cuentas en varias líneas). Después (mapeo desde las columnas X a AJ con su signo), 2.4 a 2.6. Antes, confirmar con Contraloría la clave única de una línea y el origen del Budget (el signo ya lo respalda el TIPO de cuenta del catálogo oficial).
