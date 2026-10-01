@@ -37,13 +37,13 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 ## Fase 2 — Catálogo corporativo y mapeo `[SIGUIENTE]` (M)
 
-**Avance:** el catálogo oficial de cuentas ya está importado (sub-fase 1.9). Trae TIPO (signo), departamento y grupo de cada cuenta, lo que permite **validar el mapeo** contra el Excel del contralor en vez de aceptarlo a ciegas, y derivar la sección del reporte desde el código (los grupos de 4 dígitos de la clase 6 son los departamentos).
+**Avance:** la sub-fase 2.1 (estructura del reporte desde la hoja `Ago`) está hecha. El catálogo oficial de cuentas ya está importado (sub-fase 1.9). Trae TIPO (signo), departamento y grupo de cada cuenta, lo que permite **validar el mapeo** contra el Excel del contralor en vez de aceptarlo a ciegas, y derivar la sección del reporte desde el código (los grupos de 4 dígitos de la clase 6 son los departamentos).
 
 **Objetivo:** convertir las cuentas de Novohit en las líneas del reporte Variance, con las reglas que hoy están escondidas en las columnas X a AJ de la hoja `Ago`.
 
 | Sub-fase | Qué se hace | Qué se prueba |
 |---|---|---|
-| 2.1 Estructura del reporte | Importar de la hoja `Ago` las secciones, líneas, orden y tipo (detalle, subtotal, total) | 409 líneas de detalle importadas en el mismo orden que el Excel |
+| 2.1 Estructura del reporte `[HECHA]` | Importar de la hoja `Ago` las secciones, líneas, orden y tipo (detalle, subtotal, total) | 409 líneas de detalle importadas en el mismo orden que el Excel |
 | 2.2 Reglas de suma | Modelar cómo se arma cada total (por ejemplo Total Operation Expenses = suma de 9 secciones) | Las reglas reproducen 3,711,624.81 |
 | 2.3 Mapeo | Importar de las columnas X a AJ: línea del reporte ↔ cuentas locales, con su signo | 253 líneas vinculadas; signos iguales a las fórmulas del Excel |
 | 2.4 Validación del mapeo | Reporte de cuentas con movimiento sin mapear y de cuentas mapeadas a más de una línea | Cero cuentas con Actual distinto de cero sin vínculo (como en agosto) |

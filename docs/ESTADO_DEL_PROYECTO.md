@@ -1,9 +1,9 @@
 # Estado del proyecto
 
-Última actualización: 30-sep-2026
+Última actualización: 01-oct-2026
 
 ## Fase actual
-**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. Siguiente: **Fase 2 — Catálogo corporativo y mapeo** (líneas del reporte Variance y mapeo de cuentas locales a líneas).
+**Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: en curso** (2.1 hecha; sigue 2.2).
 
 ## Avance por fase
 | Fase | Estado |
@@ -12,7 +12,7 @@
 | Arquitectura técnica v1.0 | Hecha (`docs/Arquitectura_Tecnica_FPA_Hotelero.md`) |
 | 0 Repositorio full stack (alcance básico) | **Hecha** |
 | **1 Data Hub: Actuals** | **Hecha** |
-| 2 Catálogo corporativo y mapeo | Por iniciar |
+| 2 Catálogo corporativo y mapeo | **En curso** (2.1 hecha) |
 | 3 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
@@ -29,6 +29,12 @@
 | 1.8 API de carga segura (`POST /cargas`, `GET /cargas`, `GET /cargas/{id}`, `GET /auditoria`; `fpa/seguridad/archivos.py`) | **Hecha** |
 | 1.9 Catálogo oficial de cuentas (CON020 `.xls`: nombres de la jerarquía, TIPO, departamento, grupo, SAT; `POST /catalogo/importar`; migración `0006`) | **Hecha** |
 
+### Sub-fases de la Fase 2
+| Sub-fase | Estado |
+|---|---|
+| 2.1 Estructura del reporte (`fpa/ingesta/variance_estructura.py`, `VersionEstructuraReporte` + `LineaReporte`, migración `0007`, `importar_estructura_reporte`) | **Hecha** |
+| 2.2 Reglas de suma · 2.3 Mapeo · 2.4 Validación · 2.5 Versionado · 2.6 API | Pendientes |
+
 ## Frontend (Fase 1) y pruebas de navegador
 - Pantallas: **Cargas** (subir CON130 o Variance, aviso de reemplazo con confirmación, lista de cargas y su reporte de calidad), **Catálogo** (árbol con búsqueda), **Saldos** (por mes, con total exacto) y **Auditoría**. Cada rol ve solo sus secciones.
 - Modo desarrollo: el usuario se elige en un selector (cabecera `X-Usuario-Dev`); se reemplazará por el inicio de sesión corporativo.
@@ -37,7 +43,7 @@
 - `npm run build` y `npm run lint` sin errores.
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **240 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **253 pasan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -69,6 +75,8 @@
 - Mapeo de cuentas: el que está en el Excel (columnas X a AJ de la hoja `Ago`).
 - Budget: se carga tal como viene en el Excel de agosto como una versión; el origen real sigue pendiente.
 
+- **Estructura del reporte (2.1):** la hoja `Ago` se lee por posición (B = código corporativo o título de sección, C = descripción/total, D = Actual solo para distinguir filas informativas). Real: 512 líneas = 409 detalle + 24 secciones + 24 totales + 17 subtotales + 38 informativas (tipo de cambio, resumen de Commercial Services, bloque de notas con importe 0). Una fila con cifras y sin nombre (395, un porcentaje) se ignora con aviso. Una estructura **vigente por hotel**; reimportar otro archivo pide confirmación y deja la anterior como `reemplazada`. La `clave` de línea es **provisional** (orden + descripción) hasta que Contraloría confirme la clave natural. Aún sin API ni pantalla (la API del mapeo es 2.6).
+
 ## Pendientes y avisos
 - No hay servidor remoto de código; lo define TI.
 - **Salida de la Fase 1 verificada por la API con los Excel reales** (también en vivo con el servidor): CON130 septiembre = 7,242 movimientos (57,835,193.08); Variance = 3,583 (julio) + 3,277 (agosto); repetir un archivo no cambia nada; 366 saldos de septiembre; catálogo con 145 títulos + 554 cuentas con movimientos; un usuario de otro hotel recibe 404 en todo.
@@ -82,4 +90,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**Fase 2.1:** importar de la hoja `Ago` del Variance la estructura del reporte (secciones, líneas, orden, tipo detalle/subtotal/total) como `linea_reporte`; 409 líneas de detalle en agosto. Después 2.2 (reglas de suma), 2.3 (mapeo desde las columnas X a AJ con su signo), 2.4 a 2.6. Antes, confirmar con Contraloría la clave única de una línea y el origen del Budget (el signo ya lo respalda el TIPO de cuenta del catálogo oficial).
+**Fase 2.2:** modelar las reglas de suma de totales y subtotales (reproducir 3,711,624.81). Después 2.3 (mapeo desde las columnas X a AJ con su signo), 2.4 a 2.6. Antes, confirmar con Contraloría la clave única de una línea y el origen del Budget (el signo ya lo respalda el TIPO de cuenta del catálogo oficial).

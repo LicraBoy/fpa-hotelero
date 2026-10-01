@@ -330,7 +330,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 ### Fase 2 — Catálogo corporativo y mapeo (M)
 | Sub-fase | Qué se hace | Qué se prueba |
 |---|---|---|
-| 2.1 Estructura del reporte | Importar de la hoja `Ago`: secciones, líneas, orden, tipo (detalle, subtotal, total) | 409 líneas de detalle importadas; orden igual al Excel |
+| 2.1 Estructura del reporte `[HECHO]` | Importar de la hoja `Ago`: secciones, líneas, orden, tipo (detalle, subtotal, total) | 409 líneas de detalle importadas; orden igual al Excel |
 | 2.2 Reglas de suma | Modelar cómo se construye cada total (p. ej. Total Operation Expenses = suma de 9 secciones) | Reglas reproducen 3,711,624.81 |
 | 2.3 Mapeo | Importar de las columnas X a AJ: línea ↔ cuentas locales, con signo | 253 líneas vinculadas; signos iguales a las fórmulas del Excel |
 | 2.4 Validación del mapeo | Reporte de cuentas con movimiento sin mapear y de cuentas mapeadas a más de una línea | Cero cuentas con Actual ≠ 0 sin vínculo (como en agosto) |
