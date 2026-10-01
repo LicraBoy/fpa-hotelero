@@ -46,7 +46,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 2.1 Estructura del reporte `[HECHA]` | Importar de la hoja `Ago` las secciones, líneas, orden y tipo (detalle, subtotal, total) | 409 líneas de detalle importadas en el mismo orden que el Excel |
 | 2.2 Reglas de suma `[HECHA]` | Modelar cómo se arma cada total (por ejemplo Total Operation Expenses = suma de 9 secciones) | Las reglas reproducen 3,711,624.81 |
 | 2.3 Mapeo `[HECHA]` | Importar de las columnas X a AJ: línea del reporte ↔ cuentas locales, con su signo | 253 líneas vinculadas; signos iguales a las fórmulas del Excel |
-| 2.4 Validación del mapeo | Reporte de cuentas con movimiento sin mapear y de cuentas mapeadas a más de una línea | Cero cuentas con Actual distinto de cero sin vínculo (como en agosto) |
+| 2.4 Validación del mapeo `[HECHA]` | Reporte de cuentas con movimiento sin mapear y de cuentas mapeadas a más de una línea | Cero cuentas con Actual distinto de cero sin vínculo (como en agosto) |
 | 2.5 Versionado | Cada cambio del mapeo crea una versión; vigencia y auditoría | No se puede editar una versión aprobada |
 | 2.6 API del mapeo | Consultar y cambiar con permiso de analista | Solo el rol autorizado cambia el mapeo; queda bitácora |
 
@@ -274,6 +274,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 |---|---|---|
 | Contraloría | Confirmar que el signo es la naturaleza de la cuenta (Deudor suma, Acreedor resta; ya validado con el Excel) | 2, 3 |
 | Contraloría | Clave única de una línea del reporte | 2 |
+| Contraloría | Las cuentas `4002013` (−20,000 al mes) y `4003003` (≈ −2.9 a −3.2 millones al mes, julio y agosto) tienen movimientos pero **ninguna línea de la hoja `Ago` las toma**: ¿se excluyen a propósito del reporte o es una omisión? | 2 |
 | Contraloría | Origen, versión y responsable del Budget | 3, 7 |
 | Contraloría | Año fiscal (julio–junio) y horizonte del forecast | 3, 8 |
 | Contraloría | Árbol oficial de departamentos y centros de costo | 2, 5, 7 |
