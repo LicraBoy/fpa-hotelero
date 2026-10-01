@@ -17,6 +17,30 @@ Excel?* Todo lo que no coincida se anota en `docs/HALLAZGOS_CONTRALORIA.md`.
 > Modo desarrollo: el usuario se elige a mano. En producción se entrará con el inicio de sesión
 > corporativo.
 
+## De dónde salen las cifras (lo que hoy hace el Prompt de integración)
+Hoy el reporte se arma a mano siguiendo `docs/adr/Prompt_Integracion_Variance.docx`. La plataforma
+reproduce ese proceso, así que conviene tenerlo presente al comparar:
+
+1. **Materia prima:** la hoja *Base de Datos* (movimientos de cuentas de resultados: mes, fecha,
+   cuenta, asiento, concepto, débito, crédito).
+2. **Una hoja por cuenta**, con su total por mes (Débito − Crédito) y el acumulado de julio y agosto.
+3. **La hoja `Ago` se liga a esos totales con fórmulas:** la columna **S** trae el total del mes y la
+   **T** el acumulado. Los números de cuenta de cada línea están en las columnas **X a AC**.
+4. **Las cuentas que empiezan con 4 van con signo negativo** (ingresos). La plataforma lo llama signo
+   −1; las demás, +1.
+5. **El Budget está pegado a mano** en `Ago` (columnas E, J y O): por eso solo hay Budget de agosto.
+
+Qué explica esto de lo que van a ver:
+- **Una cuenta con movimientos que no está en X a AC no entra a ninguna línea.** Es el caso de
+  `4002013` y `4003003` (el propio prompt lo dice: sin vínculo, no participa). Parece un olvido del
+  armado, pero lo confirma Contraloría.
+- **IVA, Lodging Tax, Bank Commissions, Audit Fees e Income Taxes** salen de cuentas de balance o
+  corporativas que *Base de Datos* no trae; hoy Contraloría las toma de otras hojas.
+- **El proceso se repite cada mes con una base nueva** (el prompt habla de septiembre). Por eso el
+  mapeo de agosto no sirve tal cual para septiembre: hay 154 cuentas nuevas.
+- **La plataforma lee las fórmulas de S y T para sacar el mapeo.** Si una fórmula del Excel cambia,
+  cambia el mapeo.
+
 ## Cómo leer la pantalla
 - **Tres bloques:** *Mes*, *Acumulado del año fiscal* (julio a agosto) y *Presupuesto anual*. Cada uno
   con **Actual, Presupuesto, Variación y % var.**
