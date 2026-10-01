@@ -11,7 +11,11 @@ import schemathesis
 from conftest import Mundo, como
 from fastapi.testclient import TestClient
 from hypothesis import HealthCheck, settings
-from schemathesis.specs.openapi.checks import allow_header_conformance, unsupported_method
+from schemathesis.specs.openapi.checks import (
+    allow_header_conformance,
+    positive_data_acceptance,
+    unsupported_method,
+)
 from sqlalchemy.orm import Session
 from test_api_variance import _preparar
 
@@ -46,7 +50,9 @@ def test_las_rutas_de_lectura_cumplen_su_contrato(case, sembrado: Mundo) -> None
         case.path_parameters["hotel_id"] = sembrado.hotel_a if valor % 2 == 0 else sembrado.hotel_b
     # Se excluyen las comprobaciones de `Allow` en un 405: Starlette lista un solo método cuando
     # la ruta tiene varios (GET y POST son rutas separadas); no es un defecto nuestro.
-    case.call_and_validate(
-        headers=como("contralor_ab@test.local"),
-        excluded_checks=[unsupported_method, allow_header_conformance],
-    )
+    excluidas = [unsupported_method, allow_header_conformance]
+    if case.operation.path.endswith("/movimientos"):
+        # El cursor es opaco: cualquier texto cumple el esquema, pero solo los que entregó la API
+        # sirven. Rechazar el resto con 422 es justo lo que se quiere.
+        excluidas.append(positive_data_acceptance)
+    case.call_and_validate(headers=como("contralor_ab@test.local"), excluded_checks=excluidas)

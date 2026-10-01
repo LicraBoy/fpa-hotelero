@@ -15,6 +15,7 @@ export type Permiso =
   | 'budget:leer'
   | 'budget:importar'
   | 'variance:leer'
+  | 'drilldown:leer'
 
 const POR_ROL: Record<string, Permiso[]> = {
   contralor: [
@@ -31,6 +32,7 @@ const POR_ROL: Record<string, Permiso[]> = {
     'budget:leer',
     'budget:importar',
     'variance:leer',
+    'drilldown:leer',
   ],
   analista: [
     'carga:crear',
@@ -44,6 +46,7 @@ const POR_ROL: Record<string, Permiso[]> = {
     'budget:leer',
     'budget:importar',
     'variance:leer',
+    'drilldown:leer',
   ],
   responsable_area: ['catalogo:leer', 'reporte:leer'],
   direccion: [
@@ -64,6 +67,7 @@ const POR_ROL: Record<string, Permiso[]> = {
     'mapeo:leer',
     'budget:leer',
     'variance:leer',
+    'drilldown:leer',
   ],
 }
 

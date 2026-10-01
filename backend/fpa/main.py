@@ -5,7 +5,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 from fpa.api import health
-from fpa.api.v1 import budget, cargas, catalogo, identidad, mapeo, saldos, variance
+from fpa.api.v1 import (
+    budget,
+    cargas,
+    catalogo,
+    drilldown,
+    identidad,
+    mapeo,
+    saldos,
+    variance,
+)
 from fpa.config import settings
 
 
@@ -39,6 +48,7 @@ def crear_app() -> FastAPI:
     app.include_router(mapeo.router, prefix="/api/v1")
     app.include_router(budget.router, prefix="/api/v1")
     app.include_router(variance.router, prefix="/api/v1")
+    app.include_router(drilldown.router, prefix="/api/v1")
     return app
 
 

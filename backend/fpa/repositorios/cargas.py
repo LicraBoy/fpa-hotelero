@@ -1,5 +1,7 @@
 """Consultas de cargas y movimientos. **Todas** están acotadas a un hotel (aislamiento)."""
 
+from collections.abc import Sequence
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -56,5 +58,48 @@ class RepositorioCargas:
                     CargaArchivo.estado == EstadoCarga.VIGENTE.value,
                 )
                 .order_by(Movimiento.id)
+            )
+        )
+
+    def movimientos_de_cuenta(
+        self,
+        periodos: Sequence[str],
+        cuenta_codigo: str,
+        despues_de_id: int | None,
+        limite: int,
+    ) -> list[Movimiento]:
+        """Una página de movimientos de una cuenta, de las cargas vigentes, por **cursor**.
+
+        Paginación keyset: `id > despues_de_id ORDER BY id LIMIT n`. Nunca `OFFSET`: el costo de
+        una página no depende de cuántas anteriores se vieron.
+        """
+        consulta = (
+            select(Movimiento)
+            .join(CargaArchivo, CargaArchivo.id == Movimiento.carga_id)
+            .where(
+                Movimiento.hotel_id == self.hotel_id,
+                Movimiento.periodo.in_(list(periodos)),
+                Movimiento.cuenta_codigo == cuenta_codigo,
+                CargaArchivo.estado == EstadoCarga.VIGENTE.value,
+            )
+        )
+        if despues_de_id is not None:
+            consulta = consulta.where(Movimiento.id > despues_de_id)
+        return list(self._db.scalars(consulta.order_by(Movimiento.id).limit(limite)))
+
+    def movimientos_de_asiento(self, periodo: str, asiento: str, limite: int) -> list[Movimiento]:
+        """Las líneas de un asiento en el periodo (de la carga vigente), en el orden del archivo."""
+        return list(
+            self._db.scalars(
+                select(Movimiento)
+                .join(CargaArchivo, CargaArchivo.id == Movimiento.carga_id)
+                .where(
+                    Movimiento.hotel_id == self.hotel_id,
+                    Movimiento.periodo == periodo,
+                    Movimiento.asiento == asiento,
+                    CargaArchivo.estado == EstadoCarga.VIGENTE.value,
+                )
+                .order_by(Movimiento.id)
+                .limit(limite)
             )
         )

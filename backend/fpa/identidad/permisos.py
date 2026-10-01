@@ -18,6 +18,7 @@ class Permiso(StrEnum):
     BUDGET_LEER = "budget:leer"
     BUDGET_IMPORTAR = "budget:importar"
     VARIANCE_LEER = "variance:leer"
+    DRILLDOWN_LEER = "drilldown:leer"
 
 
 class RolCodigo(StrEnum):
@@ -53,6 +54,7 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.BUDGET_LEER,
             Permiso.BUDGET_IMPORTAR,
             Permiso.VARIANCE_LEER,
+            Permiso.DRILLDOWN_LEER,
         }
     ),
     RolCodigo.RESPONSABLE_AREA: frozenset(
@@ -81,6 +83,7 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.MAPEO_LEER,
             Permiso.BUDGET_LEER,
             Permiso.VARIANCE_LEER,
+            Permiso.DRILLDOWN_LEER,
         }
     ),
 }

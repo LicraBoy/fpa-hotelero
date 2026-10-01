@@ -14,7 +14,7 @@
 | **1 Data Hub: Actuals** | **Hecha** |
 | 2 Catálogo corporativo y mapeo | **Código listo** (2.1 a 2.6); falta aprobación de Contraloría |
 | 3 Motor de Variance | **Código listo** (3.1 a 3.7); falta el Excel de septiembre de Contraloría |
-| 4 Reporting y frontend | **En curso** (4.1 hecha) |
+| 4 Reporting y frontend | **En curso** (4.1 y 4.2 hechas) |
 | 5 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
@@ -56,7 +56,8 @@
 | Sub-fase | Estado |
 |---|---|
 | 4.1 Endpoints de reporte (filtros y secciones en `GET /variance`, contrato con Schemathesis) | **Hecha** |
-| 4.2 Drill-down · 4.3 Base del frontend · 4.4 Pantalla de Variance · 4.5 Drill-down en pantalla · 4.6 Exportación a Excel · 4.7 Rendimiento · 4.8 Pruebas con usuarios | Pendientes |
+| 4.2 Drill-down (`servicios/drilldown.py`, `api/v1/drilldown.py`, permiso `drilldown:leer`) | **Hecha** |
+| 4.3 Base del frontend · 4.4 Pantalla de Variance · 4.5 Drill-down en pantalla · 4.6 Exportación a Excel · 4.7 Rendimiento · 4.8 Pruebas con usuarios | Pendientes |
 
 ## Frontend (Fase 1) y pruebas de navegador
 - Pantallas: **Cargas** (subir CON130 o Variance, aviso de reemplazo con confirmación, lista de cargas y su reporte de calidad), **Catálogo** (árbol con búsqueda), **Saldos** (por mes, con total exacto) y **Auditoría**. Cada rol ve solo sus secciones.
@@ -66,7 +67,7 @@
 - `npm run build` y `npm run lint` sin errores.
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **431 pasan y 2 se saltan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **477 pasan y 2 se saltan y 1 se salta** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.
@@ -126,6 +127,8 @@
 
 - **Endpoints de reporte (4.1):** `GET /hoteles/{id}/variance` acepta `seccion_id`, `tipo` (repetible: detalle, subtotal, total, informativa) y `q` (texto, sin distinguir mayúsculas), y devuelve `secciones` con su línea de total; avisa cuando el mapeo deja cuentas fuera a propósito. **Contrato:** `tests/test_contrato_api.py` corre Schemathesis (dependencia solo de desarrollo, `requirements.txt`) sobre todas las rutas de lectura con entradas generadas. Encontró y se corrigieron **defectos reales**: (1) un periodo como `0000-01` o un id gigante (`9223372036854775808`) daba **500**; ahora los ids son enteros de 32 bits positivos y los periodos van de 2000-01 a 2099-12, con **422**; (2) las fechas salían **sin zona horaria** en SQLite (`2026-10-01T10:38:43`): ahora siempre UTC; (3) el OpenAPI no documentaba los 401/403/404/409 ni que un 422 puede traer un texto de negocio. Se excluye una sola comprobación (`Allow` en un 405) por una limitación de Starlette con rutas de varios métodos.
 
+- **Drill-down (4.2):** `GET /variance/lineas/{id}/desglose?periodo&bloque=mes|ytd` (una línea de detalle → sus cuentas con signo, neto y aporte; un total → sus componentes; con `suma`, `cifra` y `cuadra`), `GET /variance/cuentas/{codigo}/movimientos` (**paginación por cursor** keyset por `movimiento.id`, límite 1–200, cursor opaco; solo cargas vigentes; `resumen` desde los saldos precalculados) y `GET /asientos/{asiento}?periodo`. Permiso nuevo `drilldown:leer` para contralor, analista y auditoría; **dirección y responsable de área no lo tienen** (`[POR VALIDAR]`: los movimientos traen conceptos de proveedores). La primera página de una cuenta y cada asiento consultado quedan en la bitácora (`drilldown.consultado`, sin el contenido). **La propiedad se prueba de punta a punta:** con cualquier tamaño de página (1 a 200) los movimientos no se repiten ni faltan y **suman el neto de la cuenta = su aporte a la línea = la cifra del reporte**; con agosto real, **las 1,000+ combinaciones línea × (mes, YTD) cuadran con sus partes** y los movimientos de las cuentas más grandes (hasta ≈2,000 filas) suman su neto. Un concepto con HTML viaja como texto (la pantalla lo mostrará escapado).
+
 ## Pendientes y avisos
 - No hay servidor remoto de código; lo define TI.
 - **Salida de la Fase 1 verificada por la API con los Excel reales** (también en vivo con el servidor): CON130 septiembre = 7,242 movimientos (57,835,193.08); Variance = 3,583 (julio) + 3,277 (agosto); repetir un archivo no cambia nada; 366 saldos de septiembre; catálogo con 145 títulos + 554 cuentas con movimientos; un usuario de otro hotel recibe 404 en todo.
@@ -139,4 +142,4 @@
 Ver sección 11 de la arquitectura (TI: alojamiento, identidad, PostgreSQL/Oracle, respaldos, antivirus; Contraloría: origen del Budget, convención de signo y año fiscal, árbol de departamentos y centros de costo, quién exporta el CON130, si Puerto Vallarta usa el mismo Novohit).
 
 ## Siguiente paso
-**Fase 4.2:** drill-down (línea → cuentas → movimientos paginados por cursor → asiento), con la propiedad de que la suma de los movimientos = la cifra del reporte. Pendientes de Contraloría que siguen abiertos: Variance y Budget de septiembre y ampliar el mapeo con 154 cuentas; causas de las 19 excepciones de agosto; `4002013`/`4003003`; clave única de línea; origen del Budget; año fiscal julio–junio; convención de signo.
+**Fase 4.3:** base del frontend (tipos generados del OpenAPI, ruteo por hash con rutas protegidas, cabeceras de seguridad y CSP estricta, sin `dangerouslySetInnerHTML` ni tokens en `localStorage`). Después 4.4 a 4.8. Pendientes de Contraloría que siguen abiertos: Variance y Budget de septiembre y ampliar el mapeo con 154 cuentas; causas de las 19 excepciones de agosto; `4002013`/`4003003`; clave única de línea; origen del Budget; año fiscal julio–junio; convención de signo; quién ve los movimientos.
