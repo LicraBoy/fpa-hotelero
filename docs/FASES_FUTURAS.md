@@ -16,7 +16,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 |---|---|---|---|---|
 | 0 | Repositorio full stack | M | `[HECHA]` | — |
 | 1 | Data Hub: Actuals | L | `[HECHA]` | 0 |
-| **2** | **Catálogo corporativo y mapeo** | M | `[SIGUIENTE]` | 1 + 3 respuestas de Contraloría |
+| **2** | **Catálogo corporativo y mapeo** | M | `[CÓDIGO LISTO]` | 1 + 3 respuestas de Contraloría |
 | 3 | Motor de Variance | L | `[PENDIENTE]` | 2 |
 | 4 | Reporting y frontend definitivo | L | `[PENDIENTE]` | 3 |
 | 5 | Comentarios, workflow, roles y auditoría | L | `[PENDIENTE]` | 4 + decisión de identidad con TI |
@@ -35,7 +35,9 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 ---
 
-## Fase 2 — Catálogo corporativo y mapeo `[SIGUIENTE]` (M)
+## Fase 2 — Catálogo corporativo y mapeo `[CÓDIGO LISTO]` (M)
+
+**Estado (01-oct-2026):** las sub-fases 2.1 a 2.6 están hechas. La **salida** ("mapeo completo, aprobado por Contraloría") queda pendiente de dos respuestas: las cuentas `4002013` y `4003003` sin línea, y la clave única de una línea. Hasta entonces el mapeo del Excel de agosto se puede aprobar solo con esas dos cuentas excluidas a propósito (provisional). La Fase 3 puede empezar sobre el borrador, pero la Fase 2 no se cierra hasta esa aprobación.
 
 **Avance:** la sub-fase 2.1 (estructura del reporte desde la hoja `Ago`) está hecha. El catálogo oficial de cuentas ya está importado (sub-fase 1.9). Trae TIPO (signo), departamento y grupo de cada cuenta, lo que permite **validar el mapeo** contra el Excel del contralor en vez de aceptarlo a ciegas, y derivar la sección del reporte desde el código (los grupos de 4 dígitos de la clase 6 son los departamentos).
 
@@ -48,7 +50,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 2.3 Mapeo `[HECHA]` | Importar de las columnas X a AJ: línea del reporte ↔ cuentas locales, con su signo | 253 líneas vinculadas; signos iguales a las fórmulas del Excel |
 | 2.4 Validación del mapeo `[HECHA]` | Reporte de cuentas con movimiento sin mapear y de cuentas mapeadas a más de una línea | Cero cuentas con Actual distinto de cero sin vínculo (como en agosto) |
 | 2.5 Versionado `[HECHA]` | Cada cambio del mapeo crea una versión; vigencia y auditoría | No se puede editar una versión aprobada |
-| 2.6 API del mapeo | Consultar y cambiar con permiso de analista | Solo el rol autorizado cambia el mapeo; queda bitácora |
+| 2.6 API del mapeo `[HECHA]` | Consultar y cambiar con permiso de analista | Solo el rol autorizado cambia el mapeo; queda bitácora |
 
 **Antes de empezar, Contraloría debe confirmar:**
 1. La convención del **signo** del Variance (hoy: favorable positivo; ingresos Actual − Budget, gastos Budget − Actual).

@@ -42,6 +42,12 @@ Una de las pruebas lee el Excel real de Torres si lo encuentra en la carpeta de 
 | `GET /yo`, `GET /hoteles`, `GET /hoteles/{id}` | Quién soy y a qué hoteles tengo acceso |
 | `POST /hoteles/{id}/cargas` | Subir un CON130 o el Excel del Variance (`fuente`, `confirmar_reemplazo`, `periodos`) |
 | `GET /hoteles/{id}/cargas`, `GET /hoteles/{id}/cargas/{carga}` | Cargas y su reporte de calidad |
+| `GET /hoteles/{id}/reporte/estructura` | Estructura vigente del reporte Variance (secciones, líneas, orden, tipo) |
+| `POST /hoteles/{id}/reporte/importar` | Importar el Excel del Variance: estructura, reglas de suma y un borrador de mapeo (`periodo_referencia`, `confirmar_reemplazo`) |
+| `GET /hoteles/{id}/mapeo/versiones`, `…/{version}`, `…/{version}/validacion?periodo=` | Versiones del mapeo, sus vínculos y exclusiones, y el reporte de validación |
+| `POST /hoteles/{id}/mapeo/versiones` | Crear un borrador copiando la versión aprobada |
+| `PUT`/`DELETE …/mapeo/versiones/{version}/vinculos` y `/exclusiones` | Editar el borrador (cuenta ↔ línea con signo; cuentas excluidas con motivo) |
+| `POST …/mapeo/versiones/{version}/aprobar` · `/descartar` | Aprobar (solo contralor; 409 si quedan cuentas con movimiento sin mapear) o descartar un borrador |
 | `POST /hoteles/{id}/catalogo/importar` | Importar el catálogo oficial de Novohit (CON020, `.xls`) |
 | `GET /hoteles/{id}/catalogo/arbol` | Árbol de cuentas con nombres, Deudor/Acreedor, departamento y SAT |
 | `GET /hoteles/{id}/saldos?periodo=AAAA-MM` | Saldo por cuenta del periodo |
