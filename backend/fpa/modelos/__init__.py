@@ -7,6 +7,7 @@ from fpa.modelos.catalogo import CuentaLocal
 from fpa.modelos.identidad import Asignacion, Rol, Usuario
 from fpa.modelos.mapeo import CuentaExcluidaMapeo, MapeoLineaCuenta, VersionMapeo
 from fpa.modelos.organizacion import Hotel, Organizacion
+from fpa.modelos.plan import LineaPlan, VersionPlan
 from fpa.modelos.reporte import LineaReporte, ReglaSumaLinea, VersionEstructuraReporte
 from fpa.modelos.saldos import SaldoMensualCuenta
 
@@ -19,6 +20,7 @@ __all__ = [
     "EstadoCarga",
     "EventoAuditoria",
     "Hotel",
+    "LineaPlan",
     "LineaReporte",
     "MapeoLineaCuenta",
     "Movimiento",
@@ -29,4 +31,5 @@ __all__ = [
     "Usuario",
     "VersionEstructuraReporte",
     "VersionMapeo",
+    "VersionPlan",
 ]

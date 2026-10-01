@@ -15,6 +15,9 @@ class Permiso(StrEnum):
     MAPEO_LEER = "mapeo:leer"
     MAPEO_EDITAR = "mapeo:editar"
     MAPEO_APROBAR = "mapeo:aprobar"
+    BUDGET_LEER = "budget:leer"
+    BUDGET_IMPORTAR = "budget:importar"
+    VARIANCE_LEER = "variance:leer"
 
 
 class RolCodigo(StrEnum):
@@ -47,6 +50,9 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.REPORTE_LEER,
             Permiso.MAPEO_LEER,
             Permiso.MAPEO_EDITAR,
+            Permiso.BUDGET_LEER,
+            Permiso.BUDGET_IMPORTAR,
+            Permiso.VARIANCE_LEER,
         }
     ),
     RolCodigo.RESPONSABLE_AREA: frozenset(
@@ -60,6 +66,8 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.SALDOS_LEER,
             Permiso.REPORTE_LEER,
             Permiso.MAPEO_LEER,
+            Permiso.BUDGET_LEER,
+            Permiso.VARIANCE_LEER,
         }
     ),
     RolCodigo.AUDITORIA: frozenset(
@@ -71,6 +79,8 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.AUDITORIA_LEER,
             Permiso.REPORTE_LEER,
             Permiso.MAPEO_LEER,
+            Permiso.BUDGET_LEER,
+            Permiso.VARIANCE_LEER,
         }
     ),
 }

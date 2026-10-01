@@ -67,7 +67,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 | Sub-fase | Qué se hace | Qué se prueba |
 |---|---|---|
-| 3.1 Budget como versión | Cargar el Budget del Excel de agosto (mes, acumulado y anual) como una versión inmutable | Idéntico al Excel, línea por línea |
+| 3.1 Budget como versión `[HECHA]` | Cargar el Budget del Excel de agosto (mes, acumulado y anual) como una versión inmutable | Idéntico al Excel, línea por línea |
 | 3.2 Actual por línea y mes | Suma con signo de las cuentas mapeadas (función pura) | Casos pequeños y propiedades (signo, suma) |
 | 3.3 Acumulado y año fiscal | YTD desde julio hasta el mes de corte | Primer mes, cierre de año, mes sin datos |
 | 3.4 Totales y subtotales | Reglas de suma; resumen de Commercial Services (Net Income, Expenses, Profit, Allocations) | Totales iguales a los del reporte |

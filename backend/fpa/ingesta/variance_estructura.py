@@ -109,11 +109,11 @@ def _ubicar_inicio(filas: Sequence[Sequence[object]]) -> int:
 
 
 def leer_filas_hoja(
-    ruta: str | Path, hoja: str = HOJA, max_col: int = 20
+    ruta: str | Path, hoja: str = HOJA, max_col: int = 20, solo_valores: bool = False
 ) -> list[tuple[object, ...]]:
-    """Filas de la hoja con **fórmulas** (no valores), hasta la columna T. Se lee una sola vez."""
+    """Filas de la hoja hasta `max_col`: con **fórmulas** o, si `solo_valores`, con sus valores."""
     with Path(ruta).open("rb") as archivo:
-        wb = load_workbook(archivo, read_only=True, data_only=False)
+        wb = load_workbook(archivo, read_only=True, data_only=solo_valores)
         try:
             if hoja not in wb.sheetnames:
                 raise ValueError(f'El libro no tiene la hoja "{hoja}"')
