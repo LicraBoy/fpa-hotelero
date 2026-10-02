@@ -28,3 +28,17 @@ export type DesgloseLinea = Esquemas['DesgloseSalida']
 export type PaginaMovimientos = Esquemas['PaginaSalida']
 export type MovimientoDetalle = Esquemas['MovimientoSalida']
 export type Asiento = Esquemas['AsientoSalida']
+
+export type VistaEdicionBudget = Esquemas['VistaEdicionSalida']
+export type LineaEdicionBudget = Esquemas['LineaEdicionSalida']
+export type VersionPlan = Esquemas['VersionPlanSalida']
+export type CuerpoVersionBudget = Esquemas['VersionDesdeCambios']
+
+/** Respuesta de negocio al importar o guardar un Budget (la API la devuelve como JSON libre). */
+export interface RespuestaBudget {
+  resolucion: 'creada' | 'reemplazada' | 'duplicada' | 'requiere_confirmacion' | 'rechazada'
+  motivos: string[]
+  avisos: string[]
+  formato?: string
+  version: VersionPlan | null
+}

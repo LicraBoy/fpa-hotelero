@@ -1,6 +1,12 @@
 import { credencialesActuales } from './sesion'
 import type { paths } from './schema'
-import type { Fuente, RespuestaCarga, RespuestaImportacion } from './tipos'
+import type {
+  CuerpoVersionBudget,
+  Fuente,
+  RespuestaBudget,
+  RespuestaCarga,
+  RespuestaImportacion,
+} from './tipos'
 
 export { fijarUsuarioDev } from './sesion'
 
@@ -158,4 +164,41 @@ export async function descargarVarianceExcel(
   if (!r.ok) throw new ErrorApi(r.status, mensajeDeError(await leerJson(r), r.status))
   const sugerido = /filename="([A-Za-z0-9._-]+)"/.exec(r.headers.get('content-disposition') ?? '')
   return { archivo: await r.blob(), nombre: sugerido?.[1] ?? 'variance.xlsx' }
+}
+
+function comoRespuestaBudget(cuerpo: unknown, estado: number): RespuestaBudget {
+  if (cuerpo && typeof cuerpo === 'object' && 'resolucion' in cuerpo) return cuerpo as RespuestaBudget
+  throw new ErrorApi(estado, mensajeDeError(cuerpo, estado))
+}
+
+/** Guarda una versión nueva del Budget con los cambios hechos en pantalla. */
+export async function guardarVersionBudget(
+  hotelId: number,
+  cuerpo: CuerpoVersionBudget,
+): Promise<RespuestaBudget> {
+  const encabezados = cabeceras()
+  encabezados.set('Content-Type', 'application/json')
+  const r = await fetch(`/api/v1/hoteles/${hotelId}/budget/versiones`, {
+    method: 'POST',
+    headers: encabezados,
+    body: JSON.stringify(cuerpo),
+  })
+  return comoRespuestaBudget(await leerJson(r), r.status)
+}
+
+/** Importa el Excel de Contraloría como punto de partida del Budget (formato Mazatlán o Vallarta). */
+export async function importarBudgetExcel(
+  hotelId: number,
+  archivo: File,
+  confirmarReemplazo: boolean,
+): Promise<RespuestaBudget> {
+  const formulario = new FormData()
+  formulario.append('archivo', archivo)
+  formulario.append('confirmar_reemplazo', String(confirmarReemplazo))
+  const r = await fetch(`/api/v1/hoteles/${hotelId}/budget/importar`, {
+    method: 'POST',
+    body: formulario,
+    headers: cabeceras(),
+  })
+  return comoRespuestaBudget(await leerJson(r), r.status)
 }

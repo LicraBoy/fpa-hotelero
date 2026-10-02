@@ -7,6 +7,7 @@ import { PanelAuditoria } from './componentes/PanelAuditoria'
 import { PanelCargas } from './componentes/PanelCargas'
 import { PanelCatalogo } from './componentes/PanelCatalogo'
 import { PanelSaldos } from './componentes/PanelSaldos'
+import { PanelBudget } from './pantallas/budget/PanelBudget'
 import { PanelVariance } from './pantallas/variance/PanelVariance'
 import { RutaProtegida } from './ruta/RutaProtegida'
 import { permisoDeRuta } from './ruta/ruta'
@@ -14,7 +15,7 @@ import { useRuta } from './ruta/useRuta'
 import { NOMBRE_ROL, USUARIOS_DESARROLLO, puede } from './permisos'
 import { guardarUsuarioDev, leerUsuarioDev } from './util/preferencias'
 
-type Pestana = 'cargas' | 'catalogo' | 'saldos' | 'variance' | 'auditoria'
+type Pestana = 'cargas' | 'catalogo' | 'saldos' | 'variance' | 'budget' | 'auditoria'
 
 function usuarioInicial(): string {
   const guardado = leerUsuarioDev()
@@ -47,6 +48,7 @@ export default function App() {
     { id: 'catalogo', nombre: 'Catálogo', visible: puede(rol, 'catalogo:leer') },
     { id: 'saldos', nombre: 'Saldos', visible: puede(rol, 'saldos:leer') },
     { id: 'variance', nombre: 'Variance', visible: puede(rol, 'variance:leer') },
+    { id: 'budget', nombre: 'Budget', visible: puede(rol, 'budget:importar') },
     { id: 'auditoria', nombre: 'Auditoría', visible: puede(rol, 'auditoria:leer') },
   ]
   const visibles = pestanas.filter((p) => p.visible)
@@ -165,6 +167,7 @@ export default function App() {
                   <PanelVariance hotelId={hotel.id} rol={rol} />
                 </RutaProtegida>
               )}
+              {activa === 'budget' && <PanelBudget hotelId={hotel.id} />}
               {activa === 'auditoria' && <PanelAuditoria hotelId={hotel.id} version={version} />}
             </div>
           </>
