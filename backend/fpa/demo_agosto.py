@@ -5,14 +5,17 @@ Uso (desde backend/, con la base ya migrada: `iniciar_servidores.bat` lo hace):
     set FPA_ENTORNO=desarrollo
     .venv\\Scripts\\python -m fpa.demo_agosto --datos "C:\\ruta\\a\\la\\carpeta\\de\\datos"
 
-La carpeta debe traer `02. VT August 2026 Variance (Envio) (1).xlsx` y, opcionalmente,
-`Catalogo de cuentas.xls` (da nombre a las cuentas del desglose). Hace lo mismo que un analista y
-un contralor por la interfaz: carga los movimientos de julio y agosto, importa la estructura, las
-reglas de suma y el mapeo, **excluye a propósito** las cuentas `4002013` y `4003003`, aprueba el
-mapeo e importa el Budget. Es seguro repetirlo: si el mismo archivo ya está cargado, no cambia nada.
+La carpeta debe traer el Excel del Variance de **Mazatlán** (`02. MZT August 2026 Variance
+(Envio).xlsx`; también se busca en `docs/adr/`) y, opcionalmente, `Catalogo de cuentas.xls` (da
+nombre a las cuentas del desglose). Con `--archivo` se usa otro (p. ej. el de Vallarta, que se
+detecta solo). Hace lo mismo que un analista y un contralor por la interfaz: carga los movimientos
+de julio y agosto, importa la estructura, las reglas de suma y el mapeo, **excluye a propósito y
+lista** las cuentas con movimiento que el Excel no toma en ninguna línea, aprueba el mapeo e
+importa el Budget (mes a mes en Mazatlán). Es seguro repetirlo: si el mismo archivo ya está
+cargado, no cambia nada.
 
-**Solo desarrollo.** Se niega a correr si `FPA_ENTORNO` no es `desarrollo`. Las dos exclusiones
-son PROVISIONALES hasta que Contraloría responda por esas cuentas (docs/FASES_FUTURAS.md) y la
+**Solo desarrollo.** Se niega a correr si `FPA_ENTORNO` no es `desarrollo`. Las exclusiones son
+PROVISIONALES hasta que Contraloría responda por esas cuentas (docs/HALLAZGOS_CONTRALORIA.md) y la
 pantalla lo avisa. Con el servidor ya corriendo, la caché de reportes vence a los 5 minutos (o
 reinícialo).
 """
@@ -29,30 +32,32 @@ from sqlalchemy import select
 from fpa.calculo.ano_fiscal import etiqueta_ano_fiscal
 from fpa.config import settings
 from fpa.db import SessionLocal
+from fpa.ingesta.formato_variance import Formato
 from fpa.ingesta.novohit_con020 import leer_con020
 from fpa.ingesta.variance_base_datos import leer_variance_base_datos
-from fpa.ingesta.variance_estructura import leer_filas_hoja, leer_variance_estructura_filas
-from fpa.ingesta.variance_mapeo import leer_variance_mapeo_filas
-from fpa.ingesta.variance_reglas import leer_variance_reglas_filas
+from fpa.ingesta.variance_lectura import leer_variance
+from fpa.ingesta.variance_mzt import leer_hojas_mzt, leer_valores_mensuales_mzt
 from fpa.ingesta.variance_valores import leer_variance_valores
 from fpa.modelos.identidad import Usuario
 from fpa.repositorios.mapeo import RepositorioMapeo
 from fpa.semilla import sembrar_torres
-from fpa.servicios.budget import importar_budget
+from fpa.servicios.budget import importar_budget, importar_budget_mensual
 from fpa.servicios.cargar_archivo import Resolucion, cargar_archivo
 from fpa.servicios.cargas import DatosArchivo
 from fpa.servicios.catalogo_oficial import importar_catalogo
 from fpa.servicios.estructura_reporte import importar_estructura_reporte
 from fpa.servicios.mapeo import importar_mapeo
 from fpa.servicios.reglas_suma import importar_reglas_suma
+from fpa.servicios.validacion_mapeo import CuentaSinMapear, validar_mapeo
 from fpa.servicios.versionado_mapeo import aprobar, excluir_cuenta
 
-EXCEL = "02. VT August 2026 Variance (Envio) (1).xlsx"
+EXCEL = "02. MZT August 2026 Variance (Envio).xlsx"
 CATALOGO = "Catalogo de cuentas.xls"
 PERIODO_CORTE = "2026-08"
-CUENTAS_EXCLUIDAS = ("4002013", "4003003")
+PERIODOS = ["2026-07", "2026-08"]
+DOCS_ADR = Path(__file__).resolve().parents[2] / "docs" / "adr"
 MOTIVO = (
-    "Provisional: tiene movimientos y la hoja Ago no la toma en ninguna línea; "
+    "Provisional: tiene movimientos y el Excel no la toma en ninguna línea; "
     "pendiente de la respuesta de Contraloría"
 )
 
@@ -65,15 +70,17 @@ def _sha256(ruta: Path) -> str:
     return h.hexdigest()
 
 
-def cargar_demo(carpeta: Path, imprimir=print) -> None:  # type: ignore[no-untyped-def]
+def cargar_demo(carpeta: Path, imprimir=print, archivo_excel: str = EXCEL) -> None:  # type: ignore[no-untyped-def]
     if settings.entorno != "desarrollo":
         raise SystemExit(
             "Este script solo corre con FPA_ENTORNO=desarrollo: carga datos reales de Torres en "
             "la base y usa la identidad de desarrollo."
         )
-    excel = carpeta / EXCEL
+    excel = carpeta / archivo_excel
+    if not excel.exists() and (DOCS_ADR / archivo_excel).exists():
+        excel = DOCS_ADR / archivo_excel
     if not excel.exists():
-        raise SystemExit(f"No encuentro {EXCEL} en {carpeta}")
+        raise SystemExit(f"No encuentro {archivo_excel} en {carpeta}")
     sha = _sha256(excel)
     archivo = DatosArchivo(nombre=excel.name, sha256=sha, tamano_bytes=excel.stat().st_size)
 
@@ -108,8 +115,9 @@ def cargar_demo(carpeta: Path, imprimir=print) -> None:  # type: ignore[no-untyp
         imprimir(f"Movimientos: {carga.resolucion.value}")
 
         imprimir("Leyendo la estructura, las reglas y el mapeo de la hoja Ago…")
-        filas = leer_filas_hoja(excel)
-        estructura = leer_variance_estructura_filas(filas)
+        lectura = leer_variance(excel)
+        estructura = lectura.estructura
+        imprimir(f"Formato detectado: {lectura.formato.value}")
         res_est = importar_estructura_reporte(
             db,
             usuario_id=analista.id,
@@ -127,7 +135,7 @@ def cargar_demo(carpeta: Path, imprimir=print) -> None:  # type: ignore[no-untyp
             db,
             usuario_id=analista.id,
             version=version,
-            leidas=leer_variance_reglas_filas(filas, estructura),
+            leidas=lectura.reglas,
             **base,
         )
 
@@ -145,19 +153,26 @@ def cargar_demo(carpeta: Path, imprimir=print) -> None:  # type: ignore[no-untyp
                 db,
                 usuario_id=analista.id,
                 version_estructura=version,
-                leido=leer_variance_mapeo_filas(filas, estructura),
+                leido=lectura.mapeo,
                 archivo=archivo,
                 confirmar_reemplazo=True,
                 **base,
             ).version
             if mapeo is None:
                 raise SystemExit("No se pudo crear el borrador del mapeo")
-            for cuenta in CUENTAS_EXCLUIDAS:
+            sin_linea: dict[str, CuentaSinMapear] = {}
+            for periodo in PERIODOS:
+                reporte = validar_mapeo(
+                    db, hotel_id=hotel.id, version_mapeo_id=mapeo.id, periodo=periodo
+                )
+                for c in reporte.sin_mapear:
+                    sin_linea.setdefault(c.cuenta_codigo, c)
+            for c in sin_linea.values():
                 excluir_cuenta(
                     db,
                     usuario_id=analista.id,
                     version_id=mapeo.id,
-                    cuenta_codigo=cuenta,
+                    cuenta_codigo=c.cuenta_codigo,
                     motivo=MOTIVO,
                     **base,
                 )
@@ -165,24 +180,39 @@ def cargar_demo(carpeta: Path, imprimir=print) -> None:  # type: ignore[no-untyp
                 db,
                 usuario_id=contralor.id,
                 version_id=mapeo.id,
-                periodos=["2026-07", "2026-08"],
+                periodos=PERIODOS,
                 notas="Demostración de agosto 2026 (exclusiones provisionales)",
                 **base,
             )
             db.commit()
-            imprimir(f"Mapeo v{mapeo.numero} aprobado; excluidas: {', '.join(CUENTAS_EXCLUIDAS)}")
+            imprimir(f"Mapeo v{mapeo.numero} aprobado; {len(sin_linea)} cuentas excluidas:")
+            for c in sorted(sin_linea.values(), key=lambda x: -abs(x.neto)):
+                imprimir(f"  {c.cuenta_codigo}  {c.neto:>16,.2f}  {c.descripcion or ''}")
 
-        res_budget = importar_budget(
-            db,
-            usuario_id=analista.id,
-            version_estructura=version,
-            valores=leer_variance_valores(excel),
-            archivo=archivo,
-            periodo_corte=PERIODO_CORTE,
-            ano_fiscal=etiqueta_ano_fiscal(PERIODO_CORTE),
-            confirmar_reemplazo=True,
-            **base,
-        )
+        if lectura.formato is Formato.MZT:
+            res_budget = importar_budget_mensual(
+                db,
+                usuario_id=analista.id,
+                version_estructura=version,
+                por_periodo=leer_valores_mensuales_mzt(leer_hojas_mzt(excel)).por_periodo,
+                archivo=archivo,
+                ano_fiscal=etiqueta_ano_fiscal(PERIODO_CORTE),
+                filas_con_cuentas={v.fila_origen for v in lectura.mapeo.vinculos},
+                confirmar_reemplazo=True,
+                **base,
+            )
+        else:
+            res_budget = importar_budget(
+                db,
+                usuario_id=analista.id,
+                version_estructura=version,
+                valores=leer_variance_valores(excel),
+                archivo=archivo,
+                periodo_corte=PERIODO_CORTE,
+                ano_fiscal=etiqueta_ano_fiscal(PERIODO_CORTE),
+                confirmar_reemplazo=True,
+                **base,
+            )
         db.commit()
         imprimir(f"Budget: {res_budget.resolucion.value}")
 
@@ -201,8 +231,9 @@ def main() -> None:
         required=True,
         help="Carpeta con el Excel del Variance de agosto (y, opcional, el catálogo CON020)",
     )
+    parser.add_argument("--archivo", default=EXCEL, help="Nombre del Excel (por omisión, Mazatlán)")
     args = parser.parse_args()
-    cargar_demo(args.datos)
+    cargar_demo(args.datos, archivo_excel=args.archivo)
 
 
 if __name__ == "__main__":

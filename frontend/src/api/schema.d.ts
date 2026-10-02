@@ -580,9 +580,9 @@ export interface components {
             confirmar_reemplazo: boolean;
             /**
              * Periodo Corte
-             * @description AAAA-MM del archivo, p. ej. 2026-08
+             * @description AAAA-MM del archivo, p. ej. 2026-08. Obligatorio en el formato de Vallarta; el de Mazatlán trae sus meses (julio y agosto) en el propio archivo
              */
-            periodo_corte: string;
+            periodo_corte?: string | null;
         };
         /** Body_importar_catalogo_oficial_api_v1_hoteles__hotel_id__catalogo_importar_post */
         Body_importar_catalogo_oficial_api_v1_hoteles__hotel_id__catalogo_importar_post: {
@@ -934,6 +934,8 @@ export interface components {
         /** LineaVarianceSalida */
         LineaVarianceSalida: {
             anual: components["schemas"]["CifrasSalida"];
+            /** Capturada */
+            capturada: boolean;
             /** Codigo Corporativo */
             codigo_corporativo: string | null;
             /** Convencion */

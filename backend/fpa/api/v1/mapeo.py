@@ -20,9 +20,7 @@ from fpa.config import settings
 from fpa.db import get_db
 from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
 from fpa.identidad.permisos import Permiso
-from fpa.ingesta.variance_estructura import leer_filas_hoja, leer_variance_estructura_filas
-from fpa.ingesta.variance_mapeo import leer_variance_mapeo_filas
-from fpa.ingesta.variance_reglas import leer_variance_reglas_filas
+from fpa.ingesta.variance_lectura import leer_variance
 from fpa.modelos.mapeo import VersionMapeo
 from fpa.repositorios.mapeo import RepositorioMapeo
 from fpa.repositorios.reporte import RepositorioReporte
@@ -452,7 +450,7 @@ def importar_reporte(
             rechazar(e.detalle, e.status_code)
             raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
         try:
-            filas = leer_filas_hoja(temporal)
+            lectura = leer_variance(temporal)
         except ValueError as e:
             rechazar(str(e), 422)
             raise HTTPException(status_code=422, detail=str(e)) from None
@@ -461,9 +459,7 @@ def importar_reporte(
             rechazar("No se pudo leer el libro", 422)
             raise HTTPException(status_code=422, detail="No se pudo leer el libro") from None
 
-        estructura = leer_variance_estructura_filas(filas)
-        reglas = leer_variance_reglas_filas(filas, estructura)
-        mapeo = leer_variance_mapeo_filas(filas, estructura)
+        estructura, reglas, mapeo = lectura.estructura, lectura.reglas, lectura.mapeo
         datos = DatosArchivo(nombre=nombre, sha256=sha256, tamano_bytes=tamano)
         kw = _kw(contexto)
 
@@ -527,6 +523,7 @@ def importar_reporte(
             status_code=201,
             content={
                 "resolucion": res_est.resolucion.value,
+                "formato": lectura.formato.value,
                 "estructura_version_id": version.id,
                 "n_lineas": version.n_lineas,
                 "n_detalle": version.n_detalle,

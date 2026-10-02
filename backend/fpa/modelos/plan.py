@@ -73,3 +73,39 @@ class LineaPlan(Base):
     mes: Mapped[Decimal | None] = mapped_column(Medida, nullable=True)
     ytd: Mapped[Decimal | None] = mapped_column(Medida, nullable=True)
     anual: Mapped[Decimal | None] = mapped_column(Medida, nullable=True)
+
+
+class LineaPlanMensual(Base):
+    """Budget de una línea en **un mes** concreto (formatos que traen el Budget mes a mes).
+
+    El acumulado del año fiscal es la suma de estos meses; si falta alguno, no se inventa un cero.
+    """
+
+    __tablename__ = "linea_plan_mensual"
+    __table_args__ = (UniqueConstraint("version_plan_id", "linea_id", "periodo"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version_plan_id: Mapped[int] = mapped_column(ForeignKey("version_plan.id"), index=True)
+    hotel_id: Mapped[int] = mapped_column(ForeignKey("hotel.id"), index=True)
+    linea_id: Mapped[int] = mapped_column(ForeignKey("linea_reporte.id"))
+    periodo: Mapped[str] = mapped_column(String(7))  # AAAA-MM
+    importe: Mapped[Decimal] = mapped_column(Medida)
+
+
+class ValorCapturado(Base):
+    """Actual **capturado** de una línea sin cuentas ni regla (p. ej. el tipo de cambio).
+
+    No sale de los movimientos: lo trae el Excel (`origen="excel"`) o se captura a mano. Pertenece a
+    una versión de la estructura del reporte, como el mapeo y el Budget.
+    """
+
+    __tablename__ = "valor_capturado"
+    __table_args__ = (UniqueConstraint("hotel_id", "version_estructura_id", "linea_id", "periodo"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    hotel_id: Mapped[int] = mapped_column(ForeignKey("hotel.id"), index=True)
+    version_estructura_id: Mapped[int] = mapped_column(ForeignKey("version_estructura_reporte.id"))
+    linea_id: Mapped[int] = mapped_column(ForeignKey("linea_reporte.id"))
+    periodo: Mapped[str] = mapped_column(String(7))
+    importe: Mapped[Decimal] = mapped_column(Medida)
+    origen: Mapped[str] = mapped_column(String(20), default="excel")

@@ -22,6 +22,9 @@ from fpa.config import settings
 from fpa.db import get_db
 from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
 from fpa.identidad.permisos import Permiso
+from fpa.ingesta.formato_variance import Formato, detectar_formato
+from fpa.ingesta.variance_lectura import leer_variance
+from fpa.ingesta.variance_mzt import leer_hojas_mzt, leer_valores_mensuales_mzt
 from fpa.ingesta.variance_valores import leer_variance_valores
 from fpa.modelos.plan import VersionPlan
 from fpa.repositorios.plan import RepositorioPlan
@@ -36,7 +39,7 @@ from fpa.seguridad.archivos import (
     verificar_nombre,
 )
 from fpa.servicios.auditoria import auditar
-from fpa.servicios.budget import importar_budget
+from fpa.servicios.budget import importar_budget, importar_budget_mensual
 from fpa.servicios.cargar_archivo import Resolucion
 from fpa.servicios.cargas import DatosArchivo
 
@@ -128,20 +131,21 @@ def importar(
     contexto: Importacion,
     archivo: Annotated[UploadFile, File(description="Excel del Variance (.xlsx), hoja `Ago`")],
     periodo_corte: Annotated[
-        str,
+        str | None,
         Form(
-            pattern=r"^20\d{2}-(0[1-9]|1[0-2])$", description="AAAA-MM del archivo, p. ej. 2026-08"
+            pattern=r"^20\d{2}-(0[1-9]|1[0-2])$",
+            description="AAAA-MM del archivo, p. ej. 2026-08. Obligatorio en el formato de "
+            "Vallarta; el de Mazatlán trae sus meses (julio y agosto) en el propio archivo",
         ),
-    ],
+    ] = None,
     ano_fiscal: Annotated[str | None, Form(description="Por omisión se deduce del corte")] = None,
     confirmar_reemplazo: Annotated[bool, Form()] = False,
     db: Session = Depends(get_db),
 ) -> JSONResponse:
     """Carga el Budget (mes, YTD y anual) pegado en el Excel como una versión nueva e inmutable."""
-    if not _RE_PERIODO.match(periodo_corte):
+    if periodo_corte is not None and not _RE_PERIODO.match(periodo_corte):
         raise HTTPException(status_code=422, detail="El periodo debe ser AAAA-MM")
     anio = ano_fiscal.strip() if ano_fiscal and ano_fiscal.strip() else None
-    anio = anio or etiqueta_ano_fiscal(periodo_corte)
     limites = LimitesArchivo.desde_settings()
     nombre = nombre_seguro(archivo.filename)
 
@@ -179,8 +183,15 @@ def importar(
         except ArchivoRechazado as e:
             rechazar(e.detalle, e.status_code)
             raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
+        datos = DatosArchivo(nombre=nombre, sha256=sha256, tamano_bytes=tamano)
         try:
-            valores = leer_variance_valores(temporal)
+            formato = detectar_formato(temporal).formato
+            if formato is Formato.MZT:
+                mensuales = leer_valores_mensuales_mzt(leer_hojas_mzt(temporal))
+                valores = {}
+            else:
+                mensuales = None
+                valores = leer_variance_valores(temporal)
         except ValueError as e:
             rechazar(str(e), 422)
             raise HTTPException(status_code=422, detail=str(e)) from None
@@ -189,23 +200,46 @@ def importar(
             rechazar("No se pudo leer el libro", 422)
             raise HTTPException(status_code=422, detail="No se pudo leer el libro") from None
 
-        resultado = importar_budget(
-            db,
-            organizacion_id=contexto.organizacion_id,
-            hotel_id=contexto.hotel_id,
-            usuario_id=contexto.principal.usuario_id,
-            version_estructura=estructura,
-            valores=valores,
-            archivo=DatosArchivo(nombre=nombre, sha256=sha256, tamano_bytes=tamano),
-            periodo_corte=periodo_corte,
-            ano_fiscal=anio,
-            confirmar_reemplazo=confirmar_reemplazo,
-        )
+        if mensuales is not None:
+            if not mensuales.periodos:
+                rechazar("El archivo no trae meses con Budget", 422)
+                raise HTTPException(status_code=422, detail="El archivo no trae meses con Budget")
+            resultado = importar_budget_mensual(
+                db,
+                organizacion_id=contexto.organizacion_id,
+                hotel_id=contexto.hotel_id,
+                usuario_id=contexto.principal.usuario_id,
+                version_estructura=estructura,
+                por_periodo=mensuales.por_periodo,
+                archivo=datos,
+                ano_fiscal=anio or etiqueta_ano_fiscal(mensuales.periodos[-1]),
+                filas_con_cuentas={v.fila_origen for v in leer_variance(temporal).mapeo.vinculos},
+                confirmar_reemplazo=confirmar_reemplazo,
+            )
+        else:
+            if periodo_corte is None:
+                rechazar("Falta el periodo de corte", 422)
+                raise HTTPException(
+                    status_code=422, detail="Indica el periodo de corte (AAAA-MM) de este formato"
+                )
+            resultado = importar_budget(
+                db,
+                organizacion_id=contexto.organizacion_id,
+                hotel_id=contexto.hotel_id,
+                usuario_id=contexto.principal.usuario_id,
+                version_estructura=estructura,
+                valores=valores,
+                archivo=datos,
+                periodo_corte=periodo_corte,
+                ano_fiscal=anio or etiqueta_ano_fiscal(periodo_corte),
+                confirmar_reemplazo=confirmar_reemplazo,
+            )
         db.commit()
         cuerpo: dict[str, object] = {
             "resolucion": resultado.resolucion.value,
             "motivos": resultado.motivos,
             "avisos": resultado.avisos,
+            "formato": formato.value,
             "version": _version(resultado.version).model_dump(mode="json")
             if resultado.version
             else None,

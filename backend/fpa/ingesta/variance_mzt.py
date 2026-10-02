@@ -249,10 +249,10 @@ def leer_mapeo_mzt(hojas: HojasMzt, estructura: ResultadoEstructura) -> Resultad
             )
             if c and _CODIGO.match(c)
         }
-        formuladas = {_normalizar_codigo(c) for c in por_cuenta}
-        pegadas_normales = {_normalizar_codigo(c) for c in pegadas}
-        faltan = sorted(c for c in pegadas if _normalizar_codigo(c) not in formuladas)
-        sobran = sorted(c for c in por_cuenta if _normalizar_codigo(c) not in pegadas_normales)
+        formuladas = {normalizar_codigo(c) for c in por_cuenta}
+        pegadas_normales = {normalizar_codigo(c) for c in pegadas}
+        faltan = sorted(c for c in pegadas if normalizar_codigo(c) not in formuladas)
+        sobran = sorted(c for c in por_cuenta if normalizar_codigo(c) not in pegadas_normales)
         for codigo in faltan:
             res.vinculos.append(
                 VinculoLeido(
@@ -296,7 +296,7 @@ def _texto_de_cuenta(valor: object) -> str:
     return str(valor).strip()
 
 
-def _normalizar_codigo(codigo: object) -> str:
+def normalizar_codigo(codigo: object) -> str:
     """`4002001.01` (Excel pierde el cero final) y `4002001.010` se comparan como iguales."""
     texto = str(codigo).strip()
     if re.fullmatch(r"\d+\.\d+", texto):

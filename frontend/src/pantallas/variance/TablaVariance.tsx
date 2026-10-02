@@ -96,7 +96,8 @@ function FilaLinea({
         {linea.codigo_corporativo && <span className="codigo suave"> {linea.codigo_corporativo}</span>}
       </th>
       <CeldasBloque
-        calculada={calculada}
+        // el tipo de cambio trae su Actual del mes capturado (no calculado): se muestra, sin desglose
+        calculada={calculada || linea.capturada}
         cifras={linea.mes}
         enlace={enlace('mes')}
         etiquetaEnlace={`Ver el desglose de ${linea.descripcion}, mes`}

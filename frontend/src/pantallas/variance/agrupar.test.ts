@@ -14,6 +14,7 @@ function linea(id: number, seccion_id: number | null): LineaVariance {
     codigo_corporativo: null,
     descripcion: `L${id}`,
     convencion: 'real_menos_presupuesto',
+    capturada: false,
     mes: cifras,
     ytd: cifras,
     anual: cifras,

@@ -89,6 +89,7 @@ def generar_excel(
     secciones: Sequence[SeccionReporte],
     resultado: dict[int, LineaVariance],
     advertencias: Sequence[str],
+    capturadas: frozenset[int] = frozenset(),
     version_mapeo: int,
     version_budget: int | None,
     periodos_ytd: Sequence[str],
@@ -155,7 +156,7 @@ def generar_excel(
         if linea.codigo_corporativo:
             escribir_texto(hoja, fila, 1, linea.codigo_corporativo)
         escribir_texto(hoja, fila, 2, linea.descripcion)
-        _cifras(hoja, fila, 3, r.mes, calculada)
+        _cifras(hoja, fila, 3, r.mes, calculada or linea.id in capturadas)
         _cifras(hoja, fila, 8, r.ytd, calculada)
         _cifras(hoja, fila, 13, r.anual, calculada)
         if linea.tipo in ("total", "subtotal"):
@@ -190,7 +191,8 @@ def generar_excel(
         f"Budget: versión {version_budget}" if version_budget is not None else "Budget: ninguno",
         "Variación favorable = positiva. Ingresos y utilidades: real - presupuesto; gastos: "
         "presupuesto - real.",
-        "Las líneas informativas (p. ej. el tipo de cambio) no se calculan: Actual en blanco.",
+        "Las líneas informativas (p. ej. el tipo de cambio) no se calculan; el Actual del mes "
+        "solo aparece si fue capturado.",
         f"Generado por la plataforma el {datetime.now().strftime('%Y-%m-%d %H:%M')} (servidor).",
         "",
         "Advertencias al calcular:" if advertencias else "Sin advertencias al calcular.",

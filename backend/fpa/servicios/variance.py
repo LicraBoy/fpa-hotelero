@@ -7,16 +7,18 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from fpa.calculo.ano_fiscal import MES_INICIO_POR_DEFECTO, etiqueta_ano_fiscal
+from fpa.calculo.ano_fiscal import MES_INICIO_POR_DEFECTO, etiqueta_ano_fiscal, periodos_ytd
 from fpa.calculo.motor import LineaVariance, armar_variance
 from fpa.calculo.variance import Convencion, LineaParaConvencion, deducir_convenciones
-from fpa.modelos.plan import TIPO_BUDGET, VersionPlan
+from fpa.modelos.plan import TIPO_BUDGET, LineaPlanMensual, VersionPlan
 from fpa.modelos.reporte import LineaReporte
 from fpa.repositorios.mapeo import RepositorioMapeo
 from fpa.repositorios.plan import RepositorioPlan
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.servicios.actual import actual_del_periodo, actual_ytd_del_periodo, version_de_mapeo
 from fpa.servicios.reglas_suma import reglas_como_mapa
+
+CERO = Decimal("0")
 
 
 class PlanIncompatible(ValueError):
@@ -44,6 +46,7 @@ class ReporteVariance:
     lineas: list[LineaReporte]
     resultado: dict[int, LineaVariance]
     secciones: list[SeccionReporte] = field(default_factory=list)
+    capturadas: frozenset[int] = frozenset()  # líneas informativas con Actual capturado (mes)
     advertencias: list[str] = field(default_factory=list)
 
 
@@ -71,6 +74,38 @@ def secciones_del_reporte(lineas: list[LineaReporte]) -> list[SeccionReporte]:
             SeccionReporte(seccion.id, seccion.descripcion, totales[-1].id if totales else None)
         )
     return salida
+
+
+def _budget_mensual(
+    filas: list[LineaPlanMensual],
+    periodo: str,
+    ytd: list[str],
+    sin_acumular: set[int],
+    advertencias: list[str],
+) -> tuple[dict[int, Decimal] | None, dict[int, Decimal] | None]:
+    """Budget del mes y del acumulado (suma de los meses del año fiscal) de los meses cargados."""
+    por_periodo: dict[str, dict[int, Decimal]] = {}
+    for f in filas:
+        por_periodo.setdefault(f.periodo, {})[f.linea_id] = f.importe
+    b_mes = por_periodo.get(periodo)
+    if b_mes is None:
+        advertencias.append(
+            f"El Budget cargado no trae {periodo} (trae {', '.join(sorted(por_periodo))}): "
+            "no hay Budget del mes ni del acumulado"
+        )
+        return None, None
+    faltan = [p for p in ytd if p not in por_periodo]
+    if faltan:
+        advertencias.append(
+            "El Budget del acumulado no se calcula: faltan los meses " + ", ".join(faltan)
+        )
+        return b_mes, None
+    b_ytd: dict[int, Decimal] = {}
+    for p in ytd:
+        for linea, importe in por_periodo[p].items():
+            if linea not in sin_acumular:
+                b_ytd[linea] = b_ytd.get(linea, CERO) + importe
+    return b_mes, b_ytd
 
 
 def calcular_variance(
@@ -127,9 +162,17 @@ def calcular_variance(
     if plan is None:
         advertencias.append("No hay Budget para este año fiscal: no se calcula el Variance")
     else:
-        filas = RepositorioPlan(db, hotel_id).lineas(plan.id)
-        b_anual = {x.linea_id: x.anual for x in filas if x.anual is not None}
-        if plan.periodo_corte == periodo:
+        repo_plan = RepositorioPlan(db, hotel_id)
+        filas = repo_plan.lineas(plan.id)
+        b_anual = {x.linea_id: x.anual for x in filas if x.anual is not None} or None
+        mensuales = repo_plan.mensuales(plan.id)
+        if mensuales:
+            # un acumulado de "tipo de cambio" no es la suma de sus meses: se deja en blanco
+            informativas = {x.id for x in lineas if x.tipo == "informativa"}
+            b_mes, b_ytd = _budget_mensual(
+                mensuales, periodo, periodos_ytd(periodo, mes_inicio), informativas, advertencias
+            )
+        elif plan.periodo_corte == periodo:
             b_mes = {x.linea_id: x.mes for x in filas if x.mes is not None}
             b_ytd = {x.linea_id: x.ytd for x in filas if x.ytd is not None}
         else:
@@ -149,8 +192,33 @@ def calcular_variance(
             "El acumulado está incompleto: faltan movimientos de " + ", ".join(ytd.sin_datos)
         )
 
+    # Actual capturado (el Excel lo trae pegado): solo para líneas sin cuentas ni regla de suma.
+    # El acumulado suma los meses capturados, salvo en las informativas (un tipo de cambio no suma).
+    periodos_del_ytd = periodos_ytd(periodo, mes_inicio)
+    tipos = {x.id: x.tipo for x in lineas}
+    capturados: dict[int, Decimal] = {}
+    capturados_ytd: dict[int, Decimal] = {}
+    meses_por_linea: dict[int, int] = {}
+    for x in RepositorioPlan(db, hotel_id).capturados(
+        mapeo.version_estructura_id, periodos_del_ytd
+    ):
+        if x.linea_id in cuentas or x.linea_id in reglas:
+            continue
+        if x.periodo == periodo:
+            capturados[x.linea_id] = x.importe
+        if tipos.get(x.linea_id) != "informativa":
+            capturados_ytd[x.linea_id] = capturados_ytd.get(x.linea_id, CERO) + x.importe
+            meses_por_linea[x.linea_id] = meses_por_linea.get(x.linea_id, 0) + 1
+    if any(n < len(periodos_del_ytd) for n in meses_por_linea.values()):
+        advertencias.append(
+            "Hay líneas con Actual capturado que no trae todos los meses del acumulado: "
+            "su acumulado queda incompleto"
+        )
+    mes = {**mes, **capturados}
+    acumulado = {**ytd.por_linea, **capturados_ytd}
+
     resultado = armar_variance(
-        [x.id for x in lineas], reglas, convenciones, mes, ytd.por_linea, b_mes, b_ytd, b_anual
+        [x.id for x in lineas], reglas, convenciones, mes, acumulado, b_mes, b_ytd, b_anual
     )
     return ReporteVariance(
         hotel_id=hotel_id,
@@ -163,5 +231,6 @@ def calcular_variance(
         lineas=lineas,
         resultado=resultado,
         secciones=secciones,
+        capturadas=frozenset(capturados),
         advertencias=advertencias,
     )

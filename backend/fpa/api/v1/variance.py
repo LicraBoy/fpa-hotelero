@@ -54,6 +54,7 @@ class LineaVarianceSalida(BaseModel):
     codigo_corporativo: str | None
     descripcion: str
     convencion: str
+    capturada: bool  # línea informativa con Actual capturado (mes), p. ej. el tipo de cambio
     mes: CifrasSalida
     ytd: CifrasSalida
     anual: CifrasSalida
@@ -193,6 +194,7 @@ def _salida(r: ReporteVariance) -> VarianceSalida:
                 codigo_corporativo=x.codigo_corporativo,
                 descripcion=x.descripcion,
                 convencion=r.resultado[x.id].convencion.value,
+                capturada=x.id in r.capturadas,
                 mes=_cifras(r.resultado[x.id].mes),
                 ytd=_cifras(r.resultado[x.id].ytd),
                 anual=_cifras(r.resultado[x.id].anual),
@@ -250,6 +252,7 @@ def exportar(
         lineas=lineas,
         secciones=r.secciones,
         resultado=r.resultado,
+        capturadas=r.capturadas,
         advertencias=r.advertencias,
         version_mapeo=r.version_mapeo_id,
         version_budget=r.version_plan_id,

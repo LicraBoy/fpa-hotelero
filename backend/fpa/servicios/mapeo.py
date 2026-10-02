@@ -11,7 +11,8 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from fpa.ingesta.variance_mapeo import ResultadoMapeo
+from fpa.ingesta.variance_mapeo import ResultadoMapeo, VinculoLeido
+from fpa.ingesta.variance_mzt import normalizar_codigo
 from fpa.modelos.base import ahora_utc
 from fpa.modelos.mapeo import DESCARTADA, MapeoLineaCuenta, VersionMapeo
 from fpa.modelos.reporte import VersionEstructuraReporte
@@ -109,6 +110,20 @@ def importar_mapeo(
 
     lineas = {x.orden: x for x in RepositorioReporte(db, hotel_id).lineas(version_estructura.id)}
     conocidas = {c.codigo for c in RepositorioCatalogo(db, hotel_id).todas()}
+    por_clave: dict[str, set[str]] = {}
+    for codigo in conocidas:
+        por_clave.setdefault(normalizar_codigo(codigo), set()).add(codigo)
+
+    def resolver(v: VinculoLeido) -> str:
+        """Un código pegado como valor pierde el cero final: se completa con el catálogo."""
+        if v.origen != "excel_ago" or v.cuenta_codigo in conocidas:
+            return v.cuenta_codigo
+        candidatos = por_clave.get(normalizar_codigo(v.cuenta_codigo), set())
+        return next(iter(candidatos)) if len(candidatos) == 1 else v.cuenta_codigo
+
+    resueltos: dict[tuple[int, str], int] = {}
+    for v in leido.vinculos:
+        resueltos.setdefault((v.orden, resolver(v)), v.signo)
     with db.begin_nested():
         if borrador is not None:
             borrador.estado = DESCARTADA
@@ -124,14 +139,14 @@ def importar_mapeo(
         )
         db.add(version)
         db.flush()
-        for v in leido.vinculos:
+        for (orden, codigo), signo in resueltos.items():
             db.add(
                 MapeoLineaCuenta(
                     version_mapeo_id=version.id,
                     hotel_id=hotel_id,
-                    linea_id=lineas[v.orden].id,
-                    cuenta_codigo=v.cuenta_codigo,
-                    signo=v.signo,
+                    linea_id=lineas[orden].id,
+                    cuenta_codigo=codigo,
+                    signo=signo,
                     origen="excel",
                 )
             )
@@ -142,14 +157,14 @@ def importar_mapeo(
             {
                 **base,
                 "numero": version.numero,
-                "n_vinculos": len(leido.vinculos),
+                "n_vinculos": len(resueltos),
                 "lineas_vinculadas": leido.lineas_vinculadas,
             },
         )
     return ResultadoImportacionMapeo(
         Resolucion.CREADA,
         version=version,
-        n_vinculos=len(leido.vinculos),
+        n_vinculos=len(resueltos),
         lineas_vinculadas=leido.lineas_vinculadas,
-        sin_catalogo=sorted({v.cuenta_codigo for v in leido.vinculos} - conocidas),
+        sin_catalogo=sorted({codigo for _, codigo in resueltos} - conocidas),
     )

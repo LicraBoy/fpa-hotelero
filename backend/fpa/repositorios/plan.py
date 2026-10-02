@@ -3,7 +3,13 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from fpa.modelos.plan import VIGENTE, LineaPlan, VersionPlan
+from fpa.modelos.plan import (
+    VIGENTE,
+    LineaPlan,
+    LineaPlanMensual,
+    ValorCapturado,
+    VersionPlan,
+)
 
 
 class RepositorioPlan:
@@ -50,5 +56,30 @@ class RepositorioPlan:
                 select(LineaPlan)
                 .where(LineaPlan.version_plan_id == version_id, LineaPlan.hotel_id == self.hotel_id)
                 .order_by(LineaPlan.linea_id)
+            )
+        )
+
+    def mensuales(self, version_id: int) -> list[LineaPlanMensual]:
+        return list(
+            self._db.scalars(
+                select(LineaPlanMensual)
+                .where(
+                    LineaPlanMensual.version_plan_id == version_id,
+                    LineaPlanMensual.hotel_id == self.hotel_id,
+                )
+                .order_by(LineaPlanMensual.periodo, LineaPlanMensual.linea_id)
+            )
+        )
+
+    def capturados(self, version_estructura_id: int, periodos: list[str]) -> list[ValorCapturado]:
+        return list(
+            self._db.scalars(
+                select(ValorCapturado)
+                .where(
+                    ValorCapturado.hotel_id == self.hotel_id,
+                    ValorCapturado.version_estructura_id == version_estructura_id,
+                    ValorCapturado.periodo.in_(periodos),
+                )
+                .order_by(ValorCapturado.linea_id)
             )
         )
