@@ -10,13 +10,13 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from fpa.api.v1.respuestas import RESPUESTAS_HOTEL
-from fpa.api.v1.tipos import FechaHoraUtc, IdRuta
+from fpa.api.v1.tipos import ID_MAX, FechaHoraUtc, IdRuta
 from fpa.calculo.ano_fiscal import etiqueta_ano_fiscal
 from fpa.config import settings
 from fpa.db import get_db
@@ -40,6 +40,13 @@ from fpa.seguridad.archivos import (
 )
 from fpa.servicios.auditoria import auditar
 from fpa.servicios.budget import importar_budget, importar_budget_mensual
+from fpa.servicios.budget_edicion import (
+    BaseDesactualizada,
+    CambioBudget,
+    EdicionInvalida,
+    crear_version_desde_cambios,
+    vista_edicion,
+)
 from fpa.servicios.cargar_archivo import Resolucion
 from fpa.servicios.cargas import DatosArchivo
 
@@ -251,3 +258,165 @@ def importar(
                 temporal.unlink(missing_ok=True)
             except OSError:
                 log.warning("No se pudo borrar el temporal %s; se limpiará después", temporal.name)
+
+
+# --- Edición en pantalla ----------------------------------------------------------------------
+
+
+class CeldaEdicion(BaseModel):
+    periodo: str
+    budget: Decimal | None
+    actual: Decimal | None
+
+
+class LineaEdicionSalida(BaseModel):
+    linea_id: int
+    orden: int
+    tipo: str
+    nivel: int
+    seccion_id: int | None
+    codigo_corporativo: str | None
+    descripcion: str
+    editable: bool
+    meses: list[CeldaEdicion]
+
+
+class ComponenteEdicion(BaseModel):
+    linea_id: int
+    signo: int
+
+
+class ReglaEdicion(BaseModel):
+    linea_id: int
+    componentes: list[ComponenteEdicion]
+
+
+class SeccionEdicion(BaseModel):
+    id: int
+    descripcion: str
+
+
+class VistaEdicionSalida(BaseModel):
+    ano_fiscal: str
+    periodos: list[str]
+    version: VersionPlanSalida | None
+    secciones: list[SeccionEdicion]
+    lineas: list[LineaEdicionSalida]
+    reglas: list[ReglaEdicion]
+    advertencias: list[str]
+
+
+class CambioEntrada(BaseModel):
+    linea_id: int = Field(ge=1, le=ID_MAX)
+    periodo: str = Field(pattern=r"^20\d{2}-(0[1-9]|1[0-2])$")
+    importe: Decimal = Field(allow_inf_nan=False, max_digits=20, decimal_places=6)
+
+
+class VersionDesdeCambios(BaseModel):
+    ano_fiscal: str = Field(pattern=r"^20\d{2}(/\d{2})?$")
+    base_version_id: int | None = Field(default=None, ge=1, le=ID_MAX)
+    cambios: list[CambioEntrada] = Field(min_length=1, max_length=20_000)
+
+
+RESPUESTAS_EDICION: dict[int | str, dict[str, object]] = {
+    404: {"description": "Hotel o año fiscal no encontrado (o sin acceso)"},
+    409: {"description": "Falta la estructura o el mapeo, o la versión base ya no es la vigente"},
+    422: {"description": "Un cambio no es válido (línea, mes o importe)"},
+}
+
+
+@router.get(
+    "/hoteles/{hotel_id}/budget/edicion",
+    response_model=VistaEdicionSalida,
+    responses=RESPUESTAS_EDICION,
+)
+def ver_edicion(
+    contexto: Importacion,
+    ano_fiscal: Annotated[str, Query(pattern=r"^20\d{2}(/\d{2})?$", description="Ej. 2026/27")],
+    version_id: Annotated[int | None, Query(ge=1, le=ID_MAX)] = None,
+    db: Session = Depends(get_db),
+) -> VistaEdicionSalida:
+    """El Budget (mes a mes) y el Actual de referencia de cada línea, para editarlo."""
+    try:
+        vista = vista_edicion(
+            db, hotel_id=contexto.hotel_id, ano_fiscal=ano_fiscal, version_id=version_id
+        )
+    except LookupError as e:
+        raise HTTPException(status_code=409, detail=str(e.args[0])) from None
+    except EdicionInvalida as e:  # un año fiscal que no existe (p. ej. 2026/99): no hay recurso
+        raise HTTPException(status_code=404, detail=str(e)) from None
+    return VistaEdicionSalida(
+        ano_fiscal=vista.ano_fiscal,
+        periodos=vista.periodos,
+        version=_version(vista.version) if vista.version else None,
+        secciones=[SeccionEdicion(id=x.id, descripcion=x.descripcion) for x in vista.secciones],
+        lineas=[
+            LineaEdicionSalida(
+                linea_id=x.linea.id,
+                orden=x.linea.orden,
+                tipo=x.linea.tipo,
+                nivel=x.linea.nivel,
+                seccion_id=x.linea.seccion_id,
+                codigo_corporativo=x.linea.codigo_corporativo,
+                descripcion=x.linea.descripcion,
+                editable=x.editable,
+                meses=[
+                    CeldaEdicion(periodo=p, budget=x.budget[p], actual=x.actual[p])
+                    for p in vista.periodos
+                ],
+            )
+            for x in vista.lineas
+        ],
+        reglas=[
+            ReglaEdicion(
+                linea_id=total,
+                componentes=[ComponenteEdicion(linea_id=c, signo=s) for c, s in componentes],
+            )
+            for total, componentes in vista.reglas.items()
+        ],
+        advertencias=vista.advertencias,
+    )
+
+
+@router.post(
+    "/hoteles/{hotel_id}/budget/versiones",
+    status_code=201,
+    responses=RESPUESTAS_EDICION,
+)
+def guardar_edicion(
+    entrada: VersionDesdeCambios,
+    contexto: Importacion,
+    db: Session = Depends(get_db),
+) -> JSONResponse:
+    """Guarda una versión nueva del Budget con los cambios; la anterior queda como `reemplazada`."""
+    try:
+        resultado = crear_version_desde_cambios(
+            db,
+            organizacion_id=contexto.organizacion_id,
+            hotel_id=contexto.hotel_id,
+            usuario_id=contexto.principal.usuario_id,
+            ano_fiscal=entrada.ano_fiscal,
+            base_version_id=entrada.base_version_id,
+            cambios=[CambioBudget(c.linea_id, c.periodo, c.importe) for c in entrada.cambios],
+        )
+    except LookupError as e:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=str(e.args[0])) from None
+    except BaseDesactualizada as e:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=str(e)) from None
+    except EdicionInvalida as e:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=str(e)) from None
+    db.commit()
+    return JSONResponse(
+        status_code=_HTTP[resultado.resolucion],
+        content={
+            "resolucion": resultado.resolucion.value,
+            "motivos": resultado.motivos,
+            "avisos": resultado.avisos,
+            "version": _version(resultado.version).model_dump(mode="json")
+            if resultado.version
+            else None,
+        },
+    )

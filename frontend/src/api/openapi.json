@@ -210,6 +210,40 @@
         "title": "Body_subir_carga_api_v1_hoteles__hotel_id__cargas_post",
         "type": "object"
       },
+      "CambioEntrada": {
+        "properties": {
+          "importe": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,14}|(?=[\\d.]{1,21}0*$)\\d{0,14}\\.\\d{0,6}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Importe"
+          },
+          "linea_id": {
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "periodo": {
+            "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+            "title": "Periodo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "linea_id",
+          "periodo",
+          "importe"
+        ],
+        "title": "CambioEntrada",
+        "type": "object"
+      },
       "CargaDetalle": {
         "properties": {
           "controles": {
@@ -415,6 +449,45 @@
         "title": "CargaSalida",
         "type": "object"
       },
+      "CeldaEdicion": {
+        "properties": {
+          "actual": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "periodo",
+          "budget",
+          "actual"
+        ],
+        "title": "CeldaEdicion",
+        "type": "object"
+      },
       "CifrasSalida": {
         "properties": {
           "actual": {
@@ -466,6 +539,24 @@
           "pct"
         ],
         "title": "CifrasSalida",
+        "type": "object"
+      },
+      "ComponenteEdicion": {
+        "properties": {
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "signo": {
+            "title": "Signo",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "linea_id",
+          "signo"
+        ],
+        "title": "ComponenteEdicion",
         "type": "object"
       },
       "ComponenteSalida": {
@@ -970,6 +1061,76 @@
         "title": "HotelSalida",
         "type": "object"
       },
+      "LineaEdicionSalida": {
+        "properties": {
+          "codigo_corporativo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo Corporativo"
+          },
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "editable": {
+            "title": "Editable",
+            "type": "boolean"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "meses": {
+            "items": {
+              "$ref": "#/components/schemas/CeldaEdicion"
+            },
+            "title": "Meses",
+            "type": "array"
+          },
+          "nivel": {
+            "title": "Nivel",
+            "type": "integer"
+          },
+          "orden": {
+            "title": "Orden",
+            "type": "integer"
+          },
+          "seccion_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seccion Id"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "linea_id",
+          "orden",
+          "tipo",
+          "nivel",
+          "seccion_id",
+          "codigo_corporativo",
+          "descripcion",
+          "editable",
+          "meses"
+        ],
+        "title": "LineaEdicionSalida",
+        "type": "object"
+      },
       "LineaPlanSalida": {
         "properties": {
           "anual": {
@@ -1470,6 +1631,27 @@
         "title": "PaginaSalida",
         "type": "object"
       },
+      "ReglaEdicion": {
+        "properties": {
+          "componentes": {
+            "items": {
+              "$ref": "#/components/schemas/ComponenteEdicion"
+            },
+            "title": "Componentes",
+            "type": "array"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "linea_id",
+          "componentes"
+        ],
+        "title": "ReglaEdicion",
+        "type": "object"
+      },
       "ReporteCalidadSalida": {
         "properties": {
           "aprobado": {
@@ -1724,6 +1906,24 @@
         "title": "SaldoSalida",
         "type": "object"
       },
+      "SeccionEdicion": {
+        "properties": {
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "descripcion"
+        ],
+        "title": "SeccionEdicion",
+        "type": "object"
+      },
       "SeccionSalida": {
         "properties": {
           "descripcion": {
@@ -1867,6 +2067,43 @@
           "lineas"
         ],
         "title": "VarianceSalida",
+        "type": "object"
+      },
+      "VersionDesdeCambios": {
+        "properties": {
+          "ano_fiscal": {
+            "pattern": "^20\\d{2}(/\\d{2})?$",
+            "title": "Ano Fiscal",
+            "type": "string"
+          },
+          "base_version_id": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Version Id"
+          },
+          "cambios": {
+            "items": {
+              "$ref": "#/components/schemas/CambioEntrada"
+            },
+            "maxItems": 20000,
+            "minItems": 1,
+            "title": "Cambios",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ano_fiscal",
+          "cambios"
+        ],
+        "title": "VersionDesdeCambios",
         "type": "object"
       },
       "VersionDetalle": {
@@ -2302,6 +2539,70 @@
         "title": "VinculoSalida",
         "type": "object"
       },
+      "VistaEdicionSalida": {
+        "properties": {
+          "advertencias": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Advertencias",
+            "type": "array"
+          },
+          "ano_fiscal": {
+            "title": "Ano Fiscal",
+            "type": "string"
+          },
+          "lineas": {
+            "items": {
+              "$ref": "#/components/schemas/LineaEdicionSalida"
+            },
+            "title": "Lineas",
+            "type": "array"
+          },
+          "periodos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Periodos",
+            "type": "array"
+          },
+          "reglas": {
+            "items": {
+              "$ref": "#/components/schemas/ReglaEdicion"
+            },
+            "title": "Reglas",
+            "type": "array"
+          },
+          "secciones": {
+            "items": {
+              "$ref": "#/components/schemas/SeccionEdicion"
+            },
+            "title": "Secciones",
+            "type": "array"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VersionPlanSalida"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ano_fiscal",
+          "periodos",
+          "version",
+          "secciones",
+          "lineas",
+          "reglas",
+          "advertencias"
+        ],
+        "title": "VistaEdicionSalida",
+        "type": "object"
+      },
       "YoSalida": {
         "properties": {
           "email": {
@@ -2607,6 +2908,86 @@
         ]
       }
     },
+    "/api/v1/hoteles/{hotel_id}/budget/edicion": {
+      "get": {
+        "description": "El Budget (mes a mes) y el Actual de referencia de cada línea, para editarlo.",
+        "operationId": "ver_edicion_api_v1_hoteles__hotel_id__budget_edicion_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Ej. 2026/27",
+            "in": "query",
+            "name": "ano_fiscal",
+            "required": true,
+            "schema": {
+              "description": "Ej. 2026/27",
+              "pattern": "^20\\d{2}(/\\d{2})?$",
+              "title": "Ano Fiscal",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VistaEdicionSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o año fiscal no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "Falta la estructura o el mapeo, o la versión base ya no es la vigente"
+          },
+          "422": {
+            "description": "Un cambio no es válido (línea, mes o importe)"
+          }
+        },
+        "summary": "Ver Edicion",
+        "tags": [
+          "budget"
+        ]
+      }
+    },
     "/api/v1/hoteles/{hotel_id}/budget/importar": {
       "post": {
         "description": "Carga el Budget (mes, YTD y anual) pegado en el Excel como una versión nueva e inmutable.",
@@ -2721,6 +3102,62 @@
           }
         },
         "summary": "Listar Versiones",
+        "tags": [
+          "budget"
+        ]
+      },
+      "post": {
+        "description": "Guarda una versión nueva del Budget con los cambios; la anterior queda como `reemplazada`.",
+        "operationId": "guardar_edicion_api_v1_hoteles__hotel_id__budget_versiones_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionDesdeCambios"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o año fiscal no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "Falta la estructura o el mapeo, o la versión base ya no es la vigente"
+          },
+          "422": {
+            "description": "Un cambio no es válido (línea, mes o importe)"
+          }
+        },
+        "summary": "Guardar Edicion",
         "tags": [
           "budget"
         ]

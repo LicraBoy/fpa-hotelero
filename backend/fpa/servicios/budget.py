@@ -196,6 +196,7 @@ def importar_budget_mensual(
     mes_inicio: int = MES_INICIO_POR_DEFECTO,
     filas_con_cuentas: set[int] | None = None,
     confirmar_reemplazo: bool = False,
+    accion_creado: str = "budget.creado",
 ) -> ResultadoImportacionBudget:
     """Guarda el Budget **mes a mes** (formato de Mazatlán) como una versión nueva e inmutable.
 
@@ -342,7 +343,7 @@ def importar_budget_mensual(
             )
         db.flush()
         evento(
-            "budget.creado",
+            accion_creado,
             version.id,
             {**base, "numero": version.numero, "n_lineas": version.n_lineas},
         )

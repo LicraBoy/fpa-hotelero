@@ -118,6 +118,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/budget/edicion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver Edicion
+         * @description El Budget (mes a mes) y el Actual de referencia de cada línea, para editarlo.
+         */
+        get: operations["ver_edicion_api_v1_hoteles__hotel_id__budget_edicion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/budget/importar": {
         parameters: {
             query?: never;
@@ -148,7 +168,11 @@ export interface paths {
         /** Listar Versiones */
         get: operations["listar_versiones_api_v1_hoteles__hotel_id__budget_versiones_get"];
         put?: never;
-        post?: never;
+        /**
+         * Guardar Edicion
+         * @description Guarda una versión nueva del Budget con los cambios; la anterior queda como `reemplazada`.
+         */
+        post: operations["guardar_edicion_api_v1_hoteles__hotel_id__budget_versiones_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -630,6 +654,15 @@ export interface components {
              */
             periodos?: string | null;
         };
+        /** CambioEntrada */
+        CambioEntrada: {
+            /** Importe */
+            importe: number | string;
+            /** Linea Id */
+            linea_id: number;
+            /** Periodo */
+            periodo: string;
+        };
         /** CargaDetalle */
         CargaDetalle: {
             controles: components["schemas"]["ReporteCalidadSalida"] | null;
@@ -711,6 +744,15 @@ export interface components {
             /** Usuario Id */
             usuario_id: number | null;
         };
+        /** CeldaEdicion */
+        CeldaEdicion: {
+            /** Actual */
+            actual: string | null;
+            /** Budget */
+            budget: string | null;
+            /** Periodo */
+            periodo: string;
+        };
         /** CifrasSalida */
         CifrasSalida: {
             /** Actual */
@@ -721,6 +763,13 @@ export interface components {
             pct: string | null;
             /** Var */
             var: string | null;
+        };
+        /** ComponenteEdicion */
+        ComponenteEdicion: {
+            /** Linea Id */
+            linea_id: number;
+            /** Signo */
+            signo: number;
         };
         /** ComponenteSalida */
         ComponenteSalida: {
@@ -899,6 +948,27 @@ export interface components {
             /** Rol */
             rol: string;
         };
+        /** LineaEdicionSalida */
+        LineaEdicionSalida: {
+            /** Codigo Corporativo */
+            codigo_corporativo: string | null;
+            /** Descripcion */
+            descripcion: string;
+            /** Editable */
+            editable: boolean;
+            /** Linea Id */
+            linea_id: number;
+            /** Meses */
+            meses: components["schemas"]["CeldaEdicion"][];
+            /** Nivel */
+            nivel: number;
+            /** Orden */
+            orden: number;
+            /** Seccion Id */
+            seccion_id: number | null;
+            /** Tipo */
+            tipo: string;
+        };
         /** LineaPlanSalida */
         LineaPlanSalida: {
             /** Anual */
@@ -1038,6 +1108,13 @@ export interface components {
             /** Siguiente Cursor */
             siguiente_cursor: string | null;
         };
+        /** ReglaEdicion */
+        ReglaEdicion: {
+            /** Componentes */
+            componentes: components["schemas"]["ComponenteEdicion"][];
+            /** Linea Id */
+            linea_id: number;
+        };
         /** ReporteCalidadSalida */
         ReporteCalidadSalida: {
             /** Aprobado */
@@ -1117,6 +1194,13 @@ export interface components {
             /** Suma Debito */
             suma_debito: string;
         };
+        /** SeccionEdicion */
+        SeccionEdicion: {
+            /** Descripcion */
+            descripcion: string;
+            /** Id */
+            id: number;
+        };
         /** SeccionSalida */
         SeccionSalida: {
             /** Descripcion */
@@ -1159,6 +1243,15 @@ export interface components {
             version_mapeo_id: number;
             /** Version Plan Id */
             version_plan_id: number | null;
+        };
+        /** VersionDesdeCambios */
+        VersionDesdeCambios: {
+            /** Ano Fiscal */
+            ano_fiscal: string;
+            /** Base Version Id */
+            base_version_id?: number | null;
+            /** Cambios */
+            cambios: components["schemas"]["CambioEntrada"][];
         };
         /** VersionDetalle */
         VersionDetalle: {
@@ -1301,6 +1394,22 @@ export interface components {
             origen: string;
             /** Signo */
             signo: number;
+        };
+        /** VistaEdicionSalida */
+        VistaEdicionSalida: {
+            /** Advertencias */
+            advertencias: string[];
+            /** Ano Fiscal */
+            ano_fiscal: string;
+            /** Lineas */
+            lineas: components["schemas"]["LineaEdicionSalida"][];
+            /** Periodos */
+            periodos: string[];
+            /** Reglas */
+            reglas: components["schemas"]["ReglaEdicion"][];
+            /** Secciones */
+            secciones: components["schemas"]["SeccionEdicion"][];
+            version: components["schemas"]["VersionPlanSalida"] | null;
         };
         /** YoSalida */
         YoSalida: {
@@ -1548,6 +1657,67 @@ export interface operations {
             };
         };
     };
+    ver_edicion_api_v1_hoteles__hotel_id__budget_edicion_get: {
+        parameters: {
+            query: {
+                /** @description Ej. 2026/27 */
+                ano_fiscal: string;
+                version_id?: number | null;
+            };
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VistaEdicionSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o año fiscal no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Falta la estructura o el mapeo, o la versión base ya no es la vigente */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Un cambio no es válido (línea, mes o importe) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     importar_api_v1_hoteles__hotel_id__budget_importar_post: {
         parameters: {
             query?: never;
@@ -1653,6 +1823,67 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    guardar_edicion_api_v1_hoteles__hotel_id__budget_versiones_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionDesdeCambios"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o año fiscal no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Falta la estructura o el mapeo, o la versión base ya no es la vigente */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Un cambio no es válido (línea, mes o importe) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
