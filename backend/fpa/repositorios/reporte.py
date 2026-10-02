@@ -3,7 +3,12 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from fpa.modelos.reporte import LineaReporte, ReglaSumaLinea, VersionEstructuraReporte
+from fpa.modelos.reporte import (
+    ConvencionLinea,
+    LineaReporte,
+    ReglaSumaLinea,
+    VersionEstructuraReporte,
+)
 
 
 class RepositorioReporte:
@@ -46,6 +51,18 @@ class RepositorioReporte:
                     LineaReporte.version_id == version_id, LineaReporte.hotel_id == self.hotel_id
                 )
                 .order_by(LineaReporte.orden)
+            )
+        )
+
+    def convenciones(self, version_id: int) -> list[ConvencionLinea]:
+        return list(
+            self._db.scalars(
+                select(ConvencionLinea)
+                .where(
+                    ConvencionLinea.version_id == version_id,
+                    ConvencionLinea.hotel_id == self.hotel_id,
+                )
+                .order_by(ConvencionLinea.linea_id, ConvencionLinea.bloque)
             )
         )
 

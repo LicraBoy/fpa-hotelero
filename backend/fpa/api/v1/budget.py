@@ -283,7 +283,8 @@ class LineaEdicionSalida(BaseModel):
 
 class ComponenteEdicion(BaseModel):
     linea_id: int
-    signo: int
+    signo: int  # +1 o -1
+    factor: Decimal  # 1, o p. ej. 0.16 en una línea que es el 16 % de otra
 
 
 class ReglaEdicion(BaseModel):
@@ -370,7 +371,10 @@ def ver_edicion(
         reglas=[
             ReglaEdicion(
                 linea_id=total,
-                componentes=[ComponenteEdicion(linea_id=c, signo=s) for c, s in componentes],
+                componentes=[
+                    ComponenteEdicion(linea_id=c, signo=1 if s > 0 else -1, factor=abs(Decimal(s)))
+                    for c, s in componentes
+                ],
             )
             for total, componentes in vista.reglas.items()
         ],

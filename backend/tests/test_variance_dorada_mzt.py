@@ -43,7 +43,7 @@ EXCEL = next(
 )
 pytestmark = pytest.mark.skipif(EXCEL is None, reason="No está el Excel real de Mazatlán")
 
-# fila del Excel -> causa. Son 12 de las 693 líneas con cifras.
+# fila del Excel -> causa. Son 16 de las 693 líneas con cifras (4 solo en julio).
 EXCEPCIONES = {
     # --- el Excel no calcula la línea aunque `Ago!I:O` lista su cuenta -------------------------
     # (si otra fórmula ya suma esa cuenta, como la 4002011 de Cleaning Service Income, no se
@@ -57,6 +57,11 @@ EXCEPCIONES = {
     308: "Audit Fees: la fórmula suma celdas de cuentas ajenas ('6-0-20-35', '6-1-01-100-500')",
     317: "IVA Taxes 16%: cuentas de pasivo ('2007001', '2-1-70-20') que Base de Datos no trae",
     318: "Income Tax: cuentas de activo ('1005003', '1-1-10-90') que Base de Datos no trae",
+    # --- julio usa otra fórmula del IVA que agosto (se aplica la de agosto a todos los meses) ---
+    756: "Legal VAT: julio = (Legal + Admin Fee 6%) x 16%; agosto = solo Legal x 16%",
+    807: "IT Systems VAT: julio = (IT + Admin Fee 6%) x 16%; agosto = solo IT x 16%",
+    757: "Total Legal: arrastra 756 (julio)",
+    808: "Total IT Systems: arrastra 807 (julio)",
     # --- totales que arrastran las anteriores ------------------------------------------------
     32: "Total Other Income: arrastra 19",
     76: "Total Expenses: arrastra 70",
@@ -68,11 +73,6 @@ EXCEPCIONES_VAR = {
     **dict.fromkeys(
         (92, 175, 214, 272, 315, 326, 327, 332, 378),
         "Sin Budget en el Excel: el Excel muestra Var 0; el motor no inventa un cero (None)",
-    ),
-    **dict.fromkeys(
-        (362, 363, 465, 518, 566, 676, 677, 678, 679, 680, 681, 682, 683, 696, 709, 713),
-        "Convención de signo: el Excel usa Actual - Budget; el motor, sin cuentas que lo "
-        "indiquen, la toma de la sección (por validar con Contraloría)",
     ),
     **dict.fromkeys(
         (615, 617),

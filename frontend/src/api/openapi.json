@@ -141,6 +141,21 @@
         "title": "Body_importar_catalogo_oficial_api_v1_hoteles__hotel_id__catalogo_importar_post",
         "type": "object"
       },
+      "Body_importar_convenciones_reporte_api_v1_hoteles__hotel_id__reporte_convenciones_post": {
+        "properties": {
+          "archivo": {
+            "contentMediaType": "application/octet-stream",
+            "description": "Excel de la Variación (.xlsx) con la hoja `Variance August 2026`",
+            "title": "Archivo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_importar_convenciones_reporte_api_v1_hoteles__hotel_id__reporte_convenciones_post",
+        "type": "object"
+      },
       "Body_importar_reporte_api_v1_hoteles__hotel_id__reporte_importar_post": {
         "properties": {
           "archivo": {
@@ -543,6 +558,11 @@
       },
       "ComponenteEdicion": {
         "properties": {
+          "factor": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Factor",
+            "type": "string"
+          },
           "linea_id": {
             "title": "Linea Id",
             "type": "integer"
@@ -554,7 +574,8 @@
         },
         "required": [
           "linea_id",
-          "signo"
+          "signo",
+          "factor"
         ],
         "title": "ComponenteEdicion",
         "type": "object"
@@ -563,6 +584,11 @@
         "properties": {
           "descripcion": {
             "title": "Descripcion",
+            "type": "string"
+          },
+          "factor": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Factor",
             "type": "string"
           },
           "importe": {
@@ -588,7 +614,8 @@
           "descripcion",
           "tipo",
           "signo",
-          "importe"
+          "importe",
+          "factor"
         ],
         "title": "ComponenteSalida",
         "type": "object"
@@ -684,6 +711,40 @@
           "ejemplos"
         ],
         "title": "ControlCalidadSalida",
+        "type": "object"
+      },
+      "ConvencionesSalida": {
+        "properties": {
+          "avisos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Avisos",
+            "type": "array"
+          },
+          "celdas": {
+            "title": "Celdas",
+            "type": "integer"
+          },
+          "filas_sin_linea": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Filas Sin Linea",
+            "type": "array"
+          },
+          "lineas": {
+            "title": "Lineas",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "celdas",
+          "lineas",
+          "filas_sin_linea",
+          "avisos"
+        ],
+        "title": "ConvencionesSalida",
         "type": "object"
       },
       "CopiaEntrada": {
@@ -4266,6 +4327,72 @@
           }
         },
         "summary": "Poner Vinculo",
+        "tags": [
+          "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/reporte/convenciones": {
+      "post": {
+        "description": "Lee de las fórmulas del Excel el sentido de la Variación de cada línea (mes, YTD y anual).",
+        "operationId": "importar_convenciones_reporte_api_v1_hoteles__hotel_id__reporte_convenciones_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_importar_convenciones_reporte_api_v1_hoteles__hotel_id__reporte_convenciones_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConvencionesSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "Primero hay que importar la estructura del reporte"
+          },
+          "413": {
+            "description": "El archivo supera el tamaño máximo"
+          },
+          "415": {
+            "description": "No es un libro .xlsx válido o trae macros"
+          },
+          "422": {
+            "description": "El libro no trae la hoja de la Variación con sus fórmulas"
+          }
+        },
+        "summary": "Importar Convenciones Reporte",
         "tags": [
           "mapeo"
         ]

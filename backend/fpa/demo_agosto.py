@@ -35,6 +35,7 @@ from fpa.db import SessionLocal
 from fpa.ingesta.formato_variance import Formato
 from fpa.ingesta.novohit_con020 import leer_con020
 from fpa.ingesta.variance_base_datos import leer_variance_base_datos
+from fpa.ingesta.variance_convenciones import leer_convenciones
 from fpa.ingesta.variance_lectura import leer_variance
 from fpa.ingesta.variance_mzt import leer_hojas_mzt, leer_valores_mensuales_mzt
 from fpa.ingesta.variance_valores import leer_variance_valores
@@ -45,6 +46,7 @@ from fpa.servicios.budget import importar_budget, importar_budget_mensual
 from fpa.servicios.cargar_archivo import Resolucion, cargar_archivo
 from fpa.servicios.cargas import DatosArchivo
 from fpa.servicios.catalogo_oficial import importar_catalogo
+from fpa.servicios.convenciones_linea import importar_convenciones
 from fpa.servicios.estructura_reporte import importar_estructura_reporte
 from fpa.servicios.mapeo import importar_mapeo
 from fpa.servicios.omitir_cuentas import MOTIVO_NO_SE_OCUPAN
@@ -53,6 +55,9 @@ from fpa.servicios.validacion_mapeo import CuentaSinMapear, validar_mapeo
 from fpa.servicios.versionado_mapeo import aprobar, excluir_cuenta
 
 EXCEL = "02. MZT August 2026 Variance (Envio).xlsx"
+VARIACION = (
+    "02. MZT August 2026 Variance.xlsx"  # sus columnas G, L y Q dan el sentido de la Variación
+)
 CATALOGO = "Catalogo de cuentas.xls"
 PERIODO_CORTE = "2026-08"
 PERIODOS = ["2026-07", "2026-08"]
@@ -213,6 +218,22 @@ def cargar_demo(carpeta: Path, imprimir=print, archivo_excel: str = EXCEL) -> No
             )
         db.commit()
         imprimir(f"Budget: {res_budget.resolucion.value}")
+
+        if lectura.formato is Formato.MZT:
+            variacion = next(
+                (p for p in (carpeta / VARIACION, DOCS_ADR / VARIACION) if p.exists()), None
+            )
+            if variacion is not None:
+                celdas, _sin = importar_convenciones(
+                    db,
+                    usuario_id=analista.id,
+                    version=version,
+                    leidas=leer_convenciones(variacion),
+                    archivo=variacion.name,
+                    **base,
+                )
+                db.commit()
+                imprimir(f"Sentido de la Variación leído de {variacion.name}: {celdas} celdas")
 
     imprimir("")
     imprimir("Listo. Abre http://localhost:5180 (iniciar_servidores.bat) y entra como Analista o")

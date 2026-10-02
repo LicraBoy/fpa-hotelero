@@ -95,6 +95,6 @@ def test_archivo_real_se_lee_completo() -> None:
     h = leer_hojas_mzt(REAL)
     est = leer_estructura_mzt(h)
     assert est.es_valido and len(est.lineas) == 729
-    assert len(leer_reglas_mzt(h, est).reglas) == 54
+    assert len(leer_reglas_mzt(h, est).reglas) == 57  # 54 totales + 3 líneas con otras líneas
     assert leer_mapeo_mzt(h, est).lineas_vinculadas == 495
     assert periodos_de_la_hoja(h.dos_meses) == ["2026-07", "2026-08"]

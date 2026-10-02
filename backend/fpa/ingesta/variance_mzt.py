@@ -33,7 +33,7 @@ from fpa.ingesta.variance_estructura import (
     leer_variance_estructura_filas,
 )
 from fpa.ingesta.variance_mapeo import ResultadoMapeo, VinculoLeido
-from fpa.ingesta.variance_reglas import ResultadoReglas, leer_variance_reglas_filas
+from fpa.ingesta.variance_reglas import ReglaLeida, ResultadoReglas, leer_variance_reglas_filas
 from fpa.ingesta.variance_valores import a_decimal
 
 COLUMNAS_REPORTE = 17  # hasta la Q (la de control)
@@ -173,14 +173,72 @@ def leer_estructura_mzt(hojas: HojasMzt) -> ResultadoEstructura:
     return estructura
 
 
+_REF_LINEA = re.compile(
+    r"([+-]?)\s*\$?J\$?(\d+)(?:\s*\*\s*(\d+(?:\.\d+)?))?(?![\d(])", re.IGNORECASE
+)
+
+
+def referencias_a_lineas(formula: object) -> list[tuple[int, int | Decimal]] | None:
+    """Referencias a **otras líneas** (celdas de la columna J) dentro de una fórmula.
+
+    `='2007001'!L5+'2-1-70-20'!L5-J756-J807-J363` -> [(756, -1), (807, -1), (363, -1)]. Una
+    referencia multiplicada por una constante (`=+J754*0.16`) lleva ese factor: [(754, 0.16)].
+    Las celdas de otras hojas (`'cuenta'!L5`) y los términos `SUMIFS` no cuentan: son cuentas.
+    `None` si no hay referencias.
+    """
+    if not (isinstance(formula, str) and formula.startswith("=")):
+        return None
+    sin_cuentas = _TERMINO.sub("", formula[1:])
+    refs: list[tuple[int, int | Decimal]] = []
+    for m in _REF_LINEA.finditer(sin_cuentas):
+        signo = -1 if m.group(1) == "-" else 1
+        coeficiente: int | Decimal = Decimal(m.group(3)) * signo if m.group(3) else signo
+        refs.append((int(m.group(2)), coeficiente))
+    return refs or None
+
+
 def leer_reglas_mzt(hojas: HojasMzt, estructura: ResultadoEstructura) -> ResultadoReglas:
-    """Reglas de suma de las fórmulas de agosto (`Jul-Ago!J`)."""
-    return leer_variance_reglas_filas(
+    """Reglas de suma de las fórmulas de agosto (`Jul-Ago!J`).
+
+    Además de los totales y subtotales, una línea de **detalle** que suma cuentas y también otras
+    líneas (p. ej. *IVA Taxes 16 %*) lleva una regla con esas otras líneas: su valor es «cuentas +
+    componentes».
+    """
+    res = leer_variance_reglas_filas(
         hojas.dos_meses,
         estructura,
         columna=PERFIL_MZT.col_formula_mes,
         letra=PERFIL_MZT.letra_formula_mes,
     )
+    por_fila = {x.fila_origen: x for x in estructura.lineas}
+    col = PERFIL_MZT.col_formula_mes
+    for linea in estructura.lineas:
+        if linea.tipo is not TipoLinea.DETALLE or linea.fila_origen > len(hojas.dos_meses):
+            continue
+        fila = hojas.dos_meses[linea.fila_origen - 1]
+        referencias = referencias_a_lineas(fila[col] if len(fila) > col else None)
+        if not referencias:
+            continue
+        componentes: dict[int, int | Decimal] = {}
+        for fila_destino, signo in referencias:
+            destino = por_fila.get(fila_destino)
+            if destino is None or destino.tipo is TipoLinea.SECCION:
+                res.avisos.append(
+                    f"Fila {linea.fila_origen} ({linea.descripcion}): la fila {fila_destino} no es "
+                    "una línea sumable; se ignora"
+                )
+                continue
+            componentes[destino.orden] = componentes.get(destino.orden, 0) + signo
+        if componentes:
+            res.reglas.append(
+                ReglaLeida(
+                    orden=linea.orden,
+                    fila_origen=linea.fila_origen,
+                    componentes=[(o, s) for o, s in componentes.items() if s != 0],
+                    formula=str(fila[col]),
+                )
+            )
+    return res
 
 
 def analizar_terminos_cuenta(formula: object) -> tuple[list[tuple[str, int]], bool] | None:

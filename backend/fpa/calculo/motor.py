@@ -11,11 +11,11 @@ bloques del reporte (mes, YTD, anual) con Actual, Budget, Variance y Variance %.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 
-from fpa.calculo.totales import completar_con_totales
+from fpa.calculo.totales import Reglas, completar_con_totales
 from fpa.calculo.variance import Convencion, variance, variance_pct
 
 CERO = Decimal("0")
@@ -39,30 +39,47 @@ class LineaVariance:
 
 
 def _budget_completo(
-    base: Mapping[int, Decimal] | None, reglas: Mapping[int, Sequence[tuple[int, int]]]
+    base: Mapping[int, Decimal] | None,
+    reglas: Reglas,
+    detalle_con_regla: Collection[int],
 ) -> dict[int, Decimal] | None:
-    """Budget de todas las líneas (totales por regla); `None` si no hay Budget de este bloque."""
+    """Budget de todas las líneas (totales por regla); `None` si no hay Budget de este bloque.
+
+    Una línea de detalle con regla (cuentas + otras líneas, o «16 % de otra») trae su Budget como un
+    número, igual que cualquier línea de detalle: su regla solo aplica al Actual.
+    """
     if base is None:
         return None
-    return completar_con_totales(reglas, base)
+    return completar_con_totales(
+        {linea: r for linea, r in reglas.items() if linea not in detalle_con_regla}, base
+    )
 
 
 def armar_variance(
     lineas: Sequence[int],
-    reglas: Mapping[int, Sequence[tuple[int, int]]],
+    reglas: Reglas,
     convenciones: Mapping[int, Convencion],
     actual_mes: Mapping[int, Decimal],
     actual_ytd: Mapping[int, Decimal],
     budget_mes: Mapping[int, Decimal] | None,
     budget_ytd: Mapping[int, Decimal] | None,
     budget_anual: Mapping[int, Decimal] | None,
+    aditivas: Collection[int] = frozenset(),
+    detalle_con_regla: Collection[int] = frozenset(),
+    convenciones_bloque: Mapping[str, Mapping[int, Convencion]] | None = None,
 ) -> dict[int, LineaVariance]:
-    """`lineas`: ids de las líneas del reporte (sin secciones), en orden."""
-    a_mes = completar_con_totales(reglas, actual_mes)
-    a_ytd = completar_con_totales(reglas, actual_ytd)
-    b_mes = _budget_completo(budget_mes, reglas)
-    b_ytd = _budget_completo(budget_ytd, reglas)
-    b_anual = _budget_completo(budget_anual, reglas)
+    """`lineas`: ids de las líneas del reporte (sin secciones), en orden.
+
+    `aditivas`: líneas cuyo Actual es «cuentas + componentes». `detalle_con_regla`: líneas de
+    detalle con regla (su regla no se aplica al Budget). `convenciones_bloque`: el sentido de la
+    Variación escrito en el Excel por línea y bloque (`mes`, `ytd`, `anual`); sin dato, vale
+    `convenciones`.
+    """
+    a_mes = completar_con_totales(reglas, actual_mes, aditivas)
+    a_ytd = completar_con_totales(reglas, actual_ytd, aditivas)
+    b_mes = _budget_completo(budget_mes, reglas, detalle_con_regla)
+    b_ytd = _budget_completo(budget_ytd, reglas, detalle_con_regla)
+    b_anual = _budget_completo(budget_anual, reglas, detalle_con_regla)
 
     def cifras(
         actual: Mapping[int, Decimal],
@@ -75,14 +92,18 @@ def armar_variance(
         var = variance(real, previsto, convencion)
         return Cifras(real, previsto, var, variance_pct(var, previsto))
 
+    por_bloque = convenciones_bloque or {}
+
+    def sentido(bloque: str, linea: int) -> Convencion:
+        return por_bloque.get(bloque, {}).get(linea) or convenciones[linea]
+
     salida: dict[int, LineaVariance] = {}
     for linea in lineas:
-        conv = convenciones[linea]
         salida[linea] = LineaVariance(
             linea_id=linea,
-            convencion=conv,
-            mes=cifras(a_mes, b_mes, linea, conv),
-            ytd=cifras(a_ytd, b_ytd, linea, conv),
-            anual=cifras(a_ytd, b_anual, linea, conv),
+            convencion=sentido("mes", linea),
+            mes=cifras(a_mes, b_mes, linea, sentido("mes", linea)),
+            ytd=cifras(a_ytd, b_ytd, linea, sentido("ytd", linea)),
+            anual=cifras(a_ytd, b_anual, linea, sentido("anual", linea)),
         )
     return salida

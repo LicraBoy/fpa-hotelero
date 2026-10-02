@@ -399,6 +399,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/reporte/convenciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Importar Convenciones Reporte
+         * @description Lee de las fórmulas del Excel el sentido de la Variación de cada línea (mes, YTD y anual).
+         */
+        post: operations["importar_convenciones_reporte_api_v1_hoteles__hotel_id__reporte_convenciones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/reporte/estructura": {
         parameters: {
             query?: never;
@@ -616,6 +636,14 @@ export interface components {
              */
             archivo: string;
         };
+        /** Body_importar_convenciones_reporte_api_v1_hoteles__hotel_id__reporte_convenciones_post */
+        Body_importar_convenciones_reporte_api_v1_hoteles__hotel_id__reporte_convenciones_post: {
+            /**
+             * Archivo
+             * @description Excel de la Variación (.xlsx) con la hoja `Variance August 2026`
+             */
+            archivo: string;
+        };
         /** Body_importar_reporte_api_v1_hoteles__hotel_id__reporte_importar_post */
         Body_importar_reporte_api_v1_hoteles__hotel_id__reporte_importar_post: {
             /**
@@ -766,6 +794,8 @@ export interface components {
         };
         /** ComponenteEdicion */
         ComponenteEdicion: {
+            /** Factor */
+            factor: string;
             /** Linea Id */
             linea_id: number;
             /** Signo */
@@ -775,6 +805,8 @@ export interface components {
         ComponenteSalida: {
             /** Descripcion */
             descripcion: string;
+            /** Factor */
+            factor: string;
             /** Importe */
             importe: string;
             /** Linea Id */
@@ -818,6 +850,17 @@ export interface components {
              * @enum {string}
              */
             severidad: "ok" | "aviso" | "error";
+        };
+        /** ConvencionesSalida */
+        ConvencionesSalida: {
+            /** Avisos */
+            avisos: string[];
+            /** Celdas */
+            celdas: number;
+            /** Filas Sin Linea */
+            filas_sin_linea: number[];
+            /** Lineas */
+            lineas: number;
         };
         /** CopiaEntrada */
         CopiaEntrada: {
@@ -2809,6 +2852,81 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    importar_convenciones_reporte_api_v1_hoteles__hotel_id__reporte_convenciones_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_importar_convenciones_reporte_api_v1_hoteles__hotel_id__reporte_convenciones_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConvencionesSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Primero hay que importar la estructura del reporte */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El archivo supera el tamaño máximo */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No es un libro .xlsx válido o trae macros */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El libro no trae la hoja de la Variación con sus fórmulas */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

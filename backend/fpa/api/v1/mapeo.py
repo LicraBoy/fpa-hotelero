@@ -20,6 +20,7 @@ from fpa.config import settings
 from fpa.db import get_db
 from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
 from fpa.identidad.permisos import Permiso
+from fpa.ingesta.variance_convenciones import leer_convenciones
 from fpa.ingesta.variance_lectura import leer_variance
 from fpa.modelos.mapeo import VersionMapeo
 from fpa.repositorios.mapeo import RepositorioMapeo
@@ -36,6 +37,7 @@ from fpa.seguridad.archivos import (
 from fpa.servicios.auditoria import auditar
 from fpa.servicios.cargar_archivo import Resolucion
 from fpa.servicios.cargas import DatosArchivo
+from fpa.servicios.convenciones_linea import importar_convenciones
 from fpa.servicios.estructura_reporte import importar_estructura_reporte
 from fpa.servicios.mapeo import importar_mapeo
 from fpa.servicios.reglas_suma import importar_reglas_suma
@@ -542,3 +544,81 @@ def importar_reporte(
                 temporal.unlink(missing_ok=True)
             except OSError:
                 log.warning("No se pudo borrar el temporal %s; se limpiará después", temporal.name)
+
+
+# --- Sentido de la Variación (fórmulas G, L y Q del Excel de Contraloría) -----------------------
+
+
+class ConvencionesSalida(BaseModel):
+    celdas: int
+    lineas: int
+    filas_sin_linea: list[int]
+    avisos: list[str]
+
+
+@router.post(
+    "/hoteles/{hotel_id}/reporte/convenciones",
+    response_model=ConvencionesSalida,
+    responses={
+        409: {"description": "Primero hay que importar la estructura del reporte"},
+        413: {"description": "El archivo supera el tamaño máximo"},
+        415: {"description": "No es un libro .xlsx válido o trae macros"},
+        422: {"description": "El libro no trae la hoja de la Variación con sus fórmulas"},
+    },
+)
+def importar_convenciones_reporte(
+    request: Request,
+    contexto: Edicion,
+    archivo: Annotated[
+        UploadFile,
+        File(description="Excel de la Variación (.xlsx) con la hoja `Variance August 2026`"),
+    ],
+    db: Session = Depends(get_db),
+) -> ConvencionesSalida:
+    """Lee de las fórmulas del Excel el sentido de la Variación de cada línea (mes, YTD y anual)."""
+    limites = LimitesArchivo.desde_settings()
+    nombre = nombre_seguro(archivo.filename)
+    declarado = request.headers.get("content-length")
+    if declarado and declarado.isdigit() and int(declarado) > limites.max_bytes + 64 * 1024:
+        raise HTTPException(status_code=413, detail="El archivo supera el tamaño máximo")
+    estructura = RepositorioReporte(db, contexto.hotel_id).vigente()
+    if estructura is None:
+        raise HTTPException(
+            status_code=409, detail="Primero importa la estructura del reporte (reporte/importar)"
+        )
+    carpeta = Path(settings.storage_dir) / "tmp"
+    limpiar_temporales(carpeta)
+    temporal: Path | None = None
+    try:
+        try:
+            verificar_nombre(nombre)
+            temporal, _sha, _tamano = guardar_en_temporal(archivo.file, carpeta, limites)
+            inspeccionar_xlsx(temporal, limites)
+        except ArchivoRechazado as e:
+            raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
+        try:
+            leidas = leer_convenciones(temporal)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e)) from None
+        except Exception:
+            log.exception("No se pudo leer el libro de la Variación")
+            raise HTTPException(status_code=422, detail="No se pudo leer el libro") from None
+        if leidas.n_lineas == 0:
+            raise HTTPException(status_code=422, detail="; ".join(leidas.avisos))
+        celdas, sin_linea = importar_convenciones(
+            db,
+            version=estructura,
+            leidas=leidas,
+            archivo=nombre,
+            **_kw(contexto),
+        )
+        db.commit()
+        return ConvencionesSalida(
+            celdas=celdas,
+            lineas=leidas.n_lineas - len(sin_linea),
+            filas_sin_linea=sin_linea[:50],
+            avisos=leidas.avisos,
+        )
+    finally:
+        if temporal is not None:
+            temporal.unlink(missing_ok=True)

@@ -8,13 +8,19 @@ from fpa.modelos.identidad import Asignacion, Rol, Usuario
 from fpa.modelos.mapeo import CuentaExcluidaMapeo, MapeoLineaCuenta, VersionMapeo
 from fpa.modelos.organizacion import Hotel, Organizacion
 from fpa.modelos.plan import LineaPlan, LineaPlanMensual, ValorCapturado, VersionPlan
-from fpa.modelos.reporte import LineaReporte, ReglaSumaLinea, VersionEstructuraReporte
+from fpa.modelos.reporte import (
+    ConvencionLinea,
+    LineaReporte,
+    ReglaSumaLinea,
+    VersionEstructuraReporte,
+)
 from fpa.modelos.saldos import SaldoMensualCuenta
 
 __all__ = [
     "Asignacion",
     "Base",
     "CargaArchivo",
+    "ConvencionLinea",
     "CuentaExcluidaMapeo",
     "CuentaLocal",
     "EstadoCarga",

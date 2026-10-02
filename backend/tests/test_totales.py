@@ -133,3 +133,30 @@ def test_totales_de_budget_identicos_al_excel(agosto_real: AgostoReal, campo: st
             revisadas += 1
             assert casi(todo[linea.id], esperado, "0.01"), (linea.fila_origen, linea.descripcion)
     assert revisadas >= 50
+
+
+# --- Líneas aditivas (cuentas + componentes) y coeficientes distintos de ±1 -----------------------
+
+
+def test_una_linea_aditiva_suma_su_valor_propio_a_sus_componentes() -> None:
+    from decimal import Decimal as D
+
+    from fpa.calculo.totales import completar_con_totales
+
+    # 10 = cuentas (100) − línea 1 (30) − línea 2 (20): IVA Taxes de Mazatlán
+    reglas = {10: [(1, -1), (2, -1)]}
+    base = {10: D("100"), 1: D("30"), 2: D("20")}
+    assert completar_con_totales(reglas, base, aditivas={10})[10] == D("50")
+    # sin marcarla como aditiva, la regla reemplaza al valor propio (comportamiento de los totales)
+    assert completar_con_totales(reglas, base)[10] == D("-50")
+
+
+def test_un_coeficiente_puede_ser_un_porcentaje_de_otra_linea() -> None:
+    from decimal import Decimal as D
+
+    from fpa.calculo.totales import completar_con_totales
+
+    # Legal VAT = 16 % de Legal; el total Legal = Legal + VAT
+    reglas = {2: [(1, D("0.16"))], 3: [(1, 1), (2, 1)]}
+    r = completar_con_totales(reglas, {1: D("1000")})
+    assert (r[2], r[3]) == (D("160.00"), D("1160.00"))

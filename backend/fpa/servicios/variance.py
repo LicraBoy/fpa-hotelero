@@ -16,7 +16,8 @@ from fpa.repositorios.mapeo import RepositorioMapeo
 from fpa.repositorios.plan import RepositorioPlan
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.servicios.actual import actual_del_periodo, actual_ytd_del_periodo, version_de_mapeo
-from fpa.servicios.reglas_suma import reglas_como_mapa
+from fpa.servicios.convenciones_linea import convenciones_por_bloque
+from fpa.servicios.reglas_suma import lineas_aditivas, reglas_como_mapa
 from fpa.servicios.validacion_mapeo import validar_mapeo
 
 CERO = Decimal("0")
@@ -149,6 +150,11 @@ def calcular_variance(
     cuentas: dict[int, list[tuple[str, int]]] = {}
     for v in RepositorioMapeo(db, hotel_id).vinculos(mapeo.id):
         cuentas.setdefault(v.linea_id, []).append((v.cuenta_codigo, v.signo))
+    aditivas = lineas_aditivas(reglas, set(cuentas))
+    detalle_con_regla = frozenset(x.id for x in lineas if x.tipo == "detalle" and x.id in reglas)
+    por_bloque = convenciones_por_bloque(db, hotel_id, mapeo.version_estructura_id)
+    # lo escrito en el Excel (mes) manda sobre lo deducido; una excepción pedida a mano, sobre todo
+    excepciones = {**por_bloque["mes"], **(excepciones or {})}
     convenciones = deducir_convenciones(
         [
             LineaParaConvencion(x.id, x.tipo, x.seccion_id)
@@ -235,7 +241,17 @@ def calcular_variance(
     acumulado = {**ytd.por_linea, **capturados_ytd}
 
     resultado = armar_variance(
-        [x.id for x in lineas], reglas, convenciones, mes, acumulado, b_mes, b_ytd, b_anual
+        [x.id for x in lineas],
+        reglas,
+        convenciones,
+        mes,
+        acumulado,
+        b_mes,
+        b_ytd,
+        b_anual,
+        aditivas,
+        detalle_con_regla,
+        por_bloque,
     )
     return ReporteVariance(
         hotel_id=hotel_id,

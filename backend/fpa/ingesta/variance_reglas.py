@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 
@@ -44,7 +45,7 @@ class ReglaLeida:
     orden: int  # línea que es el total o subtotal
     fila_origen: int
     # (orden de la línea componente, signo +1 o -1)
-    componentes: list[tuple[int, int]] = field(default_factory=list)
+    componentes: list[tuple[int, int | Decimal]] = field(default_factory=list)
     formula: str = ""
 
 

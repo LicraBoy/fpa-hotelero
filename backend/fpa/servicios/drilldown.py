@@ -25,7 +25,7 @@ from fpa.repositorios.mapeo import RepositorioMapeo
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.repositorios.saldos import RepositorioSaldos
 from fpa.servicios.actual import actual_del_periodo, actual_ytd_del_periodo, version_de_mapeo
-from fpa.servicios.reglas_suma import reglas_como_mapa
+from fpa.servicios.reglas_suma import lineas_aditivas, reglas_como_mapa
 
 Bloque = Literal["mes", "ytd"]
 CERO = Decimal("0")
@@ -84,7 +84,8 @@ class ComponenteDesglose:
     descripcion: str
     tipo: str
     signo: int
-    importe: Decimal
+    importe: Decimal  # lo que aporta el componente (ya multiplicado por su factor), sin signo
+    factor: Decimal = Decimal("1")  # 1 salvo en las líneas «16 % de otra línea»
 
 
 @dataclass
@@ -134,7 +135,9 @@ def desglose_de_linea(
             version_mapeo_id=mapeo.id,
             mes_inicio=mes_inicio,
         ).por_linea
-    todo = completar_con_totales(reglas, base)
+    vinculos = RepositorioMapeo(db, hotel_id).vinculos(mapeo.id)
+    aditivas = lineas_aditivas(reglas, {v.linea_id for v in vinculos})
+    todo = completar_con_totales(reglas, base, aditivas)
     cifra = todo.get(linea_id, CERO)
     salida = Desglose(
         linea_id=linea.id,
@@ -148,19 +151,22 @@ def desglose_de_linea(
     )
 
     if linea_id in reglas:
-        for componente_id, signo in reglas[linea_id]:
+        for componente_id, coeficiente in reglas[linea_id]:
             componente = lineas[componente_id]
+            factor = abs(Decimal(coeficiente))
             salida.componentes.append(
                 ComponenteDesglose(
                     componente.id,
                     componente.descripcion,
                     componente.tipo,
-                    signo,
-                    todo.get(componente_id, CERO),
+                    1 if coeficiente > 0 else -1,
+                    todo.get(componente_id, CERO) * factor,
+                    factor,
                 )
             )
         salida.suma = sum((c.signo * c.importe for c in salida.componentes), CERO)
-        return salida
+        if linea_id not in aditivas:
+            return salida
 
     saldos: dict[str, tuple[Decimal, int]] = {}
     repo_saldos = RepositorioSaldos(db, hotel_id)
@@ -169,7 +175,7 @@ def desglose_de_linea(
             neto, n = saldos.get(s.cuenta_codigo, (CERO, 0))
             saldos[s.cuenta_codigo] = (neto + s.neto, n + s.n_movimientos)
     nombres = {c.codigo: c.descripcion for c in RepositorioCatalogo(db, hotel_id).todas()}
-    for v in RepositorioMapeo(db, hotel_id).vinculos(mapeo.id):
+    for v in vinculos:
         if v.linea_id != linea_id:
             continue
         neto, n = saldos.get(v.cuenta_codigo, (CERO, 0))
@@ -179,7 +185,7 @@ def desglose_de_linea(
             )
         )
     salida.cuentas.sort(key=lambda c: c.cuenta_codigo)
-    salida.suma = sum((c.aporte for c in salida.cuentas), CERO)
+    salida.suma += sum((c.aporte for c in salida.cuentas), CERO)
     return salida
 
 

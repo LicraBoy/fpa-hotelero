@@ -29,6 +29,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
+from fpa.calculo.totales import Reglas
+
 CERO = Decimal("0")
 UNO = Decimal("1")
 
@@ -78,7 +80,7 @@ def _mayoria(signos: Sequence[int]) -> Convencion | None:
 def deducir_convenciones(
     lineas: Sequence[LineaParaConvencion],
     cuentas_por_linea: Mapping[int, Sequence[tuple[str, int]]],
-    reglas: Mapping[int, Sequence[tuple[int, int]]],
+    reglas: Reglas,
     excepciones: Mapping[int, Convencion] | None = None,
 ) -> dict[int, Convencion]:
     """Convención de cada línea (menos las secciones). `excepciones` manda sobre lo deducido.

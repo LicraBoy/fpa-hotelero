@@ -59,7 +59,8 @@ class ComponenteSalida(BaseModel):
     descripcion: str
     tipo: str
     signo: int
-    importe: Decimal
+    importe: Decimal  # lo que aporta el componente (ya multiplicado por su factor), sin signo
+    factor: Decimal  # 1, salvo en las líneas calculadas como un % de otra (p. ej. 0.16)
 
 
 class DesgloseSalida(BaseModel):

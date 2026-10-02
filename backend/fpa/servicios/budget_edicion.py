@@ -27,13 +27,14 @@ from fpa.calculo.totales import completar_con_totales
 from fpa.ingesta.variance_mzt import ValoresMes
 from fpa.modelos.plan import TIPO_BUDGET, VIGENTE, VersionPlan
 from fpa.modelos.reporte import LineaReporte, VersionEstructuraReporte
+from fpa.repositorios.mapeo import RepositorioMapeo
 from fpa.repositorios.plan import RepositorioPlan
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.repositorios.saldos import RepositorioSaldos
 from fpa.servicios.actual import actual_del_periodo, version_de_mapeo
 from fpa.servicios.budget import ResultadoImportacionBudget, importar_budget_mensual
 from fpa.servicios.cargas import DatosArchivo
-from fpa.servicios.reglas_suma import reglas_como_mapa
+from fpa.servicios.reglas_suma import lineas_aditivas, reglas_como_mapa
 
 IMPORTE_MAXIMO = Decimal("1000000000000")  # un billón: más que cualquier presupuesto de un hotel
 NOMBRE_EDICION = "Edición en pantalla"
@@ -69,7 +70,7 @@ class VistaEdicion:
     version: VersionPlan | None
     version_estructura_id: int
     lineas: list[LineaEdicion]
-    reglas: dict[int, list[tuple[int, int]]]
+    reglas: dict[int, list[tuple[int, Decimal]]]
     secciones: list[LineaReporte]
     advertencias: list[str] = field(default_factory=list)
 
@@ -140,6 +141,12 @@ def vista_edicion(
         (x.linea_id, x.periodo): x.importe for x in planes.capturados(estructura.id, periodos)
     }
 
+    con_cuentas = {v.linea_id for v in RepositorioMapeo(db, hotel_id).vinculos(mapeo.id)}
+    aditivas = lineas_aditivas(reglas, con_cuentas)
+    # Una línea de detalle con regla (cuentas + líneas, o «16 % de otra») trae su Budget como número
+    detalle_ids = {x.id for x in lineas if x.tipo == "detalle"}
+    reglas_budget = {k: v for k, v in reglas.items() if k not in detalle_ids}
+
     con_datos = set(RepositorioSaldos(db, hotel_id).periodos())
     actual_por_mes: dict[str, dict[int, Decimal] | None] = {}
     for p in periodos:
@@ -147,18 +154,19 @@ def vista_edicion(
             completar_con_totales(
                 reglas,
                 actual_del_periodo(db, hotel_id=hotel_id, periodo=p, version_mapeo_id=mapeo.id),
+                aditivas,
             )
             if p in con_datos
             else None
         )
     budget_completo = {
-        p: completar_con_totales(reglas, budget_por_mes[p]) if budget_por_mes[p] else {}
+        p: completar_con_totales(reglas_budget, budget_por_mes[p]) if budget_por_mes[p] else {}
         for p in periodos
     }
 
     salida: list[LineaEdicion] = []
     for linea in lineas:
-        con_regla = linea.id in reglas
+        con_regla = linea.id in reglas_budget
         budget: dict[str, Decimal | None] = {}
         actual: dict[str, Decimal | None] = {}
         for p in periodos:
@@ -179,7 +187,7 @@ def vista_edicion(
         version=version,
         version_estructura_id=estructura.id,
         lineas=salida,
-        reglas=reglas,
+        reglas=reglas_budget,
         secciones=[x for x in todas if x.tipo == "seccion"],
         advertencias=advertencias,
     )
@@ -229,6 +237,7 @@ def crear_version_desde_cambios(
     todas = RepositorioReporte(db, hotel_id).lineas(estructura.id)
     por_id = {x.id: x for x in todas}
     reglas = reglas_como_mapa(db, hotel_id, estructura.id)
+    reglas = {k: v for k, v in reglas.items() if por_id[k].tipo != "detalle"}
 
     por_periodo: dict[str, dict[int, ValoresMes]] = {p: {} for p in periodos}
     previo: dict[tuple[int, str], Decimal] = {}

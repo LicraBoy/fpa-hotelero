@@ -5,16 +5,25 @@ El cálculo (`evaluar_totales`) vive en `fpa.calculo.totales` y se re-exporta aq
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
+from decimal import Decimal
+
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from fpa.calculo.totales import CicloEnReglas, evaluar_totales
+from fpa.calculo.totales import CicloEnReglas, Coeficiente, evaluar_totales
 from fpa.ingesta.variance_reglas import ResultadoReglas
 from fpa.modelos.reporte import LineaReporte, ReglaSumaLinea, VersionEstructuraReporte
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.servicios.auditoria import auditar
 
-__all__ = ["CicloEnReglas", "evaluar_totales", "importar_reglas_suma", "reglas_como_mapa"]
+__all__ = [
+    "CicloEnReglas",
+    "evaluar_totales",
+    "importar_reglas_suma",
+    "lineas_aditivas",
+    "reglas_como_mapa",
+]
 
 
 def importar_reglas_suma(
@@ -46,7 +55,7 @@ def importar_reglas_suma(
                         hotel_id=hotel_id,
                         linea_id=destino.id,
                         componente_id=por_orden[orden_componente].id,
-                        signo=signo,
+                        signo=Decimal(signo),
                     )
                 )
         db.flush()
@@ -65,9 +74,16 @@ def importar_reglas_suma(
 
 def reglas_como_mapa(
     db: Session, hotel_id: int, version_id: int
-) -> dict[int, list[tuple[int, int]]]:
+) -> dict[int, list[tuple[int, Decimal]]]:
     """Reglas guardadas como `linea_id -> [(componente_id, signo)]` para `evaluar_totales`."""
-    mapa: dict[int, list[tuple[int, int]]] = {}
+    mapa: dict[int, list[tuple[int, Decimal]]] = {}
     for r in RepositorioReporte(db, hotel_id).reglas(version_id):
         mapa.setdefault(r.linea_id, []).append((r.componente_id, r.signo))
     return mapa
+
+
+def lineas_aditivas(
+    reglas: Mapping[int, Sequence[tuple[int, Coeficiente]]], lineas_con_cuentas: set[int]
+) -> frozenset[int]:
+    """Líneas con regla **y** cuentas vinculadas: su valor es «cuentas + componentes»."""
+    return frozenset(linea for linea in reglas if linea in lineas_con_cuentas)
