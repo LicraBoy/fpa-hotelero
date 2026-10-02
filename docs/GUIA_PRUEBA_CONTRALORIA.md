@@ -147,8 +147,9 @@ incluye** esos movimientos.
 
 ## Parte 4 — Las preguntas para Contraloría
 
-Contéstalas en `docs/HALLAZGOS_CONTRALORIA.md`, en la columna "Respuesta de Contraloría". Están en
-orden de importancia.
+**La lista completa y ordenada (P1 a P18), lista para enviar, está en `docs/PREGUNTAS_PARA_CONTRALORIA.md`.**
+Aquí quedan las principales. Contéstalas en ese documento o en `docs/HALLAZGOS_CONTRALORIA.md`, columna
+"Respuesta de Contraloría".
 
 | # | La pregunta, en simple |
 |---|---|
