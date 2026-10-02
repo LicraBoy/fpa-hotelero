@@ -28,6 +28,8 @@ Vienen de las pruebas con el Excel de **Mazatlán** (julio y agosto 2026) y est�
 | P8 | Non-Deductible, Adm Fee 6 % y las líneas del resumen son valores a mano o sin fórmula: ¿de dónde salen? | | Abierto |
 | P9 | ¿Pueden dar el presupuesto anual y el Variance/Budget de septiembre? El Excel de Mazatlán solo trae el mes | | Abierto |
 | P10 | ¿Quién debe poder ver los movimientos (el desglose)? Hoy: Contralor, Analista y Auditoría; Dirección no | | Abierto |
+| P11 | CON130: el sistema lee mes, fecha y cuenta del propio reporte. Como el CON130 trae también cuentas de balance, ¿IVA Taxes e Income Tax salen de ahí? ¿La fórmula `'2007001'!L5` apunta siempre al primer mes de la hoja? | | Abierto |
+| P12 | Budget en pantalla: ¿quién puede editarlo y quién lo aprueba? ¿Se parte de tu Excel o del Actual del año anterior? | | Abierto |
 
 ## Hallazgos de la sesión
 
@@ -39,7 +41,7 @@ Vienen de las pruebas con el Excel de **Mazatlán** (julio y agosto 2026) y est�
 
 ## Cierre
 - [ ] Todos los hallazgos Alta y Media están `Cerrado` o `Aceptado`.
-- [ ] Contraloría confirmó por escrito las respuestas P1 a P10 (o acordó una fecha).
+- [ ] Contraloría confirmó por escrito las respuestas P1 a P12 (o acordó una fecha).
 - [ ] `docs/ESTADO_DEL_PROYECTO.md` actualizado y la Fase 4 marcada como cerrada.
 
 Firma de Contraloría: ______________________ Fecha: ____________

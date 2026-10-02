@@ -66,6 +66,25 @@ Excel) y entra como **Dirección** (ve el reporte, pero no el detalle) y como **
 
 ---
 
+## Parte 2 bis — El Budget en pantalla (nuevo)
+
+Abre la pestaña **Budget** (la ven Contralor y Analista). Muestra, para cada línea y cada mes del año
+fiscal, el **Budget** (editable) y, al lado en gris, el **Actual** como referencia.
+
+| # | Qué hacer | Qué debe verse |
+|---|---|---|
+| B1 | Elegir una **Sección** y mirar una línea de detalle | Una casilla de Budget por mes, con el Actual de ese mes al lado. Un mes sin movimientos cargados muestra **—** en el Actual |
+| B2 | Escribir un importe en una casilla | La casilla se marca como editada y los **totales de la sección cambian al instante**. Abajo dice cuántos cambios hay sin guardar |
+| B3 | Escribir letras en una casilla | Se marca en rojo y **no deja guardar** |
+| B4 | Poner `10` en *Ajuste sobre el Actual (%)* y pulsar **Copiar el Actual** | Se llenan los meses **sin Budget** con el Actual + 10 %. Lo que ya escribiste no se pisa |
+| B5 | Pulsar **Guardar como versión nueva** y confirmar | Mensaje con el número de versión. La anterior se conserva en el historial |
+| B6 | Ir a **Variance** | Ya usa el Budget nuevo (mes y acumulado) |
+
+**Nota:** *Importar el Budget desde el Excel de Contraloría* sirve de punto de partida; después se
+corrige aquí. Un total o subtotal **no se edita**: se calcula de sus partes.
+
+---
+
 ## Parte 3 — Diferencias que ya conocemos
 
 Comparamos las 693 líneas con cifras de tu Excel, en **agosto y julio**. **Todas coinciden salvo 12
@@ -130,6 +149,8 @@ orden de importancia.
 | **P8** | *Non-Deductible*, *Adm Fee 6 %* y las líneas del resumen son valores escritos a mano o sin fórmula. ¿De dónde salen? |
 | **P9** | ¿Puedes darnos el **presupuesto anual** y el Variance de septiembre? Tu Excel de Mazatlán solo trae el mes. |
 | **P10** | ¿Quién debe poder ver el detalle de los movimientos? Hoy lo ven Contralor, Analista y Auditoría; Dirección no |
+| **P11** | **CON130:** nosotros leemos el mes, la fecha y la cuenta directamente del reporte de Novohit (lo que hoy hacen tus fórmulas). El CON130 trae también las cuentas de balance: ¿*IVA Taxes* e *Income Tax* salen de ahí? ¿Tu fórmula `'2007001'!L5` apunta siempre al primer mes de esa hoja? |
+| **P12** | **Budget en pantalla:** ¿quién puede editarlo y quién lo aprueba? ¿Se parte siempre de tu Excel o a veces del Actual del año anterior? |
 
 ---
 
