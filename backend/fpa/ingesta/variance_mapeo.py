@@ -37,6 +37,9 @@ class VinculoLeido:
     fila_origen: int
     cuenta_codigo: str
     signo: int  # +1 o -1
+    # `excel` = de una fórmula (código exacto); `excel_ago` = valor pegado en la hoja del reporte
+    # (Excel pudo quitarle el cero final al código: se resuelve contra el catálogo al importar)
+    origen: str = "excel"
 
 
 @dataclass

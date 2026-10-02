@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 
 from openpyxl import load_workbook
@@ -23,8 +24,18 @@ from fpa.ingesta.variance_estructura import (
     leer_variance_estructura_filas,
 )
 
-COLUMNA_S = 18  # índice (desde 0) de la columna S
-_TERMINO = re.compile(r"([+-]?)\s*(?:SUM\(\s*S(\d+)\s*:\s*S(\d+)\s*\)|S(\d+))", re.IGNORECASE)
+COLUMNA_S = 18  # índice (desde 0) de la columna S (Vallarta); en Mazatlán es la J (índice 9)
+
+
+@lru_cache(maxsize=8)
+def _regex_termino(letra: str) -> re.Pattern[str]:
+    """Término de una fórmula de suma sobre la columna `letra`: `S12`, `-S12` o `SUM(S1:S5)`."""
+    return re.compile(
+        rf"([+-]?)\s*(?:SUM\(\s*{letra}(\d+)\s*:\s*{letra}(\d+)\s*\)|{letra}(\d+))",
+        re.IGNORECASE,
+    )
+
+
 _SUMABLES = {TipoLinea.DETALLE, TipoLinea.SUBTOTAL, TipoLinea.TOTAL, TipoLinea.INFORMATIVA}
 
 
@@ -48,7 +59,7 @@ class ResultadoReglas:
         return not self.errores
 
 
-def analizar_formula(formula: str) -> list[tuple[str, int, int]] | None:
+def analizar_formula(formula: str, letra: str = "S") -> list[tuple[str, int, int]] | None:
     """`=S69+S70` -> [("+", 69, 69), ("+", 70, 70)]; `=SUM(S1:S5)` -> [("+", 1, 5)].
 
     Devuelve None si la fórmula trae algo distinto de sumas/restas de celdas de la columna S.
@@ -64,7 +75,7 @@ def analizar_formula(formula: str) -> list[tuple[str, int, int]] | None:
             posicion += 1
         if posicion >= len(cuerpo):
             break
-        m = _TERMINO.match(cuerpo, posicion)
+        m = _regex_termino(letra).match(cuerpo, posicion)
         if m is None or m.end() == posicion:
             return None
         signo = "-" if m.group(1) == "-" else "+"
@@ -91,8 +102,12 @@ def leer_variance_reglas(ruta: str | Path, hoja: str = HOJA) -> ResultadoReglas:
 
 
 def leer_variance_reglas_filas(
-    filas: Sequence[Sequence[object]], estructura: ResultadoEstructura
+    filas: Sequence[Sequence[object]],
+    estructura: ResultadoEstructura,
+    columna: int = COLUMNA_S,
+    letra: str = "S",
 ) -> ResultadoReglas:
+    """`columna`/`letra`: dónde están las fórmulas de totales (S en Vallarta, J en Mazatlán)."""
     res = ResultadoReglas()
     if not estructura.es_valido:
         res.errores.append("La estructura del reporte no es válida; no se pueden leer las reglas")
@@ -103,11 +118,11 @@ def leer_variance_reglas_filas(
         if linea.tipo not in (TipoLinea.TOTAL, TipoLinea.SUBTOTAL):
             continue
         fila = filas[linea.fila_origen - 1] if linea.fila_origen <= len(filas) else ()
-        valor = fila[COLUMNA_S] if len(fila) > COLUMNA_S else None
+        valor = fila[columna] if len(fila) > columna else None
         if not (isinstance(valor, str) and valor.startswith("=")):
             sin_formula.append(f"{linea.descripcion} (fila {linea.fila_origen})")
             continue
-        terminos = analizar_formula(valor)
+        terminos = analizar_formula(valor, letra)
         if terminos is None:
             res.avisos.append(
                 f"Fila {linea.fila_origen} ({linea.descripcion}): fórmula no reconocida {valor!r}"
@@ -148,7 +163,7 @@ def leer_variance_reglas_filas(
         )
     if sin_formula:
         res.avisos.append(
-            f"{len(sin_formula)} totales o subtotales sin fórmula en la columna S "
+            f"{len(sin_formula)} totales o subtotales sin fórmula en la columna {letra} "
             f"(quedan sin regla): {', '.join(sin_formula[:5])}"
         )
     return res

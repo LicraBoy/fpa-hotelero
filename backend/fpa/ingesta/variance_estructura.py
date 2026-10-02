@@ -151,7 +151,10 @@ def leer_variance_estructura_filas(filas: Sequence[Sequence[object]]) -> Resulta
     sin_etiqueta: list[int] = []
     for n, fila in enumerate(filas[inicio:], start=inicio + 1):
         celdas = [*fila, *([None] * 19)][:19]
-        b, c, d = a_texto(celdas[1]), a_texto(celdas[2]), celdas[3]
+        b, c = a_texto(celdas[1]), a_texto(celdas[2])
+        d = celdas[3]
+        if isinstance(d, str) and not d.strip():
+            d = None  # un espacio en blanco no es una cifra (Mazatlán rotula así sus secciones)
         formula = celdas[18] if isinstance(celdas[18], str) else ""
         con_formula = formula.startswith("=")
         es_suma = _RE_FORMULA_DE_SUMA.match(formula) is not None
