@@ -35,6 +35,7 @@ from fpa.ingesta.contrato import (
     ResultadoLectura,
     Titulo,
 )
+from fpa.ingesta.tabla_cruda import formato_por_contenido, leer_filas
 from fpa.ingesta.utilidades import a_dinero, a_fecha, a_texto
 
 __all__ = [
@@ -90,14 +91,21 @@ def _ubicar_encabezado(filas: Sequence[Sequence[object]]) -> tuple[int, int]:
 
 
 def leer_con130(ruta: str | Path, hoja: str | None = None) -> ResultadoCon130:
-    with Path(ruta).open("rb") as archivo:
-        wb = load_workbook(archivo, read_only=True, data_only=True)
-        try:
-            ws = wb[hoja] if hoja else wb.worksheets[0]
-            filas = [tuple(r) for r in ws.iter_rows(values_only=True)]
-        finally:
-            wb.close()
-    return leer_con130_filas(filas)
+    """Lee el CON130 de un .xlsx, un .xls o un .csv (se reconoce por el contenido).
+
+    `hoja` solo aplica a un .xlsx: si no se indica, se usa la primera hoja.
+    """
+    if hoja is not None and formato_por_contenido(Path(ruta)) == "xlsx":
+        with Path(ruta).open("rb") as archivo:
+            wb = load_workbook(archivo, read_only=True, data_only=True)
+            try:
+                filas: Sequence[Sequence[object]] = [
+                    tuple(r) for r in wb[hoja].iter_rows(values_only=True)
+                ]
+            finally:
+                wb.close()
+        return leer_con130_filas(filas)
+    return leer_con130_filas(leer_filas(ruta))
 
 
 def leer_con130_filas(filas: Sequence[Sequence[object]]) -> ResultadoCon130:

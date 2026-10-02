@@ -177,7 +177,7 @@
         "properties": {
           "archivo": {
             "contentMediaType": "application/octet-stream",
-            "description": "Libro .xlsx exportado de Novohit o el Variance",
+            "description": "CON130 de Novohit (.xlsx, .xls o .csv) o Excel del Variance (.xlsx)",
             "title": "Archivo",
             "type": "string"
           },
@@ -3352,7 +3352,7 @@
             "description": "El archivo supera el tamaño máximo"
           },
           "415": {
-            "description": "No es un libro .xlsx válido o trae macros"
+            "description": "No es un archivo válido (.xlsx, .xls o .csv), o trae macros"
           },
           "422": {
             "content": {

@@ -120,6 +120,32 @@ def verificar_nombre_xls(nombre: str) -> None:
         )
 
 
+_EXTENSIONES_CON130 = (".xlsx", ".xls", ".csv")
+
+
+def verificar_nombre_con130(nombre: str) -> str:
+    """El CON130 se acepta como .xlsx, .xls (el de Novohit) o .csv. Devuelve la extensión."""
+    minusculas = nombre.lower()
+    if minusculas.endswith(".xlsm"):
+        raise ArchivoRechazado(415, "Los archivos con macros (.xlsm) no se aceptan")
+    if minusculas.endswith(".xlsb"):
+        raise ArchivoRechazado(
+            415, "El formato .xlsb no está soportado; guarda el libro como .xlsx"
+        )
+    for extension in _EXTENSIONES_CON130:
+        if minusculas.endswith(extension):
+            return extension
+    raise ArchivoRechazado(415, "Solo se aceptan archivos .xlsx, .xls o .csv")
+
+
+def inspeccionar_csv(ruta: Path) -> None:
+    """Un CSV es texto: rechaza lo binario (p. ej. un Excel renombrado)."""
+    with ruta.open("rb") as f:
+        inicio = f.read(8192)
+    if inicio.startswith((FIRMA_ZIP, FIRMA_OLE2)) or b"\x00" in inicio:
+        raise ArchivoRechazado(415, "El contenido no es un archivo CSV de texto")
+
+
 def inspeccionar_xls(ruta: Path) -> None:
     """Rechaza lo que no sea un libro .xls (OLE2) sano y sin macros. Lanza `ArchivoRechazado`."""
     contenido = ruta.read_bytes()  # ya acotado por el tamaño máximo de la subida
@@ -134,7 +160,7 @@ def limpiar_temporales(carpeta: Path, edad_maxima_s: float = 3600.0) -> None:
     if not carpeta.exists():
         return
     limite = time.time() - edad_maxima_s
-    for ruta in [*carpeta.glob("*.xlsx"), *carpeta.glob("*.xls")]:
+    for ruta in [*carpeta.glob("*.xlsx"), *carpeta.glob("*.xls"), *carpeta.glob("*.csv")]:
         try:
             if ruta.stat().st_mtime < limite:
                 ruta.unlink()

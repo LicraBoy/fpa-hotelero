@@ -11,8 +11,8 @@ import { ReporteCalidadVista } from './ReporteCalidadVista'
 const FUENTE: Fuente = 'con130'
 const NOMBRE_FUENTE = 'CON130 · Mayor Analítico (Novohit)'
 const AYUDA_FUENTE =
-  'Reporte exportado de Novohit, tal cual. El sistema toma de él la cuenta, la fecha y el mes de ' +
-  'cada movimiento; no hace falta agregarle fórmulas ni columnas.'
+  'Reporte exportado de Novohit, tal cual, en .xls, .xlsx o .csv. El sistema toma de él la cuenta, ' +
+  'la fecha y el mes de cada movimiento; no hace falta agregarle fórmulas ni columnas.'
 
 interface Props {
   hotelId: number
@@ -67,10 +67,10 @@ export function SubirArchivo({ hotelId, alCambiar }: Props) {
           <span className="suave">{AYUDA_FUENTE}</span>
         </p>
         <label>
-          Archivo (.xlsx)
+          Archivo (.xls, .xlsx o .csv)
           <input
             type="file"
-            accept=".xlsx"
+            accept=".xls,.xlsx,.csv"
             onChange={(e) => {
               setArchivo(e.target.files?.[0] ?? null)
               setResultado({ tipo: 'ninguno' })

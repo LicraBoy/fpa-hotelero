@@ -13,7 +13,7 @@ async function elegirUsuario(page: Page, nombre: string) {
 
 async function subir(page: Page, nombre: string) {
   const formulario = page.getByRole('region', { name: 'Subir archivo' })
-  await formulario.getByLabel('Archivo (.xlsx)').setInputFiles(archivo(nombre))
+  await formulario.getByLabel('Archivo (.xls, .xlsx o .csv)').setInputFiles(archivo(nombre))
   await formulario.getByRole('button', { name: 'Subir y validar' }).click()
 }
 
@@ -50,6 +50,20 @@ test('subir un CON130 crea la carga y muestra su reporte de calidad', async ({ p
   await expect(resultado).toContainText('Aprobado')
   const cargas = page.getByRole('region', { name: 'Cargas' })
   await expect(cargas.getByRole('row', { name: /2026-08.*vigente/ })).toBeVisible()
+})
+
+test('el CON130 también se sube como .xls (el de Novohit) y como .csv', async ({ page }) => {
+  await page.goto('/')
+  await elegirUsuario(page, 'Analista')
+  // El mismo contenido que el .xlsx ya cargado, en otro formato: se reconoce y no cambia nada
+  for (const nombre of ['con130_novohit.xls', 'con130_novohit.csv']) {
+    await subir(page, nombre)
+    const estado = page.getByRole('status').filter({ hasText: /ya estaba cargado|Ya hay datos cargados/ })
+    await expect(estado).toBeVisible()
+  }
+  // Tipos que no son del CON130 se rechazan con un mensaje claro
+  await subir(page, 'falso.xls')
+  await expect(page.getByRole('alert')).toContainText('.xls')
 })
 
 test('subir el mismo archivo otra vez no cambia nada', async ({ page }) => {

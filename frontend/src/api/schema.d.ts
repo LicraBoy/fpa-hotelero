@@ -638,7 +638,7 @@ export interface components {
         Body_subir_carga_api_v1_hoteles__hotel_id__cargas_post: {
             /**
              * Archivo
-             * @description Libro .xlsx exportado de Novohit o el Variance
+             * @description CON130 de Novohit (.xlsx, .xls o .csv) o Excel del Variance (.xlsx)
              */
             archivo: string;
             /**
@@ -2062,7 +2062,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description No es un libro .xlsx válido o trae macros */
+            /** @description No es un archivo válido (.xlsx, .xls o .csv), o trae macros */
             415: {
                 headers: {
                     [name: string]: unknown;

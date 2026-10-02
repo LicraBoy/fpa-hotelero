@@ -310,6 +310,11 @@ def main(destino: Path) -> None:
         ]
 
     (destino / "con130_agosto.xlsx").write_bytes(con130(movimientos_con130(100.50)))
+    # El mismo CON130 como .xls (el formato que exporta Novohit) y como .csv, para la subida
+    from con130_formatos import con130_csv, con130_xls
+
+    (destino / "con130_novohit.xls").write_bytes(con130_xls(movimientos_con130(100.50)))
+    (destino / "con130_novohit.csv").write_bytes(con130_csv(movimientos_con130(100.50)))
     (destino / "con130_agosto_corregido.xlsx").write_bytes(con130(movimientos_con130(120.00)))
     # Catálogo contable (CON020) sintético en .xls, y un falso .xls de texto
     (destino / "catalogo.xls").write_bytes(a_xls(catalogo_basico()))

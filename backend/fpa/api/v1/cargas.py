@@ -28,10 +28,13 @@ from fpa.seguridad.archivos import (
     ArchivoRechazado,
     LimitesArchivo,
     guardar_en_temporal,
+    inspeccionar_csv,
+    inspeccionar_xls,
     inspeccionar_xlsx,
     limpiar_temporales,
     nombre_seguro,
     verificar_nombre,
+    verificar_nombre_con130,
 )
 from fpa.servicios.auditoria import auditar
 from fpa.servicios.cargar_archivo import Resolucion, ResultadoCarga, cargar_archivo
@@ -158,15 +161,21 @@ def _periodos_declarados(texto: str | None) -> list[str] | None:
     return periodos
 
 
+def _solo_xlsx(nombre: str) -> str:
+    verificar_nombre(nombre)
+    return ".xlsx"
+
+
 def _leer(fuente: Fuente, ruta: Path) -> ResultadoLectura:
     if fuente == Fuente.CON130:
         return leer_con130(ruta)
     return leer_variance_base_datos(ruta)
 
 
-def _ruta_final(hotel_id: int, sha256: str) -> Path:
-    # La ruta se arma solo con un entero y un hash hexadecimal: no hay forma de salirse de storage/
-    return Path(settings.storage_dir) / "cargas" / str(hotel_id) / f"{sha256}.xlsx"
+def _ruta_final(hotel_id: int, sha256: str, extension: str = ".xlsx") -> Path:
+    # La ruta se arma solo con un entero, un hash hexadecimal y una extensión de una lista fija:
+    # no hay forma de salirse de storage/
+    return Path(settings.storage_dir) / "cargas" / str(hotel_id) / f"{sha256}{extension}"
 
 
 @router.post(
@@ -176,14 +185,15 @@ def _ruta_final(hotel_id: int, sha256: str) -> Path:
         201: {"model": RespuestaCarga, "description": "Carga creada o reemplazada"},
         409: {"model": RespuestaCarga, "description": "Pide confirmar el reemplazo"},
         413: {"description": "El archivo supera el tamaño máximo"},
-        415: {"description": "No es un libro .xlsx válido o trae macros"},
+        415: {"description": "No es un archivo válido (.xlsx, .xls o .csv), o trae macros"},
     },
 )
 def subir_carga(
     request: Request,
     contexto: Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.CARGA_CREAR))],
     archivo: Annotated[
-        UploadFile, File(description="Libro .xlsx exportado de Novohit o el Variance")
+        UploadFile,
+        File(description="CON130 de Novohit (.xlsx, .xls o .csv) o Excel del Variance (.xlsx)"),
     ],
     fuente: Annotated[Fuente, Form(description="con130 o variance_base_datos")],
     confirmar_reemplazo: Annotated[bool, Form()] = False,
@@ -219,9 +229,19 @@ def subir_carga(
     temporal: Path | None = None
     try:
         try:
-            verificar_nombre(nombre)
-            temporal, sha256, tamano = guardar_en_temporal(archivo.file, carpeta_temporal, limites)
-            inspeccionar_xlsx(temporal, limites)
+            # El CON130 viene de Novohit como .xlsx, .xls o .csv; el Excel del Variance, como .xlsx
+            extension = (
+                verificar_nombre_con130(nombre) if fuente == Fuente.CON130 else _solo_xlsx(nombre)
+            )
+            temporal, sha256, tamano = guardar_en_temporal(
+                archivo.file, carpeta_temporal, limites, sufijo=extension
+            )
+            if extension == ".xls":
+                inspeccionar_xls(temporal)
+            elif extension == ".csv":
+                inspeccionar_csv(temporal)
+            else:
+                inspeccionar_xlsx(temporal, limites)
         except ArchivoRechazado as e:
             auditar_rechazo(e.detalle, e.status_code)
             raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
@@ -249,7 +269,7 @@ def subir_carga(
         db.commit()
 
         if resultado.resolucion in (Resolucion.CREADA, Resolucion.REEMPLAZADA):
-            final = _ruta_final(contexto.hotel_id, sha256)
+            final = _ruta_final(contexto.hotel_id, sha256, extension)
             final.parent.mkdir(parents=True, exist_ok=True)
             if final.exists():
                 temporal.unlink(missing_ok=True)
