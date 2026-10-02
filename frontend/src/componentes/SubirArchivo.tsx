@@ -5,18 +5,14 @@ import { formatoDinero } from '../util/dinero'
 import { Insignia, MensajeError } from './Insignia'
 import { ReporteCalidadVista } from './ReporteCalidadVista'
 
-const FUENTES: { valor: Fuente; nombre: string; ayuda: string }[] = [
-  {
-    valor: 'con130',
-    nombre: 'CON130 · Mayor Analítico (Novohit)',
-    ayuda: 'Reporte completo de un mes exportado de Novohit.',
-  },
-  {
-    valor: 'variance_base_datos',
-    nombre: 'Excel del Variance · hoja "Base de Datos"',
-    ayuda: 'Movimientos de cuentas de resultados, de uno o varios meses.',
-  },
-]
+// Desde la 4.10 la única fuente que se sube por pantalla es el CON130 de Novohit: el sistema deduce
+// de él la cuenta, la fecha y el mes de cada movimiento (lo que antes hacían las fórmulas del Excel).
+// La fuente `variance_base_datos` sigue existiendo en la API (demostración y pruebas), no aquí.
+const FUENTE: Fuente = 'con130'
+const NOMBRE_FUENTE = 'CON130 · Mayor Analítico (Novohit)'
+const AYUDA_FUENTE =
+  'Reporte exportado de Novohit, tal cual. El sistema toma de él la cuenta, la fecha y el mes de ' +
+  'cada movimiento; no hace falta agregarle fórmulas ni columnas.'
 
 interface Props {
   hotelId: number
@@ -30,7 +26,6 @@ type Resultado =
 
 export function SubirArchivo({ hotelId, alCambiar }: Props) {
   const [archivo, setArchivo] = useState<File | null>(null)
-  const [fuente, setFuente] = useState<Fuente>('con130')
   const [periodos, setPeriodos] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [resultado, setResultado] = useState<Resultado>({ tipo: 'ninguno' })
@@ -41,7 +36,7 @@ export function SubirArchivo({ hotelId, alCambiar }: Props) {
     try {
       const { estado, cuerpo } = await subirCarga(hotelId, {
         archivo,
-        fuente,
+        fuente: FUENTE,
         confirmarReemplazo,
         periodos,
       })
@@ -62,23 +57,15 @@ export function SubirArchivo({ hotelId, alCambiar }: Props) {
     void enviar(false)
   }
 
-  const ayuda = FUENTES.find((f) => f.valor === fuente)?.ayuda
-
   return (
     <section className="tarjeta" aria-labelledby="titulo-subir">
       <h2 id="titulo-subir">Subir archivo</h2>
       <form onSubmit={alEnviar} className="formulario">
-        <label>
-          Tipo de archivo
-          <select value={fuente} onChange={(e) => setFuente(e.target.value as Fuente)}>
-            {FUENTES.map((f) => (
-              <option key={f.valor} value={f.valor}>
-                {f.nombre}
-              </option>
-            ))}
-          </select>
-          <span className="suave">{ayuda}</span>
-        </label>
+        <p>
+          <strong>{NOMBRE_FUENTE}</strong>
+          <br />
+          <span className="suave">{AYUDA_FUENTE}</span>
+        </p>
         <label>
           Archivo (.xlsx)
           <input

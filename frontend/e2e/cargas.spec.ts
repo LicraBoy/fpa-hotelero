@@ -11,9 +11,8 @@ async function elegirUsuario(page: Page, nombre: string) {
   await page.getByLabel('Usuario (desarrollo)').selectOption({ label: nombre })
 }
 
-async function subir(page: Page, nombre: string, fuente: 'con130' | 'variance_base_datos') {
+async function subir(page: Page, nombre: string) {
   const formulario = page.getByRole('region', { name: 'Subir archivo' })
-  await formulario.getByLabel('Tipo de archivo').selectOption(fuente)
   await formulario.getByLabel('Archivo (.xlsx)').setInputFiles(archivo(nombre))
   await formulario.getByRole('button', { name: 'Subir y validar' }).click()
 }
@@ -34,20 +33,20 @@ test('la app abre, se conecta a la API y el contralor ve todas las secciones', a
 test('archivos que no son un Excel se rechazan con un mensaje claro', async ({ page }) => {
   await page.goto('/')
   await elegirUsuario(page, 'Analista')
-  await subir(page, 'falso.xlsx', 'variance_base_datos')
+  await subir(page, 'falso.xlsx')
   await expect(page.getByRole('alert')).toContainText('no es un libro de Excel')
-  await subir(page, 'zip_no_excel.xlsx', 'variance_base_datos')
+  await subir(page, 'zip_no_excel.xlsx')
   await expect(page.getByRole('alert')).toContainText('no es un libro de Excel')
   await expect(page.getByText('Todavía no hay cargas en este hotel.')).toBeVisible()
 })
 
-test('subir un Variance crea la carga y muestra su reporte de calidad', async ({ page }) => {
+test('subir un CON130 crea la carga y muestra su reporte de calidad', async ({ page }) => {
   await page.goto('/')
   await elegirUsuario(page, 'Analista')
-  await subir(page, 'variance_agosto.xlsx', 'variance_base_datos')
+  await subir(page, 'con130_agosto.xlsx')
   const resultado = page.getByRole('status').filter({ hasText: 'Carga creada' })
   await expect(resultado).toBeVisible()
-  await expect(resultado).toContainText('2 movimientos')
+  await expect(resultado).toContainText('4 movimientos')
   await expect(resultado).toContainText('Aprobado')
   const cargas = page.getByRole('region', { name: 'Cargas' })
   await expect(cargas.getByRole('row', { name: /2026-08.*vigente/ })).toBeVisible()
@@ -56,7 +55,7 @@ test('subir un Variance crea la carga y muestra su reporte de calidad', async ({
 test('subir el mismo archivo otra vez no cambia nada', async ({ page }) => {
   await page.goto('/')
   await elegirUsuario(page, 'Analista')
-  await subir(page, 'variance_agosto.xlsx', 'variance_base_datos')
+  await subir(page, 'con130_agosto.xlsx')
   await expect(page.getByRole('status')).toContainText('ya estaba cargado')
   const cargas = page.getByRole('region', { name: 'Cargas' })
   await expect(cargas.getByRole('row')).toHaveCount(2) // encabezado + 1 carga
@@ -65,12 +64,12 @@ test('subir el mismo archivo otra vez no cambia nada', async ({ page }) => {
 test('otro archivo del mismo mes pide confirmación y al confirmar reemplaza', async ({ page }) => {
   await page.goto('/')
   await elegirUsuario(page, 'Analista')
-  await subir(page, 'variance_agosto_corregido.xlsx', 'variance_base_datos')
+  await subir(page, 'con130_agosto_corregido.xlsx')
   await expect(page.getByRole('status')).toContainText('Ya hay datos cargados para estos meses')
   await expect(page.getByRole('button', { name: 'Confirmar reemplazo' })).toBeVisible()
   const conflicto = page.getByRole('row', { name: /2026-08/ }).first()
-  await expect(conflicto).toContainText('100.50') // crédito vigente
-  await expect(conflicto).toContainText('120.00') // crédito nuevo
+  await expect(conflicto).toContainText('140.75') // total vigente
+  await expect(conflicto).toContainText('160.25') // total nuevo
   // sin confirmar no se cambió nada
   const cargas = page.getByRole('region', { name: 'Cargas' })
   await expect(cargas.getByRole('row')).toHaveCount(2)
@@ -78,7 +77,7 @@ test('otro archivo del mismo mes pide confirmación y al confirmar reemplaza', a
   await page.getByRole('button', { name: 'Confirmar reemplazo' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Carga reemplazada' })).toBeVisible()
   await expect(cargas.getByRole('row', { name: /reemplazada/ })).toBeVisible()
-  await expect(cargas.getByRole('row', { name: /variance_agosto_corregido.*/ })).toContainText('vigente')
+  await expect(cargas.getByRole('row', { name: /con130_agosto_corregido.*/ })).toContainText('vigente')
 })
 
 test('se puede ver la calidad de una carga', async ({ page }) => {
@@ -144,9 +143,9 @@ test('los saldos del mes suman exacto, con el reemplazo aplicado', async ({ page
   await expect(tabla.getByRole('row', { name: /4001002\.001/ })).toContainText('120.00') // corregido
   await expect(tabla.getByRole('row', { name: /6009001\.001/ })).toContainText('40.25')
   const total = tabla.getByRole('row', { name: /^Total/ })
-  await expect(total).toContainText('40.25') // débito
-  await expect(total).toContainText('120.00') // crédito
-  await expect(total).toContainText('-79.75') // resultado = débito − crédito
+  await expect(total).toContainText('3 cuentas') // las dos de resultados y la de bancos
+  await expect(total).toContainText('160.25') // débito y crédito: el CON130 cuadra
+  await expect(total).toContainText('0.00') // resultado = débito − crédito
 })
 
 test('la bitácora registra lo ocurrido y solo la ve contralor o auditoría', async ({ page }) => {

@@ -43,6 +43,46 @@ def fila(
     return (None, mes, dia, cuenta, nombre, "8.3.1", "MOVIMIENTO", None, None, debito, credito)
 
 
+def con130(movimientos: list[tuple[str, str, str, float | None, float | None]]) -> bytes:
+    """CON130 sintético de Novohit (Mayor Analítico) con el mismo layout que el real.
+
+    `movimientos`: (cuenta con su nombre, fecha `dd/mm/aaaa`, concepto, débito, crédito). Cada
+    cuenta lleva su "Saldo anterior" y su fila "Total"; el reporte cuadra (Débito = Crédito) si los
+    movimientos cuadran. Nunca contiene datos reales de Torres.
+    """
+    wb = Workbook()
+    ws = wb.active
+    assert ws is not None
+    ws.title = "CON130"
+    ws.append([None] * 6 + ["Torres Sintética S.A. de C.V."])
+    ws.append([None] * 6 + ["Mayor Analítico (movimientos por cuentas) "])
+    ws.append([None] * 6 + ["Periodo Agosto 2026 a Agosto 2026"])
+    ws.append(
+        [None] * 6
+        + ["# ASIENTO", "Fecha", "Tp.Asiento", "Oper.", "Tp.Doc.", "Número", "Fecha", "Concepto"]
+        + ["Débito", "Crédito", "Saldo"]
+    )
+    por_cuenta: dict[str, list[tuple[str, str, float | None, float | None]]] = {}
+    for cuenta, fecha, concepto, debito, credito in movimientos:
+        por_cuenta.setdefault(cuenta, []).append((fecha, concepto, debito, credito))
+    for cuenta, filas in sorted(por_cuenta.items()):
+        ws.append([None] * 6 + [cuenta] + [None] * 6 + ["Saldo anterior", 0, 0])
+        for n, (fecha, concepto, debito, credito) in enumerate(filas, start=1):
+            ws.append(
+                [None] * 6
+                + [f"8.1.{n}", fecha, "POLIZA", "REGISTRO", "POLIZA", f"P{n}", fecha, concepto]
+                + [debito, credito]
+            )
+        ws.append(
+            [None] * 6
+            + [None] * 7
+            + [f"Total  {cuenta}", sum(f[2] or 0 for f in filas), sum(f[3] or 0 for f in filas)]
+        )
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
 def reporte_variance() -> bytes:
     """Variance sintético COMPLETO (hojas `Ago` y `Base de Datos`) con cifras fáciles de verificar.
 
@@ -257,6 +297,20 @@ def main(destino: Path) -> None:
     (destino / "variance_reporte.xlsx").write_bytes(reporte_variance())
     (destino / "variance_agosto.xlsx").write_bytes(variance(agosto))
     (destino / "variance_agosto_corregido.xlsx").write_bytes(variance(corregido))
+
+    # Los mismos movimientos como CON130 de Novohit (con su contrapartida en bancos para que cuadre)
+    def movimientos_con130(
+        ingreso: float,
+    ) -> list[tuple[str, str, str, float | None, float | None]]:
+        return [
+            ("4001002.001  INGRESOS DE BAR", "05/08/2026", "Venta de bar", None, ingreso),
+            ("6009001.001  SUELDOS", "06/08/2026", "Nomina", 40.25, None),
+            ("1000001.001  BANCOS", "05/08/2026", "Cobro bar", ingreso, None),
+            ("1000001.001  BANCOS", "06/08/2026", "Pago nomina", None, 40.25),
+        ]
+
+    (destino / "con130_agosto.xlsx").write_bytes(con130(movimientos_con130(100.50)))
+    (destino / "con130_agosto_corregido.xlsx").write_bytes(con130(movimientos_con130(120.00)))
     # Catálogo contable (CON020) sintético en .xls, y un falso .xls de texto
     (destino / "catalogo.xls").write_bytes(a_xls(catalogo_basico()))
     (destino / "falso.xls").write_bytes(b"esto no es un libro de Excel")
