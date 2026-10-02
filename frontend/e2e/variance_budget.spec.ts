@@ -47,6 +47,23 @@ test('un importe no válido se marca y no deja guardar', async ({ page }) => {
   await expect(page.getByRole('status').filter({ hasText: 'Sin cambios.' })).toBeVisible()
 })
 
+test('un mes sin Budget lo avisa y lleva a la pestaña Budget', async ({ page }) => {
+  await abrirVariance(page)
+  // El Budget del reporte de ejemplo es del corte de agosto: julio no tiene Budget del mes
+  await page.getByLabel('Mes', { exact: true }).selectOption('2026-07')
+  const aviso = page.getByRole('status').filter({ hasText: 'No hay Budget para 2026-07' })
+  await expect(aviso).toBeVisible()
+  await expect(aviso).toContainText('Presupuesto, Variación y % var. salen en «—»')
+  await aviso.getByRole('button', { name: 'Capturar el Budget de 2026-07' }).click()
+  await expect(page.getByRole('heading', { name: 'Budget 2026/27' })).toBeVisible()
+  // quien no puede editar el Budget no ve el botón, solo la explicación
+  await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Dirección' })
+  await pestana(page, 'Variance').click()
+  await page.getByLabel('Mes', { exact: true }).selectOption('2026-07')
+  await expect(page.getByText('Pide a Contraloría que lo capture o lo importe.')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Capturar el Budget/ })).toHaveCount(0)
+})
+
 test('editar, copiar el Actual, guardar y ver el Variance con el Budget nuevo', async ({ page }) => {
   await abrirBudget(page)
 

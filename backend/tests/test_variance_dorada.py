@@ -59,7 +59,12 @@ def test_el_motor_reproduce_el_variance_de_agosto(agosto_real: AgostoReal) -> No
     r = calcular_variance(
         a.db, hotel_id=a.hotel_id, periodo="2026-08", version_mapeo_id=a.version_mapeo_id
     )
-    assert r.version_plan_id == a.version_plan_id and r.advertencias == []
+    assert r.version_plan_id == a.version_plan_id
+    # Lo único que avisa son las dos cuentas de Vallarta sin línea (4002013 y 4003003): es lo que
+    # el aviso de «cuentas sin línea» debe detectar
+    assert len(r.advertencias) == 1
+    assert "2 cuentas" in r.advertencias[0] and "4003003" in r.advertencias[0]
+    assert "4002013" in r.advertencias[0]
     assert r.periodos_ytd == ["2026-07", "2026-08"] and r.periodos_sin_datos == []
 
     comparadas, con_diferencia = 0, {}

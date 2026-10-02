@@ -195,6 +195,56 @@ def test_la_exclusion_a_proposito_se_advierte(
     assert any("4999999" in a and "a propósito" in a for a in r.json()["advertencias"])
 
 
+def test_una_cuenta_con_movimiento_sin_linea_se_advierte_con_su_importe(
+    cliente: TestClient, mundo: Mundo, db: Session
+) -> None:
+    from sqlalchemy import select
+
+    from fpa.modelos import CargaArchivo
+    from fpa.modelos.saldos import SaldoMensualCuenta
+
+    esc = Escenario(db, mundo, [_mov("4001002.001", "0", "100"), _mov("6009001.001", "30", "0")])
+    aprobar(db, version_id=esc.borrador.id, **esc.kw)  # type: ignore[union-attr, arg-type]
+    carga = db.scalar(select(CargaArchivo))
+    assert carga is not None
+    # Una cuenta nueva que llega después de aprobar el mapeo (como las de septiembre)
+    for codigo, debito in (("6009020", "6894.83"), ("6006012.001", "3101.98")):
+        db.add(
+            SaldoMensualCuenta(
+                hotel_id=mundo.hotel_a,
+                periodo="2026-08",
+                cuenta_codigo=codigo,
+                suma_debito=D(debito),
+                suma_credito=D("0"),
+                n_movimientos=1,
+                carga_id=carga.id,
+            )
+        )
+    db.commit()
+    avisos = _pedir(cliente, mundo).json()["advertencias"]
+    sin_linea = [a for a in avisos if "no están en ninguna línea" in a]
+    assert len(sin_linea) == 1
+    assert "2 cuentas" in sin_linea[0] and "9,996.81" in sin_linea[0]
+    assert "6009020 (6,894.83)" in sin_linea[0] and "6006012.001 (3,101.98)" in sin_linea[0]
+
+
+def test_sin_cuentas_sueltas_no_hay_aviso_de_cuentas_sin_linea(
+    cliente: TestClient, mundo: Mundo, db: Session
+) -> None:
+    _preparar(db, mundo)
+    avisos = _pedir(cliente, mundo).json()["advertencias"]
+    assert not any("no están en ninguna línea" in a for a in avisos)
+
+
+def test_un_mes_fuera_del_corte_del_budget_se_explica(
+    cliente: TestClient, mundo: Mundo, db: Session
+) -> None:
+    _preparar(db, mundo)
+    # el Budget de este escenario es del corte 2026-08: septiembre solo trae el anual
+    avisos = _pedir(cliente, mundo, periodo="2026-09").json()["advertencias"]
+    assert any("solo el anual" in a for a in avisos)
+
+
 def test_secciones_con_su_total() -> None:
     from types import SimpleNamespace as L
 

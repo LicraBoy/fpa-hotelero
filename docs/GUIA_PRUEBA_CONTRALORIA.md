@@ -80,6 +80,19 @@ fiscal, el **Budget** (editable) y, al lado en gris, el **Actual** como referenc
 | B5 | Pulsar **Guardar como versión nueva** y confirmar | Mensaje con el número de versión. La anterior se conserva en el historial |
 | B6 | Ir a **Variance** | Ya usa el Budget nuevo (mes y acumulado) |
 
+### Un mes sin Budget (por ejemplo septiembre)
+Tu Excel de Mazatlán solo trae el Budget de **julio y agosto**. Un mes sin Budget no se inventa en cero:
+**Presupuesto, Variación y % var. salen en «—»** (el Actual sí se calcula) y la pantalla lo avisa con un
+botón a la pestaña Budget. Para llenarlo: **Budget** → año 2026/27 → columna del mes → escribe el importe
+o usa **Copiar el Actual** (con un ajuste en %) → **Guardar como versión nueva**. El **acumulado** del mes
+solo se llena cuando hay Budget de **todos** los meses del año fiscal hasta ese mes.
+
+**Cómo se calcula:** *Variación* = Actual − Presupuesto en ingresos y utilidades, y Presupuesto − Actual en
+gastos (positivo = favorable). *% var.* = Variación ÷ Presupuesto.
+
+**Cuidado:** si vuelves a **importar el Excel** de Contraloría, reemplaza el Budget vigente (incluido lo que
+capturaste a mano). La versión anterior queda en el historial, pero deja de usarse.
+
 **Nota:** *Importar el Budget desde el Excel de Contraloría* sirve de punto de partida; después se
 corrige aquí. Un total o subtotal **no se edita**: se calcula de sus partes.
 
@@ -151,6 +164,7 @@ orden de importancia.
 | **P10** | ¿Quién debe poder ver el detalle de los movimientos? Hoy lo ven Contralor, Analista y Auditoría; Dirección no |
 | **P11** | **CON130:** nosotros leemos el mes, la fecha y la cuenta directamente del reporte de Novohit (lo que hoy hacen tus fórmulas). El CON130 trae también las cuentas de balance: ¿*IVA Taxes* e *Income Tax* salen de ahí? ¿Tu fórmula `'2007001'!L5` apunta siempre al primer mes de esa hoja? |
 | **P12** | **Budget en pantalla:** ¿quién puede editarlo y quién lo aprueba? ¿Se parte siempre de tu Excel o a veces del Actual del año anterior? |
+| **P13** | **Cuentas nuevas sin línea:** en septiembre, `6009020` (EQUIPO, 6,894.83), `6009001.004` (DIAS FESTIVOS, 5,850.68) y `6006012.001` (TRANSPORTACION, 3,101.98) tienen movimientos y **no están en ninguna línea**, por eso no salen en el Variance (la pantalla lo avisa). ¿A qué línea va cada una? *Holidays*, *Equipment* y *Transportation Allowance* existen en varios departamentos |
 
 ---
 

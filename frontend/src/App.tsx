@@ -164,7 +164,18 @@ export default function App() {
               )}
               {activa === 'variance' && (
                 <RutaProtegida rol={rol} permiso={permisoDeRuta(ruta) ?? 'variance:leer'}>
-                  <PanelVariance hotelId={hotel.id} rol={rol} />
+                  <PanelVariance
+                    hotelId={hotel.id}
+                    rol={rol}
+                    alIrABudget={
+                      puede(rol, 'budget:importar')
+                        ? () => {
+                            setPestana('budget')
+                            window.location.hash = ''
+                          }
+                        : undefined
+                    }
+                  />
                 </RutaProtegida>
               )}
               {activa === 'budget' && <PanelBudget hotelId={hotel.id} />}

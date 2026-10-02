@@ -17,6 +17,7 @@ from fpa.repositorios.plan import RepositorioPlan
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.servicios.actual import actual_del_periodo, actual_ytd_del_periodo, version_de_mapeo
 from fpa.servicios.reglas_suma import reglas_como_mapa
+from fpa.servicios.validacion_mapeo import validar_mapeo
 
 CERO = Decimal("0")
 
@@ -90,14 +91,17 @@ def _budget_mensual(
     b_mes = por_periodo.get(periodo)
     if b_mes is None:
         advertencias.append(
-            f"El Budget cargado no trae {periodo} (trae {', '.join(sorted(por_periodo))}): "
-            "no hay Budget del mes ni del acumulado"
+            f"No hay Budget para {periodo} (el Budget cargado trae "
+            f"{', '.join(sorted(por_periodo))}): Presupuesto, Variación y % quedan en «—». "
+            "Captúralo en la pestaña Budget o importa el Excel de Contraloría con ese mes"
         )
         return None, None
     faltan = [p for p in ytd if p not in por_periodo]
     if faltan:
         advertencias.append(
-            "El Budget del acumulado no se calcula: faltan los meses " + ", ".join(faltan)
+            "El Budget del acumulado no se calcula porque falta el Budget de "
+            + ", ".join(faltan)
+            + " (el acumulado suma todos los meses del año fiscal hasta este)"
         )
         return b_mes, None
     b_ytd: dict[int, Decimal] = {}
@@ -188,6 +192,18 @@ def calcular_variance(
         advertencias.append(
             f"El mapeo (versión {mapeo.numero}) deja fuera a propósito {len(excluidas)} cuentas "
             f"({codigos}): sus movimientos no entran al reporte"
+        )
+    sin_linea = validar_mapeo(
+        db, hotel_id=hotel_id, version_mapeo_id=mapeo.id, periodo=periodo
+    ).sin_mapear
+    if sin_linea:
+        mayores = sorted(sin_linea, key=lambda c: abs(c.neto), reverse=True)[:5]
+        total = sum((abs(c.neto) for c in sin_linea), CERO)
+        detalle = ", ".join(f"{c.cuenta_codigo} ({abs(c.neto):,.2f})" for c in mayores)
+        advertencias.append(
+            f"{len(sin_linea)} cuentas con movimiento en {periodo} no están en ninguna línea del "
+            f"reporte y no aparecen en él (importe {total:,.2f}): {detalle}"
+            + ("…" if len(sin_linea) > len(mayores) else "")
         )
     if ytd.sin_datos:
         advertencias.append(

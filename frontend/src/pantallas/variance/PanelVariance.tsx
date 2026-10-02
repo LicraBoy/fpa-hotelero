@@ -13,14 +13,21 @@ import { TablaVariance } from './TablaVariance'
 interface Props {
   hotelId: number
   rol: string | undefined
+  /** Abre la pestaña Budget (solo si el rol puede editarlo). */
+  alIrABudget?: () => void
 }
 
 const ESPERA_BUSQUEDA_MS = 300
 // Texto con el que la API avisa que no hay mapeo aprobado (servicios/actual.py, version_de_mapeo)
 const SIN_MAPEO = /No hay un mapeo aprobado/
 
+/** El mes no tiene Budget cuando ninguna línea trae Presupuesto del mes. */
+function sinBudgetEnElMes(lineas: { mes: { budget: string | null } }[]): boolean {
+  return lineas.length > 0 && lineas.every((l) => l.mes.budget === null)
+}
+
 /** Pantalla de Variance: el reporte del mes, el acumulado del año fiscal y el Budget anual. */
-function ReporteVariance({ hotelId, rol }: Props) {
+function ReporteVariance({ hotelId, rol, alIrABudget }: Props) {
   const { ruta, navegar } = useRuta()
   const rutaPeriodo = ruta.tipo === 'variance' ? ruta.periodo : null
 
@@ -217,6 +224,19 @@ function ReporteVariance({ hotelId, rol }: Props) {
               <Insignia tono="aviso">Acumulado incompleto</Insignia>
             )}
           </p>
+          {sinBudgetEnElMes(datos.lineas) && (
+            <p className="mensaje mensaje-aviso" role="status">
+              <strong>No hay Budget para {periodo}.</strong> Por eso Presupuesto, Variación y % var.
+              salen en «—» (el Actual sí se calcula).{' '}
+              {alIrABudget ? (
+                <button type="button" className="boton boton-secundario" onClick={alIrABudget}>
+                  Capturar el Budget de {periodo}
+                </button>
+              ) : (
+                'Pide a Contraloría que lo capture o lo importe.'
+              )}
+            </p>
+          )}
           {datos.advertencias.length > 0 && (
             <ul className="mensaje mensaje-aviso advertencias" role="status" aria-label="Advertencias">
               {datos.advertencias.map((a) => (
@@ -249,11 +269,11 @@ function ReporteVariance({ hotelId, rol }: Props) {
  * Pantalla de Variance y su recorrido de desglose. Cada ruta monta SOLO su pantalla: ir al detalle
  * de una cuenta no vuelve a pedir el reporte completo.
  */
-export function PanelVariance({ hotelId, rol }: Props) {
+export function PanelVariance({ hotelId, rol, alIrABudget }: Props) {
   const { ruta } = useRuta()
   switch (ruta.tipo) {
     case 'variance':
-      return <ReporteVariance hotelId={hotelId} rol={rol} />
+      return <ReporteVariance hotelId={hotelId} rol={rol} alIrABudget={alIrABudget} />
     case 'desglose':
       return (
         <Desglose

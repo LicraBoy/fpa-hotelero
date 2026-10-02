@@ -199,10 +199,17 @@ def test_tipo_de_cambio_es_capturado_var_es_budget_menos_actual_y_no_se_acumula(
     assert linea.id in r.capturadas
 
 
+def renta_sin_budget(r) -> bool:  # type: ignore[no-untyped-def]
+    renta = next(r.resultado[x.id] for x in r.lineas if x.descripcion == "Rental Income")
+    return renta.mes.budget is None and renta.mes.var is None and renta.mes.pct is None
+
+
 def test_un_mes_sin_budget_deja_el_acumulado_vacio_y_avisa(libro: Libro) -> None:
     libro.aprobar_y_cargar_budget()
     r = calcular_variance(libro.db, hotel_id=libro.mundo.hotel_a, periodo="2026-09")
-    assert any("no trae 2026-09" in a for a in r.advertencias)
+    assert any("No hay Budget para 2026-09" in a for a in r.advertencias)
+    assert any("Captúralo en la pestaña Budget" in a for a in r.advertencias)
+    assert renta_sin_budget(r)
     renta = next(r.resultado[x.id] for x in r.lineas if x.descripcion == "Rental Income")
     assert renta.mes.budget is None and renta.ytd.budget is None
 
