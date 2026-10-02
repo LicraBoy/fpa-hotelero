@@ -47,6 +47,7 @@ from fpa.servicios.cargas import DatosArchivo
 from fpa.servicios.catalogo_oficial import importar_catalogo
 from fpa.servicios.estructura_reporte import importar_estructura_reporte
 from fpa.servicios.mapeo import importar_mapeo
+from fpa.servicios.omitir_cuentas import MOTIVO_NO_SE_OCUPAN
 from fpa.servicios.reglas_suma import importar_reglas_suma
 from fpa.servicios.validacion_mapeo import CuentaSinMapear, validar_mapeo
 from fpa.servicios.versionado_mapeo import aprobar, excluir_cuenta
@@ -56,10 +57,7 @@ CATALOGO = "Catalogo de cuentas.xls"
 PERIODO_CORTE = "2026-08"
 PERIODOS = ["2026-07", "2026-08"]
 DOCS_ADR = Path(__file__).resolve().parents[2] / "docs" / "adr"
-MOTIVO = (
-    "Provisional: tiene movimientos y el Excel no la toma en ninguna línea; "
-    "pendiente de la respuesta de Contraloría"
-)
+MOTIVO = MOTIVO_NO_SE_OCUPAN  # Contraloría: estas cuentas todavía no se ocupan
 
 
 def _sha256(ruta: Path) -> str:
@@ -181,7 +179,7 @@ def cargar_demo(carpeta: Path, imprimir=print, archivo_excel: str = EXCEL) -> No
                 usuario_id=contralor.id,
                 version_id=mapeo.id,
                 periodos=PERIODOS,
-                notas="Demostración de agosto 2026 (exclusiones provisionales)",
+                notas="Demostración de agosto 2026 (cuentas que todavía no se ocupan)",
                 **base,
             )
             db.commit()
