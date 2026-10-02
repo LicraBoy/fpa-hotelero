@@ -11,31 +11,10 @@ estorba, confunde o falta algo importante · **Baja** = mejora de forma.
 **Estado:** `Abierto` → `En trabajo` → `Corregido (por verificar)` → `Cerrado`; o `Aceptado` (se queda
 así, con motivo) / `No es un defecto` (el sistema está bien; se explicó).
 
-## Preguntas ya conocidas que Contraloría debe responder
-Vienen de las pruebas con el Excel de **Mazatlán** (julio y agosto 2026) y están explicadas en
-`docs/GUIA_PRUEBA_CONTRALORIA.md`. *Las preguntas P1 y P2 de la versión anterior (`4002013` y
-`4003003`) eran del archivo de Puerto Vallarta y se retiraron.*
-
-| ID | Pregunta | Respuesta de Contraloría | Estado |
-|---|---|---|---|
-| P1 | `4003001.010` (−4.1 M en agosto), `4003001.020` y `4002020` tienen movimientos y ninguna línea las suma: ¿se excluyen a propósito o es una omisión? | | Abierto |
-| P2 | IVA Taxes, Income Tax, Bank Commissions y Audit Fees suman cuentas de pasivo, activo y ajenas (`2007001`, `1005003`, `6-1-01-100-050`…) que la Base de Datos no trae: ¿de qué reporte salen cada mes? | | Abierto |
-| P3 | Miscellaneous Taxable (fila 19) resta celdas fijas de otras hojas y difiere en 5,000.00 de los movimientos: ¿es intencional? | | Abierto |
-| P4 | 6 líneas listan en `Ago!I:O` cuentas que su fórmula no suma y 15 suman cuentas que no listan: ¿cuál es la fuente correcta? | | Abierto |
-| P5 | Tipo de cambio: ¿de dónde sale el Actual (17.1337 / 17.2175)? ¿Cuál es el de septiembre (Actual y Budget)? ¿Variación = Presupuesto − Actual y % = Variación / Presupuesto es correcto? | | Abierto |
-| P6 | Año fiscal: el título dice FY 25/26; el sistema usa julio–junio (agosto 2026 = 2026/27). ¿Cuál es el correcto? | | Abierto |
-| P7 | Líneas sin cuentas (Less Discount, VDS Allocation, resumen por departamento): ¿la Variación es Actual − Presupuesto? ¿Qué regla de signo aplica? | | Abierto |
-| P8 | Non-Deductible, Adm Fee 6 % y las líneas del resumen son valores a mano o sin fórmula: ¿de dónde salen? | | Abierto |
-| P9 | ¿Pueden dar el presupuesto anual y el Variance/Budget de septiembre? El Excel de Mazatlán solo trae el mes | | Abierto |
-| P10 | ¿Quién debe poder ver los movimientos (el desglose)? Hoy: Contralor, Analista y Auditoría; Dirección no | | Abierto |
-| P11 | CON130: el sistema lee mes, fecha y cuenta del propio reporte. Como el CON130 trae también cuentas de balance, ¿IVA Taxes e Income Tax salen de ahí? ¿La fórmula `'2007001'!L5` apunta siempre al primer mes de la hoja? | | Abierto |
-| P12 | Budget en pantalla: ¿quién puede editarlo y quién lo aprueba? ¿Se parte de tu Excel o del Actual del año anterior? | | Abierto |
-| P14 | Gross Profit y Net Profit Money Exchange (filas 615 y 617): la Variación del Excel no coincide con Actual − Presupuesto ni Presupuesto − Actual de sus propias columnas: ¿cómo se calcula? | | Abierto |
-| P15 | Líneas sin Presupuesto (Education Bonus, Holidays…): el Excel muestra Variación 0 y el sistema «—»: ¿cuál prefieres? | | Abierto |
-| P16 | CON130 de septiembre: 18 movimientos con Débito y Crédito en blanco (el saldo no cambia): ¿son movimientos de cero legítimos? | | Abierto |
-| P17 | CON130 de septiembre: 26 filas repetidas exactamente y 300 importes negativos: ¿son reversos y ajustes legítimos? | | Abierto |
-| P18 | Puerto Vallarta: ¿usa el mismo Novohit y un catálogo parecido? ¿cuándo se incorpora? | | Abierto |
-| P13 | Septiembre: `6009020` (EQUIPO, 6,894.83), `6009001.004` (DIAS FESTIVOS, 5,850.68) y `6006012.001` (TRANSPORTACION, 3,101.98) tienen movimientos y ninguna línea las suma, por eso no salen en el Variance: ¿a qué línea va cada una? | | Abierto |
+## Las preguntas están en otro documento
+Las preguntas para Contraloría (P1 a P18) viven **solo** en `docs/PREGUNTAS_PARA_CONTRALORIA.md`: ese es
+el documento que se envía y donde se anotan las respuestas. Aquí solo se anotan los **hallazgos** que
+salgan durante la sesión de revisión (abajo).
 
 ## Hallazgos de la sesión
 
@@ -47,7 +26,7 @@ Vienen de las pruebas con el Excel de **Mazatlán** (julio y agosto 2026) y est�
 
 ## Cierre
 - [ ] Todos los hallazgos Alta y Media están `Cerrado` o `Aceptado`.
-- [ ] Contraloría confirmó por escrito las respuestas P1 a P18 (o acordó una fecha).
+- [ ] Contraloría confirmó por escrito las respuestas del documento `PREGUNTAS_PARA_CONTRALORIA.md` (P1 a P18) (o acordó una fecha).
 - [ ] `docs/ESTADO_DEL_PROYECTO.md` actualizado y la Fase 4 marcada como cerrada.
 
 Firma de Contraloría: ______________________ Fecha: ____________

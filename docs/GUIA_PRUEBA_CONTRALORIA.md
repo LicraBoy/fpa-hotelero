@@ -147,25 +147,8 @@ incluye** esos movimientos.
 
 ## Parte 4 — Las preguntas para Contraloría
 
-**La lista completa y ordenada (P1 a P18), lista para enviar, está en `docs/PREGUNTAS_PARA_CONTRALORIA.md`.**
-Aquí quedan las principales. Contéstalas en ese documento o en `docs/HALLAZGOS_CONTRALORIA.md`, columna
-"Respuesta de Contraloría".
-
-| # | La pregunta, en simple |
-|---|---|
-| **P1** | Las cuentas `4003001.010` y `4003001.020` (más de 4 millones en agosto) y `4002020` tienen movimientos y **ninguna línea las suma**. ¿Las dejas fuera a propósito o es un olvido? |
-| **P2** | *IVA Taxes*, *Income Tax*, *Bank Commissions* y *Audit Fees* suman cuentas que la *Base de Datos* no trae (pasivo, activo y cuentas ajenas `6-1-01…`). ¿De qué reporte sacas esos números cada mes? |
-| **P3** | *Miscellaneous Taxable* resta celdas fijas (`L5`, `L12`) de otras hojas y por eso difiere en 5,000.00 de lo que dicen los movimientos. ¿Es a propósito? |
-| **P4** | 6 líneas listan en `Ago!I:O` una cuenta que su fórmula no suma (por ejemplo `6019901` en *Miscellaneous Taxable*, `6006012` en la fila 234) y 15 líneas suman cuentas que no listan. ¿Cuál es la fuente correcta, la fórmula o la lista? |
-| **P5** | **Tipo de cambio:** ¿de dónde sale el Actual (17.1337 en agosto, 17.2175 en julio)? El presupuesto es 18 fijo. ¿Está bien que Variación = Presupuesto − Actual y % = Variación / Presupuesto? |
-| **P6** | **Año fiscal:** el título de la hoja dice *FY 25/26* y nosotros tomamos julio–junio (agosto 2026 = año 2026/27). ¿Cuál es el año fiscal correcto? |
-| **P7** | *Less Discount*, *VDS Allocation Collections* y el resumen de ingresos por departamento: ¿se calculan Actual − Presupuesto? ¿Qué regla de signo aplica a las líneas sin cuentas? |
-| **P8** | *Non-Deductible*, *Adm Fee 6 %* y las líneas del resumen son valores escritos a mano o sin fórmula. ¿De dónde salen? |
-| **P9** | ¿Puedes darnos el **presupuesto anual** y el Variance de septiembre? Tu Excel de Mazatlán solo trae el mes. |
-| **P10** | ¿Quién debe poder ver el detalle de los movimientos? Hoy lo ven Contralor, Analista y Auditoría; Dirección no |
-| **P11** | **CON130:** nosotros leemos el mes, la fecha y la cuenta directamente del reporte de Novohit (lo que hoy hacen tus fórmulas). El CON130 trae también las cuentas de balance: ¿*IVA Taxes* e *Income Tax* salen de ahí? ¿Tu fórmula `'2007001'!L5` apunta siempre al primer mes de esa hoja? |
-| **P12** | **Budget en pantalla:** ¿quién puede editarlo y quién lo aprueba? ¿Se parte siempre de tu Excel o a veces del Actual del año anterior? |
-| **P13** | **Cuentas nuevas sin línea:** en septiembre, `6009020` (EQUIPO, 6,894.83), `6009001.004` (DIAS FESTIVOS, 5,850.68) y `6006012.001` (TRANSPORTACION, 3,101.98) tienen movimientos y **no están en ninguna línea**, por eso no salen en el Variance (la pantalla lo avisa). ¿A qué línea va cada una? *Holidays*, *Equipment* y *Transportation Allowance* existen en varios departamentos |
+**Las preguntas (P1 a P18) están en `docs/PREGUNTAS_PARA_CONTRALORIA.md`**: es el documento que se envía
+y donde se anotan las respuestas. No se repiten aquí para que no haya dos listas distintas.
 
 ---
 
