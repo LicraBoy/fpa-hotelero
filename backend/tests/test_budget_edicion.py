@@ -82,6 +82,7 @@ def test_la_vista_trae_budget_y_actual_mes_a_mes(libro: Libro) -> None:
     assert total.budget["2026-08"] == D("110") and total.actual["2026-08"] == D("120")
     assert not por_fila[9].editable  # el tipo de cambio no es de detalle
     assert por_fila[9].actual["2026-08"] == D("17.1337")  # su Actual capturado
+    assert por_fila[9].actual["2026-09"] is None  # sin capturar: no es un cero
     assert vista.version is not None and len(vista.reglas) == 3
 
 

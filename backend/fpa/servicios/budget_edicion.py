@@ -166,6 +166,8 @@ def vista_edicion(
             mes = actual_por_mes[p]
             if (linea.id, p) in capturados:
                 actual[p] = capturados[(linea.id, p)]
+            elif linea.tipo == "informativa" and not con_regla:
+                actual[p] = None  # un tipo de cambio sin capturar no es un cero
             else:
                 actual[p] = None if mes is None else mes.get(linea.id, Decimal(0))
         salida.append(
