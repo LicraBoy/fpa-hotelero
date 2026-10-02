@@ -37,7 +37,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 ## Fase 2 — Catálogo corporativo y mapeo `[CÓDIGO LISTO]` (M)
 
-**Estado (01-oct-2026):** las sub-fases 2.1 a 2.6 están hechas. La **salida** ("mapeo completo, aprobado por Contraloría") queda pendiente de dos respuestas: las cuentas `4002013` y `4003003` sin línea, y la clave única de una línea. Hasta entonces el mapeo del Excel de agosto se puede aprobar solo con esas dos cuentas excluidas a propósito (provisional). La Fase 3 puede empezar sobre el borrador, pero la Fase 2 no se cierra hasta esa aprobación.
+**Estado (01-oct-2026):** las sub-fases 2.1 a 2.6 están hechas. La **salida** ("mapeo completo, aprobado por Contraloría") queda pendiente de dos respuestas: las cuentas sin línea (en Mazatlán `4003001.010`, `4003001.020` y `4002020`; las `4002013` y `4003003` eran del archivo de Vallarta) y la clave única de una línea. Hasta entonces el mapeo del Excel de agosto se puede aprobar solo con esas cuentas excluidas a propósito (provisional). La Fase 3 puede empezar sobre el borrador, pero la Fase 2 no se cierra hasta esa aprobación.
 
 **Avance:** la sub-fase 2.1 (estructura del reporte desde la hoja `Ago`) está hecha. El catálogo oficial de cuentas ya está importado (sub-fase 1.9). Trae TIPO (signo), departamento y grupo de cada cuenta, lo que permite **validar el mapeo** contra el Excel del contralor en vez de aceptarlo a ciegas, y derivar la sección del reporte desde el código (los grupos de 4 dígitos de la clase 6 son los departamentos).
 
@@ -280,7 +280,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | Contraloría | Clave única de una línea del reporte | 2 |
 | Contraloría | **Septiembre:** el Variance y el Budget de septiembre (para la prueba de diferencia cero) y ampliar el mapeo: 154 cuentas con movimiento en septiembre no están en el mapeo de agosto (p. ej. `4003001.010`, ≈ −4.6 millones, y `4001006.x`) | 3.7 |
 | Contraloría | Fuera del Base de Datos de agosto: filas 12 (5,000), 272, 277, 285, 289, 292 y Administration Fee/Allocated pegadas; `Telephone Profit` (344) como gasto y % de la fila 530 con |Budget|: ¿intencional? | 3.6 |
-| Contraloría | Las cuentas `4002013` (−20,000 al mes) y `4003003` (≈ −2.9 a −3.2 millones al mes, julio y agosto) tienen movimientos pero **ninguna línea de la hoja `Ago` las toma**: ¿se excluyen a propósito del reporte o es una omisión? | 2 |
+| Contraloría | Las cuentas `4003001.010` (≈ −4.1 M en agosto), `4003001.020` (≈ −166 mil) y `4002020` (−20,000) tienen movimientos pero **ninguna línea del Excel de Mazatlán las toma**: ¿se excluyen a propósito o es una omisión? | 2 |
 | Contraloría | Origen, versión y responsable del Budget | 3, 7 |
 | Contraloría | Año fiscal (julio–junio) y horizonte del forecast | 3, 8 |
 | Contraloría | Árbol oficial de departamentos y centros de costo | 2, 5, 7 |

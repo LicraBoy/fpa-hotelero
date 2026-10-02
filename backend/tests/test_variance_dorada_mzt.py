@@ -43,10 +43,11 @@ EXCEL = next(
 )
 pytestmark = pytest.mark.skipif(EXCEL is None, reason="No está el Excel real de Mazatlán")
 
-# fila del Excel -> causa. Son 13 de las 693 líneas con cifras.
+# fila del Excel -> causa. Son 12 de las 693 líneas con cifras.
 EXCEPCIONES = {
-    # --- el Excel no calcula la línea aunque `Ago!I:O` lista su cuenta ------------------------
-    16: "Cleaning Service Income: sin fórmula (el Excel muestra 0); `Ago!I:O` lista la 4002011",
+    # --- el Excel no calcula la línea aunque `Ago!I:O` lista su cuenta -------------------------
+    # (si otra fórmula ya suma esa cuenta, como la 4002011 de Cleaning Service Income, no se
+    # agrega a la línea: contaría dos veces)
     313: "Non-Deductible: sin fórmula; `Ago!I:O` lista la 6004043 (Excel 0.97 en agosto)",
     314: "Adm Fee 6%: sin fórmula en julio; el Excel pega 102,454.51 y `Ago!I:O` lista 4003001.002",
     # --- la fórmula suma celdas fijas de hojas de cuentas que no están en Base de Datos ---------
@@ -57,7 +58,7 @@ EXCEPCIONES = {
     317: "IVA Taxes 16%: cuentas de pasivo ('2007001', '2-1-70-20') que Base de Datos no trae",
     318: "Income Tax: cuentas de activo ('1005003', '1-1-10-90') que Base de Datos no trae",
     # --- totales que arrastran las anteriores ------------------------------------------------
-    32: "Total Other Income: arrastra 16 y 19",
+    32: "Total Other Income: arrastra 19",
     76: "Total Expenses: arrastra 70",
     78: "Total Mgmt & Check In: arrastra 70",
     319: "Total Other Taxes: arrastra 308, 317 y 318",

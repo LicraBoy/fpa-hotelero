@@ -1,8 +1,8 @@
-# Hallazgos de la sesión con Contraloría — Variance de agosto 2026
+# Hallazgos de la sesión con Contraloría — Variance de Mazatlán, agosto 2026
 
-Sesión: _fecha_ · Participantes: _nombres y roles_ · Versión: _commit_ · Datos: agosto 2026
+Sesión: _fecha_ · Participantes: _nombres y roles_ · Versión: _commit_ · Datos: Mazatlán, julio y agosto 2026
 
-Estado de la sub-fase 4.8: **preparada; la sesión y el cierre de esta lista están pendientes.**
+Estado de las sub-fases 4.8 y 4.9: **preparadas con el Excel de Mazatlán; la sesión y el cierre de esta lista están pendientes.**
 La sub-fase se cierra cuando **todos** los hallazgos de severidad Alta y Media estén en `Cerrado` o
 `Aceptado` (con una nota de por qué).
 
@@ -12,20 +12,22 @@ estorba, confunde o falta algo importante · **Baja** = mejora de forma.
 así, con motivo) / `No es un defecto` (el sistema está bien; se explicó).
 
 ## Preguntas ya conocidas que Contraloría debe responder
-Vienen de las pruebas con agosto y están explicadas en `docs/GUIA_PRUEBA_CONTRALORIA.md`.
+Vienen de las pruebas con el Excel de **Mazatlán** (julio y agosto 2026) y están explicadas en
+`docs/GUIA_PRUEBA_CONTRALORIA.md`. *Las preguntas P1 y P2 de la versión anterior (`4002013` y
+`4003003`) eran del archivo de Puerto Vallarta y se retiraron.*
 
 | ID | Pregunta | Respuesta de Contraloría | Estado |
 |---|---|---|---|
-| P1 | `4002013` (−20,000/mes) y `4003003` (≈ −3.2 M/mes) tienen movimientos y ninguna línea las toma: ¿se excluyen a propósito o es una omisión? | | Abierto |
-| P2 | Fila 12 Other Income: el Excel deja fuera 5,000.00 de la hoja de la cuenta: ¿es intencional? | | Abierto |
-| P3 | IVA Taxes, Lodging Tax, Bank Commissions, Audit Fees e Income Taxes (filas 272, 277, 285, 289, 292) usan cuentas de balance o corporativas que el archivo de movimientos no trae: ¿de qué reporte salen cada mes? | | Abierto |
-| P4 | Telephone Profit (fila 344) se calcula como gasto aunque es utilidad: ¿es intencional? | | Abierto |
-| P5 | El % de Net Profit Commercial Services (530) usa el valor absoluto del presupuesto y el resto no: ¿cuál es la regla? | | Abierto |
-| P6 | Administration Fee (273) y las dos "Allocated" (576, 577) son valores pegados: ¿de dónde salen? | | Abierto |
-| P7 | ¿El año fiscal es julio–junio? ¿La convención "favorable = positivo" es la correcta para todas las líneas? | | Abierto |
-| P8 | ¿Cuál es la clave única de una línea del reporte y de dónde sale el Budget? | | Abierto |
-| P9 | ¿Quién debe poder ver los movimientos (el desglose)? Hoy: Contralor, Analista y Auditoría; Dirección no | | Abierto |
-| P10 | Septiembre: ¿pueden dar el Variance y el Budget de septiembre y aclarar las 154 cuentas nuevas? | | Abierto |
+| P1 | `4003001.010` (−4.1 M en agosto), `4003001.020` y `4002020` tienen movimientos y ninguna línea las suma: ¿se excluyen a propósito o es una omisión? | | Abierto |
+| P2 | IVA Taxes, Income Tax, Bank Commissions y Audit Fees suman cuentas de pasivo, activo y ajenas (`2007001`, `1005003`, `6-1-01-100-050`…) que la Base de Datos no trae: ¿de qué reporte salen cada mes? | | Abierto |
+| P3 | Miscellaneous Taxable (fila 19) resta celdas fijas de otras hojas y difiere en 5,000.00 de los movimientos: ¿es intencional? | | Abierto |
+| P4 | 6 líneas listan en `Ago!I:O` cuentas que su fórmula no suma y 15 suman cuentas que no listan: ¿cuál es la fuente correcta? | | Abierto |
+| P5 | Tipo de cambio: ¿de dónde sale el Actual (17.1337 / 17.2175)? ¿Variación = Presupuesto − Actual y % = Variación / Presupuesto es correcto? | | Abierto |
+| P6 | Año fiscal: el título dice FY 25/26; el sistema usa julio–junio (agosto 2026 = 2026/27). ¿Cuál es el correcto? | | Abierto |
+| P7 | Líneas sin cuentas (Less Discount, VDS Allocation, resumen por departamento): ¿la Variación es Actual − Presupuesto? ¿Qué regla de signo aplica? | | Abierto |
+| P8 | Non-Deductible, Adm Fee 6 % y las líneas del resumen son valores a mano o sin fórmula: ¿de dónde salen? | | Abierto |
+| P9 | ¿Pueden dar el presupuesto anual y el Variance/Budget de septiembre? El Excel de Mazatlán solo trae el mes | | Abierto |
+| P10 | ¿Quién debe poder ver los movimientos (el desglose)? Hoy: Contralor, Analista y Auditoría; Dirección no | | Abierto |
 
 ## Hallazgos de la sesión
 

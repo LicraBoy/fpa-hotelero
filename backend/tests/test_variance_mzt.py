@@ -64,6 +64,8 @@ def test_mapeo_toma_signo_de_la_formula_y_completa_con_la_hoja_ago(hojas: HojasM
     # Laundry no tiene fórmula: el código viene pegado en Ago y pierde el cero final
     assert v[(12, "4002001.01")].origen == "excel_ago"
     assert v[(12, "4002001.01")].signo == -1
+    # una cuenta que la fórmula de otra línea ya suma no se agrega por estar listada en Ago!I:O
+    assert (12, "4002011") not in v
 
 
 def test_periodos_de_la_hoja(hojas: HojasMzt) -> None:
@@ -94,5 +96,5 @@ def test_archivo_real_se_lee_completo() -> None:
     est = leer_estructura_mzt(h)
     assert est.es_valido and len(est.lineas) == 729
     assert len(leer_reglas_mzt(h, est).reglas) == 54
-    assert leer_mapeo_mzt(h, est).lineas_vinculadas == 496
+    assert leer_mapeo_mzt(h, est).lineas_vinculadas == 495
     assert periodos_de_la_hoja(h.dos_meses) == ["2026-07", "2026-08"]

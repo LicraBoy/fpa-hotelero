@@ -48,6 +48,7 @@ def _hoja_ago(wb: Workbook) -> None:
         ws.cell(row=fila, column=8, value=pct)
         ws.cell(row=fila, column=9, value=cuenta)
     ws["J14"] = "6009001.002"  # la segunda cuenta de Salaries
+    ws["K12"] = "4002011"  # Laundry lista una cuenta que la fórmula de Rental Income ya suma
     ws["C13"], ws["D13"], ws["F13"] = "T o t a l   I n c o m e", 120, 110
     ws["B13"] = None
     ws["B15"], ws["D15"] = "E x p e n s e s", " "

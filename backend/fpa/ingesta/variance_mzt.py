@@ -207,6 +207,21 @@ def leer_mapeo_mzt(hojas: HojasMzt, estructura: ResultadoEstructura) -> Resultad
         return res
     col = PERFIL_MZT.col_formula_mes
     otro_mes: list[int] = []
+    # Una cuenta que alguna fórmula ya suma no se agrega a otra línea solo porque `Ago!I:O` la
+    # liste: contaría dos veces (el Excel no la toma en esa otra línea).
+    en_formulas = {
+        normalizar_codigo(codigo)
+        for linea in estructura.lineas
+        if linea.tipo is TipoLinea.DETALLE and linea.fila_origen <= len(hojas.dos_meses)
+        for codigo, _ in (
+            analizar_terminos_cuenta(
+                hojas.dos_meses[linea.fila_origen - 1][col]
+                if len(hojas.dos_meses[linea.fila_origen - 1]) > col
+                else None
+            )
+            or ([], False)
+        )[0]
+    }
     solo_en_ago: list[str] = []
     solo_en_formula: list[str] = []
     for linea in estructura.lineas:
@@ -251,7 +266,11 @@ def leer_mapeo_mzt(hojas: HojasMzt, estructura: ResultadoEstructura) -> Resultad
         }
         formuladas = {normalizar_codigo(c) for c in por_cuenta}
         pegadas_normales = {normalizar_codigo(c) for c in pegadas}
-        faltan = sorted(c for c in pegadas if normalizar_codigo(c) not in formuladas)
+        faltan = sorted(
+            c
+            for c in pegadas
+            if normalizar_codigo(c) not in formuladas and normalizar_codigo(c) not in en_formulas
+        )
         sobran = sorted(c for c in por_cuenta if normalizar_codigo(c) not in pegadas_normales)
         for codigo in faltan:
             res.vinculos.append(
