@@ -118,7 +118,8 @@ def leer_con130_filas(filas: Sequence[Sequence[object]]) -> ResultadoCon130:
             if not isinstance(celda, str):
                 continue
             texto = celda.strip()
-            if texto.lower().startswith("periodo") and res.periodo_texto is None:
+            minusculas = texto.lower()
+            if minusculas.startswith(("periodo", "fecha desde")) and res.periodo_texto is None:
                 res.periodo_texto = texto
         if res.empresa is None:
             for celda in fila:
@@ -135,6 +136,8 @@ def leer_con130_filas(filas: Sequence[Sequence[object]]) -> ResultadoCon130:
         return fila[idx] if idx < len(fila) else None
 
     abierta: Cuenta | None = None
+    ultimo_saldo: Decimal | None = None  # saldo del movimiento anterior de la cuenta
+    sin_importe: list[int] = []  # movimientos de importe cero (filas)
 
     def cerrar_sin_total() -> None:
         nonlocal abierta
@@ -161,6 +164,7 @@ def leer_con130_filas(filas: Sequence[Sequence[object]]) -> ResultadoCon130:
                 res.errores.append(f"Fila {n}: 'Saldo anterior' sin encabezado de cuenta")
                 continue
             cerrar_sin_total()
+            ultimo_saldo = None
             codigo, descripcion = m.group(1), m.group(2)
             if codigo in res.cuentas:
                 res.errores.append(f"Fila {n}: la cuenta {codigo} aparece más de una vez")
@@ -201,8 +205,20 @@ def leer_con130_filas(filas: Sequence[Sequence[object]]) -> ResultadoCon130:
                 res.errores.append(f"Fila {n}: movimiento sin cuenta abierta")
                 continue
             if debito is None and credito is None:
-                res.errores.append(f"Fila {n}: movimiento sin Débito ni Crédito")
-                continue
+                # Novohit deja en blanco un movimiento de importe cero (en el CON130 real de
+                # septiembre, 18). Se acepta como 0 con un aviso, salvo que el saldo se mueva: ahí
+                # el importe se perdió y no se puede cargar un reporte incompleto.
+                if (
+                    saldo is not None
+                    and ultimo_saldo is not None
+                    and abs(saldo - ultimo_saldo) >= CENTAVO
+                ):
+                    res.errores.append(
+                        f"Fila {n}: movimiento sin Débito ni Crédito, pero el saldo cambia de "
+                        f"{ultimo_saldo} a {saldo}"
+                    )
+                    continue
+                sin_importe.append(n)
             d, c = debito or CERO, credito or CERO
             res.movimientos.append(
                 Movimiento(
@@ -223,6 +239,8 @@ def leer_con130_filas(filas: Sequence[Sequence[object]]) -> ResultadoCon130:
             )
             abierta.suma_debito += d
             abierta.suma_credito += c
+            if saldo is not None:
+                ultimo_saldo = saldo
             continue
 
         # 4) Título de jerarquía: solo código (y a veces descripción) en la columna "# ASIENTO"
@@ -243,6 +261,13 @@ def leer_con130_filas(filas: Sequence[Sequence[object]]) -> ResultadoCon130:
             res.filas_ignoradas += 1
 
     cerrar_sin_total()
+
+    if sin_importe:
+        muestra = ", ".join(str(n) for n in sin_importe[:5])
+        res.avisos.append(
+            f"{len(sin_importe)} movimientos sin Débito ni Crédito "
+            f"(se toman como 0): filas {muestra}"
+        )
 
     if res.controla_balance and not res.cuadra_debito_credito:
         res.errores.append(

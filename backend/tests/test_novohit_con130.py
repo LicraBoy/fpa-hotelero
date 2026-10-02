@@ -184,6 +184,55 @@ def test_monto_invalido_es_error():
     assert any("monto inválido" in e for e in r.errores)
 
 
+def _cuenta_con_movimiento_sin_importe(saldo_antes, saldo_del_cero):
+    return [
+        fila("1000001.001  BANCO", concepto="Saldo anterior", credito="0.00"),
+        fila("9.2.1", "01/09/2026", concepto="DEP", debito=100, saldo=saldo_antes),
+        # Novohit deja en blanco el importe de un movimiento de cero
+        fila("9.3.20", "30/09/2026", concepto="AJUSTE EN CERO", saldo=saldo_del_cero),
+        fila(concepto="Total  BANCO", debito=100, credito=0),
+        # la contrapartida, para que el reporte cuadre (Débito = Crédito)
+        fila("4001002.001  INGRESOS", concepto="Saldo anterior", credito="0.00"),
+        fila("9.2.1", "01/09/2026", concepto="VENTA", credito=100, saldo=-100),
+        fila(concepto="Total  INGRESOS", debito=0, credito=100),
+    ]
+
+
+def test_movimiento_de_importe_cero_se_acepta_como_cero_con_un_aviso():
+    r = leer_con130_filas(reporte(*_cuenta_con_movimiento_sin_importe(100, 100)))
+    assert r.errores == [] and r.es_valido
+    cero = next(m for m in r.movimientos if m.concepto == "AJUSTE EN CERO")
+    assert (cero.debito, cero.credito, cero.concepto) == (D("0"), D("0"), "AJUSTE EN CERO")
+    assert len(r.movimientos) == 3
+    assert len(r.avisos) == 1 and "1 movimientos sin Débito ni Crédito" in r.avisos[0]
+    assert r.cuentas["1000001.001"].total_verificado is True
+
+
+def test_movimiento_sin_importe_pero_con_saldo_que_cambia_es_error():
+    # el saldo pasó de 100 a 250 sin importe: se perdió un importe, no se puede cargar
+    r = leer_con130_filas(reporte(*_cuenta_con_movimiento_sin_importe(100, 250)))
+    assert any("el saldo cambia de 100" in e for e in r.errores)
+    assert not r.es_valido
+
+
+def test_movimiento_sin_importe_al_inicio_de_la_cuenta_se_acepta():
+    # sin movimiento anterior no hay con qué comparar el saldo
+    r = leer_con130_filas(
+        reporte(
+            fila("1000001.001  BANCO", concepto="Saldo anterior", credito="0.00"),
+            fila("9.3.20", "30/09/2026", concepto="CERO", saldo=0),
+            fila(concepto="Total  BANCO", debito=0, credito=0),
+        )
+    )
+    assert r.es_valido and len(r.avisos) == 1
+
+
+def test_encabezado_con_fecha_desde_hasta_se_toma_como_periodo():
+    filas = reporte(*cuenta_simple())
+    filas[2] = ("Fecha desde: 01/09/2026 hasta: 30/09/2026, Cuentas [1000001.001]", *filas[2][1:])
+    assert leer_con130_filas(filas).periodo_texto.startswith("Fecha desde: 01/09/2026")
+
+
 def test_sin_encabezado_no_es_con130():
     with pytest.raises(ValueError, match="CON130"):
         leer_con130_filas([("a", "b"), ("c", "d")])
@@ -209,3 +258,23 @@ def test_archivo_real_septiembre_2026():
     assert min(m.fecha for m in r.movimientos) == date(2026, 9, 1)
     assert max(m.fecha for m in r.movimientos) == date(2026, 9, 30)
     assert r.es_valido
+
+
+SEPTIEMBRE_XLS = _CARPETA_DOCUMENTOS / "SEPTIEMBRE 2026.xls"
+SEPTIEMBRE_XLS_EN_REPO = Path(__file__).resolve().parents[2] / "docs" / "SEPTIEMBRE 2026.xls"
+_XLS_REAL = next((p for p in (SEPTIEMBRE_XLS, SEPTIEMBRE_XLS_EN_REPO) if p.exists()), None)
+
+
+@pytest.mark.skipif(_XLS_REAL is None, reason="SEPTIEMBRE 2026.xls no está disponible")
+def test_archivo_real_septiembre_xls_completo():
+    from fpa.calidad.evaluacion import evaluar
+
+    r = leer_con130(_XLS_REAL)
+    assert r.es_valido and r.errores == []
+    assert len(r.movimientos) == 8280 and len(r.cuentas) == 544
+    assert r.total_debito == r.total_credito == D("66323973.22")
+    assert all(c.total_verificado for c in r.cuentas.values())
+    assert len([m for m in r.movimientos if m.debito == 0 and m.credito == 0]) >= 18
+    assert any("18 movimientos sin Débito ni Crédito" in a for a in r.avisos)
+    assert r.periodo_texto.startswith("Fecha desde: 01/09/2026 hasta: 30/09/2026")
+    assert evaluar(r).aprobado

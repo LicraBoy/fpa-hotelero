@@ -75,6 +75,13 @@ def control(rep, codigo: str):  # type: ignore[no-untyped-def]
         ),
         ("Periodo Julio 2026 a Agosto 2026", (date(2026, 7, 1), date(2026, 8, 31))),
         ("PERIODO FEBRERO 2028 A FEBRERO 2028", (date(2028, 2, 1), date(2028, 2, 29))),
+        (
+            "Fecha desde: 01/09/2026 hasta: 30/09/2026, Cuentas [1000001.001] hasta [6021081.001]",
+            (date(2026, 9, 1), date(2026, 9, 30)),
+        ),
+        ("FECHA DESDE 1/8/2026 HASTA 15/9/2026", (date(2026, 8, 1), date(2026, 9, 15))),
+        ("Fecha desde: 31/02/2026 hasta: 30/09/2026", None),  # fecha que no existe
+        ("Fecha desde: 30/09/2026 hasta: 01/09/2026", None),  # al revés
         ("Periodo Agosto 2026 a Julio 2026", None),  # al revés
         ("Periodo Smarch 2026 a Abril 2026", None),
         ("otra cosa", None),

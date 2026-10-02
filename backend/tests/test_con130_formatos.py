@@ -316,3 +316,66 @@ def test_el_excel_del_variance_sigue_siendo_solo_xlsx(
         r = _subir(cliente, mundo, como_xls(), nombre, fuente="variance_base_datos")
         assert r.status_code == 415
     assert _cargas(db) == 0
+
+
+def _con_movimiento_de_cero() -> list[list[object]]:
+    """El reporte de prueba más un movimiento de importe cero (Novohit lo deja en blanco)."""
+    filas = [list(f) for f in FILAS]
+    i = next(n for n, f in enumerate(filas) if f[0] == "9.2.2")
+    filas.insert(
+        i + 1,
+        ["9.3.20", "30/09/2026", "DIARIO", "REGISTRO", "POLIZA", "", "30/09/2026", "AJUSTE EN CERO",
+         "", "", "1,005.00"],
+    )  # fmt: skip
+    return filas
+
+
+def test_un_movimiento_de_importe_cero_entra_como_aviso_en_xls_y_csv(tmp_path: Path) -> None:
+    libro = xlwt.Workbook()
+    hoja = libro.add_sheet("CON130")
+    for i, f in enumerate(_con_movimiento_de_cero()):
+        for j, v in enumerate(f):
+            if v != "":
+                hoja.write(i, j, v)
+    buf = io.BytesIO()
+    libro.save(buf)
+    texto = io.StringIO(newline="")
+    csv.writer(texto, delimiter=";").writerows(_con_movimiento_de_cero())
+    for nombre, contenido in [
+        ("cero.xls", buf.getvalue()),
+        ("cero.csv", texto.getvalue().encode()),
+    ]:
+        ruta = tmp_path / nombre
+        ruta.write_bytes(contenido)
+        r = leer_con130(ruta)
+        assert r.es_valido and r.errores == [], nombre
+        assert len(r.movimientos) == 4 and len(r.avisos) == 1
+
+
+_REAL = next(
+    (
+        p
+        for p in (
+            Path.home()
+            / "Desktop"
+            / "PLATAFORMA FP&A E INTELIGENCIA HOTELERA"
+            / "SEPTIEMBRE 2026.xls",
+            Path(__file__).resolve().parents[2] / "docs" / "SEPTIEMBRE 2026.xls",
+        )
+        if p.exists()
+    ),
+    None,
+)
+
+
+@pytest.mark.skipif(_REAL is None, reason="SEPTIEMBRE 2026.xls no está disponible")
+def test_la_api_carga_el_con130_real_de_septiembre_en_xls(
+    cliente: TestClient, db: Session, mundo: Mundo
+) -> None:
+    assert _REAL is not None
+    r = _subir(cliente, mundo, _REAL.read_bytes(), "SEPTIEMBRE 2026.xls")
+    assert r.status_code == 201, r.text
+    carga = r.json()["cargas"][0]
+    assert carga["periodo"] == "2026-09" and carga["n_movimientos"] == 8280
+    assert carga["estado"] == "vigente"
+    assert _subir(cliente, mundo, _REAL.read_bytes(), "SEPTIEMBRE 2026.xls").status_code == 200

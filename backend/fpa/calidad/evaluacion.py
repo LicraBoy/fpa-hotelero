@@ -42,6 +42,9 @@ _MESES = {
 _RE_PERIODO = re.compile(
     r"periodo\s+([a-zA-ZÁÉÍÓÚáéíóúñÑ]+)\s+(\d{4})\s+a\s+([a-zA-ZÁÉÍÓÚáéíóúñÑ]+)\s+(\d{4})"
 )
+_RE_FECHAS = re.compile(
+    r"fecha\s+desde:?\s*(\d{1,2})/(\d{1,2})/(\d{4})\s+hasta:?\s*(\d{1,2})/(\d{1,2})/(\d{4})"
+)
 _RE_ASIENTO = re.compile(r"^(\d+)\.\d+\.\d+$")
 _MAX_EJEMPLOS = 10
 
@@ -107,10 +110,23 @@ def _normalizar(texto: str) -> str:
 
 
 def periodo_del_encabezado(texto: str | None) -> tuple[date, date] | None:
-    """`Periodo Septiembre 2026 a Septiembre 2026, ...` -> (2026-09-01, 2026-09-30)."""
+    """`Periodo Septiembre 2026 a Septiembre 2026, ...` -> (2026-09-01, 2026-09-30).
+
+    También entiende la otra versión del encabezado de Novohit:
+    `Fecha desde: 01/09/2026 hasta: 30/09/2026, ...` -> (2026-09-01, 2026-09-30).
+    """
     if not texto:
         return None
-    m = _RE_PERIODO.search(_normalizar(texto))
+    normal = _normalizar(texto)
+    f = _RE_FECHAS.search(normal)
+    if f:
+        d1, m1, a1, d2, m2, a2 = (int(x) for x in f.groups())
+        try:
+            inicio, fin = date(a1, m1, d1), date(a2, m2, d2)
+        except ValueError:
+            return None
+        return (inicio, fin) if inicio <= fin else None
+    m = _RE_PERIODO.search(normal)
     if not m:
         return None
     mes_i, anio_i, mes_f, anio_f = (
