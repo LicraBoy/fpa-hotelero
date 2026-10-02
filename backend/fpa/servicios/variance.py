@@ -155,6 +155,10 @@ def calcular_variance(
         excepciones,
     )
 
+    # Un tipo de cambio no es la suma de sus meses: las líneas informativas que ningún total suma
+    # (a diferencia de las del resumen, que sí son dinero) no se acumulan.
+    sumadas = {c for componentes in reglas.values() for c, _ in componentes}
+    no_se_acumulan = {x.id for x in lineas if x.tipo == "informativa" and x.id not in sumadas}
     advertencias: list[str] = []
     b_mes: dict[int, Decimal] | None = None
     b_ytd: dict[int, Decimal] | None = None
@@ -167,10 +171,8 @@ def calcular_variance(
         b_anual = {x.linea_id: x.anual for x in filas if x.anual is not None} or None
         mensuales = repo_plan.mensuales(plan.id)
         if mensuales:
-            # un acumulado de "tipo de cambio" no es la suma de sus meses: se deja en blanco
-            informativas = {x.id for x in lineas if x.tipo == "informativa"}
             b_mes, b_ytd = _budget_mensual(
-                mensuales, periodo, periodos_ytd(periodo, mes_inicio), informativas, advertencias
+                mensuales, periodo, periodos_ytd(periodo, mes_inicio), no_se_acumulan, advertencias
             )
         elif plan.periodo_corte == periodo:
             b_mes = {x.linea_id: x.mes for x in filas if x.mes is not None}
@@ -193,9 +195,8 @@ def calcular_variance(
         )
 
     # Actual capturado (el Excel lo trae pegado): solo para líneas sin cuentas ni regla de suma.
-    # El acumulado suma los meses capturados, salvo en las informativas (un tipo de cambio no suma).
+    # El acumulado suma los meses capturados, salvo en las líneas que no se acumulan.
     periodos_del_ytd = periodos_ytd(periodo, mes_inicio)
-    tipos = {x.id: x.tipo for x in lineas}
     capturados: dict[int, Decimal] = {}
     capturados_ytd: dict[int, Decimal] = {}
     meses_por_linea: dict[int, int] = {}
@@ -206,7 +207,7 @@ def calcular_variance(
             continue
         if x.periodo == periodo:
             capturados[x.linea_id] = x.importe
-        if tipos.get(x.linea_id) != "informativa":
+        if x.linea_id not in no_se_acumulan:
             capturados_ytd[x.linea_id] = capturados_ytd.get(x.linea_id, CERO) + x.importe
             meses_por_linea[x.linea_id] = meses_por_linea.get(x.linea_id, 0) + 1
     if any(n < len(periodos_del_ytd) for n in meses_por_linea.values()):

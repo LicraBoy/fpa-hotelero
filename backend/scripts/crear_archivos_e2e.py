@@ -15,6 +15,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from xls_sintetico import a_xls, catalogo_basico
 
+RAIZ_REPO = Path(__file__).resolve().parents[2]
+
 ENCABEZADO_VARIANCE = [
     None, "Mes", "Fecha", "No Cuenta", "Nombre de la Cuenta", "Asiento - Salida",
     "Concepto - Nombre Articulo", "Cantidad", "Costo", "Débito", "Crédito",
@@ -155,16 +157,21 @@ def reporte_variance() -> bytes:
 
 
 def golden_real(destino: Path) -> None:
-    """Con el Excel real de agosto, guarda cifras de referencia para el e2e (NO se versiona).
+    """Con el Excel real de Mazatlán, guarda cifras de referencia para el e2e (NO se versiona).
 
-    Elige líneas con descripción única en el reporte y que no estén entre las excepciones
-    documentadas de la prueba dorada, y guarda sus 12 cifras tal como las pegó Contraloría.
+    Elige líneas con descripción única que no estén entre las excepciones documentadas de la prueba
+    dorada y guarda sus 12 cifras con el orden de la pantalla: mes de agosto tal como lo pegó
+    Contraloría, acumulado = julio + agosto (Actual y Budget) y el bloque anual vacío (el Excel de
+    Mazatlán no trae presupuesto anual).
     """
+    import json
     import os
     import re
+    from decimal import Decimal
 
-    from fpa.ingesta.variance_estructura import TipoLinea, leer_variance_estructura
-    from fpa.ingesta.variance_valores import leer_variance_valores
+    from fpa.ingesta.variance_estructura import TipoLinea
+    from fpa.ingesta.variance_lectura import leer_variance
+    from fpa.ingesta.variance_mzt import leer_hojas_mzt, leer_valores_mensuales_mzt
 
     carpeta = Path(
         os.environ.get(
@@ -172,57 +179,69 @@ def golden_real(destino: Path) -> None:
             Path.home() / "Desktop" / "PLATAFORMA FP&A E INTELIGENCIA HOTELERA",
         )
     )
-    excel = carpeta / "02. VT August 2026 Variance (Envio) (1).xlsx"
+    nombre = "02. MZT August 2026 Variance (Envio).xlsx"
     salida = destino / "golden_real.json"
-    if not excel.exists():
+    excel = next(
+        (p for p in (carpeta / nombre, RAIZ_REPO / "docs" / "adr" / nombre) if p.exists()), None
+    )
+    if excel is None:
         salida.unlink(missing_ok=True)
         return
-    from test_variance_dorada import EXCEPCIONES
+    from test_variance_dorada_mzt import EXCEPCIONES, EXCEPCIONES_VAR
 
-    estructura = leer_variance_estructura(excel)
-    valores = leer_variance_valores(excel)
+    estructura = leer_variance(excel).estructura
+    por_periodo = leer_valores_mensuales_mzt(leer_hojas_mzt(excel)).por_periodo
+    ago, jul = por_periodo["2026-08"], por_periodo["2026-07"]
     descripciones = [x.descripcion for x in estructura.lineas if x.tipo is not TipoLinea.SECCION]
     elegidas = []
     for linea in estructura.lineas:
-        v = valores.get(linea.fila_origen)
+        a, j = ago.get(linea.fila_origen), jul.get(linea.fila_origen)
         if (
-            v is None
-            or linea.tipo is TipoLinea.SECCION
+            a is None
+            or j is None
+            or linea.tipo in (TipoLinea.SECCION, TipoLinea.INFORMATIVA)
             or linea.fila_origen in EXCEPCIONES
+            or linea.fila_origen in EXCEPCIONES_VAR
             or descripciones.count(linea.descripcion) != 1
             or not re.search(r"[A-Za-z]{4}", linea.descripcion)
-            or v.mes_budget is None
-            or v.mes_actual is None
+            or None in (a.actual, a.budget, a.var, a.pct, j.actual, j.budget)
+            or abs(a.actual or 0) < 100  # con ceros no se prueba nada
+            or abs(a.budget or 0) < 100
         ):
             continue
-        elegidas.append((linea, v))
+        elegidas.append((linea, a, j))
     paso = max(1, len(elegidas) // 14)
     muestra = elegidas[::paso][:14]
-    campos = [
-        "mes_actual", "mes_budget", "mes_var", "mes_pct",
-        "ytd_actual", "ytd_budget", "ytd_var", "ytd_pct",
-        "anual_actual", "anual_budget", "anual_var", "anual_pct",
-    ]  # fmt: skip
-    import json
 
-    salida.write_text(
-        json.dumps(
-            [
-                {
-                    "fila": linea.fila_origen,
-                    "descripcion": linea.descripcion,
-                    "tipo": linea.tipo.value,
-                    "cifras": [
-                        None if getattr(v, c) is None else str(getattr(v, c)) for c in campos
-                    ],
-                }
-                for linea, v in muestra
-            ],
-            ensure_ascii=False,
-            indent=1,
-        ),
-        encoding="utf-8",
-    )
+    def texto(valor: Decimal | None) -> str | None:
+        return None if valor is None else str(valor)
+
+    filas = []
+    for linea, a, j in muestra:
+        assert a.actual is not None and a.budget is not None
+        assert j.actual is not None and j.budget is not None
+        filas.append(
+            {
+                "fila": linea.fila_origen,
+                "descripcion": linea.descripcion,
+                "tipo": linea.tipo.value,
+                "cifras": [
+                    texto(a.actual),
+                    texto(a.budget),
+                    texto(a.var),
+                    texto(a.pct),
+                    texto(a.actual + j.actual),
+                    texto(a.budget + j.budget),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                ],
+            }
+        )
+    salida.write_text(json.dumps(filas, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 def main(destino: Path) -> None:

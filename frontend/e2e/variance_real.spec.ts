@@ -4,13 +4,16 @@ import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 
-// Comparación de valores EN PANTALLA contra el Excel real de agosto 2026 (hoja `Ago`).
+// Comparación de valores EN PANTALLA contra el Excel real de MAZATLÁN (agosto 2026, hojas `Ago` y
+// `Jul-Ago`). El acumulado de referencia es julio + agosto (el Excel no trae acumulado ni anual).
 // Solo corre si los archivos reales existen (FPA_DATOS_REALES o la carpeta de Contraloría); las
 // cifras de referencia las deja `crear_archivos_e2e.py` en `e2e/archivos/golden_real.json`, que NO
-// se versiona. Se omiten las líneas con diferencias ya documentadas (19, ver la prueba dorada).
+// se versiona. Se omiten las líneas con diferencias ya documentadas (ver `test_variance_dorada_mzt.py`).
 const CARPETA =
   process.env.FPA_DATOS_REALES ?? join(homedir(), 'Desktop', 'PLATAFORMA FP&A E INTELIGENCIA HOTELERA')
-const EXCEL = join(CARPETA, '02. VT August 2026 Variance (Envio) (1).xlsx')
+const NOMBRE = '02. MZT August 2026 Variance (Envio).xlsx'
+const EN_REPO = resolve('../docs/adr', NOMBRE)
+const EXCEL = existsSync(join(CARPETA, NOMBRE)) ? join(CARPETA, NOMBRE) : EN_REPO
 const GOLDEN = resolve('e2e/archivos/golden_real.json')
 const hayDatos = existsSync(EXCEL) && existsSync(GOLDEN)
 
@@ -48,8 +51,8 @@ async function cargarAgostoReal(request: APIRequestContext) {
   })
   expect(r.status(), await r.text()).toBe(201)
   const mapeo = (await r.json()).mapeo_version_id as number
-  // Provisional hasta que Contraloría responda por estas dos cuentas (ver FASES_FUTURAS.md)
-  for (const cuenta of ['4002013', '4003003']) {
+  // Provisional hasta que Contraloría responda por estas cuentas (ver HALLAZGOS_CONTRALORIA.md)
+  for (const cuenta of ['4003001.010', '4003001.020', '4002020']) {
     r = await request.put(`${base}/mapeo/versiones/${mapeo}/exclusiones`, {
       headers: analista,
       data: { cuenta_codigo: cuenta, motivo: 'Prueba: sin línea en la hoja Ago, pendiente de Contraloría' },
@@ -64,7 +67,7 @@ async function cargarAgostoReal(request: APIRequestContext) {
   r = await request.post(`${base}/budget/importar`, {
     headers: analista,
     timeout: 120_000,
-    multipart: { archivo: adjunto, periodo_corte: '2026-08', confirmar_reemplazo: 'true' },
+    multipart: { archivo: adjunto, confirmar_reemplazo: 'true' }, // Mazatlán trae sus meses
   })
   expect(r.status(), await r.text()).toBeLessThan(300)
 }
@@ -102,7 +105,7 @@ test('las cifras en pantalla coinciden con las del Excel de Contraloría', async
     .getByRole('button', { name: 'Variance' })
     .click()
   await expect(page.getByRole('region', { name: 'Tabla de Variance' })).toBeVisible()
-  await expect(page.getByText(/mapeo \(versión \d+\) deja fuera a propósito 2 cuentas/)).toBeVisible()
+  await expect(page.getByText(/mapeo \(versión \d+\) deja fuera a propósito 3 cuentas/)).toBeVisible()
 
   const diferencias: string[] = []
   for (const ref of referencias) {
@@ -130,6 +133,29 @@ test('las cifras en pantalla coinciden con las del Excel de Contraloría', async
   await page.screenshot({ path: 'test-results/variance_agosto_real.png', fullPage: false })
 })
 
+test('el tipo de cambio muestra el Actual real, el Budget fijo y su variación', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  await page.goto('/')
+  await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Analista' })
+  await page
+    .getByRole('navigation', { name: 'Secciones' })
+    .getByRole('button', { name: 'Variance' })
+    .click()
+  await expect(page.getByRole('region', { name: 'Tabla de Variance' })).toBeVisible()
+  const fila = page
+    .getByRole('row')
+    .filter({ has: page.locator('.descripcion', { hasText: /^Exchange Rate:?$/ }) })
+  await expect(fila).toHaveCount(1)
+  const textos = await fila.getByRole('cell').allInnerTexts()
+  // Actual 17.1337, Budget 18, Var = Budget - Actual = 0.8663, % = Var / Budget = 4.8 %
+  expect(numeroDePantalla(textos[0])).toBeCloseTo(17.13, 2)
+  expect(numeroDePantalla(textos[1])).toBeCloseTo(18, 2)
+  expect(numeroDePantalla(textos[2])).toBeCloseTo(0.87, 2)
+  expect(numeroDePantalla(textos[3])).toBeCloseTo(4.8, 1)
+  // un tipo de cambio no se acumula: el bloque del acumulado queda en blanco
+  expect(textos[4]).toBe('—')
+})
+
 test('el reporte real carga completo: secciones, totales y sin errores', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 })
   await page.goto('/')
@@ -148,7 +174,7 @@ test('"Cargar más" recorre todos los movimientos de una cuenta grande y cuadra 
   page,
 }) => {
   test.setTimeout(180_000)
-  await page.goto('/#/variance/2026-08/cuenta/6006035.001?bloque=ytd')
+  await page.goto('/#/variance/2026-08/cuenta/5001002.002?bloque=ytd')
   await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Analista' })
   const cuadre = page.getByRole('status', { name: 'Cuadre de la cuenta' })
   await expect(cuadre).toContainText('Mostrados 50 de')
@@ -166,7 +192,7 @@ test('"Cargar más" recorre todos los movimientos de una cuenta grande y cuadra 
   await expect(filas).toHaveCount(total + 1)
 })
 
-test('el Excel exportado de agosto real trae las mismas cifras de referencia que la hoja Ago', async ({
+test('el Excel exportado de agosto real trae las mismas cifras de referencia que el Excel de Mazatlán', async ({
   page,
 }, info) => {
   test.setTimeout(120_000)
