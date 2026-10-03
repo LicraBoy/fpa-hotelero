@@ -7,6 +7,13 @@ julio y agosto) y de cargar el **CON130 de septiembre** (`SEPTIEMBRE 2026.xls`).
 **Cómo responder:** contesta en la columna «Tu respuesta» (o por correo, citando el número). Una frase
 basta. Cada pregunta dice **qué hace hoy el sistema** y **qué pasa si no se responde**.
 
+**Contestadas por Contraloría (ya aplicadas, no hay que revisarlas):** **P1** y **P13** (las 6 cuentas
+`4002020`, `4003001.010`, `4003001.020`, `6009020`, `6009001.004`, `6006012.001` se omiten a propósito:
+«todavía no se ocupan»), **P6** (año fiscal julio–junio), **P7, P14, P15** (la Variación y el % se toman de las
+columnas G/H, L y Q de `02. MZT August 2026 Variance.xlsx`, línea por línea), **P9** (el Budget del año sale de
+`Budget MZT 26-27.xlsx`), **P5** (el tipo de cambio se captura a mano por mes; su YTD es el promedio de los
+meses capturados). Se dejan en las tablas para el historial.
+
 **Qué está ya resuelto** (para que no lo revises): en julio y agosto, el **Presupuesto coincide en las
 693 líneas**; el **Actual coincide salvo 12 líneas** y la **Variación salvo 27**, todas explicadas abajo.
 El CON130 de septiembre cuadra: **Débito = Crédito = 66,323,973.22**, 8,280 movimientos, 544 cuentas.
@@ -42,6 +49,14 @@ El CON130 de septiembre cuadra: **Débito = Crédito = 66,323,973.22**, 8,280 mo
 | **P9** | ¿Puedes darnos el **Budget de septiembre** (y de los meses siguientes) y el **presupuesto anual**? Tu Excel de Mazatlán solo trae julio y agosto, sin anual. Y el **Variance de septiembre** que armaste, para compararlo. | En septiembre **Presupuesto, Variación y % salen en «—»** y el acumulado también. El bloque anual siempre sale «—». Puedes capturarlo tú en la pestaña **Budget** (escribir o *Copiar el Actual* con un % de ajuste). | |
 | **P16** | El CON130 de septiembre trae **18 movimientos con Débito y Crédito en blanco** (p. ej. *LOZA DE BAJA PUB EN GRAL*, *DIF DEPURADA SALDO BANCO*, *PAGO PREST EMPL FONDO AHORRO*). El saldo no cambia: ¿son **movimientos de cero** legítimos? | Los cargamos como **0 con un aviso**. Si alguno escondiera un importe, el saldo cambiaría y el sistema **rechazaría** el archivo. | |
 | **P17** | En ese mismo CON130 hay **26 filas repetidas exactamente** y **300 movimientos con importe negativo**. ¿Son **reversos y ajustes legítimos**? | Se cargan con un aviso («pueden ser legítimas»). Un duplicado real inflaría un saldo. | |
+
+## C2. Nuevas, de la sesión del 02-oct-2026
+
+| # | Pregunta | Qué hace hoy el sistema / qué pasa si no se responde | Tu respuesta |
+|---|---|---|---|
+| **P19** | ¿Puedes darnos el **CON130 completo de julio y agosto**? | Las líneas que dependen de cuentas de balance (IVA, Income Tax…) en el **acumulado de septiembre** quedan cortas: solo tienen septiembre. | |
+| **P20** | En **julio** el IVA (*IVA Taxes 16 %* y sus detalles 756, 757, 807, 808) usa una fórmula distinta a la de agosto. ¿Es intencional o conviene unificarla para septiembre? | Septiembre usa la fórmula de agosto. Julio se reproduce con una excepción documentada. | |
+| **P21** | Unas **150 líneas no tienen cuentas** (asignaciones corporativas, etc.). ¿Se capturan a mano cada mes en la pestaña Budget? ¿Quién? | La pantalla avisa «líneas sin Actual capturado»; su Actual y Variación quedan en «—». | |
 
 ## D. Proceso y permisos
 

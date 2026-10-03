@@ -51,7 +51,8 @@ Haz cada tarea y compara con la última columna. Si en tu pantalla sale otra cos
 | 1 | Abrir **Variance**, mes 2026-08 | La tabla con sus secciones, en el mismo orden que la hoja `Ago`. Arriba, un aviso amarillo que dice que **tres** cuentas quedan fuera a propósito |
 | 2 | Buscar **Rental Income** (sección *Other Income*) | Mes: Actual **13,787.41**, Presupuesto 13,091.03, Variación 696.38 (5.3 %). Acumulado: Actual 67,537.98. Igual que tu Excel |
 | 3 | Mirar **Total Maid & Linen** | Mes: Actual **367,344.39**, Presupuesto 364,051.79, Variación **(3,292.60)** con ▼ (−0.9 %). Igual que tu Excel |
-| 4 | Buscar **Exchange Rate** (tipo de cambio) | Mes: Actual **17.13**, Presupuesto **18.00**, Variación **0.87**, **4.8 %**. En el acumulado y el anual, **—** (un tipo de cambio no se suma) |
+| 4 | Buscar **Exchange Rate** (tipo de cambio) | Mes: Actual **17.13**, Presupuesto **18.00**, Variación **0.87**, **4.8 %**. Acumulado: Actual = **promedio** de los meses capturados (17.18) y su Variación va al revés (Actual − Presupuesto). El de septiembre se captura a mano en la pestaña **Budget** |
+| 4b | Probar la tabla nueva: leyenda arriba, bloques de color, buscador que resalta, índice de secciones, «Ocultar líneas sin cifras» | Fácil de ubicar una línea; ▼ rojo = desfavorable |
 | 5 | Plegar y desplegar una sección (los títulos azules) | Al plegar, quedan visibles sus totales y subtotales |
 | 6 | Elegir una **Sección**, escribir `insurance` en **Buscar línea** y marcar **Solo totales y subtotales** | La tabla se reduce a lo que pediste |
 | 7 | Hacer clic en el **Actual de Rental Income (mes)** | Una pantalla con la cuenta `4002011`, el importe 13,787.41 y la marca verde **Cuadra** |
@@ -80,8 +81,9 @@ fiscal, el **Budget** (editable) y, al lado en gris, el **Actual** como referenc
 | B5 | Pulsar **Guardar como versión nueva** y confirmar | Mensaje con el número de versión. La anterior se conserva en el historial |
 | B6 | Ir a **Variance** | Ya usa el Budget nuevo (mes y acumulado) |
 
-### Un mes sin Budget (por ejemplo septiembre)
-Tu Excel de Mazatlán solo trae el Budget de **julio y agosto**. Un mes sin Budget no se inventa en cero:
+### Un mes sin Budget
+**El Budget de todo el año fiscal sale de `Budget MZT 26-27.xlsx`** (pestaña **Budget** → importar Excel): al
+cargarlo, septiembre y el bloque *Presupuesto anual* ya salen llenos. Si un mes no tiene Budget, no se inventa en cero:
 **Presupuesto, Variación y % var. salen en «—»** (el Actual sí se calcula) y la pantalla lo avisa con un
 botón a la pestaña Budget. Para llenarlo: **Budget** → año 2026/27 → columna del mes → escribe el importe
 o usa **Copiar el Actual** (con un ajuste en %) → **Guardar como versión nueva**. El **acumulado** del mes
@@ -178,7 +180,7 @@ Lo que esto explica:
 ---
 
 ## Parte 6 — Qué todavía no se puede revisar
-- **Septiembre** y el **presupuesto anual** (tu Excel de Mazatlán no los trae).
+- **Septiembre completo:** el acumulado de las líneas con cuentas de balance necesita el CON130 de julio y agosto (P19).
 - **Comentarios, cierre y aprobación del reporte** (se hacen después) y el **presupuesto dentro del
   sistema** (más adelante).
 
