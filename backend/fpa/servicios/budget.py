@@ -195,6 +195,7 @@ def importar_budget_mensual(
     ano_fiscal: str,
     mes_inicio: int = MES_INICIO_POR_DEFECTO,
     filas_con_cuentas: set[int] | None = None,
+    anual: dict[int, Decimal] | None = None,
     confirmar_reemplazo: bool = False,
     accion_creado: str = "budget.creado",
 ) -> ResultadoImportacionBudget:
@@ -204,7 +205,8 @@ def importar_budget_mensual(
     informativas con Actual (el tipo de cambio) y las de detalle **sin cuentas** se guardan como
     `ValorCapturado` del mes, porque su Actual no sale de los movimientos (`filas_con_cuentas` dice
     qué filas sí tienen cuentas; si es `None`, solo se capturan las informativas). Además se llena
-    `LineaPlan` (mes y acumulado del último mes) para el detalle de la versión.
+    `LineaPlan` (mes y acumulado del último mes y, si el archivo lo trae, el **Budget anual** de
+    cada línea en `anual`, por la fila de la línea en el reporte).
     """
     repo = RepositorioPlan(db, hotel_id)
     periodos = sorted(por_periodo)
@@ -338,7 +340,7 @@ def importar_budget_mensual(
                     linea_id=linea.id,
                     mes=_micro(del_corte.budget) if del_corte else None,
                     ytd=_micro(acumulado.get(linea.id)) if completo else None,
-                    anual=None,
+                    anual=_micro((anual or {}).get(fila)),
                 )
             )
         db.flush()
@@ -394,3 +396,48 @@ def _guardar_capturado(
         )
     elif existente.origen == "excel":
         existente.importe = importe
+
+
+def importar_actuales_capturados(
+    db: Session,
+    *,
+    organizacion_id: int,
+    hotel_id: int,
+    usuario_id: int | None,
+    version_estructura: VersionEstructuraReporte,
+    por_periodo: dict[str, dict[int, ValoresMes]],
+    filas_con_cuentas: set[int],
+    archivo: str,
+) -> int:
+    """Guarda como **Actual capturado** los valores del Excel de las líneas sin cuentas.
+
+    Son las líneas cuyo Actual no sale de los movimientos (el tipo de cambio, las asignaciones
+    corporativas pegadas a mano…). Un valor capturado a mano no se pisa. Devuelve cuántos guardó.
+    """
+    if version_estructura.hotel_id != hotel_id:
+        raise ValueError("La versión de estructura no pertenece al hotel")
+    lineas = {
+        x.fila_origen: x for x in RepositorioReporte(db, hotel_id).lineas(version_estructura.id)
+    }
+    n = 0
+    with db.begin_nested():
+        for periodo, datos in sorted(por_periodo.items()):
+            for fila, v in sorted(datos.items()):
+                linea = lineas.get(fila)
+                if linea is None or v.actual is None:
+                    continue
+                sin_cuentas = linea.tipo == "detalle" and fila not in filas_con_cuentas
+                if linea.tipo == "informativa" or sin_cuentas:
+                    _guardar_capturado(db, hotel_id, version_estructura.id, linea.id, periodo, v)
+                    n += 1
+        db.flush()
+        auditar(
+            db,
+            organizacion_id=organizacion_id,
+            hotel_id=hotel_id,
+            usuario_id=usuario_id,
+            accion="actuales.capturados",
+            entidad="valor_capturado",
+            detalle={"archivo": archivo, "valores": n, "periodos": sorted(por_periodo)},
+        )
+    return n

@@ -22,10 +22,15 @@ from fpa.config import settings
 from fpa.db import get_db
 from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
 from fpa.identidad.permisos import Permiso
+from fpa.ingesta.budget_anual_mzt import (
+    alinear_con_lineas,
+    es_budget_anual_mzt,
+    leer_budget_anual,
+)
 from fpa.ingesta.formato_variance import Formato, detectar_formato
 from fpa.ingesta.variance_lectura import leer_variance
 from fpa.ingesta.variance_mzt import leer_hojas_mzt, leer_valores_mensuales_mzt
-from fpa.ingesta.variance_valores import leer_variance_valores
+from fpa.ingesta.variance_valores import ValoresFila, leer_variance_valores
 from fpa.modelos.plan import VersionPlan
 from fpa.repositorios.plan import RepositorioPlan
 from fpa.repositorios.reporte import RepositorioReporte
@@ -191,14 +196,31 @@ def importar(
             rechazar(e.detalle, e.status_code)
             raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
         datos = DatosArchivo(nombre=nombre, sha256=sha256, tamano_bytes=tamano)
+        anual_mzt = None
         try:
-            formato = detectar_formato(temporal).formato
-            if formato is Formato.MZT:
-                mensuales = leer_valores_mensuales_mzt(leer_hojas_mzt(temporal))
-                valores = {}
-            else:
+            if es_budget_anual_mzt(temporal):
+                formato_texto = "budget_mzt"
+                lineas_estructura = RepositorioReporte(db, contexto.hotel_id).lineas(estructura.id)
+                anual_mzt = alinear_con_lineas(
+                    leer_budget_anual(temporal),
+                    [
+                        (x.fila_origen, x.descripcion)
+                        for x in lineas_estructura
+                        if x.tipo != "seccion"
+                    ],
+                    {x.fila_origen for x in lineas_estructura if x.tipo == "detalle"},
+                )
                 mensuales = None
-                valores = leer_variance_valores(temporal)
+                valores: dict[int, ValoresFila] = {}
+            else:
+                formato = detectar_formato(temporal).formato
+                formato_texto = formato.value
+                if formato is Formato.MZT:
+                    mensuales = leer_valores_mensuales_mzt(leer_hojas_mzt(temporal))
+                    valores = {}
+                else:
+                    mensuales = None
+                    valores = leer_variance_valores(temporal)
         except ValueError as e:
             rechazar(str(e), 422)
             raise HTTPException(status_code=422, detail=str(e)) from None
@@ -207,7 +229,21 @@ def importar(
             rechazar("No se pudo leer el libro", 422)
             raise HTTPException(status_code=422, detail="No se pudo leer el libro") from None
 
-        if mensuales is not None:
+        if anual_mzt is not None:
+            resultado = importar_budget_mensual(
+                db,
+                organizacion_id=contexto.organizacion_id,
+                hotel_id=contexto.hotel_id,
+                usuario_id=contexto.principal.usuario_id,
+                version_estructura=estructura,
+                por_periodo=anual_mzt.por_periodo,
+                anual=anual_mzt.anual,
+                archivo=datos,
+                ano_fiscal=anio or anual_mzt.ano_fiscal,
+                confirmar_reemplazo=confirmar_reemplazo,
+            )
+            resultado.avisos = [*anual_mzt.avisos, *resultado.avisos]
+        elif mensuales is not None:
             if not mensuales.periodos:
                 rechazar("El archivo no trae meses con Budget", 422)
                 raise HTTPException(status_code=422, detail="El archivo no trae meses con Budget")
@@ -246,7 +282,7 @@ def importar(
             "resolucion": resultado.resolucion.value,
             "motivos": resultado.motivos,
             "avisos": resultado.avisos,
-            "formato": formato.value,
+            "formato": formato_texto,
             "version": _version(resultado.version).model_dump(mode="json")
             if resultado.version
             else None,

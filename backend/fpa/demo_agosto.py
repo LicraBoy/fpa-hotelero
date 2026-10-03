@@ -32,6 +32,7 @@ from sqlalchemy import select
 from fpa.calculo.ano_fiscal import etiqueta_ano_fiscal
 from fpa.config import settings
 from fpa.db import SessionLocal
+from fpa.ingesta.budget_anual_mzt import alinear_con_lineas, leer_budget_anual
 from fpa.ingesta.formato_variance import Formato
 from fpa.ingesta.novohit_con020 import leer_con020
 from fpa.ingesta.variance_base_datos import leer_variance_base_datos
@@ -41,8 +42,13 @@ from fpa.ingesta.variance_mzt import leer_hojas_mzt, leer_valores_mensuales_mzt
 from fpa.ingesta.variance_valores import leer_variance_valores
 from fpa.modelos.identidad import Usuario
 from fpa.repositorios.mapeo import RepositorioMapeo
+from fpa.repositorios.reporte import RepositorioReporte
 from fpa.semilla import sembrar_torres
-from fpa.servicios.budget import importar_budget, importar_budget_mensual
+from fpa.servicios.budget import (
+    importar_actuales_capturados,
+    importar_budget,
+    importar_budget_mensual,
+)
 from fpa.servicios.cargar_archivo import Resolucion, cargar_archivo
 from fpa.servicios.cargas import DatosArchivo
 from fpa.servicios.catalogo_oficial import importar_catalogo
@@ -59,6 +65,7 @@ VARIACION = (
     "02. MZT August 2026 Variance.xlsx"  # sus columnas G, L y Q dan el sentido de la Variación
 )
 CATALOGO = "Catalogo de cuentas.xls"
+BUDGET_ANUAL = "Budget MZT 26-27.xlsx"  # el Budget de los 12 meses del año fiscal y su total
 PERIODO_CORTE = "2026-08"
 PERIODOS = ["2026-07", "2026-08"]
 DOCS_ADR = Path(__file__).resolve().parents[2] / "docs" / "adr"
@@ -192,7 +199,40 @@ def cargar_demo(carpeta: Path, imprimir=print, archivo_excel: str = EXCEL) -> No
             for c in sorted(sin_linea.values(), key=lambda x: -abs(x.neto)):
                 imprimir(f"  {c.cuenta_codigo}  {c.neto:>16,.2f}  {c.descripcion or ''}")
 
-        if lectura.formato is Formato.MZT:
+        presupuesto = next(
+            (p for p in (carpeta / BUDGET_ANUAL, DOCS_ADR / BUDGET_ANUAL) if p.exists()), None
+        )
+        if lectura.formato is Formato.MZT and presupuesto is not None:
+            # El Budget de todo el año fiscal (12 meses + anual) manda sobre el pegado en el Excel
+            alineado = alinear_con_lineas(
+                leer_budget_anual(presupuesto),
+                [
+                    (x.fila_origen, x.descripcion)
+                    for x in RepositorioReporte(db, hotel.id).lineas(version.id)
+                    if x.tipo != "seccion"
+                ],
+                {
+                    x.fila_origen
+                    for x in RepositorioReporte(db, hotel.id).lineas(version.id)
+                    if x.tipo == "detalle"
+                },
+            )
+            res_budget = importar_budget_mensual(
+                db,
+                usuario_id=analista.id,
+                version_estructura=version,
+                por_periodo=alineado.por_periodo,
+                anual=alineado.anual,
+                archivo=DatosArchivo(
+                    nombre=presupuesto.name,
+                    sha256=_sha256(presupuesto),
+                    tamano_bytes=presupuesto.stat().st_size,
+                ),
+                ano_fiscal=alineado.ano_fiscal,
+                confirmar_reemplazo=True,
+                **base,
+            )
+        elif lectura.formato is Formato.MZT:
             res_budget = importar_budget_mensual(
                 db,
                 usuario_id=analista.id,
@@ -218,6 +258,21 @@ def cargar_demo(carpeta: Path, imprimir=print, archivo_excel: str = EXCEL) -> No
             )
         db.commit()
         imprimir(f"Budget: {res_budget.resolucion.value}")
+
+        if lectura.formato is Formato.MZT and presupuesto is not None:
+            # El Budget anual no trae Actuals: el tipo de cambio y las líneas sin cuentas de julio y
+            # agosto salen del Excel de Contraloría (septiembre en adelante se captura a mano)
+            capturados = importar_actuales_capturados(
+                db,
+                usuario_id=analista.id,
+                version_estructura=version,
+                por_periodo=leer_valores_mensuales_mzt(leer_hojas_mzt(excel)).por_periodo,
+                filas_con_cuentas={v.fila_origen for v in lectura.mapeo.vinculos},
+                archivo=excel.name,
+                **base,
+            )
+            db.commit()
+            imprimir(f"Actual capturado del Excel de Contraloría: {capturados} valores")
 
         if lectura.formato is Formato.MZT:
             variacion = next(

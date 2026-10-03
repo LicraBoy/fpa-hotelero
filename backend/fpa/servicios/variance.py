@@ -152,7 +152,7 @@ def calcular_variance(
         cuentas.setdefault(v.linea_id, []).append((v.cuenta_codigo, v.signo))
     aditivas = lineas_aditivas(reglas, set(cuentas))
     detalle_con_regla = frozenset(x.id for x in lineas if x.tipo == "detalle" and x.id in reglas)
-    por_bloque = convenciones_por_bloque(db, hotel_id, mapeo.version_estructura_id)
+    por_bloque, compuestas = convenciones_por_bloque(db, hotel_id, mapeo.version_estructura_id)
     # lo escrito en el Excel (mes) manda sobre lo deducido; una excepción pedida a mano, sobre todo
     excepciones = {**por_bloque["mes"], **(excepciones or {})}
     convenciones = deducir_convenciones(
@@ -252,6 +252,7 @@ def calcular_variance(
         aditivas,
         detalle_con_regla,
         por_bloque,
+        compuestas,
     )
     return ReporteVariance(
         hotel_id=hotel_id,

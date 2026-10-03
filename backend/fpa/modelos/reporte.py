@@ -104,4 +104,7 @@ class ConvencionLinea(Base):
     hotel_id: Mapped[int] = mapped_column(ForeignKey("hotel.id"), index=True)
     linea_id: Mapped[int] = mapped_column(ForeignKey("linea_reporte.id"))
     bloque: Mapped[str] = mapped_column(String(8))  # mes | ytd | anual
+    # real_menos_presupuesto | presupuesto_menos_real | suma_de_variaciones
     convencion: Mapped[str] = mapped_column(String(30))
+    # solo en `suma_de_variaciones`: [[linea_id, signo], …], la Variación es la suma de las de estas
+    componentes: Mapped[list[list[int]] | None] = mapped_column(JSON, nullable=True)

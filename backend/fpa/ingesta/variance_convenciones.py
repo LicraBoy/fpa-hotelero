@@ -22,10 +22,12 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 from fpa.calculo.variance import Convencion
+from fpa.ingesta.variance_reglas import analizar_formula
 
 HOJA = "Variance August 2026"
 # (columna de la Variación, columna del Actual, columna del Presupuesto), índices desde 0
 BLOQUES = {"mes": (6, "E", "F"), "ytd": (11, "J", "K"), "anual": (16, "O", "P")}
+_LETRA_VARIACION = {"mes": "G", "ytd": "L", "anual": "Q"}
 _TERMINO = re.compile(r"([+-]?)\s*\$?([A-Z]{1,2})\$?(\d+)")
 
 
@@ -33,11 +35,14 @@ _TERMINO = re.compile(r"([+-]?)\s*\$?([A-Z]{1,2})\$?(\d+)")
 class ConvencionesLeidas:
     # fila del Excel -> bloque -> sentido de la Variación
     por_fila: dict[int, dict[str, Convencion]] = field(default_factory=dict)
+    # fila -> bloque -> [(desde, hasta, signo)]: la Variación es la suma de otras Variaciones
+    # (`=G613-G614`, `=SUM(G11:G31)`): el Excel no la calcula como Actual − Presupuesto
+    compuestas: dict[int, dict[str, list[tuple[int, int, int]]]] = field(default_factory=dict)
     avisos: list[str] = field(default_factory=list)
 
     @property
     def n_lineas(self) -> int:
-        return len(self.por_fila)
+        return len(set(self.por_fila) | set(self.compuestas))
 
 
 def sentido_de_formula(formula: object, col_actual: str, col_budget: str) -> Convencion | None:
@@ -72,7 +77,15 @@ def leer_convenciones_filas(filas: Sequence[Sequence[object]]) -> ConvencionesLe
             sentido = sentido_de_formula(valor, col_actual, col_budget)
             if sentido is not None:
                 res.por_fila.setdefault(numero, {})[bloque] = sentido
-    if not res.por_fila:
+                continue
+            if isinstance(valor, str):
+                terminos = analizar_formula(valor, _LETRA_VARIACION[bloque])
+                if terminos:
+                    res.compuestas.setdefault(numero, {})[bloque] = [
+                        (desde, hasta, -1 if signo == "-" else 1)
+                        for signo, desde, hasta in terminos
+                    ]
+    if not res.por_fila and not res.compuestas:
         res.avisos.append("La hoja no trae fórmulas de Variación (columnas G, L y Q)")
     return res
 

@@ -55,6 +55,55 @@ def _budget_completo(
     )
 
 
+def _aplicar_compuestas(
+    salida: dict[int, LineaVariance],
+    bloque: str,
+    compuestas: Mapping[int, Sequence[tuple[int, int]]],
+) -> None:
+    """Variación = suma (con signo) de las Variaciones de otras líneas, como en el Excel.
+
+    El Actual y el Presupuesto de la línea no cambian; el % se recalcula con su nueva Variación. Los
+    componentes que a su vez son compuestos se resuelven primero; un ciclo no se calcula.
+    """
+    hechas: dict[int, Decimal | None] = {}
+    en_curso: set[int] = set()
+
+    def variacion(linea: int) -> Decimal | None:
+        if linea in hechas:
+            return hechas[linea]
+        actual: Cifras = getattr(salida[linea], bloque)
+        if linea not in compuestas or linea in en_curso:
+            return actual.var
+        en_curso.add(linea)
+        total: Decimal | None = CERO
+        for componente, signo in compuestas[linea]:
+            if componente not in salida:
+                continue
+            parte = variacion(componente)
+            if parte is None or total is None:
+                total = None
+            else:
+                total += signo * parte
+        en_curso.discard(linea)
+        hechas[linea] = total
+        return total
+
+    for linea in compuestas:
+        if linea not in salida:
+            continue
+        var = variacion(linea)
+        viejo: Cifras = getattr(salida[linea], bloque)
+        nuevo = Cifras(viejo.actual, viejo.budget, var, variance_pct(var, viejo.budget))
+        actual_linea = salida[linea]
+        salida[linea] = LineaVariance(
+            linea_id=actual_linea.linea_id,
+            convencion=actual_linea.convencion,
+            mes=nuevo if bloque == "mes" else actual_linea.mes,
+            ytd=nuevo if bloque == "ytd" else actual_linea.ytd,
+            anual=nuevo if bloque == "anual" else actual_linea.anual,
+        )
+
+
 def armar_variance(
     lineas: Sequence[int],
     reglas: Reglas,
@@ -67,13 +116,15 @@ def armar_variance(
     aditivas: Collection[int] = frozenset(),
     detalle_con_regla: Collection[int] = frozenset(),
     convenciones_bloque: Mapping[str, Mapping[int, Convencion]] | None = None,
+    variaciones_compuestas: Mapping[str, Mapping[int, Sequence[tuple[int, int]]]] | None = None,
 ) -> dict[int, LineaVariance]:
     """`lineas`: ids de las líneas del reporte (sin secciones), en orden.
 
     `aditivas`: líneas cuyo Actual es «cuentas + componentes». `detalle_con_regla`: líneas de
     detalle con regla (su regla no se aplica al Budget). `convenciones_bloque`: el sentido de la
     Variación escrito en el Excel por línea y bloque (`mes`, `ytd`, `anual`); sin dato, vale
-    `convenciones`.
+    `convenciones`. `variaciones_compuestas`: líneas cuya Variación el Excel calcula como la
+    **suma de las Variaciones de otras líneas** (`=G613-G614`), por bloque.
     """
     a_mes = completar_con_totales(reglas, actual_mes, aditivas)
     a_ytd = completar_con_totales(reglas, actual_ytd, aditivas)
@@ -106,4 +157,7 @@ def armar_variance(
             ytd=cifras(a_ytd, b_ytd, linea, sentido("ytd", linea)),
             anual=cifras(a_ytd, b_anual, linea, sentido("anual", linea)),
         )
+    if variaciones_compuestas:
+        for bloque, por_linea in variaciones_compuestas.items():
+            _aplicar_compuestas(salida, bloque, por_linea)
     return salida

@@ -68,18 +68,9 @@ EXCEPCIONES = {
     78: "Total Mgmt & Check In: arrastra 70",
     319: "Total Other Taxes: arrastra 308, 317 y 318",
 }
-# Variance (Var y %) que no coincide aunque el Actual y el Budget sí. fila -> causa
-EXCEPCIONES_VAR = {
-    **dict.fromkeys(
-        (92, 175, 214, 272, 315, 326, 327, 332, 378),
-        "Sin Budget en el Excel: el Excel muestra Var 0; el motor no inventa un cero (None)",
-    ),
-    **dict.fromkeys(
-        (615, 617),
-        "Money Exchange: el Var del Excel no es Actual - Budget ni Budget - Actual de sus propias "
-        "columnas (arrastra una diferencia del propio Excel)",
-    ),
-}
+# Variance (Var y %) que no coincide aunque el Actual y el Budget sí. fila -> causa.
+# Vacío desde que el sentido de la Variación se lee de las fórmulas G, L y Q del Excel.
+EXCEPCIONES_VAR: dict[int, str] = {}
 # Cuentas con movimiento que el Excel no toma en ninguna línea (hallazgos para Contraloría)
 EXCLUIDAS = {"4003001.010", "4003001.020", "4002020"}
 
@@ -236,3 +227,30 @@ def test_variance_y_porcentaje_coinciden_salvo_las_excepciones(
         f"Nuevas: {sorted(distintas - set(EXCEPCIONES_VAR))}; "
         f"sobran: {sorted(set(EXCEPCIONES_VAR) - distintas)}"
     )
+
+
+@pytest.mark.skipif(
+    not (demo_agosto.DOCS_ADR / demo_agosto.BUDGET_ANUAL).exists(),
+    reason="No está el Budget del año fiscal",
+)
+def test_el_presupuesto_anual_y_septiembre_salen_del_budget_del_ano(
+    mazatlan: tuple[sessionmaker[Session], int],
+) -> None:
+    """El bloque anual (Actual acumulado vs Budget del año) y el Budget de septiembre se llenan."""
+    from fpa.ingesta.budget_anual_mzt import leer_budget_anual
+
+    r = _reporte(mazatlan, "2026-09")
+    renta = next(r.resultado[x.id] for x in r.lineas if x.fila_origen == 12)
+    assert renta.mes.budget == D("6665.274")  # septiembre: tal cual el archivo
+    assert renta.anual.budget is not None
+    leido = leer_budget_anual(demo_agosto.DOCS_ADR / demo_agosto.BUDGET_ANUAL)
+    fila12 = next(f for f in leido.filas if f.fila == 12)
+    assert fila12.total is not None and abs(renta.anual.budget - fila12.total) <= D("0.01")
+    # el acumulado de septiembre suma los tres meses del Budget
+    assert renta.ytd.budget is not None
+    assert abs(renta.ytd.budget - sum(fila12.meses[:3], D(0))) <= D("0.01")  # type: ignore[arg-type]
+    cambio = next(r.resultado[x.id] for x in r.lineas if x.fila_origen == 9)
+    assert cambio.mes.budget == D(
+        "18"
+    )  # el tipo de cambio de septiembre: Budget 18, Actual sin capturar
+    assert cambio.mes.actual == D("0") or cambio.mes.var is not None
