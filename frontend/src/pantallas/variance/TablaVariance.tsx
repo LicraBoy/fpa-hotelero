@@ -1,7 +1,7 @@
 import type { CifrasVariance, LineaVariance } from '../../api/tipos'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
 import { esDesfavorable, formatoContable, formatoPorcentaje } from '../../util/formato'
-import type { GrupoSeccion } from './agrupar'
+import { anclaDeSeccion, trozosResaltados, type GrupoSeccion } from './agrupar'
 
 interface Props {
   grupos: GrupoSeccion[]
@@ -10,9 +10,13 @@ interface Props {
   puedeDesglosar: boolean
   plegadas: ReadonlySet<number | null>
   alAlternar: (seccionId: number | null) => void
+  /** Texto buscado: se resalta en la descripción de cada línea y no se pliegan las secciones. */
+  busqueda?: string
 }
 
-const BLOQUES: { clave: 'mes' | 'ytd' | 'anual'; titulo: string }[] = [
+type ClaveBloque = 'mes' | 'ytd' | 'anual'
+
+const BLOQUES: { clave: ClaveBloque; titulo: string }[] = [
   { clave: 'mes', titulo: 'Mes' },
   { clave: 'ytd', titulo: 'Acumulado del año fiscal' },
   { clave: 'anual', titulo: 'Presupuesto anual' },
@@ -20,16 +24,22 @@ const BLOQUES: { clave: 'mes' | 'ytd' | 'anual'; titulo: string }[] = [
 const SUBTITULOS = ['Actual', 'Presupuesto', 'Variación', '% var.'] as const
 const COLUMNAS = 1 + BLOQUES.length * SUBTITULOS.length
 
-function CeldaImporte({ valor }: { valor: string | null }) {
-  return <td className="num">{formatoContable(valor)}</td>
+/** Clases de una celda: el color de su bloque y, la primera de cada bloque, su borde izquierdo. */
+const celda = (bloque: ClaveBloque, i: number, extra = '') =>
+  `num bloque-${bloque}${i === 0 ? ' inicio-bloque' : ''}${extra ? ` ${extra}` : ''}`
+
+function CeldaImporte({ valor, bloque }: { valor: string | null; bloque: ClaveBloque }) {
+  return <td className={celda(bloque, 1)}>{formatoContable(valor)}</td>
 }
 
 function CeldasBloque({
+  bloque,
   cifras,
   calculada,
   enlace,
   etiquetaEnlace,
 }: {
+  bloque: ClaveBloque
   cifras: CifrasVariance
   /** Falso en las líneas informativas (p. ej. el tipo de cambio): el motor no calcula su Actual. */
   calculada: boolean
@@ -39,19 +49,20 @@ function CeldasBloque({
   if (!calculada) {
     return (
       <>
-        <td className="num suave" title="El motor no calcula esta línea">
+        <td className={celda(bloque, 0, 'suave')} title="El motor no calcula esta línea">
           —
         </td>
-        <CeldaImporte valor={cifras.budget} />
-        <td className="num suave">—</td>
-        <td className="num suave">—</td>
+        <CeldaImporte valor={cifras.budget} bloque={bloque} />
+        <td className={celda(bloque, 2, 'suave')}>—</td>
+        <td className={celda(bloque, 3, 'suave')}>—</td>
       </>
     )
   }
   const desfavorable = esDesfavorable(cifras.var)
+  const mala = desfavorable ? 'desfavorable' : ''
   return (
     <>
-      <td className="num">
+      <td className={celda(bloque, 0)}>
         {enlace ? (
           <a href={enlace} aria-label={etiquetaEnlace}>
             {formatoContable(cifras.actual)}
@@ -60,8 +71,8 @@ function CeldasBloque({
           formatoContable(cifras.actual)
         )}
       </td>
-      <CeldaImporte valor={cifras.budget} />
-      <td className={desfavorable ? 'num desfavorable' : 'num'}>
+      <CeldaImporte valor={cifras.budget} bloque={bloque} />
+      <td className={celda(bloque, 2, mala)}>
         {desfavorable && (
           <>
             <span aria-hidden="true">▼ </span>
@@ -70,7 +81,24 @@ function CeldasBloque({
         )}
         {formatoContable(cifras.var)}
       </td>
-      <td className={desfavorable ? 'num desfavorable' : 'num'}>{formatoPorcentaje(cifras.pct)}</td>
+      <td className={celda(bloque, 3, mala)}>{formatoPorcentaje(cifras.pct)}</td>
+    </>
+  )
+}
+
+/** La descripción con lo buscado resaltado. Pinta texto, nunca HTML. */
+function Resaltado({ texto, busqueda }: { texto: string; busqueda: string }) {
+  return (
+    <>
+      {trozosResaltados(texto, busqueda).map((t, i) =>
+        t.coincide ? (
+          <mark key={i} className="coincidencia">
+            {t.texto}
+          </mark>
+        ) : (
+          <span key={i}>{t.texto}</span>
+        ),
+      )}
     </>
   )
 }
@@ -79,10 +107,12 @@ function FilaLinea({
   linea,
   periodo,
   puedeDesglosar,
+  busqueda,
 }: {
   linea: LineaVariance
   periodo: string
   puedeDesglosar: boolean
+  busqueda: string
 }) {
   const calculada = linea.tipo !== 'informativa'
   const enlace = (bloque: Bloque) =>
@@ -92,10 +122,13 @@ function FilaLinea({
   return (
     <tr className={`fila-${linea.tipo}`}>
       <th scope="row" className="col-linea">
-        <span className="descripcion">{linea.descripcion}</span>
+        <span className="descripcion">
+          <Resaltado texto={linea.descripcion} busqueda={busqueda} />
+        </span>
         {linea.codigo_corporativo && <span className="codigo suave"> {linea.codigo_corporativo}</span>}
       </th>
       <CeldasBloque
+        bloque="mes"
         // el tipo de cambio trae su Actual del mes capturado (no calculado): se muestra, sin desglose
         calculada={calculada || linea.capturada}
         cifras={linea.mes}
@@ -103,6 +136,7 @@ function FilaLinea({
         etiquetaEnlace={`Ver el desglose de ${linea.descripcion}, mes`}
       />
       <CeldasBloque
+        bloque="ytd"
         // el acumulado del tipo de cambio es el promedio de los meses capturados: se muestra si hay
         calculada={calculada || linea.ytd.var !== null}
         cifras={linea.ytd}
@@ -110,18 +144,27 @@ function FilaLinea({
         etiquetaEnlace={`Ver el desglose de ${linea.descripcion}, acumulado`}
       />
       <CeldasBloque
+        bloque="anual"
         calculada={calculada || linea.anual.var !== null}
         cifras={linea.anual}
         // el Actual del bloque anual es el mismo acumulado: su desglose está en el bloque YTD
         enlace={null}
-        etiquetaEnlace=''
+        etiquetaEnlace=""
       />
     </tr>
   )
 }
 
 /** Tabla del reporte: descripción fija a la izquierda, encabezados fijos, secciones plegables. */
-export function TablaVariance({ grupos, periodo, puedeDesglosar, plegadas, alAlternar }: Props) {
+export function TablaVariance({
+  grupos,
+  periodo,
+  puedeDesglosar,
+  plegadas,
+  alAlternar,
+  busqueda = '',
+}: Props) {
+  const buscando = busqueda.trim() !== ''
   return (
     <div className="tabla-variance-contenedor" role="region" aria-label="Tabla de Variance" tabIndex={0}>
       <table className="tabla-variance">
@@ -135,15 +178,24 @@ export function TablaVariance({ grupos, periodo, puedeDesglosar, plegadas, alAlt
               Línea
             </th>
             {BLOQUES.map((b) => (
-              <th key={b.clave} scope="colgroup" colSpan={SUBTITULOS.length} className="grupo-bloque">
+              <th
+                key={b.clave}
+                scope="colgroup"
+                colSpan={SUBTITULOS.length}
+                className={`grupo-bloque bloque-${b.clave}`}
+              >
                 {b.titulo}
               </th>
             ))}
           </tr>
           <tr>
             {BLOQUES.flatMap((b) =>
-              SUBTITULOS.map((s) => (
-                <th key={`${b.clave}-${s}`} scope="col" className="num">
+              SUBTITULOS.map((s, i) => (
+                <th
+                  key={`${b.clave}-${s}`}
+                  scope="col"
+                  className={`num bloque-${b.clave}${i === 0 ? ' inicio-bloque' : ''}`}
+                >
                   {s}
                 </th>
               )),
@@ -153,14 +205,15 @@ export function TablaVariance({ grupos, periodo, puedeDesglosar, plegadas, alAlt
         <tbody>
           {grupos.map((grupo, i) => {
             const id = grupo.seccion?.id ?? null
-            const plegada = plegadas.has(id)
+            // al buscar se ve todo lo encontrado: no se pliega nada
+            const plegada = !buscando && plegadas.has(id)
             const visibles = plegada
               ? grupo.lineas.filter((l) => l.tipo === 'total' || l.tipo === 'subtotal')
               : grupo.lineas
             return (
               <SeccionFilas key={`${id ?? 'sin'}-${i}`}>
                 {grupo.seccion && (
-                  <tr className="fila-seccion">
+                  <tr className="fila-seccion" id={anclaDeSeccion(id)}>
                     <th scope="rowgroup" colSpan={COLUMNAS} className="col-linea">
                       <button
                         type="button"
@@ -170,6 +223,10 @@ export function TablaVariance({ grupos, periodo, puedeDesglosar, plegadas, alAlt
                       >
                         <span aria-hidden="true">{plegada ? '▸' : '▾'} </span>
                         {grupo.seccion.descripcion}
+                        <span className="suave cuenta-seccion">
+                          {' '}
+                          · {grupo.lineas.length} {grupo.lineas.length === 1 ? 'línea' : 'líneas'}
+                        </span>
                       </button>
                     </th>
                   </tr>
@@ -180,6 +237,7 @@ export function TablaVariance({ grupos, periodo, puedeDesglosar, plegadas, alAlt
                     linea={l}
                     periodo={periodo}
                     puedeDesglosar={puedeDesglosar}
+                    busqueda={busqueda}
                   />
                 ))}
               </SeccionFilas>
@@ -193,4 +251,19 @@ export function TablaVariance({ grupos, periodo, puedeDesglosar, plegadas, alAlt
 
 function SeccionFilas({ children }: { children: React.ReactNode }) {
   return <>{children}</>
+}
+
+/** Qué significan las columnas y los colores: va arriba de la tabla. */
+export function LeyendaVariance() {
+  return (
+    <div className="leyenda-variance" role="note" aria-label="Cómo leer la tabla">
+      <span className="leyenda-bloque bloque-mes">Mes</span>
+      <span className="leyenda-bloque bloque-ytd">Acumulado del año fiscal</span>
+      <span className="leyenda-bloque bloque-anual">Presupuesto anual</span>
+      <span>
+        <span className="desfavorable">▼ (rojo)</span> = desfavorable · normal = favorable · «—» = sin
+        dato
+      </span>
+    </div>
+  )
 }

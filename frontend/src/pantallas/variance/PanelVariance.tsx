@@ -4,11 +4,16 @@ import { useDatos } from '../../api/useDatos'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { puede } from '../../permisos'
 import { useRuta } from '../../ruta/useRuta'
-import { agruparPorSeccion } from './agrupar'
+import {
+  agruparPorSeccion,
+  anclaDeSeccion,
+  etiquetasDeSecciones,
+  sinLineasVacias,
+} from './agrupar'
 import { AsientoVista } from './AsientoVista'
 import { Desglose } from './Desglose'
 import { Movimientos } from './Movimientos'
-import { TablaVariance } from './TablaVariance'
+import { LeyendaVariance, TablaVariance } from './TablaVariance'
 
 interface Props {
   hotelId: number
@@ -64,6 +69,8 @@ function ReporteVariance({ hotelId, rol, alIrABudget }: Props) {
 
   const [seccionId, setSeccionId] = useState<number | null>(null)
   const [soloTotales, setSoloTotales] = useState(false)
+  // Por omisión se ocultan las líneas sin Actual ni Presupuesto (con aviso de cuántas son)
+  const [ocultarVacias, setOcultarVacias] = useState(true)
   const [textoBusqueda, setTextoBusqueda] = useState('')
   const [busqueda, setBusqueda] = useState('')
   const [plegadas, setPlegadas] = useState<ReadonlySet<number | null>>(new Set())
@@ -91,10 +98,27 @@ function ReporteVariance({ hotelId, rol, alIrABudget }: Props) {
     [hotelId, periodo, seccionId, soloTotales, busqueda],
   )
 
-  const grupos = useMemo(
-    () => (variance.datos ? agruparPorSeccion(variance.datos.lineas, variance.datos.secciones) : []),
-    [variance.datos],
-  )
+  const { grupos, ocultas } = useMemo(() => {
+    const todos = variance.datos
+      ? agruparPorSeccion(variance.datos.lineas, variance.datos.secciones)
+      : []
+    return ocultarVacias ? sinLineasVacias(todos) : { grupos: todos, ocultas: 0 }
+  }, [variance.datos, ocultarVacias])
+  const encontradas = grupos.reduce((n, g) => n + g.lineas.length, 0)
+  const etiquetas = etiquetasDeSecciones(grupos.map((g) => g.seccion?.descripcion ?? 'Sin sección'))
+
+  // Salta a una sección (y la despliega si estaba plegada)
+  function irASeccion(id: number | null) {
+    setPlegadas((anteriores) => {
+      if (!anteriores.has(id)) return anteriores
+      const nuevas = new Set(anteriores)
+      nuevas.delete(id)
+      return nuevas
+    })
+    setTimeout(() => {
+      document.getElementById(anclaDeSeccion(id))?.scrollIntoView({ block: 'start' })
+    }, 0)
+  }
 
   // Descarga el Excel con los mismos filtros que se ven en pantalla
   async function exportar() {
@@ -184,6 +208,14 @@ function ReporteVariance({ hotelId, rol, alIrABudget }: Props) {
           />
           Solo totales y subtotales
         </label>
+        <label className="casilla">
+          <input
+            type="checkbox"
+            checked={ocultarVacias}
+            onChange={(e) => setOcultarVacias(e.target.checked)}
+          />
+          Ocultar líneas sin cifras
+        </label>
         <button
           type="button"
           className="boton-exportar"
@@ -247,13 +279,58 @@ function ReporteVariance({ hotelId, rol, alIrABudget }: Props) {
           {datos.lineas.length === 0 ? (
             <p className="suave">Ninguna línea coincide con los filtros.</p>
           ) : (
-            <TablaVariance
-              grupos={grupos}
-              periodo={periodo}
-              puedeDesglosar={puede(rol, 'drilldown:leer')}
-              plegadas={plegadas}
-              alAlternar={alternar}
-            />
+            <>
+              <LeyendaVariance />
+              <div className="barra-lectura">
+                {grupos.length > 1 && (
+                  <nav className="indice-secciones" aria-label="Ir a una sección">
+                    <span className="suave">Ir a:</span>
+                    {grupos.map((g, i) => (
+                      <button
+                        key={`${g.seccion?.id ?? 'sin'}-${i}`}
+                        type="button"
+                        className="chip"
+                        onClick={() => irASeccion(g.seccion?.id ?? null)}
+                      >
+                        {etiquetas[i]}
+                      </button>
+                    ))}
+                  </nav>
+                )}
+                <p className="suave cuenta-lineas" role="status">
+                  {busqueda !== '' && (
+                    <>
+                      <strong>
+                        {encontradas} {encontradas === 1 ? 'línea encontrada' : 'líneas encontradas'}
+                      </strong>{' '}
+                      para «{busqueda}»
+                      {grupos.length > 0 && ` en ${grupos.length} ${grupos.length === 1 ? 'sección' : 'secciones'}`}.{' '}
+                    </>
+                  )}
+                  {ocultas > 0 && (
+                    <>
+                      Hay {ocultas} {ocultas === 1 ? 'línea oculta' : 'líneas ocultas'} por no tener
+                      cifras.{' '}
+                      <button type="button" className="enlace" onClick={() => setOcultarVacias(false)}>
+                        Mostrarlas
+                      </button>
+                    </>
+                  )}
+                </p>
+              </div>
+              {grupos.length === 0 ? (
+                <p className="suave">Todas las líneas están sin cifras: desmarca «Ocultar líneas sin cifras».</p>
+              ) : (
+                <TablaVariance
+                  grupos={grupos}
+                  periodo={periodo}
+                  puedeDesglosar={puede(rol, 'drilldown:leer')}
+                  plegadas={plegadas}
+                  alAlternar={alternar}
+                  busqueda={busqueda}
+                />
+              )}
+            </>
           )}
           <p className="suave nota-pie">
             Variación favorable = positiva. Ingresos y utilidades: real − presupuesto; gastos:

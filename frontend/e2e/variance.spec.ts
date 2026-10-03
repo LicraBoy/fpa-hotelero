@@ -56,7 +56,7 @@ test('los totales y subtotales salen de las reglas y se distinguen visualmente',
 
 test('las secciones se pliegan y los subtotales siguen visibles', async ({ page }) => {
   await abrirVariance(page)
-  const boton = page.getByRole('button', { name: /Expenses/ })
+  const boton = page.getByRole('table').getByRole('button', { name: /Expenses/ })
   await expect(boton).toHaveAttribute('aria-expanded', 'true')
   await boton.click()
   await expect(boton).toHaveAttribute('aria-expanded', 'false')
@@ -176,4 +176,53 @@ test('sin permiso para ver el reporte no hay botón de exportar', async ({ page 
   await page.goto('/')
   await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Responsable de área' })
   await expect(page.getByRole('button', { name: 'Exportar a Excel' })).toHaveCount(0)
+})
+
+test('la leyenda explica las columnas y los colores', async ({ page }) => {
+  await abrirVariance(page)
+  const leyenda = page.getByRole('note', { name: 'Cómo leer la tabla' })
+  await expect(leyenda).toContainText('Mes')
+  await expect(leyenda).toContainText('Acumulado del año fiscal')
+  await expect(leyenda).toContainText('Presupuesto anual')
+  await expect(leyenda).toContainText('desfavorable')
+})
+
+test('las líneas sin cifras se ocultan con aviso y se pueden mostrar', async ({ page }) => {
+  await abrirVariance(page)
+  await expect(page.getByRole('rowheader', { name: 'Unused Expense' })).toHaveCount(0)
+  const aviso = page.getByRole('status').filter({ hasText: 'línea oculta por no tener cifras' })
+  await expect(aviso).toContainText('Hay 1 línea oculta')
+  await aviso.getByRole('button', { name: 'Mostrarlas' }).click()
+  await expect(page.getByRole('rowheader', { name: 'Unused Expense' })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'oculta' })).toHaveCount(0)
+  // el interruptor hace lo mismo
+  await page.getByLabel('Ocultar líneas sin cifras').check()
+  await expect(page.getByRole('rowheader', { name: 'Unused Expense' })).toHaveCount(0)
+})
+
+test('la búsqueda resalta lo encontrado, cuenta las líneas y no pliega nada', async ({ page }) => {
+  await abrirVariance(page)
+  await page.getByRole('table').getByRole('button', { name: /Expenses/ }).click() // se pliega
+  await page.getByLabel('Buscar línea').fill('sala')
+  const conteo = page.getByRole('status').filter({ hasText: 'encontrada' })
+  await expect(conteo).toContainText('1 línea encontrada para «sala»')
+  await expect(conteo).toContainText('en 1 sección')
+  // lo encontrado se resalta y su sección se abre aunque estuviera plegada
+  await expect(page.locator('mark.coincidencia')).toHaveText('Sala')
+  await expect(page.getByRole('rowheader', { name: 'Salaries' })).toBeVisible()
+  await page.getByLabel('Buscar línea').fill('<img src=x>')
+  await expect(page.getByText('Ninguna línea coincide con los filtros.')).toBeVisible()
+  expect(await page.locator('img[src="x"]').count()).toBe(0) // lo escrito nunca se interpreta
+})
+
+test('el índice de secciones lleva a la sección y la despliega', async ({ page }) => {
+  await abrirVariance(page)
+  const indice = page.getByRole('navigation', { name: 'Ir a una sección' })
+  await expect(indice.getByRole('button', { name: /Expenses/ })).toBeVisible()
+  const boton = page.getByRole('table').getByRole('button', { name: /Expenses/ })
+  await boton.click() // plegada
+  await expect(boton).toHaveAttribute('aria-expanded', 'false')
+  await indice.getByRole('button', { name: /Expenses/ }).click()
+  await expect(boton).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.getByRole('rowheader', { name: 'Salaries' })).toBeVisible()
 })

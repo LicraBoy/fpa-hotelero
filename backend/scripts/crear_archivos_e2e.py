@@ -110,6 +110,8 @@ def reporte_variance() -> bytes:
     poner(10, "029-0111-60010-000", "Salaries", 400.0, 380.0, 760.0, 4560.0, "='6009001.001'!L9")
     poner(11, "029-0000-3-000", "Supplies", 150.25, 140.0, 280.0, 1680.0, "='6005024'!L3")
     poner(12, None, "T o t a l   E x p e n s e s", 550.25, 520.0, 1040.0, 6240.0, "=SUM(S10:S11)")
+    # una línea sin movimientos ni Budget: la pantalla la oculta por omisión y avisa
+    poner(13, "029-0000-9-000", "Unused Expense", 0.0, None, None, None, "='6999999'!L2")
     poner(14, None, "N e t   P r o f i t", 950.25, 980.0, 1860.0, 11760.0, "=S7-S12")
     # tipo de cambio: sin cuentas ni fórmula; su Actual se captura a mano (Budget fijo de 18)
     poner(16, None, "Exchange Rate:", None, 18.0, 18.0, 18.0)

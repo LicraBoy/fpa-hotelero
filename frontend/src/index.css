@@ -15,6 +15,12 @@
   --info: #1f4e9c;
   --info-fondo: #e6eefb;
   --neutro-fondo: #eceff4;
+  --tinte-mes: rgba(31, 78, 156, 0.07);
+  --tinte-ytd: rgba(30, 107, 58, 0.08);
+  --tinte-anual: rgba(138, 90, 0, 0.09);
+  --realce: #fff0a6;
+  --fila-par: rgba(31, 41, 55, 0.035);
+  --fila-hover: rgba(31, 78, 156, 0.12);
   color-scheme: light dark;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
@@ -38,6 +44,12 @@
     --info: #8fb4f7;
     --info-fondo: #172a4a;
     --neutro-fondo: #27324a;
+    --tinte-mes: rgba(110, 160, 245, 0.12);
+    --tinte-ytd: rgba(110, 231, 160, 0.10);
+    --tinte-anual: rgba(245, 196, 81, 0.11);
+    --realce: #6b5a12;
+    --fila-par: rgba(229, 231, 235, 0.045);
+    --fila-hover: rgba(143, 180, 247, 0.20);
   }
 }
 
@@ -520,8 +532,121 @@ input[type='file'] {
   text-align: right;
 }
 
-.tabla-variance .num:nth-child(5n + 2) {
+.tabla-variance .inicio-bloque {
   border-left: 2px solid var(--borde);
+}
+
+/* Cada bloque (Mes, Acumulado, Anual) tiene su tinte: se sigue con la vista de arriba abajo */
+.tabla-variance .bloque-mes {
+  background-image: linear-gradient(var(--tinte-mes), var(--tinte-mes));
+}
+
+.tabla-variance .bloque-ytd {
+  background-image: linear-gradient(var(--tinte-ytd), var(--tinte-ytd));
+}
+
+.tabla-variance .bloque-anual {
+  background-image: linear-gradient(var(--tinte-anual), var(--tinte-anual));
+}
+
+/* Filas alternadas y la fila bajo el cursor (o con el foco dentro) se distinguen a simple vista */
+.tabla-variance tbody tr:nth-child(even):not(.fila-seccion):not(.fila-total):not(.fila-subtotal) th,
+.tabla-variance tbody tr:nth-child(even):not(.fila-seccion):not(.fila-total):not(.fila-subtotal) td {
+  background-color: color-mix(in srgb, var(--superficie), var(--fila-par));
+}
+
+.tabla-variance tbody tr:not(.fila-seccion):hover th,
+.tabla-variance tbody tr:not(.fila-seccion):hover td,
+.tabla-variance tbody tr:not(.fila-seccion):focus-within th,
+.tabla-variance tbody tr:not(.fila-seccion):focus-within td {
+  background-color: color-mix(in srgb, var(--superficie), var(--fila-hover));
+}
+
+.tabla-variance .coincidencia {
+  background: var(--realce);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 0.1em;
+}
+
+.tabla-variance .cuenta-seccion {
+  font-weight: normal;
+  font-size: 0.8rem;
+}
+
+/* Leyenda, índice de secciones y conteo, arriba de la tabla */
+.leyenda-variance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0;
+  font-size: 0.82rem;
+}
+
+.leyenda-bloque {
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+}
+
+.leyenda-bloque.bloque-mes {
+  background: color-mix(in srgb, var(--superficie), var(--tinte-mes) 100%);
+}
+
+.leyenda-bloque.bloque-ytd {
+  background: color-mix(in srgb, var(--superficie), var(--tinte-ytd) 100%);
+}
+
+.leyenda-bloque.bloque-anual {
+  background: color-mix(in srgb, var(--superficie), var(--tinte-anual) 100%);
+}
+
+.barra-lectura {
+  margin-bottom: 0.4rem;
+}
+
+.indice-secciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.82rem;
+}
+
+.chip {
+  font: inherit;
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--info);
+  cursor: pointer;
+}
+
+.chip:hover,
+.chip:focus-visible {
+  background: var(--info-fondo);
+  outline: 2px solid var(--primario);
+  outline-offset: 1px;
+}
+
+.cuenta-lineas {
+  margin: 0.2rem 0;
+  font-size: 0.85rem;
+}
+
+.enlace {
+  all: unset;
+  cursor: pointer;
+  color: var(--primario);
+  text-decoration: underline;
+}
+
+.enlace:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
 }
 
 .tabla-variance .desfavorable {
