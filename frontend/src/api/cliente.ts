@@ -202,3 +202,20 @@ export async function importarBudgetExcel(
   })
   return comoRespuestaBudget(await leerJson(r), r.status)
 }
+
+/** Guarda (o borra, con `importe: null`) el Actual capturado a mano de líneas sin cuentas. */
+export async function guardarActualesCapturados(
+  hotelId: number,
+  valores: { linea_id: number; periodo: string; importe: string | null }[],
+): Promise<number> {
+  const encabezados = cabeceras()
+  encabezados.set('Content-Type', 'application/json')
+  const r = await fetch(`/api/v1/hoteles/${hotelId}/budget/capturados`, {
+    method: 'PUT',
+    headers: encabezados,
+    body: JSON.stringify({ valores }),
+  })
+  const cuerpo = await leerJson(r)
+  if (!r.ok) throw new ErrorApi(r.status, mensajeDeError(cuerpo, r.status))
+  return (cuerpo as { guardados: number }).guardados
+}

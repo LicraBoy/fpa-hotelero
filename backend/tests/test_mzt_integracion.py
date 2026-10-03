@@ -195,7 +195,9 @@ def test_tipo_de_cambio_es_capturado_var_es_budget_menos_actual_y_no_se_acumula(
     assert (cambio.mes.actual, cambio.mes.budget) == (D("17.1337"), D("18"))
     assert cambio.mes.var == D("0.8663")
     assert cambio.mes.pct == D("0.8663") / D("18")
-    assert (cambio.ytd.budget, cambio.ytd.var) == (None, None)  # un tipo de cambio no se suma
+    # un tipo de cambio no se suma: su acumulado es el promedio de los meses capturados
+    promedio = (D("17.2175") + D("17.1337")) / 2
+    assert (cambio.ytd.actual, cambio.ytd.budget) == (promedio, D("18"))
     assert linea.id in r.capturadas
 
 

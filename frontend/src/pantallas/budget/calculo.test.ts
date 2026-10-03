@@ -119,3 +119,30 @@ test('las líneas se agrupan por sección sin cambiar su orden', async () => {
     [[1, 'ab'], [null, 'c'], [1, 'd']],
   )
 })
+
+test('los Actuales capturados se cambian aparte del Budget y vaciarlos los borra', async () => {
+  const { cambiosActualPendientes, claveActual, cambiosPendientes } = await import('./calculo.ts')
+  const vigentes = new Map<string, bigint | null>([
+    [claveCelda(9, '2026-07'), 17_217_500n],
+    [claveCelda(9, '2026-08'), 17_133_700n],
+    [claveCelda(9, '2026-09'), null],
+  ])
+  const ediciones = new Map([
+    [claveActual(9, '2026-07'), '17.2175'], // igual al vigente: no es un cambio
+    [claveActual(9, '2026-08'), ''], // vaciado: se borra
+    [claveActual(9, '2026-09'), '17.4'], // nuevo
+    [claveActual(9, '2026-10'), 'abc'], // no válido
+    [claveActual(9, '2026-11'), ''], // vacío y sin valor: nada
+    [claveCelda(9, '2026-09'), '18'], // una edición de Budget: no se mezcla
+  ])
+  const { cambios, invalidas } = cambiosActualPendientes(ediciones, vigentes)
+  assert.deepEqual(cambios, [
+    { linea_id: 9, periodo: '2026-08', importe: null },
+    { linea_id: 9, periodo: '2026-09', importe: '17.4' },
+  ])
+  assert.deepEqual(invalidas, [claveActual(9, '2026-10')])
+  // y las ediciones de Actual no se cuelan en los cambios de Budget
+  const presupuesto = cambiosPendientes(ediciones, new Map([[claveCelda(9, '2026-09'), null]]))
+  assert.deepEqual(presupuesto.cambios, [{ linea_id: 9, periodo: '2026-09', importe: '18' }])
+  assert.deepEqual(presupuesto.invalidas, [])
+})

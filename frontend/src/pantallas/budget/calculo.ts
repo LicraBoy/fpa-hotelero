@@ -96,6 +96,45 @@ export function ajustarPorcentaje(micros: bigint, porcentaje: string): bigint | 
   return signo * ((absoluto + 5_000n) / 10_000n) * 10_000n
 }
 
+/** Clave de una celda de Actual capturado a mano: se distingue de las de Budget con «A|». */
+export const claveActual = (linea: number, periodo: string) => `A|${linea}|${periodo}`
+
+export interface ActualPendiente {
+  linea_id: number
+  periodo: string
+  importe: string | null // null: borrar el valor capturado
+}
+
+/**
+ * Actuales capturados a cambiar: los que difieren del valor vigente. Un texto vacío en una celda que
+ * tenía valor lo borra; vacío en una que no tenía, no es un cambio. Devuelve también las celdas con
+ * texto no válido.
+ */
+export function cambiosActualPendientes(
+  ediciones: ReadonlyMap<string, string>,
+  vigentes: ReadonlyMap<string, bigint | null>,
+): { cambios: ActualPendiente[]; invalidas: string[] } {
+  const cambios: ActualPendiente[] = []
+  const invalidas: string[] = []
+  for (const [clave, texto] of ediciones) {
+    if (!clave.startsWith('A|')) continue
+    const [, linea, periodo] = clave.split('|')
+    const vigente = vigentes.get(claveCelda(Number(linea), periodo)) ?? null
+    if (texto.trim() === '') {
+      if (vigente !== null) cambios.push({ linea_id: Number(linea), periodo, importe: null })
+      continue
+    }
+    const micros = aMicros(texto)
+    if (micros === null) {
+      invalidas.push(clave)
+      continue
+    }
+    if (vigente === micros) continue
+    cambios.push({ linea_id: Number(linea), periodo, importe: textoDeMicros(micros) })
+  }
+  return { cambios, invalidas }
+}
+
 export interface CeldaPendiente {
   linea_id: number
   periodo: string
@@ -113,6 +152,7 @@ export function cambiosPendientes(
   const cambios: CeldaPendiente[] = []
   const invalidas: string[] = []
   for (const [clave, texto] of ediciones) {
+    if (clave.startsWith('A|')) continue // los Actuales capturados van aparte
     const [linea, periodo] = clave.split('|')
     if (texto.trim() === '') continue // celda vaciada: se deja como estaba
     const micros = aMicros(texto)

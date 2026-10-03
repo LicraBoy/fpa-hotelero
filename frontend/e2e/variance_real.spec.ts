@@ -14,6 +14,9 @@ const CARPETA =
 const NOMBRE = '02. MZT August 2026 Variance (Envio).xlsx'
 const EN_REPO = resolve('../docs/adr', NOMBRE)
 const EXCEL = existsSync(join(CARPETA, NOMBRE)) ? join(CARPETA, NOMBRE) : EN_REPO
+const VARIACION = existsSync(join(CARPETA, '02. MZT August 2026 Variance.xlsx'))
+  ? join(CARPETA, '02. MZT August 2026 Variance.xlsx')
+  : resolve('../docs/adr/02. MZT August 2026 Variance.xlsx')
 const GOLDEN = resolve('e2e/archivos/golden_real.json')
 const hayDatos = existsSync(EXCEL) && existsSync(GOLDEN)
 
@@ -51,6 +54,17 @@ async function cargarAgostoReal(request: APIRequestContext) {
   })
   expect(r.status(), await r.text()).toBe(201)
   const mapeo = (await r.json()).mapeo_version_id as number
+  // El sentido de la Variación de cada línea (columnas G, L y Q del Excel de la Variación)
+  if (existsSync(VARIACION)) {
+    r = await request.post(`${base}/reporte/convenciones`, {
+      headers: analista,
+      timeout: 120_000,
+      multipart: {
+        archivo: { name: 'variacion.xlsx', mimeType: XLSX, buffer: readFileSync(VARIACION) },
+      },
+    })
+    expect(r.status(), await r.text()).toBe(200)
+  }
   // Provisional hasta que Contraloría responda por estas cuentas (ver HALLAZGOS_CONTRALORIA.md)
   for (const cuenta of ['4003001.010', '4003001.020', '4002020']) {
     r = await request.put(`${base}/mapeo/versiones/${mapeo}/exclusiones`, {
@@ -152,8 +166,12 @@ test('el tipo de cambio muestra el Actual real, el Budget fijo y su variación',
   expect(numeroDePantalla(textos[1])).toBeCloseTo(18, 2)
   expect(numeroDePantalla(textos[2])).toBeCloseTo(0.87, 2)
   expect(numeroDePantalla(textos[3])).toBeCloseTo(4.8, 1)
-  // un tipo de cambio no se acumula: el bloque del acumulado queda en blanco
-  expect(textos[4]).toBe('—')
+  // un tipo de cambio no se suma: el acumulado es el promedio de los meses capturados (julio y
+  // agosto = 17.1756), con Variación Actual − Presupuesto = −0.82 y −4.6 %, como en el Excel
+  expect(numeroDePantalla(textos[4])).toBeCloseTo(17.18, 2)
+  expect(numeroDePantalla(textos[5])).toBeCloseTo(18, 2)
+  expect(numeroDePantalla(textos[6])).toBeCloseTo(-0.82, 2)
+  expect(numeroDePantalla(textos[7])).toBeCloseTo(-4.6, 1)
 })
 
 test('el reporte real carga completo: secciones, totales y sin errores', async ({ page }) => {

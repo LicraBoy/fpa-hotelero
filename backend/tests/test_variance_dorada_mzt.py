@@ -186,7 +186,12 @@ def test_el_tipo_de_cambio_trae_actual_budget_y_variacion(
         assert (mes.actual, mes.budget) == (actual, D("18"))
         assert mes.var == D("18") - actual
         assert mes.pct == (D("18") - actual) / D("18")
-        assert r.resultado[linea.id].ytd.budget is None  # un tipo de cambio no se acumula
+        # un tipo de cambio no se acumula: el acumulado es el promedio de los meses capturados
+        assert r.resultado[linea.id].ytd.budget == D("18")
+    r = _reporte(mazatlan, "2026-08")
+    ytd = r.resultado[next(x.id for x in r.lineas if x.fila_origen == 9)].ytd
+    assert ytd.actual == (D("17.2175") + D("17.1337")) / 2  # 17.1756, como el Excel
+    assert ytd.var == ytd.actual - D("18")  # el Excel lo calcula Actual − Presupuesto (−K9+J9)
 
 
 def test_las_cuentas_excluidas_son_las_documentadas(

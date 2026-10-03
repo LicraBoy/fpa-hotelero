@@ -72,13 +72,18 @@ def importar_reglas_suma(
     return len(leidas.reglas)
 
 
+def _coeficiente(valor: Decimal) -> Coeficiente:
+    """±1 como entero (así los importes no ganan decimales); otro factor (0.16) como Decimal."""
+    return int(valor) if valor == valor.to_integral_value() else valor
+
+
 def reglas_como_mapa(
     db: Session, hotel_id: int, version_id: int
-) -> dict[int, list[tuple[int, Decimal]]]:
-    """Reglas guardadas como `linea_id -> [(componente_id, signo)]` para `evaluar_totales`."""
-    mapa: dict[int, list[tuple[int, Decimal]]] = {}
+) -> dict[int, list[tuple[int, Coeficiente]]]:
+    """Reglas guardadas como `linea_id -> [(componente_id, coeficiente)]` para `evaluar_totales`."""
+    mapa: dict[int, list[tuple[int, Coeficiente]]] = {}
     for r in RepositorioReporte(db, hotel_id).reglas(version_id):
-        mapa.setdefault(r.linea_id, []).append((r.componente_id, r.signo))
+        mapa.setdefault(r.linea_id, []).append((r.componente_id, _coeficiente(r.signo)))
     return mapa
 
 

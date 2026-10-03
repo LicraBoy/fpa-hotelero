@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   ErrorApi,
+  guardarActualesCapturados,
   guardarVersionBudget,
   importarBudgetExcel,
   obtenerTipado,
@@ -12,7 +13,9 @@ import {
   agruparPorSeccionId,
   ajustarPorcentaje,
   aMicros,
+  cambiosActualPendientes,
   cambiosPendientes,
+  claveActual,
   claveCelda,
   completarConTotales,
   etiquetaAnoFiscal,
@@ -216,10 +219,28 @@ function VistaEditor(p: PropsVista) {
     return salida
   }, [datos, ediciones, actuales, periodos])
 
-  const { cambios, invalidas } = useMemo(
+  const { cambios, invalidas: invalidasBudget } = useMemo(
     () => cambiosPendientes(ediciones, actuales),
     [ediciones, actuales],
   )
+
+  // Actual capturado a mano que ya hay (lo que dice la base), para saber qué cambió
+  const capturadosVigentes = useMemo(() => {
+    const m = new Map<string, bigint | null>()
+    for (const l of datos.lineas) {
+      if (!l.actual_editable) continue
+      for (const c of l.meses) {
+        m.set(claveCelda(l.linea_id, c.periodo), c.actual === null ? null : aMicros(c.actual))
+      }
+    }
+    return m
+  }, [datos])
+  const { cambios: cambiosActual, invalidas: invalidasActual } = useMemo(
+    () => cambiosActualPendientes(ediciones, capturadosVigentes),
+    [ediciones, capturadosVigentes],
+  )
+  const invalidas = [...invalidasBudget, ...invalidasActual]
+  const totalCambios = cambios.length + cambiosActual.length
 
   const visibles = useMemo(() => {
     const buscado = p.texto.trim().toLowerCase()
@@ -247,6 +268,14 @@ function VistaEditor(p: PropsVista) {
     p.setConfirmando(false)
   }
 
+  function editarActual(linea: number, periodo: string, valor: string) {
+    const siguiente = new Map(ediciones)
+    siguiente.set(claveActual(linea, periodo), valor)
+    p.setEdiciones(siguiente)
+    p.setMensaje(null)
+    p.setConfirmando(false)
+  }
+
   function copiarActual() {
     const ajuste = p.porcentaje.trim()
     if (ajuste !== '' && ajustarPorcentaje(1_000_000n, ajuste) === null) {
@@ -256,7 +285,8 @@ function VistaEditor(p: PropsVista) {
     const siguiente = new Map(ediciones)
     let copiadas = 0
     for (const l of lineasMostradas) {
-      if (!l.editable) continue
+      // el tipo de cambio (informativa) tiene su propio Budget: no se copia de su Actual
+      if (!l.editable || l.tipo === 'informativa') continue
       for (const c of l.meses) {
         if (c.actual === null) continue
         const clave = claveCelda(l.linea_id, c.periodo)
@@ -283,16 +313,23 @@ function VistaEditor(p: PropsVista) {
   async function guardar() {
     p.setGuardando(true)
     try {
-      const r = await guardarVersionBudget(p.hotelId, {
-        ano_fiscal: p.anoFiscal,
-        base_version_id: datos.version?.id ?? null,
-        cambios,
-      })
+      const partes: string[] = []
+      if (cambiosActual.length > 0) {
+        const n = await guardarActualesCapturados(p.hotelId, cambiosActual)
+        partes.push(`${plural(n, 'Actual capturado', 'Actuales capturados')}`)
+      }
+      if (cambios.length > 0) {
+        const r = await guardarVersionBudget(p.hotelId, {
+          ano_fiscal: p.anoFiscal,
+          base_version_id: datos.version?.id ?? null,
+          cambios,
+        })
+        partes.push(
+          `Budget guardado como versión ${r.version?.numero ?? ''} (la anterior queda en el historial)`,
+        )
+      }
       p.recargar()
-      p.setMensaje({
-        tono: 'ok',
-        texto: `Budget guardado como versión ${r.version?.numero ?? ''}. La anterior queda en el historial.`,
-      })
+      p.setMensaje({ tono: 'ok', texto: `Guardado: ${partes.join('; ')}.` })
     } catch (e) {
       p.setConfirmando(false)
       p.setMensaje({
@@ -309,7 +346,10 @@ function VistaEditor(p: PropsVista) {
     }
   }
 
-  const lineasConCambio = new Set(cambios.map((c) => c.linea_id)).size
+  const lineasConCambio = new Set([
+    ...cambios.map((c) => c.linea_id),
+    ...cambiosActual.map((c) => c.linea_id),
+  ]).size
   const grupos = agruparPorSeccionId(lineasMostradas)
 
   return (
@@ -318,7 +358,8 @@ function VistaEditor(p: PropsVista) {
       <p className="suave">
         Escribe el Budget de cada mes; el <strong>Actual</strong> aparece al lado como referencia. Los
         totales se calculan solos. Guardar crea una <strong>versión nueva</strong>: la anterior se
-        conserva.{' '}
+        conserva. Las líneas sin cuentas (como el <strong>Exchange Rate</strong>) también dejan
+        escribir su Actual de cada mes.{' '}
         {datos.version ? (
           <Insignia tono="info">Versión {datos.version.numero} · {datos.version.nombre_archivo}</Insignia>
         ) : (
@@ -331,7 +372,7 @@ function VistaEditor(p: PropsVista) {
         </p>
       ))}
 
-      <ImportarExcel hotelId={p.hotelId} alImportar={p.recargar} hayCambios={cambios.length > 0} />
+      <ImportarExcel hotelId={p.hotelId} alImportar={p.recargar} hayCambios={totalCambios > 0} />
 
       <div className="filtros">
         <label>
@@ -443,6 +484,7 @@ function VistaEditor(p: PropsVista) {
                 ediciones={ediciones}
                 budget={budgetEnPantalla}
                 alEditar={editar}
+                alEditarActual={editarActual}
               />
             ))}
             {lineasMostradas.length === 0 && (
@@ -456,9 +498,9 @@ function VistaEditor(p: PropsVista) {
 
       <div className="acciones-budget">
         <span className="suave" role="status">
-          {cambios.length === 0
+          {totalCambios === 0
             ? 'Sin cambios.'
-            : `${plural(cambios.length, 'cambio', 'cambios')} en ${plural(lineasConCambio, 'línea', 'líneas')} sin guardar.`}
+            : `${plural(totalCambios, 'cambio', 'cambios')} en ${plural(lineasConCambio, 'línea', 'líneas')} sin guardar.`}
           {invalidas.length > 0 && ` ${plural(invalidas.length, 'celda', 'celdas')} con un importe no válido.`}
         </span>
         <button
@@ -476,7 +518,7 @@ function VistaEditor(p: PropsVista) {
         <button
           type="button"
           className="boton"
-          disabled={cambios.length === 0 || invalidas.length > 0 || p.guardando}
+          disabled={totalCambios === 0 || invalidas.length > 0 || p.guardando}
           onClick={() => p.setConfirmando(true)}
         >
           Guardar como versión nueva
@@ -487,11 +529,19 @@ function VistaEditor(p: PropsVista) {
         <div className="mensaje mensaje-aviso" role="status">
           <p>
             <strong>
-              Vas a guardar {plural(cambios.length, 'cambio', 'cambios')} en{' '}
+              Vas a guardar {plural(totalCambios, 'cambio', 'cambios')} en{' '}
               {plural(lineasConCambio, 'línea', 'líneas')}.
             </strong>{' '}
-            Se crea la versión {(datos.version?.numero ?? 0) + 1} del Budget {p.anoFiscal} y el
-            Variance la usará de inmediato. La versión anterior queda en el historial.
+            {cambios.length > 0 && (
+              <>
+                Se crea la versión {(datos.version?.numero ?? 0) + 1} del Budget {p.anoFiscal}; la
+                anterior queda en el historial.{' '}
+              </>
+            )}
+            {cambiosActual.length > 0 && (
+              <>Los Actuales capturados se guardan con tu nombre y quedan en la bitácora. </>
+            )}
+            El Variance los usará de inmediato.
           </p>
           <button type="button" className="boton" disabled={p.guardando} onClick={() => void guardar()}>
             {p.guardando ? 'Guardando…' : 'Confirmar y guardar'}
@@ -512,9 +562,18 @@ interface PropsGrupo {
   ediciones: ReadonlyMap<string, string>
   budget: ReadonlyMap<string, bigint | null>
   alEditar: (linea: number, periodo: string, valor: string) => void
+  alEditarActual: (linea: number, periodo: string, valor: string) => void
 }
 
-function GrupoFilas({ titulo, lineas, periodos, ediciones, budget, alEditar }: PropsGrupo) {
+function GrupoFilas({
+  titulo,
+  lineas,
+  periodos,
+  ediciones,
+  budget,
+  alEditar,
+  alEditarActual,
+}: PropsGrupo) {
   return (
     <>
       {titulo !== null && (
@@ -531,6 +590,7 @@ function GrupoFilas({ titulo, lineas, periodos, ediciones, budget, alEditar }: P
           ediciones={ediciones}
           budget={budget}
           alEditar={alEditar}
+          alEditarActual={alEditarActual}
         />
       ))}
     </>
@@ -542,6 +602,7 @@ function FilaBudget({
   ediciones,
   budget,
   alEditar,
+  alEditarActual,
 }: Omit<PropsGrupo, 'titulo' | 'lineas' | 'periodos'> & { linea: LineaEdicionBudget }) {
   const informativa = linea.tipo === 'informativa'
   const calculados = linea.meses.map((c) => budget.get(claveCelda(linea.linea_id, c.periodo)) ?? null)
@@ -580,12 +641,38 @@ function FilaBudget({
             {formatoMicros(calculado)}
           </td>
         )
-        return [
-          celdaBudget,
+        const claveA = claveActual(linea.linea_id, c.periodo)
+        const editadoA = ediciones.get(claveA)
+        const invalidoA = editadoA !== undefined && editadoA.trim() !== '' && aMicros(editadoA) === null
+        const celdaActual = linea.actual_editable ? (
+          <td
+            key={`${c.periodo}-a`}
+            className={`num${editadoA !== undefined ? ' editada' : ''}`}
+            title={
+              c.actual_origen === 'manual'
+                ? 'Capturado a mano'
+                : c.actual_origen === 'excel'
+                  ? 'Viene del Excel de Contraloría'
+                  : 'Sin capturar'
+            }
+          >
+            <input
+              type="text"
+              inputMode="decimal"
+              className={invalidoA ? 'entrada-budget entrada-invalida' : 'entrada-budget'}
+              aria-label={`Actual de ${linea.descripcion}, ${etiquetaMes(c.periodo)}`}
+              aria-invalid={invalidoA || undefined}
+              placeholder="—"
+              value={editadoA ?? (actuales[i] === null ? '' : textoDeMicros(actuales[i]))}
+              onChange={(e) => alEditarActual(linea.linea_id, c.periodo, e.target.value)}
+            />
+          </td>
+        ) : (
           <td key={`${c.periodo}-a`} className="num suave">
             {formatoMicros(actuales[i])}
-          </td>,
-        ]
+          </td>
+        )
+        return [celdaBudget, celdaActual]
       })}
       {/* un tipo de cambio no se suma: su "año" queda en blanco */}
       <td className="num inicio-mes">{informativa ? '—' : formatoMicros(sumar(calculados))}</td>

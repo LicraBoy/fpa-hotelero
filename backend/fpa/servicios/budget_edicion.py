@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal
 
@@ -35,6 +36,7 @@ from fpa.servicios.actual import actual_del_periodo, version_de_mapeo
 from fpa.servicios.budget import ResultadoImportacionBudget, importar_budget_mensual
 from fpa.servicios.cargas import DatosArchivo
 from fpa.servicios.reglas_suma import lineas_aditivas, reglas_como_mapa
+from fpa.servicios.valores_capturados import lineas_capturables
 
 IMPORTE_MAXIMO = Decimal("1000000000000")  # un billón: más que cualquier presupuesto de un hotel
 NOMBRE_EDICION = "Edición en pantalla"
@@ -58,9 +60,11 @@ class CambioBudget:
 @dataclass
 class LineaEdicion:
     linea: LineaReporte
-    editable: bool
+    editable: bool  # el Budget de la línea se puede escribir
     budget: dict[str, Decimal | None]
     actual: dict[str, Decimal | None]
+    actual_editable: bool = False  # el Actual se captura a mano (no sale de cuentas ni de un total)
+    origen_actual: dict[str, str | None] = field(default_factory=dict)  # excel | manual por mes
 
 
 @dataclass
@@ -70,7 +74,7 @@ class VistaEdicion:
     version: VersionPlan | None
     version_estructura_id: int
     lineas: list[LineaEdicion]
-    reglas: dict[int, list[tuple[int, Decimal]]]
+    reglas: Mapping[int, Sequence[tuple[int, int | Decimal]]]
     secciones: list[LineaReporte]
     advertencias: list[str] = field(default_factory=list)
 
@@ -134,12 +138,13 @@ def vista_edicion(
     planes = RepositorioPlan(db, hotel_id)
     budget_por_mes: dict[str, dict[int, Decimal]] = {p: {} for p in periodos}
     if version is not None:
-        for fila in planes.mensuales(version.id):
+        for fila in planes.budget_por_mes(version):
             if fila.periodo in budget_por_mes:
                 budget_por_mes[fila.periodo][fila.linea_id] = fila.importe
-    capturados = {
-        (x.linea_id, x.periodo): x.importe for x in planes.capturados(estructura.id, periodos)
-    }
+    cap = planes.capturados(estructura.id, periodos)
+    capturados = {(x.linea_id, x.periodo): x.importe for x in cap}
+    origenes = {(x.linea_id, x.periodo): x.origen for x in cap}
+    capturables = lineas_capturables(db, hotel_id)
 
     con_cuentas = {v.linea_id for v in RepositorioMapeo(db, hotel_id).vinculos(mapeo.id)}
     aditivas = lineas_aditivas(reglas, con_cuentas)
@@ -179,7 +184,14 @@ def vista_edicion(
             else:
                 actual[p] = None if mes is None else mes.get(linea.id, Decimal(0))
         salida.append(
-            LineaEdicion(linea, linea.tipo == "detalle" and not con_regla, budget, actual)
+            LineaEdicion(
+                linea,
+                linea.tipo in ("detalle", "informativa") and not con_regla,
+                budget,
+                actual,
+                linea.id in capturables,
+                {p: origenes.get((linea.id, p)) for p in periodos},
+            )
         )
     return VistaEdicion(
         ano_fiscal=ano_fiscal,
@@ -242,7 +254,7 @@ def crear_version_desde_cambios(
     por_periodo: dict[str, dict[int, ValoresMes]] = {p: {} for p in periodos}
     previo: dict[tuple[int, str], Decimal] = {}
     if base is not None:
-        for fila in repo.mensuales(base.id):
+        for fila in repo.budget_por_mes(base):
             linea = por_id.get(fila.linea_id)
             if linea is None or fila.linea_id in reglas or fila.periodo not in por_periodo:
                 continue  # un total se recalcula de sus reglas: no se arrastra
@@ -256,7 +268,7 @@ def crear_version_desde_cambios(
         linea = por_id.get(c.linea_id)
         if linea is None:
             raise EdicionInvalida(f"La línea {c.linea_id} no pertenece al reporte vigente")
-        if linea.tipo != "detalle" or c.linea_id in reglas:
+        if linea.tipo not in ("detalle", "informativa") or c.linea_id in reglas:
             raise EdicionInvalida(
                 f"«{linea.descripcion}» es un total o una línea calculada: no se edita"
             )

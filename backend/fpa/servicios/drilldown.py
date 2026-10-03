@@ -154,14 +154,18 @@ def desglose_de_linea(
         for componente_id, coeficiente in reglas[linea_id]:
             componente = lineas[componente_id]
             factor = abs(Decimal(coeficiente))
+            valor = todo.get(componente_id, CERO)
+            # con factor 1 el importe es el del componente tal cual (2 decimales); con otro factor
+            # (el 16 % de otra línea) se redondea a centavos, como se muestra
+            aporte = valor if factor == 1 else (valor * factor).quantize(Decimal("0.01"))
             salida.componentes.append(
                 ComponenteDesglose(
                     componente.id,
                     componente.descripcion,
                     componente.tipo,
                     1 if coeficiente > 0 else -1,
-                    todo.get(componente_id, CERO) * factor,
-                    factor,
+                    aporte,
+                    factor.normalize(),
                 )
             )
         salida.suma = sum((c.signo * c.importe for c in salida.componentes), CERO)

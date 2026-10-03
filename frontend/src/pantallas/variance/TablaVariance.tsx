@@ -103,13 +103,14 @@ function FilaLinea({
         etiquetaEnlace={`Ver el desglose de ${linea.descripcion}, mes`}
       />
       <CeldasBloque
-        calculada={calculada}
+        // el acumulado del tipo de cambio es el promedio de los meses capturados: se muestra si hay
+        calculada={calculada || linea.ytd.var !== null}
         cifras={linea.ytd}
         enlace={enlace('ytd')}
         etiquetaEnlace={`Ver el desglose de ${linea.descripcion}, acumulado`}
       />
       <CeldasBloque
-        calculada={calculada}
+        calculada={calculada || linea.anual.var !== null}
         cifras={linea.anual}
         // el Actual del bloque anual es el mismo acumulado: su desglose está en el bloque YTD
         enlace={null}

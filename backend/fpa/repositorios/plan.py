@@ -1,5 +1,8 @@
 """Consultas de versiones del plan (Budget). **Todas** están acotadas a un hotel (aislamiento)."""
 
+from dataclasses import dataclass
+from decimal import Decimal
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -10,6 +13,13 @@ from fpa.modelos.plan import (
     ValorCapturado,
     VersionPlan,
 )
+
+
+@dataclass(frozen=True)
+class BudgetDelMes:
+    linea_id: int
+    periodo: str
+    importe: Decimal
 
 
 class RepositorioPlan:
@@ -83,3 +93,18 @@ class RepositorioPlan:
                 .order_by(ValorCapturado.linea_id)
             )
         )
+
+    def budget_por_mes(self, version: VersionPlan) -> list[BudgetDelMes]:
+        """El Budget de cada mes de una versión.
+
+        Una versión con Budget mes a mes (Mazatlán) lo trae tal cual. Una del formato de Vallarta
+        solo trae el mes de su corte (`LineaPlan.mes`): se toma como el Budget de ese mes.
+        """
+        mensuales = self.mensuales(version.id)
+        if mensuales:
+            return [BudgetDelMes(x.linea_id, x.periodo, x.importe) for x in mensuales]
+        return [
+            BudgetDelMes(x.linea_id, version.periodo_corte, x.mes)
+            for x in self.lineas(version.id)
+            if x.mes is not None
+        ]

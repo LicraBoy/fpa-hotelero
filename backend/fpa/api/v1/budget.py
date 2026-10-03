@@ -54,6 +54,7 @@ from fpa.servicios.budget_edicion import (
 )
 from fpa.servicios.cargar_archivo import Resolucion
 from fpa.servicios.cargas import DatosArchivo
+from fpa.servicios.valores_capturados import CapturaInvalida, ValorEntrada, capturar_actuales
 
 router = APIRouter(tags=["budget"], responses=RESPUESTAS_HOTEL)
 log = logging.getLogger(__name__)
@@ -303,6 +304,9 @@ class CeldaEdicion(BaseModel):
     periodo: str
     budget: Decimal | None
     actual: Decimal | None
+    actual_origen: (
+        str | None
+    )  # excel | manual: cómo llegó el Actual capturado (None: sale de cuentas)
 
 
 class LineaEdicionSalida(BaseModel):
@@ -313,7 +317,8 @@ class LineaEdicionSalida(BaseModel):
     seccion_id: int | None
     codigo_corporativo: str | None
     descripcion: str
-    editable: bool
+    editable: bool  # el Budget se puede escribir
+    actual_editable: bool  # el Actual se captura a mano (no sale de cuentas ni de un total)
     meses: list[CeldaEdicion]
 
 
@@ -397,8 +402,14 @@ def ver_edicion(
                 codigo_corporativo=x.linea.codigo_corporativo,
                 descripcion=x.linea.descripcion,
                 editable=x.editable,
+                actual_editable=x.actual_editable,
                 meses=[
-                    CeldaEdicion(periodo=p, budget=x.budget[p], actual=x.actual[p])
+                    CeldaEdicion(
+                        periodo=p,
+                        budget=x.budget[p],
+                        actual=x.actual[p],
+                        actual_origen=x.origen_actual.get(p),
+                    )
                     for p in vista.periodos
                 ],
             )
@@ -460,3 +471,54 @@ def guardar_edicion(
             else None,
         },
     )
+
+
+class ValorCapturadoEntrada(BaseModel):
+    linea_id: int = Field(ge=1, le=ID_MAX)
+    periodo: str = Field(pattern=r"^20\d{2}-(0[1-9]|1[0-2])$")
+    # None borra el valor capturado
+    importe: Decimal | None = Field(
+        default=None, allow_inf_nan=False, max_digits=20, decimal_places=6
+    )
+
+
+class CapturaEntrada(BaseModel):
+    valores: list[ValorCapturadoEntrada] = Field(min_length=1, max_length=2_000)
+
+
+class CapturaSalida(BaseModel):
+    guardados: int
+
+
+@router.put(
+    "/hoteles/{hotel_id}/budget/capturados",
+    response_model=CapturaSalida,
+    responses={
+        409: {
+            "description": "Primero hay que importar la estructura del reporte y aprobar el mapeo"
+        },
+        422: {"description": "Una línea o un importe no se puede capturar"},
+    },
+)
+def capturar_actual(
+    entrada: CapturaEntrada,
+    contexto: Importacion,
+    db: Session = Depends(get_db),
+) -> CapturaSalida:
+    """Guarda el Actual capturado a mano (p. ej. el tipo de cambio de cada mes); vacío lo borra."""
+    try:
+        n = capturar_actuales(
+            db,
+            organizacion_id=contexto.organizacion_id,
+            hotel_id=contexto.hotel_id,
+            usuario_id=contexto.principal.usuario_id,
+            valores=[ValorEntrada(v.linea_id, v.periodo, v.importe) for v in entrada.valores],
+        )
+    except LookupError as e:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=str(e.args[0])) from None
+    except CapturaInvalida as e:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=str(e)) from None
+    db.commit()
+    return CapturaSalida(guardados=n)

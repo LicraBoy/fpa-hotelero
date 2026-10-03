@@ -62,9 +62,13 @@ def test_el_motor_reproduce_el_variance_de_agosto(agosto_real: AgostoReal) -> No
     assert r.version_plan_id == a.version_plan_id
     # Lo único que avisa son las dos cuentas de Vallarta sin línea (4002013 y 4003003): es lo que
     # el aviso de «cuentas sin línea» debe detectar
-    assert len(r.advertencias) == 1
-    assert "2 cuentas" in r.advertencias[0] and "4003003" in r.advertencias[0]
-    assert "4002013" in r.advertencias[0]
+    sin_linea = [a for a in r.advertencias if "no están en ninguna línea" in a]
+    assert len(sin_linea) == 1
+    assert "2 cuentas" in sin_linea[0] and "4003003" in sin_linea[0] and "4002013" in sin_linea[0]
+    # y las líneas sin cuentas de Vallarta (Administration Fee…) no tienen Actual capturado
+    assert (
+        len(r.advertencias) == 2 and "sin cuentas no tienen Actual capturado" in r.advertencias[1]
+    )
     assert r.periodos_ytd == ["2026-07", "2026-08"] and r.periodos_sin_datos == []
 
     comparadas, con_diferencia = 0, {}

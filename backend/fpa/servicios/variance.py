@@ -8,7 +8,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from fpa.calculo.ano_fiscal import MES_INICIO_POR_DEFECTO, etiqueta_ano_fiscal, periodos_ytd
-from fpa.calculo.motor import LineaVariance, armar_variance
+from fpa.calculo.motor import Cifras, LineaVariance, armar_variance
 from fpa.calculo.variance import Convencion, LineaParaConvencion, deducir_convenciones
 from fpa.modelos.plan import TIPO_BUDGET, LineaPlanMensual, VersionPlan
 from fpa.modelos.reporte import LineaReporte
@@ -19,6 +19,7 @@ from fpa.servicios.actual import actual_del_periodo, actual_ytd_del_periodo, ver
 from fpa.servicios.convenciones_linea import convenciones_por_bloque
 from fpa.servicios.reglas_suma import lineas_aditivas, reglas_como_mapa
 from fpa.servicios.validacion_mapeo import validar_mapeo
+from fpa.servicios.valores_capturados import lineas_capturables
 
 CERO = Decimal("0")
 
@@ -108,9 +109,26 @@ def _budget_mensual(
     b_ytd: dict[int, Decimal] = {}
     for p in ytd:
         for linea, importe in por_periodo[p].items():
-            if linea not in sin_acumular:
-                b_ytd[linea] = b_ytd.get(linea, CERO) + importe
+            b_ytd[linea] = b_ytd.get(linea, CERO) + importe
+    for linea in sin_acumular:  # un tipo de cambio no se suma: su acumulado es el promedio
+        if linea in b_ytd:
+            b_ytd[linea] = b_ytd[linea] / len(ytd)
     return b_mes, b_ytd
+
+
+def _sin_variacion(linea: LineaVariance, *, mes: bool, acumulado: bool) -> LineaVariance:
+    """Quita la Variación y el % de los bloques indicados (el Actual no existe, no es 0)."""
+
+    def sin(c: Cifras, quitar: bool) -> Cifras:
+        return Cifras(c.actual, c.budget, None, None) if quitar else c
+
+    return LineaVariance(
+        linea_id=linea.linea_id,
+        convencion=linea.convencion,
+        mes=sin(linea.mes, mes),
+        ytd=sin(linea.ytd, acumulado),
+        anual=sin(linea.anual, acumulado),
+    )
 
 
 def calcular_variance(
@@ -216,12 +234,13 @@ def calcular_variance(
             "El acumulado está incompleto: faltan movimientos de " + ", ".join(ytd.sin_datos)
         )
 
-    # Actual capturado (el Excel lo trae pegado): solo para líneas sin cuentas ni regla de suma.
-    # El acumulado suma los meses capturados, salvo en las líneas que no se acumulan.
+    # Actual capturado (lo trae el Excel o se escribe a mano): solo líneas sin cuentas ni regla de
+    # suma. El acumulado suma los meses capturados; en las que no se acumulan (el tipo de cambio),
+    # es el promedio de los meses capturados.
     periodos_del_ytd = periodos_ytd(periodo, mes_inicio)
     capturados: dict[int, Decimal] = {}
     capturados_ytd: dict[int, Decimal] = {}
-    meses_por_linea: dict[int, int] = {}
+    meses_capturados: dict[int, int] = {}
     for x in RepositorioPlan(db, hotel_id).capturados(
         mapeo.version_estructura_id, periodos_del_ytd
     ):
@@ -229,13 +248,20 @@ def calcular_variance(
             continue
         if x.periodo == periodo:
             capturados[x.linea_id] = x.importe
-        if x.linea_id not in no_se_acumulan:
-            capturados_ytd[x.linea_id] = capturados_ytd.get(x.linea_id, CERO) + x.importe
-            meses_por_linea[x.linea_id] = meses_por_linea.get(x.linea_id, 0) + 1
-    if any(n < len(periodos_del_ytd) for n in meses_por_linea.values()):
+        capturados_ytd[x.linea_id] = capturados_ytd.get(x.linea_id, CERO) + x.importe
+        meses_capturados[x.linea_id] = meses_capturados.get(x.linea_id, 0) + 1
+    for linea_id in no_se_acumulan:
+        if linea_id in capturados_ytd:
+            capturados_ytd[linea_id] = capturados_ytd[linea_id] / meses_capturados[linea_id]
+    capturables = lineas_capturables(db, hotel_id, mapeo.id)
+    sin_captura = [x for x in lineas if x.id in capturables and x.id not in capturados]
+    if sin_captura:
+        nombres = ", ".join(x.descripcion.strip() for x in sin_captura[:3])
         advertencias.append(
-            "Hay líneas con Actual capturado que no trae todos los meses del acumulado: "
-            "su acumulado queda incompleto"
+            f"{len(sin_captura)} líneas sin cuentas no tienen Actual capturado en {periodo} "
+            f"(se toman como 0): {nombres}"
+            + ("…" if len(sin_captura) > 3 else "")
+            + ". Se escribe en la pestaña Budget (fila de la línea, columna Actual)"
         )
     mes = {**mes, **capturados}
     acumulado = {**ytd.por_linea, **capturados_ytd}
@@ -254,6 +280,13 @@ def calcular_variance(
         por_bloque,
         compuestas,
     )
+    # Un tipo de cambio sin capturar no tiene Variación: un Actual en 0 la inventaría
+    for linea_id in no_se_acumulan:
+        resultado[linea_id] = _sin_variacion(
+            resultado[linea_id],
+            mes=linea_id not in capturados,
+            acumulado=linea_id not in meses_capturados,
+        )
     return ReporteVariance(
         hotel_id=hotel_id,
         periodo=periodo,

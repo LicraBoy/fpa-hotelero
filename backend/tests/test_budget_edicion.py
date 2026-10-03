@@ -80,7 +80,7 @@ def test_la_vista_trae_budget_y_actual_mes_a_mes(libro: Libro) -> None:
     total = por_fila[13]
     assert not total.editable  # un total sale de su regla
     assert total.budget["2026-08"] == D("110") and total.actual["2026-08"] == D("120")
-    assert not por_fila[9].editable  # el tipo de cambio no es de detalle
+    assert por_fila[9].editable and por_fila[9].actual_editable  # el tipo de cambio se escribe
     assert por_fila[9].actual["2026-08"] == D("17.1337")  # su Actual capturado
     assert por_fila[9].actual["2026-09"] is None  # sin capturar: no es un cero
     assert vista.version is not None and len(vista.reglas) == 3
@@ -145,7 +145,6 @@ def test_se_puede_crear_el_primer_budget_desde_cero(libro: Libro) -> None:
     ("cambio", "texto"),
     [
         ((13, "2026-08", "5"), "total"),  # línea con regla
-        ((9, "2026-08", "5"), "total"),  # línea informativa
         ((11, "2027-09", "5"), "no es del año fiscal"),
         ((11, "2026-08", "9" * 20), "no válido"),
         ((11, "2026-08", "110"), "iguales"),  # mismo importe que la versión actual
@@ -243,3 +242,30 @@ def test_api_rechaza_lo_no_valido_y_respeta_permisos(
     assert cliente.get(edicion, headers=como(RESPONSABLE)).status_code == 403
     assert cliente.get(edicion).status_code == 401
     assert cliente.get(edicion.replace("2026/27", "xx"), headers=como(CONTRALOR)).status_code == 422
+
+
+def test_editar_un_budget_del_formato_de_vallarta_no_pierde_su_mes(
+    db: Session, mundo: Mundo
+) -> None:
+    """Un Budget sin meses (solo el corte, como el de Vallarta) se conserva al editarlo."""
+    from test_api_variance import _preparar
+
+    esc = _preparar(db, mundo)
+    ids = {
+        x.fila_origen: x.id for x in RepositorioReporte(db, mundo.hotel_a).lineas(esc.estructura.id)
+    }
+    vista = vista_edicion(db, hotel_id=mundo.hotel_a, ano_fiscal="2026/27")
+    ingreso = next(x for x in vista.lineas if x.linea.fila_origen == 4)
+    assert ingreso.budget["2026-08"] == D("80")  # el Budget del corte se ve en la pantalla
+    crear_version_desde_cambios(
+        db,
+        organizacion_id=mundo.org1,
+        hotel_id=mundo.hotel_a,
+        usuario_id=None,
+        ano_fiscal="2026/27",
+        cambios=[CambioBudget(ids[5], "2026-09", D("45"))],
+    )
+    db.commit()
+    despues = vista_edicion(db, hotel_id=mundo.hotel_a, ano_fiscal="2026/27")
+    assert next(x for x in despues.lineas if x.linea.fila_origen == 4).budget["2026-08"] == D("80")
+    assert next(x for x in despues.lineas if x.linea.fila_origen == 5).budget["2026-09"] == D("45")

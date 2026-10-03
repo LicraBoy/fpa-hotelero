@@ -118,6 +118,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/budget/capturados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Capturar Actual
+         * @description Guarda el Actual capturado a mano (p. ej. el tipo de cambio de cada mes); vacío lo borra.
+         */
+        put: operations["capturar_actual_api_v1_hoteles__hotel_id__budget_capturados_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/budget/edicion": {
         parameters: {
             query?: never;
@@ -691,6 +711,16 @@ export interface components {
             /** Periodo */
             periodo: string;
         };
+        /** CapturaEntrada */
+        CapturaEntrada: {
+            /** Valores */
+            valores: components["schemas"]["ValorCapturadoEntrada"][];
+        };
+        /** CapturaSalida */
+        CapturaSalida: {
+            /** Guardados */
+            guardados: number;
+        };
         /** CargaDetalle */
         CargaDetalle: {
             controles: components["schemas"]["ReporteCalidadSalida"] | null;
@@ -776,6 +806,8 @@ export interface components {
         CeldaEdicion: {
             /** Actual */
             actual: string | null;
+            /** Actual Origen */
+            actual_origen: string | null;
             /** Budget */
             budget: string | null;
             /** Periodo */
@@ -993,6 +1025,8 @@ export interface components {
         };
         /** LineaEdicionSalida */
         LineaEdicionSalida: {
+            /** Actual Editable */
+            actual_editable: boolean;
             /** Codigo Corporativo */
             codigo_corporativo: string | null;
             /** Descripcion */
@@ -1265,6 +1299,15 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** ValorCapturadoEntrada */
+        ValorCapturadoEntrada: {
+            /** Importe */
+            importe?: number | string | null;
+            /** Linea Id */
+            linea_id: number;
+            /** Periodo */
+            periodo: string;
         };
         /** VarianceSalida */
         VarianceSalida: {
@@ -1697,6 +1740,67 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    capturar_actual_api_v1_hoteles__hotel_id__budget_capturados_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CapturaEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CapturaSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Primero hay que importar la estructura del reporte y aprobar el mapeo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Una línea o un importe no se puede capturar */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

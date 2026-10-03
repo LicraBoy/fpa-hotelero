@@ -259,6 +259,37 @@
         "title": "CambioEntrada",
         "type": "object"
       },
+      "CapturaEntrada": {
+        "properties": {
+          "valores": {
+            "items": {
+              "$ref": "#/components/schemas/ValorCapturadoEntrada"
+            },
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Valores",
+            "type": "array"
+          }
+        },
+        "required": [
+          "valores"
+        ],
+        "title": "CapturaEntrada",
+        "type": "object"
+      },
+      "CapturaSalida": {
+        "properties": {
+          "guardados": {
+            "title": "Guardados",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "guardados"
+        ],
+        "title": "CapturaSalida",
+        "type": "object"
+      },
       "CargaDetalle": {
         "properties": {
           "controles": {
@@ -478,6 +509,17 @@
             ],
             "title": "Actual"
           },
+          "actual_origen": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Origen"
+          },
           "budget": {
             "anyOf": [
               {
@@ -498,7 +540,8 @@
         "required": [
           "periodo",
           "budget",
-          "actual"
+          "actual",
+          "actual_origen"
         ],
         "title": "CeldaEdicion",
         "type": "object"
@@ -1124,6 +1167,10 @@
       },
       "LineaEdicionSalida": {
         "properties": {
+          "actual_editable": {
+            "title": "Actual Editable",
+            "type": "boolean"
+          },
           "codigo_corporativo": {
             "anyOf": [
               {
@@ -1187,6 +1234,7 @@
           "codigo_corporativo",
           "descripcion",
           "editable",
+          "actual_editable",
           "meses"
         ],
         "title": "LineaEdicionSalida",
@@ -2053,6 +2101,42 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "ValorCapturadoEntrada": {
+        "properties": {
+          "importe": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,14}|(?=[\\d.]{1,21}0*$)\\d{0,14}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Importe"
+          },
+          "linea_id": {
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "periodo": {
+            "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+            "title": "Periodo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "linea_id",
+          "periodo"
+        ],
+        "title": "ValorCapturadoEntrada",
         "type": "object"
       },
       "VarianceSalida": {
@@ -2966,6 +3050,66 @@
         "summary": "Listar Auditoria",
         "tags": [
           "cargas"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/budget/capturados": {
+      "put": {
+        "description": "Guarda el Actual capturado a mano (p. ej. el tipo de cambio de cada mes); vacío lo borra.",
+        "operationId": "capturar_actual_api_v1_hoteles__hotel_id__budget_capturados_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CapturaEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapturaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "Primero hay que importar la estructura del reporte y aprobar el mapeo"
+          },
+          "422": {
+            "description": "Una línea o un importe no se puede capturar"
+          }
+        },
+        "summary": "Capturar Actual",
+        "tags": [
+          "budget"
         ]
       }
     },

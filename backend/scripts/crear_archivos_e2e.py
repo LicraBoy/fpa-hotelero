@@ -111,6 +111,8 @@ def reporte_variance() -> bytes:
     poner(11, "029-0000-3-000", "Supplies", 150.25, 140.0, 280.0, 1680.0, "='6005024'!L3")
     poner(12, None, "T o t a l   E x p e n s e s", 550.25, 520.0, 1040.0, 6240.0, "=SUM(S10:S11)")
     poner(14, None, "N e t   P r o f i t", 950.25, 980.0, 1860.0, 11760.0, "=S7-S12")
+    # tipo de cambio: sin cuentas ni fórmula; su Actual se captura a mano (Budget fijo de 18)
+    poner(16, None, "Exchange Rate:", None, 18.0, 18.0, 18.0)
 
     bd = wb.create_sheet("Base de Datos")
     bd.append([])
