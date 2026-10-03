@@ -18,7 +18,7 @@ Julio a junio (`2026/27` = jul-2026 a jun-2027). El acumulado (YTD) suma desde j
 - La importación de convenciones es **independiente** del cálculo: el sistema calcula con sus cifras, solo toma el sentido.
 
 ## 3. Porcentaje (columna H)
-Una sola fórmula para todas las filas:
+Una sola fórmula para todas las filas (el motor la aplica con `variance_pct`; equivale a esta fórmula salvo en líneas compuestas con Presupuesto 0):
 
     SI(Var = 0, 0,
        SI(Actual = 0, Var / Presupuesto,
@@ -64,6 +64,15 @@ solo desarrollo, auditado). Si un día se ocupan: nueva versión del mapeo que l
 - Acumulado de septiembre corto en líneas con cuentas de balance (IVA, Income Tax) hasta tener el CON130 de julio y agosto (P19).
 - ~150 líneas sin cuentas requieren captura manual (P21).
 - Fórmula del IVA de julio ≠ agosto (P20).
+
+## 8b. Excel exportado con fórmulas vivas
+`GET /hoteles/{id}/variance/exportar` entrega el reporte **completo** (los filtros de la pantalla no lo recortan) con fórmulas:
+- `Variance`: Actual = `SUMIFS` sobre `Mapeo` (+ componentes con su coeficiente en totales y líneas mixtas); Budget de detalle = `SUMIFS` sobre `Budget`, totales = suma de sus partes; Var según el sentido de cada línea y bloque (o suma de Variaciones si es compuesta); % = `IF(Var=0,0,IF(Actual=0,Var/Budget,IF(Budget=0,Var/Actual,Var/Budget)))`; Anual: Actual = el del acumulado. Tipo de cambio: `AVERAGEIFS`.
+- `Saldos` (Débito−Crédito por cuenta y mes), `Mapeo` (cuenta, signo, aporte), `Budget` (mes a mes; periodo 0 = anual), `Capturas`. Las claves de cuenta llevan prefijo `K` para que Excel no confunda `4003001.010` con un número.
+- Las celdas `B3` (periodo AAAAMM) y `D3` (inicio del año fiscal) las leen las fórmulas; no se cambian a mano.
+- Donde el motor no tiene valor (sin Budget) la celda queda vacía. Si el Budget no viene mes a mes, el Budget de detalle va como valor.
+- Verificación: `tests/evaluador_formulas.py` recalcula cada fórmula (no hay Excel en el entorno) y `tests/test_exportar_variance_formulas.py` la compara con el motor, también con agosto real. **Aún no se ha abierto en Excel de verdad**: si algo se ve distinto, avisar.
+- Código: `servicios/exportar_variance.py` + `servicios/exportar_variance_formulas.py`; el motor entrega `ReporteVariance.insumos` (`calcular_variance(con_insumos=True)`).
 
 ## 9. Dónde se prueba
 `tests/test_variance_dorada_mzt.py`, `test_variance_convenciones.py`, `test_budget_anual_mzt.py`,

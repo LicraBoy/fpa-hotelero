@@ -26,7 +26,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from fpa.calculo.motor import Cifras, LineaVariance
 from fpa.modelos.reporte import LineaReporte
-from fpa.servicios.variance import SeccionReporte
+from fpa.servicios.variance import InsumosFormulas, SeccionReporte
 
 FORMATO_IMPORTE = "#,##0.00;[Red](#,##0.00)"
 FORMATO_PORCENTAJE = "0.0%;[Red](0.0%)"
@@ -42,6 +42,17 @@ _RELLENO_SECCION = PatternFill("solid", fgColor="E6EEFB")
 _RELLENO_TOTAL = PatternFill("solid", fgColor="EEF1F6")
 _LINEA = Side(style="thin", color="888888")
 _LINEA_GRUESA = Side(style="medium", color="222222")
+
+
+_NOTAS_FORMULAS = [
+    "Este libro trae FÓRMULAS: Actual, Budget, Variación y % se recalculan al editar una hoja.",
+    "Hojas: Saldos (Débito − Crédito por cuenta y mes), Mapeo (cuentas de cada línea, con su "
+    "signo y aporte), Budget (mes a mes; periodo 0 = anual), Capturas (Actuales escritos a mano).",
+    "Actual de una línea = suma de sus cuentas en Mapeo (+ sus componentes si es total). "
+    "Variación: el sentido de cada línea viene del Excel de Contraloría. % = fórmula de su col. H.",
+    "Las celdas B3 y D3 de Variance (periodo e inicio del año fiscal) las leen las fórmulas: "
+    "no se cambian a mano. El libro siempre es el reporte completo (sin filtros).",
+]
 
 
 def limpiar_texto(valor: str) -> str:
@@ -93,8 +104,13 @@ def generar_excel(
     version_mapeo: int,
     version_budget: int | None,
     periodos_ytd: Sequence[str],
+    insumos: InsumosFormulas | None = None,
 ) -> bytes:
-    """`lineas` ya viene filtrada y en el orden del reporte; `secciones` da sus encabezados."""
+    """`lineas` ya viene en el orden del reporte; `secciones` da sus encabezados.
+
+    Con `insumos` el libro sale con fórmulas vivas (ver `exportar_variance_formulas`) y `lineas`
+    debe ser el reporte completo; sin ellos, las cifras van como valores.
+    """
     libro = Workbook()
     hoja = libro.active
     if hoja is None:  # pragma: no cover - un libro nuevo siempre trae una hoja
@@ -139,6 +155,27 @@ def generar_excel(
             celda.border = Border(bottom=_LINEA)
 
     por_seccion = {s.id: s for s in secciones}
+    escritor = None
+    if insumos is not None:
+        from fpa.servicios.exportar_variance_formulas import (
+            EscritorDeFormulas,
+            escribir_hojas_auxiliares,
+            escribir_parametros,
+        )
+
+        filas_de: dict[int, int] = {}
+        siguiente = encabezado2 + 1
+        previa: int | None = -1
+        for linea in lineas:
+            if linea.seccion_id != previa:
+                previa = linea.seccion_id
+                if linea.seccion_id is not None and linea.seccion_id in por_seccion:
+                    siguiente += 1
+            filas_de[linea.id] = siguiente
+            siguiente += 1
+        escribir_parametros(hoja, periodo, insumos.inicio_ytd)
+        rangos = escribir_hojas_auxiliares(libro, lineas, filas_de, insumos)
+        escritor = EscritorDeFormulas(hoja, filas_de, insumos, rangos, resultado, capturadas)
     fila = encabezado2 + 1
     ultima_seccion: int | None = -1
     for linea in lineas:
@@ -156,9 +193,12 @@ def generar_excel(
         if linea.codigo_corporativo:
             escribir_texto(hoja, fila, 1, linea.codigo_corporativo)
         escribir_texto(hoja, fila, 2, linea.descripcion)
-        _cifras(hoja, fila, 3, r.mes, calculada or linea.id in capturadas)
-        _cifras(hoja, fila, 8, r.ytd, calculada)
-        _cifras(hoja, fila, 13, r.anual, calculada)
+        if escritor is not None:
+            escritor.escribir(linea, calculada)
+        else:
+            _cifras(hoja, fila, 3, r.mes, calculada or linea.id in capturadas)
+            _cifras(hoja, fila, 8, r.ytd, calculada)
+            _cifras(hoja, fila, 13, r.anual, calculada)
         if linea.tipo in ("total", "subtotal"):
             for columna in range(1, 17):
                 celda = hoja.cell(row=fila, column=columna)
@@ -187,6 +227,7 @@ def generar_excel(
     notas = libro.create_sheet("Notas")
     renglones = [
         f"Variance de {periodo} · año fiscal {ano_fiscal}",
+        *(_NOTAS_FORMULAS if insumos is not None else []),
         f"Mapeo de cuentas: versión {version_mapeo}",
         f"Budget: versión {version_budget}" if version_budget is not None else "Budget: ninguno",
         "Variación favorable = positiva. Ingresos y utilidades: real - presupuesto; gastos: "

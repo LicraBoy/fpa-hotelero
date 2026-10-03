@@ -549,7 +549,10 @@ export interface paths {
         };
         /**
          * Exportar
-         * @description Descarga el Variance en Excel con los filtros de la pantalla; queda en la bitácora.
+         * @description Descarga el Variance completo en Excel, con fórmulas vivas; queda en la bitácora.
+         *
+         *     Los filtros de la pantalla (`seccion_id`, `tipo`, `q`) se aceptan por compatibilidad pero se
+         *     ignoran: las fórmulas de los totales necesitan todas sus partes.
          */
         get: operations["exportar_api_v1_hoteles__hotel_id__variance_exportar_get"];
         put?: never;

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 from conftest import Mundo, como
+from evaluador_formulas import Evaluador
 from fastapi.testclient import TestClient
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
@@ -36,12 +37,21 @@ def _libro(contenido: bytes) -> Worksheet:
     return load_workbook(io.BytesIO(contenido))["Variance"]
 
 
-def _filas_de_datos(hoja: Worksheet) -> list[tuple]:  # type: ignore[type-arg]
-    """(código, descripción, 12 cifras) de cada fila con datos (después de los encabezados)."""
+def _filas_de_datos(hoja: Worksheet, ev: Evaluador | None = None) -> list[tuple]:  # type: ignore[type-arg]
+    """(código, descripción, 12 cifras) de cada fila con datos (después de los encabezados).
+
+    Con `ev`, las celdas con fórmula se recalculan (el libro de la API trae fórmulas vivas).
+    """
     salida = []
-    for fila in hoja.iter_rows(min_row=6, values_only=True):
-        cifras = [fila[i] for i in (2, 3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15)]
-        salida.append((fila[0], fila[1], cifras))
+    for fila in hoja.iter_rows(min_row=6):
+        cifras = []
+        for i in (2, 3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15):
+            celda = fila[i]
+            if ev is not None and celda.data_type == "f":
+                cifras.append(ev.numero(hoja.title, celda.column, celda.row))
+            else:
+                cifras.append(celda.value)
+        salida.append((fila[0].value, fila[1].value, cifras))
     return salida
 
 
@@ -126,8 +136,9 @@ def test_el_excel_se_descarga_y_cada_cifra_coincide_con_la_pantalla(
     pantalla = cliente.get(
         f"/api/v1/hoteles/{mundo.hotel_a}/variance?periodo=2026-08", headers=como(ANALISTA)
     ).json()
-    hoja = _libro(r.content)
-    filas = [f for f in _filas_de_datos(hoja) if f[1] is not None]
+    wb = load_workbook(io.BytesIO(r.content))
+    hoja = wb["Variance"]
+    filas = [f for f in _filas_de_datos(hoja, Evaluador(wb)) if f[1] is not None]
     assert [f[1] for f in filas] == [x["descripcion"] for x in pantalla["lineas"]]
     for fila, linea in zip(filas, pantalla["lineas"], strict=True):
         esperado = [
@@ -151,7 +162,7 @@ def test_formato_del_libro(cliente: TestClient, mundo: Mundo, db: Session) -> No
     _preparar(db, mundo)
     r = _exportar(cliente, mundo)
     libro = load_workbook(io.BytesIO(r.content))
-    assert libro.sheetnames == ["Variance", "Notas"]
+    assert libro.sheetnames == ["Variance", "Saldos", "Mapeo", "Budget", "Capturas", "Notas"]
     hoja = libro["Variance"]
     assert hoja["A1"].value == "Hotel A - Variance 2026-08"
     assert [hoja.cell(row=4, column=c).value for c in (1, 2, 3, 7, 8, 12, 13)] == [
@@ -181,14 +192,16 @@ def test_formato_del_libro(cliente: TestClient, mundo: Mundo, db: Session) -> No
     assert any("Mapeo de cuentas: versión" in n for n in notas)
 
 
-def test_los_filtros_de_la_pantalla_aplican_al_excel(
+def test_los_filtros_de_la_pantalla_no_recortan_el_excel(
     cliente: TestClient, mundo: Mundo, db: Session
 ) -> None:
     _preparar(db, mundo)
-    r = _exportar(cliente, mundo, extra="&tipo=total")
-    assert [f[1] for f in _filas_de_datos(_libro(r.content)) if f[1]] == ["Total"]
-    r = _exportar(cliente, mundo, extra="&q=gasto")
-    assert [f[1] for f in _filas_de_datos(_libro(r.content)) if f[1]] == ["Gasto"]
+    completo = [f[1] for f in _filas_de_datos(_libro(_exportar(cliente, mundo).content)) if f[1]]
+    assert completo[-3:] == ["Ingreso", "Gasto", "Total"]
+    # el Excel lleva fórmulas que necesitan todas sus partes: los filtros no lo recortan
+    for extra in ("&tipo=total", "&q=gasto"):
+        r = _exportar(cliente, mundo, extra=extra)
+        assert [f[1] for f in _filas_de_datos(_libro(r.content)) if f[1]] == completo
 
 
 def test_permisos_aislamiento_y_bitacora(cliente: TestClient, mundo: Mundo, db: Session) -> None:

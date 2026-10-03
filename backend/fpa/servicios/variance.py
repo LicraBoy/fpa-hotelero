@@ -9,12 +9,14 @@ from sqlalchemy.orm import Session
 
 from fpa.calculo.ano_fiscal import MES_INICIO_POR_DEFECTO, etiqueta_ano_fiscal, periodos_ytd
 from fpa.calculo.motor import Cifras, LineaVariance, armar_variance
+from fpa.calculo.totales import Coeficiente
 from fpa.calculo.variance import Convencion, LineaParaConvencion, deducir_convenciones
 from fpa.modelos.plan import TIPO_BUDGET, LineaPlanMensual, VersionPlan
 from fpa.modelos.reporte import LineaReporte
 from fpa.repositorios.mapeo import RepositorioMapeo
 from fpa.repositorios.plan import RepositorioPlan
 from fpa.repositorios.reporte import RepositorioReporte
+from fpa.repositorios.saldos import RepositorioSaldos
 from fpa.servicios.actual import actual_del_periodo, actual_ytd_del_periodo, version_de_mapeo
 from fpa.servicios.convenciones_linea import convenciones_por_bloque
 from fpa.servicios.reglas_suma import lineas_aditivas, reglas_como_mapa
@@ -37,6 +39,26 @@ class SeccionReporte:
     linea_total_id: int | None
 
 
+@dataclass(frozen=True)
+class InsumosFormulas:
+    """Todo lo que el motor usó para calcular, para que el Excel exportado lo vuelva a calcular
+    con fórmulas vivas (hoja por hoja: Saldos, Mapeo, Budget, Capturas)."""
+
+    cuentas: dict[int, list[tuple[str, int]]]  # línea -> [(cuenta, signo)]
+    reglas: dict[int, list[tuple[int, Coeficiente]]]  # línea -> [(componente, coeficiente)]
+    aditivas: frozenset[int]
+    detalle_con_regla: frozenset[int]
+    sentidos: dict[str, dict[int, Convencion]]  # bloque -> línea -> sentido de la Variación
+    compuestas: dict[str, dict[int, list[tuple[int, int]]]]  # bloque -> línea -> [(línea, signo)]
+    saldos: dict[tuple[str, str], Decimal]  # (cuenta, periodo) -> neto
+    capturas: list[tuple[int, str, Decimal]]  # (línea, periodo, importe) capturados
+    budget_mensual: dict[tuple[int, str], Decimal] | None  # None: el Budget no viene mes a mes
+    budget_anual: dict[int, Decimal]
+    no_se_acumulan: frozenset[int]  # su acumulado es un promedio (el tipo de cambio)
+    meses_ytd: int
+    inicio_ytd: str  # primer mes del año fiscal hasta el periodo (AAAA-MM)
+
+
 @dataclass
 class ReporteVariance:
     hotel_id: int
@@ -51,6 +73,7 @@ class ReporteVariance:
     secciones: list[SeccionReporte] = field(default_factory=list)
     capturadas: frozenset[int] = frozenset()  # líneas informativas con Actual capturado (mes)
     advertencias: list[str] = field(default_factory=list)
+    insumos: InsumosFormulas | None = None
 
 
 def _plan(
@@ -140,6 +163,7 @@ def calcular_variance(
     version_plan_id: int | None = None,
     mes_inicio: int = MES_INICIO_POR_DEFECTO,
     excepciones: dict[int, Convencion] | None = None,
+    con_insumos: bool = False,
 ) -> ReporteVariance:
     """Reporte Variance del `periodo` (`AAAA-MM`) para un hotel.
 
@@ -191,6 +215,7 @@ def calcular_variance(
     b_mes: dict[int, Decimal] | None = None
     b_ytd: dict[int, Decimal] | None = None
     b_anual: dict[int, Decimal] | None = None
+    mensuales: list[LineaPlanMensual] = []
     if plan is None:
         advertencias.append("No hay Budget para este año fiscal: no se calcula el Variance")
     else:
@@ -287,6 +312,46 @@ def calcular_variance(
             mes=linea_id not in capturados,
             acumulado=linea_id not in meses_capturados,
         )
+    insumos = None
+    if con_insumos:
+        repo_saldos = RepositorioSaldos(db, hotel_id)
+        con_datos = set(repo_saldos.periodos())
+        usadas = {c for cs in cuentas.values() for c, _ in cs}
+        saldos = {
+            (s.cuenta_codigo, p): s.neto
+            for p in periodos_del_ytd
+            if p in con_datos
+            for s in repo_saldos.del_periodo(p)
+            if s.cuenta_codigo in usadas
+        }
+        insumos = InsumosFormulas(
+            cuentas=cuentas,
+            reglas={k: list(v) for k, v in reglas.items()},
+            aditivas=frozenset(aditivas),
+            detalle_con_regla=detalle_con_regla,
+            sentidos={
+                b: {x.id: por_bloque.get(b, {}).get(x.id) or convenciones[x.id] for x in lineas}
+                for b in ("mes", "ytd", "anual")
+            },
+            compuestas={b: {k: list(v) for k, v in d.items()} for b, d in compuestas.items()},
+            saldos=saldos,
+            capturas=[
+                (x.linea_id, x.periodo, x.importe)
+                for x in RepositorioPlan(db, hotel_id).capturados(
+                    mapeo.version_estructura_id, periodos_del_ytd
+                )
+                if x.linea_id not in cuentas and x.linea_id not in reglas
+            ],
+            budget_mensual=(
+                {(f.linea_id, f.periodo): f.importe for f in mensuales}
+                if plan is not None and mensuales
+                else None
+            ),
+            budget_anual=b_anual or {},
+            no_se_acumulan=frozenset(no_se_acumulan),
+            meses_ytd=len(periodos_del_ytd),
+            inicio_ytd=periodos_del_ytd[0],
+        )
     return ReporteVariance(
         hotel_id=hotel_id,
         periodo=periodo,
@@ -300,4 +365,5 @@ def calcular_variance(
         secciones=secciones,
         capturadas=frozenset(capturados),
         advertencias=advertencias,
+        insumos=insumos,
     )

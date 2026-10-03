@@ -148,7 +148,7 @@ test('"Exportar a Excel" descarga un libro cuyas cifras son las de la pantalla',
   expect((await celdas(page, 'Room Revenue')).slice(0, 4)).toEqual(['1,000.00', '900.00', '100.00', '11.1%'])
 })
 
-test('con un filtro, el Excel trae solo lo que muestra la pantalla', async ({ page }, info) => {
+test('con un filtro, el Excel igual trae el reporte completo (sus fórmulas necesitan todas las partes)', async ({ page }, info) => {
   await abrirVariance(page)
   await page.getByLabel('Solo totales y subtotales').check()
   await expect(page.getByRole('rowheader', { name: 'Room Revenue' })).toHaveCount(0)
@@ -165,11 +165,8 @@ test('con un filtro, el Excel trae solo lo que muestra la pantalla', async ({ pa
       encoding: 'utf8',
     }),
   )
-  expect(filas.map((f) => f.descripcion).filter((d) => !['Revenue', 'Expenses'].includes(d))).toEqual([
-    'Total Revenue',
-    'Total Expenses',
-    'Net Profit',
-  ])
+  const descripciones = filas.map((f) => f.descripcion)
+  expect(descripciones).toEqual(expect.arrayContaining(['Room Revenue', 'Salaries', 'Total Revenue', 'Net Profit']))
 })
 
 test('sin permiso para ver el reporte no hay botón de exportar', async ({ page }) => {

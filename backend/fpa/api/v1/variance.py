@@ -228,7 +228,11 @@ def exportar(
     q: Annotated[str | None, Query(max_length=100)] = None,
     db: Session = Depends(get_db),
 ) -> Response:
-    """Descarga el Variance en Excel con los filtros de la pantalla; queda en la bitácora."""
+    """Descarga el Variance completo en Excel, con fórmulas vivas; queda en la bitácora.
+
+    Los filtros de la pantalla (`seccion_id`, `tipo`, `q`) se aceptan por compatibilidad pero se
+    ignoran: las fórmulas de los totales necesitan todas sus partes.
+    """
     try:
         r = calcular_variance(
             db,
@@ -236,6 +240,7 @@ def exportar(
             periodo=periodo,
             version_mapeo_id=version_mapeo_id,
             version_plan_id=version_plan_id,
+            con_insumos=True,
         )
     except LookupError as e:
         raise HTTPException(
@@ -243,7 +248,7 @@ def exportar(
         ) from None
     except PlanIncompatible as e:
         raise HTTPException(status_code=409, detail=str(e)) from None
-    lineas = [x for x in r.lineas if _pasa(x, seccion_id, tipo, q)]
+    lineas = r.lineas
     hotel = db.get(Hotel, contexto.hotel_id)
     contenido = generar_excel(
         hotel=hotel.nombre if hotel else f"Hotel {contexto.hotel_id}",
@@ -257,6 +262,7 @@ def exportar(
         version_mapeo=r.version_mapeo_id,
         version_budget=r.version_plan_id,
         periodos_ytd=r.periodos_ytd,
+        insumos=r.insumos,
     )
     auditar(
         db,

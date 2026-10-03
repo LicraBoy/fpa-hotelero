@@ -59,7 +59,7 @@ Haz cada tarea y compara con la última columna. Si en tu pantalla sale otra cos
 | 8 | Hacer clic en la cuenta y luego en **Cargar más** hasta que ya no aparezca | Los movimientos suman el total de la cuenta. Al final dice **Cuadra con el neto de la cuenta** |
 | 9 | Hacer clic en el número de un **asiento** | Se ven todas sus líneas. Puede decir "Solo cuentas de resultados": es normal, el reporte solo trae esas |
 | 10 | Hacer clic en un **total** (por ejemplo *Total Maid & Linen*) y bajar por sus partes | Cada nivel suma lo del nivel de arriba |
-| 11 | Pulsar **Exportar a Excel** | Se descarga un `.xlsx` con el mismo formato que la hoja `Ago` y las mismas cifras que la pantalla |
+| 11 | Pulsar **Exportar a Excel** | Se descarga un `.xlsx` con el formato de la hoja `Ago` **y con fórmulas vivas**: haz clic en un Actual y verás `SUMIFS` sobre la hoja `Mapeo` (cuentas y signos), en un total la suma de sus partes, y en Var y % las fórmulas del Excel. Hojas extra: `Saldos`, `Mapeo`, `Budget`, `Capturas`. Siempre es el reporte completo (no aplica los filtros de la pantalla) |
 
 **Si te sobra tiempo:** cambia el mes a **2026-07** (julio se compara contra la hoja `Jul-Ago` de tu
 Excel) y entra como **Dirección** (ve el reporte, pero no el detalle) y como **Responsable de área**
