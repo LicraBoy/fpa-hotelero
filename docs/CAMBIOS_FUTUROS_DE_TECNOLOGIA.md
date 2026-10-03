@@ -51,3 +51,8 @@ Estados: `[DECIDIDO]` ya definido · `[PROPUESTA]` recomendación técnica · `[
 
 ## 4. Regla para el equipo
 Antes de cambiar cualquiera de estas piezas: (1) se habla con TI/Contraloría, (2) se registra la decisión en `docs/adr/`, (3) se actualiza este documento y `docs/ESTADO_DEL_PROYECTO.md`.
+
+## 5. Fórmulas y reglas de negocio (no son tecnología, pero no deben perderse)
+Las fórmulas de Variación, %, Actual, Budget y tipo de cambio de la sub-fase 4.12 están registradas en
+`docs/FORMULAS_Y_REGLAS_DEL_VARIANCE.md`. Cualquier cambio de motor, de base de datos o de lector de Excel debe
+conservar esos resultados (las pruebas doradas de Mazatlán los protegen).
