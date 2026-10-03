@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from test_budget import importar_reporte, libro_con_budget
 
 from fpa.calculo.variance import Convencion, variance, variance_pct
+from fpa.datos_reales import archivo_real
 from fpa.ingesta.variance_convenciones import (
     HOJA,
     leer_convenciones,
@@ -111,7 +112,7 @@ def test_el_porcentaje_del_excel_equivale_a_la_regla_del_motor() -> None:
 
 # --- Contra el Excel real (se salta si no está) -------------------------------------------------
 
-_REAL = Path(__file__).resolve().parents[2] / "docs" / "adr" / "02. MZT August 2026 Variance.xlsx"
+_REAL = archivo_real("02. MZT August 2026 Variance.xlsx")
 
 
 @pytest.mark.skipif(not _REAL.exists(), reason="El Excel de la Variación no está disponible")

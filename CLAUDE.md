@@ -38,7 +38,7 @@ Plataforma SaaS de FP&A para hoteles, independiente de PMS/ERP/POS. Primer hotel
 Carpeta: `C:\Users\mzamora\Desktop\PLATAFORMA FP&A E INTELIGENCIA HOTELERA\`. No copiar nada de ahí al repositorio.
 - `BASE DATOS.xlsx` — reporte CON130 de Novohit, septiembre 2026 (7,242 movimientos, 366 cuentas, Débito = Crédito = 57,835,193.08).
 - `02. VT August 2026 Variance (Envio) (1).xlsx` — Variance de agosto 2026 de **Puerto Vallarta** (hasta la 4.8 se creyó de Mazatlán): hoy solo **regresión del formato VT**.
-- `docs/adr/02. MZT August 2026 Variance (Envio).xlsx` — Variance de **Mazatlán** (julio y agosto 2026): **prueba dorada del MVP** desde la 4.9 (`.xlsx` no se versiona; recomendado moverlo fuera del repositorio).
+- `02. MZT August 2026 Variance (Envio).xlsx` (los Excel reales viven fuera del repo, en `FPA_DATOS_REALES` o `Desktop/PLATAFORMA FP&A E INTELIGENCIA HOTELERA`; ver `fpa/datos_reales.py`) — Variance de **Mazatlán** (julio y agosto 2026): **prueba dorada del MVP** desde la 4.9 (`.xlsx` no se versiona; recomendado moverlo fuera del repositorio).
 - `Prompt_Integracion_Variance.docx` — los 14 pasos manuales que la plataforma reemplaza.
 
 ## Código existente

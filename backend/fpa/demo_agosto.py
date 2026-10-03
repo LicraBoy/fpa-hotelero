@@ -6,7 +6,7 @@ Uso (desde backend/, con la base ya migrada: `iniciar_servidores.bat` lo hace):
     .venv\\Scripts\\python -m fpa.demo_agosto --datos "C:\\ruta\\a\\la\\carpeta\\de\\datos"
 
 La carpeta debe traer el Excel del Variance de **Mazatlán** (`02. MZT August 2026 Variance
-(Envio).xlsx`; también se busca en `docs/adr/`) y, opcionalmente, `Catalogo de cuentas.xls` (da
+(Envio).xlsx`) y, opcionalmente, `Catalogo de cuentas.xls` (da
 nombre a las cuentas del desglose). Con `--archivo` se usa otro (p. ej. el de Vallarta, que se
 detecta solo). Hace lo mismo que un analista y un contralor por la interfaz: carga los movimientos
 de julio y agosto, importa la estructura, las reglas de suma y el mapeo, **excluye a propósito y
@@ -68,7 +68,6 @@ CATALOGO = "Catalogo de cuentas.xls"
 BUDGET_ANUAL = "Budget MZT 26-27.xlsx"  # el Budget de los 12 meses del año fiscal y su total
 PERIODO_CORTE = "2026-08"
 PERIODOS = ["2026-07", "2026-08"]
-DOCS_ADR = Path(__file__).resolve().parents[2] / "docs" / "adr"
 MOTIVO = MOTIVO_NO_SE_OCUPAN  # Contraloría: estas cuentas todavía no se ocupan
 
 
@@ -87,8 +86,6 @@ def cargar_demo(carpeta: Path, imprimir=print, archivo_excel: str = EXCEL) -> No
             "la base y usa la identidad de desarrollo."
         )
     excel = carpeta / archivo_excel
-    if not excel.exists() and (DOCS_ADR / archivo_excel).exists():
-        excel = DOCS_ADR / archivo_excel
     if not excel.exists():
         raise SystemExit(f"No encuentro {archivo_excel} en {carpeta}")
     sha = _sha256(excel)
@@ -199,9 +196,7 @@ def cargar_demo(carpeta: Path, imprimir=print, archivo_excel: str = EXCEL) -> No
             for c in sorted(sin_linea.values(), key=lambda x: -abs(x.neto)):
                 imprimir(f"  {c.cuenta_codigo}  {c.neto:>16,.2f}  {c.descripcion or ''}")
 
-        presupuesto = next(
-            (p for p in (carpeta / BUDGET_ANUAL, DOCS_ADR / BUDGET_ANUAL) if p.exists()), None
-        )
+        presupuesto = next((p for p in (carpeta / BUDGET_ANUAL,) if p.exists()), None)
         if lectura.formato is Formato.MZT and presupuesto is not None:
             # El Budget de todo el año fiscal (12 meses + anual) manda sobre el pegado en el Excel
             alineado = alinear_con_lineas(
@@ -275,9 +270,7 @@ def cargar_demo(carpeta: Path, imprimir=print, archivo_excel: str = EXCEL) -> No
             imprimir(f"Actual capturado del Excel de Contraloría: {capturados} valores")
 
         if lectura.formato is Formato.MZT:
-            variacion = next(
-                (p for p in (carpeta / VARIACION, DOCS_ADR / VARIACION) if p.exists()), None
-            )
+            variacion = next((p for p in (carpeta / VARIACION,) if p.exists()), None)
             if variacion is not None:
                 celdas, _sin = importar_convenciones(
                     db,

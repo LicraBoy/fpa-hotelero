@@ -5,7 +5,7 @@
 ## Fase actual
 **Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: sub-fases 2.1 a 2.6 HECHAS; falta la aprobación de Contraloría** (ver Pendientes). **Fase 3 — Motor de Variance: sub-fases 3.1 a 3.7 hechas** (la prueba dorada de Vallarta tiene 19 excepciones documentadas; la de **Mazatlán**, 12 en el Actual y 27 en la Variación; septiembre sin referencia de Contraloría todavía).
 
-> **Corrección importante (02-oct-2026, sub-fase 4.9):** el Excel con el que se construyó y probó todo hasta la 4.8 (`02. VT August 2026 Variance (Envio) (1).xlsx`) **era el de Puerto Vallarta**, no el de Mazatlán. Contraloría compartió el de Mazatlán (`docs/adr/02. MZT August 2026 Variance (Envio).xlsx`) y la plataforma se adaptó a él: la guía, la demostración, la prueba dorada y las pruebas de navegador usan ahora **Mazatlán**. El archivo de Vallarta queda solo como **regresión de formato** (segundo hotel de prueba). Las preguntas sobre `4002013` y `4003003` eran de Vallarta y se retiraron.
+> **Corrección importante (02-oct-2026, sub-fase 4.9):** el Excel con el que se construyó y probó todo hasta la 4.8 (`02. VT August 2026 Variance (Envio) (1).xlsx`) **era el de Puerto Vallarta**, no el de Mazatlán. Contraloría compartió el de Mazatlán (`02. MZT August 2026 Variance (Envio).xlsx` (carpeta de datos reales, fuera del repo)) y la plataforma se adaptó a él: la guía, la demostración, la prueba dorada y las pruebas de navegador usan ahora **Mazatlán**. El archivo de Vallarta queda solo como **regresión de formato** (segundo hotel de prueba). Las preguntas sobre `4002013` y `4003003` eran de Vallarta y se retiraron.
 
 ## Avance por fase
 | Fase | Estado |
@@ -162,6 +162,7 @@
 - La prueba de migración en PostgreSQL existe pero se salta: no hay PostgreSQL disponible en esta máquina.
 - Advertencia conocida de Starlette sobre `httpx` en las pruebas (no afecta).
 - El Blueprint en `docs/` contiene cifras agregadas de Torres; si el repositorio se comparte fuera de la empresa, revisar antes.
+- Los Excel reales ya no están en `docs/`: viven en la carpeta de datos reales (`FPA_DATOS_REALES`; por omisión `Desktop/PLATAFORMA FP&A E INTELIGENCIA HOTELERA`), y `.gitignore` los excluye.
 - Si `iniciar_servidores.bat` ya estaba abierto antes de la 1.0, hay que cerrarlo y volver a abrirlo para que aplique `FPA_ENTORNO=desarrollo`; sin eso la API responde 401.
 
 ## Preguntas abiertas

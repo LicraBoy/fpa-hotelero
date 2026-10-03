@@ -21,7 +21,7 @@ EXCEL_VT = "02. VT August 2026 Variance (Envio) (1).xlsx"
 
 
 def _hay(nombre: str) -> bool:
-    return (_CARPETA / nombre).exists() or (demo_agosto.DOCS_ADR / nombre).exists()
+    return (_CARPETA / nombre).exists()
 
 
 def test_se_niega_a_correr_fuera_de_desarrollo(

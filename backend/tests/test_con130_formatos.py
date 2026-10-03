@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from fpa.config import settings
+from fpa.datos_reales import archivo_real
 from fpa.ingesta.novohit_con130 import leer_con130
 from fpa.ingesta.tabla_cruda import formato_por_contenido
 from fpa.modelos import CargaArchivo
@@ -352,19 +353,8 @@ def test_un_movimiento_de_importe_cero_entra_como_aviso_en_xls_y_csv(tmp_path: P
         assert len(r.movimientos) == 4 and len(r.avisos) == 1
 
 
-_REAL = next(
-    (
-        p
-        for p in (
-            Path.home()
-            / "Desktop"
-            / "PLATAFORMA FP&A E INTELIGENCIA HOTELERA"
-            / "SEPTIEMBRE 2026.xls",
-            Path(__file__).resolve().parents[2] / "docs" / "SEPTIEMBRE 2026.xls",
-        )
-        if p.exists()
-    ),
-    None,
+_REAL = (
+    archivo_real("SEPTIEMBRE 2026.xls") if archivo_real("SEPTIEMBRE 2026.xls").exists() else None
 )
 
 

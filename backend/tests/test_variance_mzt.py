@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from fpa.datos_reales import archivo_real
 from fpa.ingesta.formato_variance import (
     Formato,
     detectar_formato,
@@ -81,12 +82,7 @@ def test_valores_mensuales_incluyen_tipo_de_cambio(hojas: HojasMzt) -> None:
     assert val["2026-07"][14].budget == Decimal("45")
 
 
-REAL = (
-    Path(__file__).resolve().parents[2]
-    / "docs"
-    / "adr"
-    / "02. MZT August 2026 Variance (Envio).xlsx"
-)
+REAL = archivo_real("02. MZT August 2026 Variance (Envio).xlsx")
 
 
 @pytest.mark.skipif(not REAL.exists(), reason="Excel real de Mazatlán no disponible")

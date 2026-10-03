@@ -11,6 +11,7 @@ from openpyxl import Workbook
 from sqlalchemy.orm import Session
 from test_mzt_integracion import Libro
 
+from fpa.datos_reales import archivo_real
 from fpa.ingesta.budget_anual_mzt import (
     HOJA,
     alinear_con_lineas,
@@ -209,13 +210,8 @@ def test_la_api_rechaza_un_budget_anual_sin_estructura(
 
 # --- Archivo real (se salta si no está) ---------------------------------------------------------
 
-_REAL = Path(__file__).resolve().parents[2] / "docs" / "adr" / "Budget MZT 26-27.xlsx"
-_ENVIO = (
-    Path(__file__).resolve().parents[2]
-    / "docs"
-    / "adr"
-    / "02. MZT August 2026 Variance (Envio).xlsx"
-)
+_REAL = archivo_real("Budget MZT 26-27.xlsx")
+_ENVIO = archivo_real("02. MZT August 2026 Variance (Envio).xlsx")
 
 
 @pytest.mark.skipif(not (_REAL.exists() and _ENVIO.exists()), reason="Faltan los Excel reales")

@@ -12,11 +12,8 @@ import { join, resolve } from 'node:path'
 const CARPETA =
   process.env.FPA_DATOS_REALES ?? join(homedir(), 'Desktop', 'PLATAFORMA FP&A E INTELIGENCIA HOTELERA')
 const NOMBRE = '02. MZT August 2026 Variance (Envio).xlsx'
-const EN_REPO = resolve('../docs/adr', NOMBRE)
-const EXCEL = existsSync(join(CARPETA, NOMBRE)) ? join(CARPETA, NOMBRE) : EN_REPO
-const VARIACION = existsSync(join(CARPETA, '02. MZT August 2026 Variance.xlsx'))
-  ? join(CARPETA, '02. MZT August 2026 Variance.xlsx')
-  : resolve('../docs/adr/02. MZT August 2026 Variance.xlsx')
+const EXCEL = join(CARPETA, NOMBRE)
+const VARIACION = join(CARPETA, '02. MZT August 2026 Variance.xlsx')
 const GOLDEN = resolve('e2e/archivos/golden_real.json')
 const hayDatos = existsSync(EXCEL) && existsSync(GOLDEN)
 

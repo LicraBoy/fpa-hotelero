@@ -34,11 +34,7 @@ _CARPETA = Path(
     )
 )
 EXCEL = next(
-    (
-        p
-        for p in (_CARPETA / demo_agosto.EXCEL, demo_agosto.DOCS_ADR / demo_agosto.EXCEL)
-        if p.exists()
-    ),
+    (p for p in (_CARPETA / demo_agosto.EXCEL,) if p.exists()),
     None,
 )
 pytestmark = pytest.mark.skipif(EXCEL is None, reason="No está el Excel real de Mazatlán")
@@ -235,7 +231,7 @@ def test_variance_y_porcentaje_coinciden_salvo_las_excepciones(
 
 
 @pytest.mark.skipif(
-    not (demo_agosto.DOCS_ADR / demo_agosto.BUDGET_ANUAL).exists(),
+    not (_CARPETA / demo_agosto.BUDGET_ANUAL).exists(),
     reason="No está el Budget del año fiscal",
 )
 def test_el_presupuesto_anual_y_septiembre_salen_del_budget_del_ano(
@@ -248,7 +244,7 @@ def test_el_presupuesto_anual_y_septiembre_salen_del_budget_del_ano(
     renta = next(r.resultado[x.id] for x in r.lineas if x.fila_origen == 12)
     assert renta.mes.budget == D("6665.274")  # septiembre: tal cual el archivo
     assert renta.anual.budget is not None
-    leido = leer_budget_anual(demo_agosto.DOCS_ADR / demo_agosto.BUDGET_ANUAL)
+    leido = leer_budget_anual(_CARPETA / demo_agosto.BUDGET_ANUAL)
     fila12 = next(f for f in leido.filas if f.fila == 12)
     assert fila12.total is not None and abs(renta.anual.budget - fila12.total) <= D("0.01")
     # el acumulado de septiembre suma los tres meses del Budget

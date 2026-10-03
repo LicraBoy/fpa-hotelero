@@ -225,9 +225,7 @@ def golden_real(destino: Path) -> None:
     )
     nombre = "02. MZT August 2026 Variance (Envio).xlsx"
     salida = destino / "golden_real.json"
-    excel = next(
-        (p for p in (carpeta / nombre, RAIZ_REPO / "docs" / "adr" / nombre) if p.exists()), None
-    )
+    excel = next((p for p in (carpeta / nombre,) if p.exists()), None)
     if excel is None:
         salida.unlink(missing_ok=True)
         return
