@@ -77,7 +77,7 @@ Nada de esto está fijo en el código: casi todo se vuelve a leer del Excel de C
 | Sentido de la Variación de una línea (Presupuesto−Actual o al revés) | Subir el Excel de Variance actualizado a `POST /hoteles/{id}/reporte/convenciones` | Tabla `convencion_linea` (se reemplaza; auditado) |
 | Qué cuentas o líneas suma una línea, o un coeficiente (p. ej. 16 %) | Importar de nuevo el Excel con las fórmulas (`reporte/importar`): se leen las referencias de `Jul-Ago` | Nueva versión de la estructura y de las reglas de suma |
 | Vincular una cuenta a otra línea, o dejar de omitir una de las 6 | Nueva versión del mapeo y su aprobación; el motivo de omisión se cambia con `fpa.mapeo_omitir` | Mapeo versionado (la anterior se conserva) |
-| Fórmula del % | Editar `calculo/variance.py::variance_pct` y actualizar `test_variance.py` (único lugar con código) | Código + pruebas |
+| Fórmula del % | Editar `calculo/variance.py::variance_pct` y actualizar `test_variance_calculo.py` (único lugar con código) | Código + pruebas |
 | Budget de un año fiscal nuevo | Pestaña Budget → importar el Excel (el título `FY 27/28` define los 12 meses) | Versión nueva de Budget |
 | Una cifra de Actual sin cuentas | Capturarla en la pestaña Budget (o importar el Excel del Envio) | `valor_capturado`, auditado |
 | Tipo de cambio de un mes | Pestaña Budget, fila Exchange Rate | `valor_capturado` |
