@@ -98,7 +98,11 @@ test('las migas de pan regresan al reporte', async ({ page }) => {
   await page.goto('/#/variance/2026-08/cuenta/6009001.001?bloque=mes')
   await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Analista' })
   await expect(page.getByRole('heading', { name: /Movimientos de 6009001\.001/ })).toBeVisible()
-  await page.getByRole('navigation', { name: 'Ruta de navegación' }).getByRole('link', { name: /Variance 2026-08/ }).click()
+  await page
+    .getByRole('navigation', { name: 'Ruta de navegación' })
+    .getByRole('list')
+    .getByRole('link', { name: /Variance 2026-08/ })
+    .click()
   await expect(page.getByRole('region', { name: 'Tabla de Variance' })).toBeVisible()
 })
 
@@ -122,4 +126,36 @@ test('dirección ve el reporte pero no el desglose (ni por la dirección directa
   await expect(page.getByRole('alert', { name: 'Sin acceso' })).toBeVisible()
   await page.waitForTimeout(300)
   expect(peticiones.filter((p) => p.includes('movimientos') || p.includes('desglose'))).toEqual([])
+})
+
+test('«Volver» regresa un nivel a la vez y la tabla conserva el filtro y la línea de origen', async ({
+  page,
+}) => {
+  await abrirVariance(page)
+  await page.getByLabel('Buscar línea').fill('Salaries')
+  await page.getByRole('link', { name: 'Ver el desglose de Salaries, mes' }).click()
+  await page
+    .getByRole('table', { name: 'Cuentas de la línea' })
+    .getByRole('link', { name: '6009001.001' })
+    .click()
+  // las migas muestran todo el camino y la cuenta recuerda de qué línea venía
+  const migas = page.getByRole('navigation', { name: 'Ruta de navegación' })
+  await expect(migas).toContainText('Salaries')
+  await expect(migas).toContainText('Paso 2 de 3')
+  await page
+    .getByRole('region', { name: 'Movimientos', exact: true })
+    .getByRole('link', { name: '8.1.4' })
+    .click()
+  await expect(page.getByRole('navigation', { name: 'Ruta de navegación' })).toContainText(
+    'Cuenta 6009001.001',
+  )
+
+  // asiento -> cuenta -> línea -> Variance
+  await page.getByRole('link', { name: /Volver a la cuenta 6009001\.001/ }).click()
+  await expect(page.getByRole('heading', { name: /Movimientos de 6009001\.001/ })).toBeVisible()
+  await page.getByRole('link', { name: /Volver a Salaries/ }).click()
+  await expect(page.getByRole('heading', { name: /Desglose: Salaries/ })).toBeVisible()
+  await page.getByRole('link', { name: /Volver a Variance 2026-08/ }).click()
+  await expect(page.getByLabel('Buscar línea')).toHaveValue('Salaries')
+  await expect(page.locator('tr.fila-origen')).toContainText('Salaries')
 })

@@ -721,6 +721,34 @@ input[type='file'] {
   color: var(--primario);
 }
 
+.boton-volver {
+  display: inline-block;
+  margin-bottom: 0.6rem;
+  padding: 6px 14px;
+  border: 1px solid var(--primario);
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.por-que-cero {
+  margin: 0.75rem 0;
+  padding: 0.6rem 0.9rem;
+  border-left: 4px solid var(--aviso, #b7791f);
+  background: rgba(183, 121, 31, 0.1);
+}
+
+.por-que-cero ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.fila-origen td,
+.fila-origen th {
+  outline: 2px solid var(--primario);
+  outline-offset: -2px;
+}
+
 .migas-bloque {
   margin: 0.2rem 0 0.6rem;
   font-size: 0.8rem;

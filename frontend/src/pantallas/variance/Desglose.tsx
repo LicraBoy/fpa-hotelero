@@ -37,8 +37,17 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
 
   return (
     <section className="tarjeta" aria-labelledby="titulo-desglose">
-      <Migas periodo={periodo} bloque={bloque} actual={d?.descripcion ?? 'Desglose'} />
-      <h2 id="titulo-desglose">Desglose: {d?.descripcion ?? '…'}</h2>
+      <Migas
+        periodo={periodo}
+        bloque={bloque}
+        actual={d?.descripcion ?? 'Desglose'}
+        paso={`Paso 1 de 3 · ${d && d.componentes.length > 0 ? 'Componentes del total' : 'Cuentas de la línea'}`}
+        volver={{ texto: `Variance ${periodo}`, href: construirRuta({ tipo: 'variance', periodo }) }}
+      />
+      <h2 id="titulo-desglose">
+        Desglose: {d?.descripcion ?? '…'}
+        {d?.codigo_corporativo && <span className="codigo suave"> {d.codigo_corporativo}</span>}
+      </h2>
       {datos.cargando && <Cargando />}
       {datos.error && <MensajeError texto={datos.error} />}
       {d && (
@@ -52,6 +61,17 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
             </span>{' '}
             <Insignia tono={cuadra ? 'ok' : 'error'}>{cuadra ? 'Cuadra' : 'No cuadra'}</Insignia>
           </p>
+
+          {d.motivos_cero.length > 0 && (
+            <div className="por-que-cero" role="note" aria-label="Por qué está en 0">
+              <strong>Por qué el Actual está en 0</strong>
+              <ul>
+                {d.motivos_cero.map((m) => (
+                  <li key={m.codigo}>{m.texto}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {d.componentes.length > 0 ? (
             <table className="tabla-simple" aria-label="Componentes del total">
@@ -100,6 +120,7 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
                   <th scope="col" className="num">
                     Movimientos
                   </th>
+                  <th scope="col">Estado</th>
                 </tr>
               </thead>
               <tbody>
@@ -112,6 +133,7 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
                           periodo,
                           codigo: c.cuenta_codigo,
                           bloque,
+                          lineaId,
                         })}
                       >
                         {c.cuenta_codigo}
@@ -122,6 +144,14 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
                     <td className="num">{formatoContable(c.neto)}</td>
                     <td className="num">{formatoContable(c.aporte)}</td>
                     <td className="num">{c.n_movimientos}</td>
+                    <td>
+                      {c.estado === 'sin_movimientos' && (
+                        <Insignia tono="aviso">Sin movimientos en el periodo</Insignia>
+                      )}
+                      {c.estado === 'no_en_catalogo' && (
+                        <Insignia tono="aviso">No está en el catálogo</Insignia>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -131,13 +161,13 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
                     Suma
                   </th>
                   <td className="num">{formatoContable(aTextoPlano(sumaCuentas))}</td>
-                  <td />
+                  <td colSpan={2} />
                 </tr>
               </tfoot>
             </table>
           ) : (
             <p className="suave">
-              Esta línea no tiene cuentas vinculadas ni se calcula como un total: su cifra es cero.
+              Esta línea no tiene cuentas vinculadas ni se calcula como un total.
             </p>
           )}
           <p className="suave nota-pie">

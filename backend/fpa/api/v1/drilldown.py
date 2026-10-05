@@ -52,6 +52,12 @@ class CuentaDesgloseSalida(BaseModel):
     neto: Decimal
     aporte: Decimal
     n_movimientos: int
+    estado: Literal["con_movimientos", "sin_movimientos", "no_en_catalogo"]
+
+
+class MotivoCeroSalida(BaseModel):
+    codigo: str
+    texto: str
 
 
 class ComponenteSalida(BaseModel):
@@ -75,6 +81,8 @@ class DesgloseSalida(BaseModel):
     cuadra: bool
     cuentas: list[CuentaDesgloseSalida]
     componentes: list[ComponenteSalida]
+    codigo_corporativo: str | None
+    motivos_cero: list[MotivoCeroSalida]
 
 
 class MovimientoSalida(BaseModel):
@@ -172,6 +180,8 @@ def desglose(
         cuadra=d.cuadra,
         cuentas=[CuentaDesgloseSalida(**vars(c)) for c in d.cuentas],
         componentes=[ComponenteSalida(**vars(c)) for c in d.componentes],
+        codigo_corporativo=d.codigo_corporativo,
+        motivos_cero=[MotivoCeroSalida(**vars(m)) for m in d.motivos_cero],
     )
 
 

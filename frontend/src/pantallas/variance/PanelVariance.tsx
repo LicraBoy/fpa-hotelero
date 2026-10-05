@@ -15,6 +15,29 @@ import { Desglose } from './Desglose'
 import { Movimientos } from './Movimientos'
 import { LeyendaVariance, TablaVariance } from './TablaVariance'
 
+/** Filtros y plegado de la tabla: viven en `PanelVariance` para sobrevivir al ir y volver del desglose. */
+function useFiltrosVariance() {
+  const [seccionId, setSeccionId] = useState<number | null>(null)
+  const [soloTotales, setSoloTotales] = useState(false)
+  // Por omisión se ocultan las líneas sin Actual ni Presupuesto (con aviso de cuántas son)
+  const [ocultarVacias, setOcultarVacias] = useState(true)
+  const [textoBusqueda, setTextoBusqueda] = useState('')
+  const [plegadas, setPlegadas] = useState<ReadonlySet<number | null>>(new Set())
+  return {
+    seccionId,
+    setSeccionId,
+    soloTotales,
+    setSoloTotales,
+    ocultarVacias,
+    setOcultarVacias,
+    textoBusqueda,
+    setTextoBusqueda,
+    plegadas,
+    setPlegadas,
+  }
+}
+type FiltrosVariance = ReturnType<typeof useFiltrosVariance>
+
 interface Props {
   hotelId: number
   rol: string | undefined
@@ -32,7 +55,13 @@ function sinBudgetEnElMes(lineas: { mes: { budget: string | null } }[]): boolean
 }
 
 /** Pantalla de Variance: el reporte del mes, el acumulado del año fiscal y el Budget anual. */
-function ReporteVariance({ hotelId, rol, alIrABudget }: Props) {
+function ReporteVariance({
+  hotelId,
+  rol,
+  alIrABudget,
+  filtros,
+  lineaOrigen,
+}: Props & { filtros: FiltrosVariance; lineaOrigen: number | null }) {
   const { ruta, navegar } = useRuta()
   const rutaPeriodo = ruta.tipo === 'variance' ? ruta.periodo : null
 
@@ -67,13 +96,19 @@ function ReporteVariance({ hotelId, rol, alIrABudget }: Props) {
   const periodo =
     rutaPeriodo && periodos.includes(rutaPeriodo) ? rutaPeriodo : presupuestos.cargando ? '' : porOmision
 
-  const [seccionId, setSeccionId] = useState<number | null>(null)
-  const [soloTotales, setSoloTotales] = useState(false)
-  // Por omisión se ocultan las líneas sin Actual ni Presupuesto (con aviso de cuántas son)
-  const [ocultarVacias, setOcultarVacias] = useState(true)
-  const [textoBusqueda, setTextoBusqueda] = useState('')
-  const [busqueda, setBusqueda] = useState('')
-  const [plegadas, setPlegadas] = useState<ReadonlySet<number | null>>(new Set())
+  const {
+    seccionId,
+    setSeccionId,
+    soloTotales,
+    setSoloTotales,
+    ocultarVacias,
+    setOcultarVacias,
+    textoBusqueda,
+    setTextoBusqueda,
+    plegadas,
+    setPlegadas,
+  } = filtros
+  const [busqueda, setBusqueda] = useState(textoBusqueda.trim())
   const [exportando, setExportando] = useState(false)
   const [errorExportar, setErrorExportar] = useState<string | null>(null)
 
@@ -157,6 +192,12 @@ function ReporteVariance({ hotelId, rol, alIrABudget }: Props) {
   }
 
   const datos = variance.datos
+  // Al volver del desglose, la línea de la que se venía queda a la vista y resaltada
+  const hayDatos = datos !== null
+  useEffect(() => {
+    if (lineaOrigen === null || !hayDatos) return
+    document.getElementById(`linea-${lineaOrigen}`)?.scrollIntoView({ block: 'center' })
+  }, [lineaOrigen, hayDatos])
   return (
     <section className="tarjeta" aria-labelledby="titulo-variance">
       <h2 id="titulo-variance">Variance</h2>
@@ -328,6 +369,7 @@ function ReporteVariance({ hotelId, rol, alIrABudget }: Props) {
                   plegadas={plegadas}
                   alAlternar={alternar}
                   busqueda={busqueda}
+                  lineaDestacada={lineaOrigen}
                 />
               )}
             </>
@@ -348,9 +390,27 @@ function ReporteVariance({ hotelId, rol, alIrABudget }: Props) {
  */
 export function PanelVariance({ hotelId, rol, alIrABudget }: Props) {
   const { ruta } = useRuta()
+  const filtros = useFiltrosVariance()
+  // Línea del reporte desde la que se bajó al detalle: al volver se resalta en la tabla
+  const [lineaOrigen, setLineaOrigen] = useState<number | null>(null)
+  const lineaDeLaRuta =
+    ruta.tipo === 'desglose'
+      ? ruta.lineaId
+      : ruta.tipo === 'cuenta' || ruta.tipo === 'asiento'
+        ? (ruta.lineaId ?? null)
+        : null
+  if (lineaDeLaRuta !== null && lineaDeLaRuta !== lineaOrigen) setLineaOrigen(lineaDeLaRuta)
   switch (ruta.tipo) {
     case 'variance':
-      return <ReporteVariance hotelId={hotelId} rol={rol} alIrABudget={alIrABudget} />
+      return (
+        <ReporteVariance
+          hotelId={hotelId}
+          rol={rol}
+          alIrABudget={alIrABudget}
+          filtros={filtros}
+          lineaOrigen={lineaOrigen}
+        />
+      )
     case 'desglose':
       return (
         <Desglose
@@ -367,10 +427,20 @@ export function PanelVariance({ hotelId, rol, alIrABudget }: Props) {
           periodo={ruta.periodo}
           codigo={ruta.codigo}
           bloque={ruta.bloque}
+          lineaId={ruta.lineaId}
         />
       )
     case 'asiento':
-      return <AsientoVista hotelId={hotelId} periodo={ruta.periodo} asiento={ruta.asiento} />
+      return (
+        <AsientoVista
+          hotelId={hotelId}
+          periodo={ruta.periodo}
+          asiento={ruta.asiento}
+          cuenta={ruta.cuenta}
+          lineaId={ruta.lineaId}
+          bloque={ruta.bloque}
+        />
+      )
     default:
       return (
         <section className="mensaje mensaje-aviso" role="alert" aria-label="Ruta no válida">

@@ -198,6 +198,40 @@ def test_un_total_se_desglosa_en_sus_componentes(db: Session, mundo: Mundo) -> N
     assert d.cifra == D("350.75") - sum((g.debito for g in GASTOS if g.fecha.month == 8), D("0"))
 
 
+def test_una_linea_con_cifra_no_trae_motivos_de_cero(db: Session, mundo: Mundo) -> None:
+    esc = _preparar(db, mundo)
+    d = desglose_de_linea(
+        db, hotel_id=mundo.hotel_a, periodo="2026-08", linea_id=esc.linea("Gasto"), bloque="mes"
+    )
+    assert d.motivos_cero == []
+    assert [c.estado for c in d.cuentas] == ["con_movimientos"]
+    assert d.codigo_corporativo == "029-0000-2-000"
+
+
+def test_actual_en_cero_porque_el_mes_no_tiene_carga(db: Session, mundo: Mundo) -> None:
+    esc = _preparar(db, mundo)
+    d = desglose_de_linea(
+        db, hotel_id=mundo.hotel_a, periodo="2026-09", linea_id=esc.linea("Gasto"), bloque="mes"
+    )
+    assert d.cifra == D("0")
+    assert [m.codigo for m in d.motivos_cero] == ["mes_sin_carga"]
+    # sigue diciendo qué cuentas usa la línea, aunque no tengan movimientos
+    assert [(c.cuenta_codigo, c.estado) for c in d.cuentas] == [("6009001.001", "sin_movimientos")]
+
+
+def test_actual_en_cero_con_cuentas_sin_movimientos_en_un_mes_cargado(
+    db: Session, mundo: Mundo
+) -> None:
+    esc = _preparar(db, mundo)
+    # julio tiene gastos pero no ingresos: el Ingreso de julio sale en 0 con su mes cargado
+    d = desglose_de_linea(
+        db, hotel_id=mundo.hotel_a, periodo="2026-07", linea_id=esc.linea("Ingreso"), bloque="mes"
+    )
+    assert d.cifra == D("0")
+    assert [m.codigo for m in d.motivos_cero] == ["cuentas_sin_movimientos"]
+    assert [c.estado for c in d.cuentas] == ["sin_movimientos"]
+
+
 def test_linea_inexistente_o_seccion(db: Session, mundo: Mundo) -> None:
     _preparar(db, mundo)
     with pytest.raises(LookupError):

@@ -6,18 +6,24 @@ import { construirRuta, type Bloque } from '../../ruta/ruta'
 import { aCentavos, aTextoPlano, sumarCentavos } from '../../util/dinero'
 import { formatoContable } from '../../util/formato'
 import { Migas } from './Migas'
+import { useNombreLinea } from './useNombreLinea'
 
 interface Props {
   hotelId: number
   periodo: string
   codigo: string
   bloque: Bloque
+  /** Línea del reporte desde la que se llegó (para las migas y «Volver»). */
+  lineaId?: number
 }
 
 const POR_PAGINA = 50
 
 /** Movimientos de una cuenta, de 50 en 50 con "Cargar más" (paginación por cursor). */
-export function Movimientos({ hotelId, periodo, codigo, bloque }: Props) {
+export function Movimientos({ hotelId, periodo, codigo, bloque, lineaId }: Props) {
+  const nombreLinea = useNombreLinea(hotelId, periodo, lineaId, bloque)
+  const rutaLinea =
+    lineaId === undefined ? null : construirRuta({ tipo: 'desglose', periodo, lineaId, bloque })
   const [movimientos, setMovimientos] = useState<MovimientoDetalle[]>([])
   const [primera, setPrimera] = useState<PaginaMovimientos | null>(null)
   const [cursor, setCursor] = useState<string | null>(null)
@@ -62,7 +68,18 @@ export function Movimientos({ hotelId, periodo, codigo, bloque }: Props) {
 
   return (
     <section className="tarjeta" aria-labelledby="titulo-movimientos">
-      <Migas periodo={periodo} bloque={bloque} actual={`Cuenta ${codigo}`} />
+      <Migas
+        periodo={periodo}
+        bloque={bloque}
+        actual={`Cuenta ${codigo}`}
+        intermedios={rutaLinea ? [{ texto: nombreLinea ?? 'Línea', href: rutaLinea }] : []}
+        paso="Paso 2 de 3 · Movimientos de la cuenta"
+        volver={
+          rutaLinea
+            ? { texto: nombreLinea ?? 'la línea', href: rutaLinea }
+            : { texto: `Variance ${periodo}`, href: construirRuta({ tipo: 'variance', periodo }) }
+        }
+      />
       <h2 id="titulo-movimientos">
         Movimientos de {codigo}
         {primera?.descripcion ? ` · ${primera.descripcion}` : ''}
@@ -126,6 +143,9 @@ export function Movimientos({ hotelId, periodo, codigo, bloque }: Props) {
                             tipo: 'asiento',
                             periodo: m.periodo,
                             asiento: m.asiento,
+                            cuenta: codigo,
+                            bloque,
+                            ...(lineaId === undefined ? {} : { lineaId }),
                           })}
                         >
                           {m.asiento}

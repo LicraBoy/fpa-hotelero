@@ -910,6 +910,11 @@ export interface components {
             cuenta_codigo: string;
             /** Descripcion */
             descripcion: string | null;
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "con_movimientos" | "sin_movimientos" | "no_en_catalogo";
             /** N Movimientos */
             n_movimientos: number;
             /** Neto */
@@ -923,6 +928,8 @@ export interface components {
             bloque: string;
             /** Cifra */
             cifra: string;
+            /** Codigo Corporativo */
+            codigo_corporativo: string | null;
             /** Componentes */
             componentes: components["schemas"]["ComponenteSalida"][];
             /** Cuadra */
@@ -933,6 +940,8 @@ export interface components {
             descripcion: string;
             /** Linea Id */
             linea_id: number;
+            /** Motivos Cero */
+            motivos_cero: components["schemas"]["MotivoCeroSalida"][];
             /** Periodo */
             periodo: string;
             /** Periodos */
@@ -1104,6 +1113,13 @@ export interface components {
             /** Tipo */
             tipo: string;
             ytd: components["schemas"]["CifrasSalida"];
+        };
+        /** MotivoCeroSalida */
+        MotivoCeroSalida: {
+            /** Codigo */
+            codigo: string;
+            /** Texto */
+            texto: string;
         };
         /** MovimientoSalida */
         MovimientoSalida: {

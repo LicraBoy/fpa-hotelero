@@ -831,6 +831,15 @@
             ],
             "title": "Descripcion"
           },
+          "estado": {
+            "enum": [
+              "con_movimientos",
+              "sin_movimientos",
+              "no_en_catalogo"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
           "n_movimientos": {
             "title": "N Movimientos",
             "type": "integer"
@@ -851,7 +860,8 @@
           "signo",
           "neto",
           "aporte",
-          "n_movimientos"
+          "n_movimientos",
+          "estado"
         ],
         "title": "CuentaDesgloseSalida",
         "type": "object"
@@ -866,6 +876,17 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Cifra",
             "type": "string"
+          },
+          "codigo_corporativo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo Corporativo"
           },
           "componentes": {
             "items": {
@@ -892,6 +913,13 @@
           "linea_id": {
             "title": "Linea Id",
             "type": "integer"
+          },
+          "motivos_cero": {
+            "items": {
+              "$ref": "#/components/schemas/MotivoCeroSalida"
+            },
+            "title": "Motivos Cero",
+            "type": "array"
           },
           "periodo": {
             "title": "Periodo",
@@ -925,7 +953,9 @@
           "suma",
           "cuadra",
           "cuentas",
-          "componentes"
+          "componentes",
+          "codigo_corporativo",
+          "motivos_cero"
         ],
         "title": "DesgloseSalida",
         "type": "object"
@@ -1436,6 +1466,24 @@
           "anual"
         ],
         "title": "LineaVarianceSalida",
+        "type": "object"
+      },
+      "MotivoCeroSalida": {
+        "properties": {
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo",
+          "texto"
+        ],
+        "title": "MotivoCeroSalida",
         "type": "object"
       },
       "MovimientoSalida": {

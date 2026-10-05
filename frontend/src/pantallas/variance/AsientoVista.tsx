@@ -1,18 +1,40 @@
 import { obtenerTipado } from '../../api/cliente'
 import { useDatos } from '../../api/useDatos'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
-import { construirRuta } from '../../ruta/ruta'
+import { construirRuta, type Bloque } from '../../ruta/ruta'
 import { formatoContable } from '../../util/formato'
 import { Migas } from './Migas'
+import { useNombreLinea } from './useNombreLinea'
 
 interface Props {
   hotelId: number
   periodo: string
   asiento: string
+  /** De dónde se llegó (para las migas y «Volver»); sin ellos, el recorrido empieza aquí. */
+  cuenta?: string
+  lineaId?: number
+  bloque?: Bloque
 }
 
 /** Todas las líneas de un asiento: el último paso del recorrido, hasta el documento contable. */
-export function AsientoVista({ hotelId, periodo, asiento }: Props) {
+export function AsientoVista({ hotelId, periodo, asiento, cuenta, lineaId, bloque = 'mes' }: Props) {
+  const nombreLinea = useNombreLinea(hotelId, periodo, lineaId, bloque)
+  const rutaLinea =
+    lineaId === undefined ? null : construirRuta({ tipo: 'desglose', periodo, lineaId, bloque })
+  const rutaCuenta =
+    cuenta === undefined
+      ? null
+      : construirRuta({
+          tipo: 'cuenta',
+          periodo,
+          codigo: cuenta,
+          bloque,
+          ...(lineaId === undefined ? {} : { lineaId }),
+        })
+  const intermedios = [
+    ...(rutaLinea ? [{ texto: nombreLinea ?? 'Línea', href: rutaLinea }] : []),
+    ...(rutaCuenta ? [{ texto: `Cuenta ${cuenta}`, href: rutaCuenta }] : []),
+  ]
   const datos = useDatos(
     () =>
       obtenerTipado('/api/v1/hoteles/{hotel_id}/asientos/{asiento}', {
@@ -24,7 +46,18 @@ export function AsientoVista({ hotelId, periodo, asiento }: Props) {
   const a = datos.datos
   return (
     <section className="tarjeta" aria-labelledby="titulo-asiento">
-      <Migas periodo={periodo} bloque="mes" actual={`Asiento ${asiento}`} />
+      <Migas
+        periodo={periodo}
+        bloque={bloque}
+        actual={`Asiento ${asiento}`}
+        intermedios={intermedios}
+        paso="Paso 3 de 3 · Líneas del asiento"
+        volver={
+          rutaCuenta
+            ? { texto: `la cuenta ${cuenta}`, href: rutaCuenta }
+            : { texto: `Variance ${periodo}`, href: construirRuta({ tipo: 'variance', periodo }) }
+        }
+      />
       <h2 id="titulo-asiento">Asiento {asiento}</h2>
       {datos.cargando && <Cargando />}
       {datos.error && <MensajeError texto={datos.error} />}
@@ -66,7 +99,8 @@ export function AsientoVista({ hotelId, periodo, asiento }: Props) {
                         tipo: 'cuenta',
                         periodo,
                         codigo: m.cuenta_codigo,
-                        bloque: 'mes',
+                        bloque,
+                        ...(lineaId === undefined ? {} : { lineaId }),
                       })}
                     >
                       {m.cuenta_codigo}

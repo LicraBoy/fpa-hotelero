@@ -22,6 +22,7 @@ from fpa.modelos.cargas import Movimiento
 from fpa.repositorios.cargas import RepositorioCargas
 from fpa.repositorios.catalogo import RepositorioCatalogo
 from fpa.repositorios.mapeo import RepositorioMapeo
+from fpa.repositorios.plan import RepositorioPlan
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.repositorios.saldos import RepositorioSaldos
 from fpa.servicios.actual import actual_del_periodo, actual_ytd_del_periodo, version_de_mapeo
@@ -76,6 +77,16 @@ class CuentaDesglose:
     neto: Decimal  # Débito − Crédito de la cuenta en el bloque
     aporte: Decimal  # signo × neto: lo que pone la cuenta en la línea
     n_movimientos: int
+    # con_movimientos | sin_movimientos (en los periodos del bloque) | no_en_catalogo
+    estado: str = "con_movimientos"
+
+
+@dataclass(frozen=True)
+class MotivoCero:
+    """Por qué una línea sale en 0: un código estable y un texto para el usuario."""
+
+    codigo: str
+    texto: str
 
 
 @dataclass(frozen=True)
@@ -100,10 +111,77 @@ class Desglose:
     suma: Decimal  # lo que suman las partes mostradas
     cuentas: list[CuentaDesglose] = field(default_factory=list)
     componentes: list[ComponenteDesglose] = field(default_factory=list)
+    codigo_corporativo: str | None = None
+    motivos_cero: list[MotivoCero] = field(default_factory=list)
 
     @property
     def cuadra(self) -> bool:
         return self.suma == self.cifra
+
+
+def _motivos_de_cero(
+    salida: Desglose,
+    *,
+    vinculada: bool,
+    periodos_sin_saldos: list[str],
+    capturado: Decimal | None,
+    capturable: bool,
+) -> list[MotivoCero]:
+    """Explica un Actual en 0 solo con lo que se sabe; si no hay motivo claro, no inventa uno."""
+    motivos: list[MotivoCero] = []
+    if periodos_sin_saldos:
+        meses = ", ".join(periodos_sin_saldos)
+        motivos.append(MotivoCero("mes_sin_carga", f"No hay movimientos cargados para: {meses}."))
+    if not vinculada and not salida.componentes:
+        if capturable and capturado is None:
+            motivos.append(
+                MotivoCero(
+                    "pendiente_de_captura",
+                    "La línea no tiene cuentas vinculadas: su Actual se captura a mano y todavía "
+                    "no se ha capturado.",
+                )
+            )
+        elif capturable:
+            motivos.append(
+                MotivoCero(
+                    "capturada_en_cero",
+                    "La línea no tiene cuentas vinculadas: su Actual es el valor capturado a mano, "
+                    "que está en 0.",
+                )
+            )
+        else:
+            motivos.append(
+                MotivoCero(
+                    "sin_cuentas_vinculadas",
+                    "La línea no tiene cuentas vinculadas en el mapeo aprobado, por eso no suma "
+                    "ningún movimiento.",
+                )
+            )
+        return motivos
+    if salida.cuentas:
+        if all(c.n_movimientos == 0 for c in salida.cuentas) and not periodos_sin_saldos:
+            motivos.append(
+                MotivoCero(
+                    "cuentas_sin_movimientos",
+                    f"Usa {len(salida.cuentas)} cuenta(s) y ninguna tuvo movimientos "
+                    "en el periodo.",
+                )
+            )
+        elif any(c.n_movimientos > 0 for c in salida.cuentas):
+            motivos.append(
+                MotivoCero(
+                    "movimientos_se_netean",
+                    "Hay movimientos, pero el neto de sus cuentas (con su signo) suma 0.",
+                )
+            )
+        if any(c.estado == "no_en_catalogo" for c in salida.cuentas):
+            motivos.append(
+                MotivoCero(
+                    "cuenta_fuera_del_catalogo",
+                    "Alguna cuenta vinculada no está en el catálogo oficial.",
+                )
+            )
+    return motivos
 
 
 def desglose_de_linea(
@@ -148,6 +226,7 @@ def desglose_de_linea(
         periodos=periodos,
         cifra=cifra,
         suma=CERO,
+        codigo_corporativo=linea.codigo_corporativo,
     )
 
     if linea_id in reglas:
@@ -174,8 +253,12 @@ def desglose_de_linea(
 
     saldos: dict[str, tuple[Decimal, int]] = {}
     repo_saldos = RepositorioSaldos(db, hotel_id)
+    periodos_sin_saldos: list[str] = []
     for p in periodos:
-        for s in repo_saldos.del_periodo(p):
+        del_mes = repo_saldos.del_periodo(p)
+        if not del_mes:
+            periodos_sin_saldos.append(p)
+        for s in del_mes:
             neto, n = saldos.get(s.cuenta_codigo, (CERO, 0))
             saldos[s.cuenta_codigo] = (neto + s.neto, n + s.n_movimientos)
     nombres = {c.codigo: c.descripcion for c in RepositorioCatalogo(db, hotel_id).todas()}
@@ -183,14 +266,45 @@ def desglose_de_linea(
         if v.linea_id != linea_id:
             continue
         neto, n = saldos.get(v.cuenta_codigo, (CERO, 0))
+        if v.cuenta_codigo not in nombres:
+            estado = "no_en_catalogo"
+        else:
+            estado = "con_movimientos" if n > 0 else "sin_movimientos"
         salida.cuentas.append(
             CuentaDesglose(
-                v.cuenta_codigo, nombres.get(v.cuenta_codigo), v.signo, neto, v.signo * neto, n
+                v.cuenta_codigo,
+                nombres.get(v.cuenta_codigo),
+                v.signo,
+                neto,
+                v.signo * neto,
+                n,
+                estado,
             )
         )
     salida.cuentas.sort(key=lambda c: c.cuenta_codigo)
     salida.suma += sum((c.aporte for c in salida.cuentas), CERO)
+    if cifra == CERO:
+        capturado = _capturado_de(db, hotel_id, mapeo.version_estructura_id, linea_id, periodos)
+        salida.motivos_cero = _motivos_de_cero(
+            salida,
+            vinculada=any(x.linea_id == linea_id for x in vinculos),
+            periodos_sin_saldos=periodos_sin_saldos,
+            capturado=capturado,
+            capturable=linea.tipo in ("detalle", "informativa") and linea_id not in reglas,
+        )
     return salida
+
+
+def _capturado_de(
+    db: Session, hotel_id: int, version_estructura_id: int, linea_id: int, periodos: list[str]
+) -> Decimal | None:
+    """Suma del valor capturado a mano de la línea en los periodos (None si no hay ninguno)."""
+    valores = [
+        c.importe
+        for c in RepositorioPlan(db, hotel_id).capturados(version_estructura_id, periodos)
+        if c.linea_id == linea_id
+    ]
+    return sum(valores, CERO) if valores else None
 
 
 # --- Cuenta -> movimientos (por cursor) -------------------------------------------------------

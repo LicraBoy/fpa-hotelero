@@ -12,6 +12,8 @@ interface Props {
   alAlternar: (seccionId: number | null) => void
   /** Texto buscado: se resalta en la descripción de cada línea y no se pliegan las secciones. */
   busqueda?: string
+  /** Línea desde la que se volvió del desglose: se resalta y se deja a la vista. */
+  lineaDestacada?: number | null
 }
 
 type ClaveBloque = 'mes' | 'ytd' | 'anual'
@@ -108,11 +110,13 @@ function FilaLinea({
   periodo,
   puedeDesglosar,
   busqueda,
+  destacada,
 }: {
   linea: LineaVariance
   periodo: string
   puedeDesglosar: boolean
   busqueda: string
+  destacada: boolean
 }) {
   const calculada = linea.tipo !== 'informativa'
   const enlace = (bloque: Bloque) =>
@@ -120,7 +124,7 @@ function FilaLinea({
       ? construirRuta({ tipo: 'desglose', periodo, lineaId: linea.linea_id, bloque })
       : null
   return (
-    <tr className={`fila-${linea.tipo}`}>
+    <tr id={`linea-${linea.linea_id}`} className={`fila-${linea.tipo}${destacada ? ' fila-origen' : ''}`}>
       <th scope="row" className="col-linea">
         <span className="descripcion">
           <Resaltado texto={linea.descripcion} busqueda={busqueda} />
@@ -163,6 +167,7 @@ export function TablaVariance({
   plegadas,
   alAlternar,
   busqueda = '',
+  lineaDestacada = null,
 }: Props) {
   const buscando = busqueda.trim() !== ''
   return (
@@ -238,6 +243,7 @@ export function TablaVariance({
                     periodo={periodo}
                     puedeDesglosar={puedeDesglosar}
                     busqueda={busqueda}
+                    destacada={l.linea_id === lineaDestacada}
                   />
                 ))}
               </SeccionFilas>

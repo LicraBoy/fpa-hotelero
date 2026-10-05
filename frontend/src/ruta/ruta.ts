@@ -11,8 +11,10 @@ export type Ruta =
   | { tipo: 'invalida' }
   | { tipo: 'variance'; periodo: string | null }
   | { tipo: 'desglose'; periodo: string; lineaId: number; bloque: Bloque }
-  | { tipo: 'cuenta'; periodo: string; codigo: string; bloque: Bloque }
-  | { tipo: 'asiento'; periodo: string; asiento: string }
+  // `lineaId` (opcional): la línea del reporte desde la que se llegó, para las migas y «Volver»
+  | { tipo: 'cuenta'; periodo: string; codigo: string; bloque: Bloque; lineaId?: number }
+  // `cuenta`/`lineaId`/`bloque` (opcionales): de dónde se llegó, para las migas y «Volver»
+  | { tipo: 'asiento'; periodo: string; asiento: string; cuenta?: string; lineaId?: number; bloque?: Bloque }
 
 const PERIODO = /^20\d{2}-(0[1-9]|1[0-2])$/
 const CODIGO = /^[0-9A-Za-z][0-9A-Za-z.-]{0,39}$/
@@ -47,13 +49,23 @@ export function parsearRuta(hash: string): Ruta {
   if (tipo === 'linea' && ENTERO.test(decodificado)) {
     return { tipo: 'desglose', periodo, lineaId: Number(decodificado), bloque }
   }
+  const linea = consulta.get('linea')
+  if (linea !== null && !ENTERO.test(linea)) return { tipo: 'invalida' }
+  const cuenta = consulta.get('cuenta')
+  if (cuenta !== null && !CODIGO.test(cuenta)) return { tipo: 'invalida' }
+  const lineaId = linea === null ? {} : { lineaId: Number(linea) }
   if (tipo === 'cuenta' && CODIGO.test(decodificado)) {
-    return { tipo: 'cuenta', periodo, codigo: decodificado, bloque }
+    return { tipo: 'cuenta', periodo, codigo: decodificado, bloque, ...lineaId }
   }
   if (tipo === 'asiento' && CODIGO.test(decodificado)) {
-    return { tipo: 'asiento', periodo, asiento: decodificado }
+    const origen = cuenta === null ? {} : { cuenta, bloque }
+    return { tipo: 'asiento', periodo, asiento: decodificado, ...origen, ...lineaId }
   }
   return { tipo: 'invalida' }
+}
+
+function parteLinea(lineaId: number | undefined): string {
+  return lineaId === undefined ? '' : `&linea=${lineaId}`
 }
 
 export function construirRuta(ruta: Ruta): string {
@@ -66,9 +78,11 @@ export function construirRuta(ruta: Ruta): string {
     case 'desglose':
       return `#/variance/${ruta.periodo}/linea/${ruta.lineaId}?bloque=${ruta.bloque}`
     case 'cuenta':
-      return `#/variance/${ruta.periodo}/cuenta/${encodeURIComponent(ruta.codigo)}?bloque=${ruta.bloque}`
-    case 'asiento':
-      return `#/variance/${ruta.periodo}/asiento/${encodeURIComponent(ruta.asiento)}?bloque=mes`
+      return `#/variance/${ruta.periodo}/cuenta/${encodeURIComponent(ruta.codigo)}?bloque=${ruta.bloque}${parteLinea(ruta.lineaId)}`
+    case 'asiento': {
+      const cuenta = ruta.cuenta === undefined ? '' : `&cuenta=${encodeURIComponent(ruta.cuenta)}`
+      return `#/variance/${ruta.periodo}/asiento/${encodeURIComponent(ruta.asiento)}?bloque=${ruta.bloque ?? 'mes'}${cuenta}${parteLinea(ruta.lineaId)}`
+    }
   }
 }
 
