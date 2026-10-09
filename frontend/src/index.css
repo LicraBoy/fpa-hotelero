@@ -1763,6 +1763,126 @@ input[type='file']::file-selector-button {
   border-bottom: none;
 }
 
+/* ---------- Catálogo: árbol, filtros de estado y detalle de la cuenta ---------- */
+.chip-ancho {
+  flex: 1 1 22rem;
+}
+
+.chip-ancho input[type='search'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.chips-estado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  align-items: center;
+}
+
+.chip-activo {
+  background: var(--acento-suave);
+  border-color: var(--acento-borde);
+  color: var(--primario);
+  font-weight: 600;
+}
+
+.catalogo-cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  gap: var(--e4);
+  align-items: start;
+}
+
+.catalogo-cuerpo .arbol {
+  max-height: 60vh;
+  padding: var(--e2);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.detalle-cuenta {
+  position: sticky;
+  top: calc(var(--alto-barra) + var(--e3));
+  padding: var(--e4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+}
+
+.detalle-cuenta h3 {
+  margin: 0 0 var(--e1);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 1.05rem;
+}
+
+.detalle-cuenta p {
+  margin: 0 0 var(--e2);
+}
+
+.estados-cuenta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e1);
+}
+
+.datos-cuenta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--e1) var(--e3);
+  margin: var(--e3) 0 0;
+  font-size: 0.85rem;
+}
+
+.datos-cuenta dt {
+  color: var(--suave);
+}
+
+.datos-cuenta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+
+.nodo {
+  border-radius: var(--radio);
+}
+
+.nodo:hover {
+  background: var(--neutro-fondo);
+}
+
+.nodo-elegido,
+.nodo-elegido:hover {
+  background: var(--acento-suave);
+  box-shadow: inset 3px 0 0 var(--primario);
+}
+
+.nodo-seleccion {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--e2);
+  padding: 2px var(--e1);
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .catalogo-cuerpo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detalle-cuenta {
+    position: static;
+  }
+}
+
 .ley-fav {
   color: var(--ok);
   font-weight: 600;
