@@ -1,6 +1,8 @@
 import { obtenerTipado } from '../../api/cliente'
 import { useDatos } from '../../api/useDatos'
+import { ContextoDrilldown } from '../../componentes/ContextoDrilldown'
 import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
+import { Icono } from '../../componentes/Iconos'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
 import { aCentavos, aTextoPlano, negar, sumarCentavos } from '../../util/dinero'
@@ -55,6 +57,14 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
           </>
         }
       />
+      <ContextoDrilldown
+        datos={[
+          { etiqueta: 'Reporte', valor: 'Variance' },
+          { etiqueta: 'Periodo', valor: periodo },
+          { etiqueta: 'Bloque', valor: bloque === 'mes' ? 'Solo el mes' : 'Acumulado del año fiscal' },
+          { etiqueta: 'Nivel', valor: d && d.componentes.length > 0 ? 'Componentes del total' : 'Cuentas de la línea' },
+        ]}
+      />
       {datos.cargando && <Cargando />}
       {datos.error && <MensajeError texto={datos.error} />}
       {d && (
@@ -71,7 +81,9 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
 
           {d.motivos_cero.length > 0 && (
             <div className="por-que-cero" role="note" aria-label="Por qué está en 0">
-              <strong>Por qué el Actual está en 0</strong>
+              <strong>
+                <Icono nombre="alerta" tamano={16} /> Por qué el Actual está en 0
+              </strong>
               <ul>
                 {d.motivos_cero.map((m) => (
                   <li key={m.codigo}>{m.texto}</li>

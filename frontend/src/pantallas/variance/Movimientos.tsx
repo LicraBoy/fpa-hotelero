@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ErrorApi, obtenerTipado } from '../../api/cliente'
 import type { MovimientoDetalle, PaginaMovimientos } from '../../api/tipos'
+import { ContextoDrilldown } from '../../componentes/ContextoDrilldown'
 import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Cargando, EstadoVacio, Insignia, MensajeError } from '../../componentes/Insignia'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
@@ -86,6 +87,15 @@ export function Movimientos({ hotelId, periodo, codigo, bloque, lineaId }: Props
         titulo={`Movimientos de ${codigo}${primera?.descripcion ? ` · ${primera.descripcion}` : ''}`}
         subtitulo={`${periodo} · ${bloque === 'mes' ? 'solo el mes' : 'acumulado del año fiscal'}`}
       />
+      <ContextoDrilldown
+        datos={[
+          { etiqueta: 'Reporte', valor: 'Variance' },
+          { etiqueta: 'Periodo', valor: periodo },
+          { etiqueta: 'Bloque', valor: bloque === 'mes' ? 'Solo el mes' : 'Acumulado del año fiscal' },
+          ...(nombreLinea ? [{ etiqueta: 'Línea', valor: nombreLinea }] : []),
+          { etiqueta: 'Cuenta', valor: codigo },
+        ]}
+      />
       {error && <MensajeError texto={error} />}
       {primera === null && cargando && <Cargando />}
       {resumen && (
@@ -166,7 +176,7 @@ export function Movimientos({ hotelId, periodo, codigo, bloque, lineaId }: Props
           )}
           {cursor !== null && (
             <p>
-              <button type="button" disabled={cargando} onClick={() => void pedir(cursor, false)}>
+              <button type="button" className="boton" disabled={cargando} onClick={() => void pedir(cursor, false)}>
                 {cargando
                   ? 'Cargando…'
                   : `Cargar más (${Math.min(POR_PAGINA, faltan)} de ${faltan} restantes)`}

@@ -1525,6 +1525,87 @@ input[type='file']::file-selector-button {
   letter-spacing: 0.01em;
 }
 
+/* ---------- Drill-down: contexto, cuadre y motivos del cero ---------- */
+.contexto-drill {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin: 0 0 var(--e3);
+  padding: 0;
+  list-style: none;
+}
+
+.chip-dato {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px var(--e3);
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  font-size: 0.8rem;
+}
+
+.chip-dato span {
+  color: var(--suave);
+}
+
+.chip-dato strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.cuadre {
+  gap: var(--e3) var(--e6);
+  padding: var(--e3) var(--e4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+}
+
+.cuadre > span {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.78rem;
+  color: var(--suave);
+}
+
+.cuadre > span strong {
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--texto);
+}
+
+.cuadre .insignia {
+  margin-left: auto;
+  padding: 3px 12px;
+  font-size: 0.82rem;
+}
+
+.por-que-cero {
+  display: block;
+  border: 1px solid var(--aviso);
+  border-left-width: 4px;
+  border-radius: var(--radio);
+  background: var(--aviso-fondo);
+  color: var(--aviso);
+}
+
+.por-que-cero strong {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+}
+
+.por-que-cero ul {
+  color: var(--texto);
+}
+
 .ley-fav {
   color: var(--ok);
   font-weight: 600;

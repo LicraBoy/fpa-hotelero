@@ -1,5 +1,6 @@
 import { obtenerTipado } from '../../api/cliente'
 import { useDatos } from '../../api/useDatos'
+import { ContextoDrilldown } from '../../componentes/ContextoDrilldown'
 import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
@@ -63,6 +64,15 @@ export function AsientoVista({ hotelId, periodo, asiento, cuenta, lineaId, bloqu
         id="titulo-asiento"
         titulo={`Asiento ${asiento}`}
         subtitulo={`${periodo} · todas las líneas del asiento`}
+      />
+      <ContextoDrilldown
+        datos={[
+          { etiqueta: 'Reporte', valor: 'Variance' },
+          { etiqueta: 'Periodo', valor: periodo },
+          ...(nombreLinea ? [{ etiqueta: 'Línea', valor: nombreLinea }] : []),
+          ...(cuenta ? [{ etiqueta: 'Cuenta', valor: cuenta }] : []),
+          { etiqueta: 'Asiento', valor: asiento },
+        ]}
       />
       {datos.cargando && <Cargando />}
       {datos.error && <MensajeError texto={datos.error} />}
