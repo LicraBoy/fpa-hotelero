@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ErrorApi, descargarVarianceExcel, obtenerTipado } from '../../api/cliente'
 import { useDatos } from '../../api/useDatos'
+import { BarraApilada } from '../../componentes/BarraApilada'
 import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
+import { Icono } from '../../componentes/Iconos'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { TarjetaKpi } from '../../componentes/TarjetaKpi'
 import { puede } from '../../permisos'
@@ -17,6 +19,7 @@ import {
 import { AsientoVista } from './AsientoVista'
 import { Desglose } from './Desglose'
 import { Movimientos } from './Movimientos'
+import { PanelLinea } from './PanelLinea'
 import { LeyendaVariance, TablaVariance } from './TablaVariance'
 
 /** Filtros y plegado de la tabla: viven en `PanelVariance` para sobrevivir al ir y volver del desglose. */
@@ -114,6 +117,9 @@ function ReporteVariance({
   } = filtros
   const [busqueda, setBusqueda] = useState(textoBusqueda.trim())
   const [exportando, setExportando] = useState(false)
+  // Línea abierta en el panel lateral y densidad de la tabla (solo presentación)
+  const [lineaPanel, setLineaPanel] = useState<number | null>(null)
+  const [compacta, setCompacta] = useState(false)
   const [errorExportar, setErrorExportar] = useState<string | null>(null)
 
   useEffect(() => {
@@ -342,6 +348,15 @@ function ReporteVariance({
                 }
                 detalle={`${resumen.favorables} favorables · en el mes ${periodo}`}
                 tono={resumen.desfavorables > 0 ? 'desfavorable' : 'neutro'}
+                extra={
+                  <BarraApilada
+                    tramos={[
+                      { etiqueta: 'favorables', cantidad: resumen.favorables, tono: 'favorable' },
+                      { etiqueta: 'desfavorables', cantidad: resumen.desfavorables, tono: 'desfavorable' },
+                      { etiqueta: 'sin variación', cantidad: resumen.sinVariacion, tono: 'neutro' },
+                    ]}
+                  />
+                }
               />
               <TarjetaKpi
                 titulo="Mayor desviación desfavorable"
@@ -388,6 +403,29 @@ function ReporteVariance({
             <p className="suave">Ninguna línea coincide con los filtros.</p>
           ) : (
             <>
+              <div className="barra-herramientas" role="toolbar" aria-label="Herramientas de la tabla">
+                <button type="button" className="boton-herramienta" onClick={() => setPlegadas(new Set())}>
+                  <Icono nombre="expandir" tamano={16} /> Expandir todo
+                </button>
+                <button
+                  type="button"
+                  className="boton-herramienta"
+                  onClick={() => setPlegadas(new Set(grupos.map((g) => g.seccion?.id ?? null)))}
+                >
+                  <Icono nombre="plegar" tamano={16} /> Plegar todo
+                </button>
+                <button
+                  type="button"
+                  className="boton-herramienta"
+                  aria-pressed={compacta}
+                  onClick={() => setCompacta((v) => !v)}
+                >
+                  <Icono nombre="densidad" tamano={16} /> Densidad: {compacta ? 'compacta' : 'cómoda'}
+                </button>
+                <button type="button" className="boton-herramienta" onClick={() => window.print()}>
+                  <Icono nombre="imprimir" tamano={16} /> Imprimir
+                </button>
+              </div>
               <div className="herramientas-tabla">
               <div className="barra-lectura">
                 <p className="suave cuenta-lineas" role="status">
@@ -424,9 +462,24 @@ function ReporteVariance({
                   alAlternar={alternar}
                   busqueda={busqueda}
                   lineaDestacada={lineaOrigen}
+                  periodosYtd={datos.periodos_ytd}
+                  anoFiscal={datos.ano_fiscal}
+                  lineaSeleccionada={lineaPanel}
+                  alSeleccionar={(id) => setLineaPanel((actual) => (actual === id ? null : id))}
+                  compacta={compacta}
                 />
               )}
             </>
+          )}
+          {lineaPanel !== null && datos.lineas.some((l) => l.linea_id === lineaPanel) && (
+            <PanelLinea
+              linea={datos.lineas.find((l) => l.linea_id === lineaPanel)!}
+              periodo={periodo}
+              periodosYtd={datos.periodos_ytd}
+              anoFiscal={datos.ano_fiscal}
+              puedeDesglosar={puede(rol, 'drilldown:leer')}
+              alCerrar={() => setLineaPanel(null)}
+            />
           )}
           <details className="notas-reporte" open>
             <summary>Notas del reporte</summary>

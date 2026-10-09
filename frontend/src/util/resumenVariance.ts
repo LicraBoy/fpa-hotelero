@@ -12,6 +12,8 @@ export interface ResumenVariance {
   conVariacion: number
   desfavorables: number
   favorables: number
+  /** Con Variación calculada pero exactamente en cero. */
+  sinVariacion: number
   mayorDesfavorable: ExtremoVariance | null
   mayorFavorable: ExtremoVariance | null
 }
@@ -26,6 +28,7 @@ export function resumirVariance(lineas: LineaVariance[]): ResumenVariance {
     conVariacion: 0,
     desfavorables: 0,
     favorables: 0,
+    sinVariacion: 0,
     mayorDesfavorable: null,
     mayorFavorable: null,
   }
@@ -52,6 +55,8 @@ export function resumirVariance(lineas: LineaVariance[]): ResumenVariance {
         mejor = centavos
         resumen.mayorFavorable = { descripcion: linea.descripcion, variacion: linea.mes.var }
       }
+    } else {
+      resumen.sinVariacion += 1
     }
   }
   return resumen

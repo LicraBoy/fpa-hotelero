@@ -8,6 +8,7 @@ import { esPreferenciaTema, type PreferenciaTema } from './tema'
 
 const CLAVE_USUARIO_DEV = 'fpa_usuario_dev'
 const CLAVE_TEMA = 'fpa_tema'
+const CLAVE_LATERAL = 'fpa_lateral_plegado'
 
 function almacenamiento(): Storage | null {
   try {
@@ -41,5 +42,18 @@ export function guardarTema(preferencia: PreferenciaTema): void {
     almacenamiento()?.setItem(CLAVE_TEMA, preferencia)
   } catch {
     // sin almacenamiento: el tema elegido solo vale hasta recargar
+  }
+}
+
+/** ¿La barra lateral está plegada (solo iconos)? Preferencia de la interfaz, no un secreto. */
+export function leerLateralPlegado(): boolean {
+  return almacenamiento()?.getItem(CLAVE_LATERAL) === '1'
+}
+
+export function guardarLateralPlegado(plegado: boolean): void {
+  try {
+    almacenamiento()?.setItem(CLAVE_LATERAL, plegado ? '1' : '0')
+  } catch {
+    // sin almacenamiento: vale solo hasta recargar
   }
 }

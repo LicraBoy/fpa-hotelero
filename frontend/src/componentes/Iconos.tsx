@@ -16,6 +16,12 @@ export type NombreIcono =
   | 'alerta'
   | 'hotel'
   | 'menu'
+  | 'expandir'
+  | 'plegar'
+  | 'densidad'
+  | 'imprimir'
+  | 'cerrar'
+  | 'info'
 
 const TRAZOS: Record<NombreIcono, string[]> = {
   informe: ['M5 3h10l4 4v14H5z', 'M15 3v4h4', 'M8 17v-4', 'M12 17v-7', 'M16 17v-2'],
@@ -32,6 +38,12 @@ const TRAZOS: Record<NombreIcono, string[]> = {
   alerta: ['M12 3l10 18H2z', 'M12 10v5', 'M12 18h.01'],
   hotel: ['M4 21V5l8-2v18', 'M12 8h8v13', 'M7 9h2', 'M7 13h2', 'M7 17h2', 'M15 12h2', 'M15 16h2'],
   menu: ['M4 7h16', 'M4 12h16', 'M4 17h16'],
+  expandir: ['M7 4l5 5 5-5', 'M7 14l5 5 5-5'],
+  plegar: ['M7 10l5-5 5 5', 'M7 20l5-5 5 5'],
+  densidad: ['M4 6h16', 'M4 10h16', 'M4 14h16', 'M4 18h16'],
+  imprimir: ['M7 9V3h10v6', 'M7 17H4v-7h16v7h-3', 'M7 14h10v7H7z'],
+  cerrar: ['M6 6l12 12', 'M18 6L6 18'],
+  info: ['M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z', 'M12 11v6', 'M12 7.5h.01'],
 }
 
 export function Icono({ nombre, tamano = 18 }: { nombre: NombreIcono; tamano?: number }) {

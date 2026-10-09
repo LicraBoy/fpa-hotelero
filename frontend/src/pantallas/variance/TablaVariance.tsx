@@ -1,11 +1,18 @@
+import type { MouseEvent } from 'react'
 import type { CifrasVariance, LineaVariance } from '../../api/tipos'
+import { Icono } from '../../componentes/Iconos'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
 import { esDesfavorable, esFavorable, formatoContable, formatoPorcentaje } from '../../util/formato'
+import { etiquetaMesLargo, etiquetaRangoMeses } from '../../util/periodos'
+import { resumirVariance } from '../../util/resumenVariance'
 import { anclaDeSeccion, trozosResaltados, type GrupoSeccion } from './agrupar'
 
 interface Props {
   grupos: GrupoSeccion[]
   periodo: string
+  /** Meses del acumulado y año fiscal: dan contexto a los encabezados de grupo. */
+  periodosYtd: string[]
+  anoFiscal: string
   /** Si el rol puede abrir el desglose, las cifras de Actual son enlaces. */
   puedeDesglosar: boolean
   plegadas: ReadonlySet<number | null>
@@ -14,17 +21,16 @@ interface Props {
   busqueda?: string
   /** Línea desde la que se volvió del desglose: se resalta y se deja a la vista. */
   lineaDestacada?: number | null
+  /** Línea abierta en el panel lateral. */
+  lineaSeleccionada?: number | null
+  alSeleccionar?: (lineaId: number) => void
+  compacta?: boolean
 }
 
 type ClaveBloque = 'mes' | 'ytd' | 'anual'
 
-const BLOQUES: { clave: ClaveBloque; titulo: string }[] = [
-  { clave: 'mes', titulo: 'Mes' },
-  { clave: 'ytd', titulo: 'Acumulado del año fiscal' },
-  { clave: 'anual', titulo: 'Presupuesto anual' },
-]
 const SUBTITULOS = ['Actual', 'Presupuesto', 'Variación', '% var.'] as const
-const COLUMNAS = 1 + BLOQUES.length * SUBTITULOS.length
+const COLUMNAS = 1 + 3 * SUBTITULOS.length
 
 /** Clases de una celda: el color de su bloque y, la primera de cada bloque, su borde izquierdo. */
 const celda = (bloque: ClaveBloque, i: number, extra = '') =>
@@ -62,7 +68,7 @@ function CeldasBloque({
   }
   const desfavorable = esDesfavorable(cifras.var)
   // El sentido (favorable / desfavorable) ya lo define la regla del reporte: aquí solo se pinta
-  const mala = desfavorable ? 'desfavorable' : esFavorable(cifras.var) ? 'favorable' : ''
+  const sentido = desfavorable ? 'desfavorable' : esFavorable(cifras.var) ? 'favorable' : ''
   return (
     <>
       <td className={celda(bloque, 0)}>
@@ -75,7 +81,7 @@ function CeldasBloque({
         )}
       </td>
       <CeldaImporte valor={cifras.budget} bloque={bloque} />
-      <td className={celda(bloque, 2, mala)}>
+      <td className={celda(bloque, 2, sentido)}>
         {desfavorable && (
           <>
             <span aria-hidden="true">▼ </span>
@@ -84,7 +90,9 @@ function CeldasBloque({
         )}
         {formatoContable(cifras.var)}
       </td>
-      <td className={celda(bloque, 3, `col-pct ${mala}`.trim())}>{formatoPorcentaje(cifras.pct)}</td>
+      <td className={celda(bloque, 3, `col-pct ${sentido}`.trim())}>
+        <span className="var-pill">{formatoPorcentaje(cifras.pct)}</span>
+      </td>
     </>
   )
 }
@@ -112,25 +120,57 @@ function FilaLinea({
   puedeDesglosar,
   busqueda,
   destacada,
+  seleccionada,
+  alSeleccionar,
 }: {
   linea: LineaVariance
   periodo: string
   puedeDesglosar: boolean
   busqueda: string
   destacada: boolean
+  seleccionada: boolean
+  alSeleccionar?: (lineaId: number) => void
 }) {
   const calculada = linea.tipo !== 'informativa'
   const enlace = (bloque: Bloque) =>
     puedeDesglosar && calculada
       ? construirRuta({ tipo: 'desglose', periodo, lineaId: linea.linea_id, bloque })
       : null
+  // Pulsar la fila abre el panel, salvo que se pulse un enlace o un botón de la propia fila
+  const alPulsar = (e: MouseEvent<HTMLTableRowElement>) => {
+    if ((e.target as HTMLElement).closest('a, button')) return
+    alSeleccionar?.(linea.linea_id)
+  }
+  const clases = [
+    `fila-${linea.tipo}`,
+    destacada ? 'fila-origen' : '',
+    seleccionada ? 'fila-seleccionada' : '',
+    alSeleccionar ? 'fila-pulsable' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
   return (
-    <tr id={`linea-${linea.linea_id}`} className={`fila-${linea.tipo}${destacada ? ' fila-origen' : ''}`}>
+    // La fila entera es pulsable con el ratón; el teclado usa el botón de detalle de la propia fila
+    <tr id={`linea-${linea.linea_id}`} className={clases} onClick={alPulsar}>
       <th scope="row" className="col-linea" title={linea.descripcion}>
-        <span className="descripcion">
-          <Resaltado texto={linea.descripcion} busqueda={busqueda} />
+        <span className="linea-contenido">
+          <span className="descripcion" id={`linea-${linea.linea_id}-nombre`}>
+            <Resaltado texto={linea.descripcion} busqueda={busqueda} />
+          </span>
+          {linea.codigo_corporativo && <span className="codigo">{linea.codigo_corporativo}</span>}
+          {alSeleccionar && (
+            <button
+              type="button"
+              className="boton-detalle"
+              aria-label="Ver detalle de la línea"
+              aria-describedby={`linea-${linea.linea_id}-nombre`}
+              aria-pressed={seleccionada}
+              onClick={() => alSeleccionar(linea.linea_id)}
+            >
+              <Icono nombre="info" tamano={15} />
+            </button>
+          )}
         </span>
-        {linea.codigo_corporativo && <span className="codigo suave"> {linea.codigo_corporativo}</span>}
       </th>
       <CeldasBloque
         bloque="mes"
@@ -164,38 +204,58 @@ function FilaLinea({
 export function TablaVariance({
   grupos,
   periodo,
+  periodosYtd,
+  anoFiscal,
   puedeDesglosar,
   plegadas,
   alAlternar,
   busqueda = '',
   lineaDestacada = null,
+  lineaSeleccionada = null,
+  alSeleccionar,
+  compacta = false,
 }: Props) {
   const buscando = busqueda.trim() !== ''
+  const grupos3: { clave: ClaveBloque; titulo: string; contexto: string }[] = [
+    { clave: 'mes', titulo: 'Mes', contexto: etiquetaMesLargo(periodo) },
+    {
+      clave: 'ytd',
+      titulo: 'Acumulado del año fiscal',
+      contexto: `${etiquetaRangoMeses(periodosYtd)} · ${anoFiscal}`,
+    },
+    { clave: 'anual', titulo: 'Presupuesto anual', contexto: anoFiscal },
+  ]
   return (
-    <div className="tabla-variance-contenedor" role="region" aria-label="Tabla de Variance" tabIndex={0}>
+    <div
+      className={compacta ? 'tabla-variance-contenedor densidad-compacta' : 'tabla-variance-contenedor'}
+      role="region"
+      aria-label="Tabla de Variance"
+      tabIndex={0}
+    >
       <table className="tabla-variance">
         <caption className="solo-lectores">
           Variance de {periodo}: Actual, Presupuesto, Variación y porcentaje, por mes, acumulado y
-          presupuesto anual. Una variación desfavorable lleva el símbolo ▼.
+          presupuesto anual. Una variación desfavorable lleva el símbolo ▼ y una favorable el ▲.
         </caption>
         <thead>
           <tr>
             <th scope="col" rowSpan={2} className="col-linea">
               Línea
             </th>
-            {BLOQUES.map((b) => (
+            {grupos3.map((b) => (
               <th
                 key={b.clave}
                 scope="colgroup"
                 colSpan={SUBTITULOS.length}
                 className={`grupo-bloque bloque-${b.clave}`}
               >
-                {b.titulo}
+                <span className="grupo-titulo">{b.titulo}</span>
+                <span className="grupo-contexto">{b.contexto}</span>
               </th>
             ))}
           </tr>
           <tr>
-            {BLOQUES.flatMap((b) =>
+            {grupos3.flatMap((b) =>
               SUBTITULOS.map((s, i) => (
                 <th
                   key={`${b.clave}-${s}`}
@@ -216,6 +276,7 @@ export function TablaVariance({
             const visibles = plegada
               ? grupo.lineas.filter((l) => l.tipo === 'total' || l.tipo === 'subtotal')
               : grupo.lineas
+            const resumen = resumirVariance(grupo.lineas)
             return (
               <SeccionFilas key={`${id ?? 'sin'}-${i}`}>
                 {grupo.seccion && (
@@ -227,12 +288,19 @@ export function TablaVariance({
                         aria-expanded={!plegada}
                         onClick={() => alAlternar(id)}
                       >
-                        <span aria-hidden="true">{plegada ? '▸' : '▾'} </span>
-                        {grupo.seccion.descripcion}
-                        <span className="suave cuenta-seccion">
-                          {' '}
-                          · {grupo.lineas.length} {grupo.lineas.length === 1 ? 'línea' : 'líneas'}
+                        <span className="chevron-seccion" aria-hidden="true">
+                          {plegada ? '▸' : '▾'}
                         </span>
+                        <span className="nombre-seccion">{grupo.seccion.descripcion}</span>
+                        <span className="suave cuenta-seccion">
+                          {grupo.lineas.length} {grupo.lineas.length === 1 ? 'línea' : 'líneas'}
+                        </span>
+                        {resumen.desfavorables > 0 && (
+                          <span className="chip-desfavorables">
+                            {resumen.desfavorables}{' '}
+                            {resumen.desfavorables === 1 ? 'desfavorable' : 'desfavorables'}
+                          </span>
+                        )}
                       </button>
                     </th>
                   </tr>
@@ -245,6 +313,8 @@ export function TablaVariance({
                     puedeDesglosar={puedeDesglosar}
                     busqueda={busqueda}
                     destacada={l.linea_id === lineaDestacada}
+                    seleccionada={l.linea_id === lineaSeleccionada}
+                    alSeleccionar={alSeleccionar}
                   />
                 ))}
               </SeccionFilas>

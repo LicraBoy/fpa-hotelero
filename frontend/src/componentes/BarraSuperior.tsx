@@ -10,6 +10,9 @@ interface Props {
   hotel?: ReactNode
   nombreUsuario: string
   rol?: string
+  /** Barra lateral plegada y cómo alternarla. */
+  lateralPlegado: boolean
+  alAlternarLateral: () => void
 }
 
 function iniciales(nombre: string): string {
@@ -22,9 +25,27 @@ function iniciales(nombre: string): string {
 }
 
 /** Barra superior: ubicación a la izquierda; hotel, estado de la API, tema y usuario a la derecha. */
-export function BarraSuperior({ ubicacion, hotel, nombreUsuario, rol }: Props) {
+export function BarraSuperior({
+  ubicacion,
+  hotel,
+  nombreUsuario,
+  rol,
+  lateralPlegado,
+  alAlternarLateral,
+}: Props) {
   return (
     <header className="barra-superior">
+      <div className="barra-izquierda">
+      <button
+        type="button"
+        className="boton-icono boton-lateral"
+        aria-label={lateralPlegado ? 'Expandir el menú lateral' : 'Contraer el menú lateral'}
+        aria-pressed={lateralPlegado}
+        title={lateralPlegado ? 'Expandir el menú lateral' : 'Contraer el menú lateral'}
+        onClick={alAlternarLateral}
+      >
+        <Icono nombre="menu" />
+      </button>
       <nav className="ubicacion" aria-label="Ubicación">
         <ol>
           {ubicacion.map((tramo, i) => (
@@ -35,6 +56,7 @@ export function BarraSuperior({ ubicacion, hotel, nombreUsuario, rol }: Props) {
           ))}
         </ol>
       </nav>
+      </div>
       <div className="barra-acciones">
         {hotel}
         <EstadoApi />

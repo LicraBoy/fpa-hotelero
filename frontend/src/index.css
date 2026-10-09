@@ -1939,6 +1939,677 @@ input[type='file']::file-selector-button {
   font-weight: 600;
 }
 
+/* ================= Variance v2: tipografía Inter, tabla jerárquica y panel de la línea ================= */
+:root {
+  font-family: 'Inter Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  letter-spacing: -0.006em;
+}
+
+.encabezado-pagina h2 {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+}
+
+.kpi-valor {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.kpi-titulo {
+  font-weight: 600;
+}
+
+/* --- Barra de herramientas --- */
+.barra-herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin: var(--e3) 0 var(--e1);
+}
+
+.boton-herramienta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px var(--e3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.boton-herramienta .icono {
+  color: var(--suave);
+}
+
+.boton-herramienta:hover {
+  background: var(--acento-suave);
+  border-color: var(--acento-borde);
+  color: var(--primario);
+}
+
+.boton-herramienta:hover .icono {
+  color: var(--primario);
+}
+
+/* --- Tabla: jerarquía, aire y tipografía --- */
+.tabla-variance {
+  font-size: 0.86rem;
+  letter-spacing: -0.004em;
+}
+
+.tabla-variance th,
+.tabla-variance td {
+  height: 2.3rem;
+  padding: 0 0.7rem;
+}
+
+.tabla-variance td.num,
+.tabla-variance td {
+  font-weight: 450;
+}
+
+.densidad-compacta .tabla-variance {
+  font-size: 0.8rem;
+}
+
+.densidad-compacta .tabla-variance th,
+.densidad-compacta .tabla-variance td {
+  height: 1.85rem;
+}
+
+/* sin cebra: solo líneas finas (como el reporte de referencia) */
+.tabla-variance tbody tr:nth-child(even):not(.fila-seccion):not(.fila-total):not(.fila-subtotal) th,
+.tabla-variance tbody tr:nth-child(even):not(.fila-seccion):not(.fila-total):not(.fila-subtotal) td {
+  background-color: var(--superficie);
+}
+
+/* encabezados: grupo con su periodo, subcolumnas en negrita pequeña */
+.tabla-variance thead tr:nth-child(1) th {
+  height: 3rem;
+}
+
+.tabla-variance thead tr:nth-child(2) th {
+  top: 3rem;
+  height: 2rem;
+  color: var(--texto);
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.tabla-variance thead .grupo-bloque {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  line-height: 1.25;
+}
+
+.grupo-titulo {
+  display: block;
+  color: var(--texto);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.grupo-contexto {
+  display: block;
+  color: var(--suave);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.tabla-variance thead .grupo-bloque {
+  background: var(--neutro-fondo);
+}
+
+.tabla-variance .inicio-bloque {
+  border-left: 2px solid var(--borde-fuerte);
+}
+
+/* columna de la línea: nombre, código y detalle; sombra al desplazar */
+.tabla-variance .col-linea {
+  min-width: 15rem;
+  max-width: 15rem;
+  box-shadow: 6px 0 8px -8px rgba(31, 29, 51, 0.25);
+}
+
+.linea-contenido {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.linea-contenido .descripcion {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabla-variance .codigo {
+  flex: none;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.66rem;
+  color: var(--suave);
+}
+
+.boton-detalle {
+  flex: none;
+  display: inline-flex;
+  padding: 2px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--primario);
+  opacity: 0;
+  cursor: pointer;
+}
+
+.tabla-variance tr:hover .boton-detalle,
+.tabla-variance tr.fila-seleccionada .boton-detalle,
+.boton-detalle:focus-visible {
+  opacity: 1;
+}
+
+.fila-pulsable {
+  cursor: pointer;
+}
+
+/* sangría por tipo: el detalle cuelga de su sección, los totales van al margen */
+.tabla-variance .fila-detalle th.col-linea,
+.tabla-variance .fila-informativa th.col-linea {
+  padding-left: 1.8rem;
+  font-weight: 400;
+}
+
+.tabla-variance .fila-subtotal th.col-linea {
+  padding-left: 1.1rem;
+}
+
+.tabla-variance .fila-total th.col-linea {
+  padding-left: 0.7rem;
+}
+
+.tabla-variance .fila-total th,
+.tabla-variance .fila-total td,
+.tabla-variance .fila-subtotal th,
+.tabla-variance .fila-subtotal td {
+  font-weight: 650;
+}
+
+/* sección: padre con triángulo, nombre, conteo y desfavorables */
+.tabla-variance .fila-seccion th {
+  height: 2.6rem;
+  background: var(--acento-suave);
+  box-shadow: inset 3px 0 0 var(--primario);
+}
+
+.tabla-variance .boton-seccion {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chevron-seccion {
+  display: inline-block;
+  width: 1em;
+  color: var(--primario);
+  font-size: 0.95rem;
+}
+
+.nombre-seccion {
+  color: var(--texto);
+  font-size: 0.92rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.cuenta-seccion {
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.chip-desfavorables {
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--des-fondo);
+  color: var(--error);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* variación: el importe con su color; el % en una píldora tintada (como la referencia) */
+.tabla-variance td.favorable,
+.tabla-variance td.desfavorable {
+  box-shadow: none;
+  font-weight: 500;
+}
+
+.tabla-variance td.col-pct::before {
+  content: none;
+}
+
+.var-pill {
+  display: inline-block;
+  min-width: 3.4rem;
+  padding: 2px 9px;
+  border-radius: 6px;
+  color: var(--suave);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: right;
+}
+
+.tabla-variance td.col-pct.favorable .var-pill,
+.var-pill.favorable {
+  background: var(--fav-fondo);
+  color: var(--ok);
+  font-weight: 650;
+}
+
+.tabla-variance td.col-pct.desfavorable .var-pill,
+.var-pill.desfavorable {
+  background: var(--des-fondo);
+  color: var(--error);
+  font-weight: 650;
+}
+
+/* fila seleccionada (la del panel lateral) */
+.tabla-variance tr.fila-seleccionada td {
+  background-image: linear-gradient(var(--acento-suave), var(--acento-suave));
+}
+
+.tabla-variance tr.fila-seleccionada th.col-linea {
+  background: var(--acento-suave);
+  box-shadow: inset 3px 0 0 var(--primario);
+}
+
+/* pliegues con triángulo (avisos y notas) */
+.notas-reporte > summary,
+.avisos > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  list-style: none;
+}
+
+.notas-reporte > summary::before,
+.avisos > summary::before {
+  content: '▸';
+  color: var(--primario);
+}
+
+.notas-reporte[open] > summary::before,
+.avisos[open] > summary::before {
+  content: '▾';
+}
+
+/* --- Barra apilada del resumen --- */
+.barra-apilada svg {
+  display: block;
+  width: 100%;
+  height: 8px;
+  margin-top: var(--e3);
+  border-radius: 4px;
+  background: var(--neutro-fondo);
+}
+
+.tramo-favorable {
+  fill: var(--ok);
+}
+
+.tramo-desfavorable {
+  fill: var(--error);
+}
+
+.tramo-neutro {
+  fill: var(--borde-fuerte);
+}
+
+.barra-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--e3);
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--suave);
+  font-size: 0.72rem;
+}
+
+.punto {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.punto-favorable {
+  background: var(--ok);
+}
+
+.punto-desfavorable {
+  background: var(--error);
+}
+
+.punto-neutro {
+  background: var(--borde-fuerte);
+}
+
+/* --- Panel lateral de la línea --- */
+.panel-linea {
+  position: fixed;
+  top: var(--alto-barra);
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  width: min(25rem, 100%);
+  padding: var(--e4) 20px var(--e5);
+  overflow-y: auto;
+  border-left: 1px solid var(--borde);
+  background: var(--superficie);
+  box-shadow: -14px 0 34px rgba(31, 29, 51, 0.14);
+}
+
+:root[data-tema='oscuro'] .panel-linea {
+  box-shadow: -14px 0 34px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel-linea {
+    animation: panel-entra 0.2s ease-out;
+  }
+}
+
+@keyframes panel-entra {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+.panel-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e3);
+  margin-bottom: var(--e2);
+}
+
+.panel-tipo {
+  margin: 0;
+  color: var(--primario);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panel-linea h3 {
+  margin: 2px 0 4px;
+  font-size: 1.2rem;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.panel-bloque {
+  padding: var(--e3) 0;
+  border-top: 1px solid var(--borde);
+}
+
+.panel-bloque h4 {
+  margin: 0 0 var(--e2);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.panel-bloque h4 .suave {
+  font-weight: 400;
+}
+
+.panel-fila {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  align-items: center;
+  gap: 3px var(--e3);
+  margin-bottom: var(--e2);
+  font-size: 0.85rem;
+}
+
+.panel-fila > span:first-child {
+  color: var(--suave);
+}
+
+.panel-fila strong {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.panel-fila .barra-valor {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 7px;
+}
+
+.barra-fondo {
+  fill: var(--neutro-fondo);
+}
+
+.barra-actual {
+  fill: var(--primario);
+}
+
+.barra-presupuesto {
+  fill: var(--borde-fuerte);
+}
+
+.panel-variacion strong.favorable {
+  color: var(--ok);
+}
+
+.panel-variacion strong.desfavorable {
+  color: var(--error);
+}
+
+.panel-variacion .var-pill {
+  justify-self: end;
+}
+
+.panel-enlace {
+  display: inline-block;
+  margin-top: 2px;
+  color: var(--primario);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+@media print {
+  .panel-linea,
+  .barra-herramientas,
+  .kpis {
+    display: none !important;
+  }
+}
+
+/* v2, ajustes: nombre y código en dos líneas, % sin flecha suelta y columnas más compactas */
+.tabla-variance th,
+.tabla-variance td {
+  height: 2.6rem;
+  padding: 0 0.55rem;
+}
+
+.tabla-variance {
+  font-size: 0.84rem;
+}
+
+.linea-contenido {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'nombre boton'
+    'codigo boton';
+  align-items: center;
+  column-gap: 6px;
+}
+
+.linea-contenido .descripcion {
+  grid-area: nombre;
+  line-height: 1.25;
+}
+
+.tabla-variance .codigo {
+  grid-area: codigo;
+  line-height: 1.2;
+}
+
+.linea-contenido .boton-detalle {
+  grid-area: boton;
+}
+
+.densidad-compacta .tabla-variance .codigo {
+  display: none;
+}
+
+.tabla-variance td.col-pct::before,
+.tabla-variance td.col-pct.favorable::before,
+.tabla-variance td.col-pct.desfavorable::before {
+  content: none;
+}
+
+.tabla-variance .col-linea {
+  min-width: 16rem;
+  max-width: 16rem;
+}
+
+/* v2, barra lateral plegable y ajustes de ancho de la tabla */
+.barra-izquierda {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+}
+
+.app-plegado {
+  grid-template-columns: 68px minmax(0, 1fr);
+}
+
+.app-plegado .lateral {
+  align-items: center;
+  padding-left: var(--e2);
+  padding-right: var(--e2);
+}
+
+.app-plegado .marca {
+  padding: var(--e1) 0 var(--e3);
+}
+
+.app-plegado .marca > div,
+.app-plegado .nav-titulo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.app-plegado .pestana {
+  justify-content: center;
+  padding: 10px;
+}
+
+.app-plegado .pestana span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.app-plegado .lateral-pie {
+  display: none;
+}
+
+/* tabla más compacta para que quepan las 13 columnas */
+.tabla-variance th,
+.tabla-variance td {
+  padding: 0 0.42rem;
+}
+
+.tabla-variance {
+  font-size: 0.82rem;
+}
+
+.var-pill {
+  min-width: 3rem;
+  padding: 2px 7px;
+}
+
+.tabla-variance .col-linea {
+  min-width: 15rem;
+  max-width: 15rem;
+}
+
+.tabla-variance th.col-linea {
+  vertical-align: middle;
+}
+
+.linea-contenido {
+  align-content: center;
+  row-gap: 0;
+}
+
+/* panel: variación en una sola fila (etiqueta, importe, píldora) */
+.panel-fila.panel-variacion {
+  grid-template-columns: 6.5rem 1fr auto;
+}
+
+/* v2, primera vista: menos alto antes de la tabla y columna de la línea un poco más estrecha */
+.tabla-variance .col-linea {
+  min-width: 14.5rem;
+  max-width: 14.5rem;
+}
+
+.kpis {
+  gap: var(--e2);
+  margin: var(--e2) 0;
+}
+
+.kpi {
+  padding: 10px var(--e4);
+}
+
+.kpi-valor {
+  font-size: 1.45rem;
+}
+
+.barra-apilada svg {
+  margin-top: var(--e2);
+}
+
+.avisos .mensaje {
+  margin-bottom: var(--e1);
+  padding: var(--e2) var(--e3);
+}
+
+.barra-herramientas {
+  margin-top: var(--e2);
+}
+
 /* Foco visible en todo lo interactivo (teclado) */
 a:focus-visible,
 button:focus-visible,

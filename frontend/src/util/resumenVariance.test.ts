@@ -26,6 +26,7 @@ test('cuenta favorables y desfavorables y localiza los extremos', () => {
   assert.equal(r.conVariacion, 5)
   assert.equal(r.desfavorables, 2)
   assert.equal(r.favorables, 2)
+  assert.equal(r.sinVariacion, 1)
   assert.deepEqual(r.mayorDesfavorable, { descripcion: 'B', variacion: '-99.50' })
   assert.deepEqual(r.mayorFavorable, { descripcion: 'D', variacion: '250.25' })
 })
@@ -48,6 +49,7 @@ test('sin Variación calculada no hay resumen ni extremos inventados', () => {
     conVariacion: 0,
     desfavorables: 0,
     favorables: 0,
+    sinVariacion: 0,
     mayorDesfavorable: null,
     mayorFavorable: null,
   })

@@ -14,7 +14,7 @@ import { RutaProtegida } from './ruta/RutaProtegida'
 import { permisoDeRuta } from './ruta/ruta'
 import { useRuta } from './ruta/useRuta'
 import { NOMBRE_ROL, USUARIOS_DESARROLLO, puede } from './permisos'
-import { guardarUsuarioDev, leerUsuarioDev } from './util/preferencias'
+import { guardarLateralPlegado, guardarUsuarioDev, leerLateralPlegado, leerUsuarioDev } from './util/preferencias'
 
 type Pestana = 'cargas' | 'catalogo' | 'saldos' | 'variance' | 'budget' | 'auditoria'
 
@@ -33,6 +33,8 @@ export default function App() {
   const [hotelId, setHotelId] = useState<number | null>(null)
   const [pestana, setPestana] = useState<Pestana>('cargas')
   const [version, setVersion] = useState(0)
+  // Barra lateral plegada (solo iconos): deja todo el ancho a las tablas anchas
+  const [lateralPlegado, setLateralPlegado] = useState(leerLateralPlegado)
 
   const hoteles = useDatos(() => obtenerTipado('/api/v1/hoteles', {}), [usuario])
 
@@ -95,7 +97,7 @@ export default function App() {
   const nombreUsuario = USUARIOS_DESARROLLO.find((u) => u.email === usuario)?.nombre ?? usuario
 
   return (
-    <div className="app">
+    <div className={lateralPlegado ? 'app app-plegado' : 'app'}>
       <aside className="lateral">
         <div className="marca">
           <Logo />
@@ -156,6 +158,11 @@ export default function App() {
 
       <div className="principal">
         <BarraSuperior
+          lateralPlegado={lateralPlegado}
+          alAlternarLateral={() => {
+            guardarLateralPlegado(!lateralPlegado)
+            setLateralPlegado(!lateralPlegado)
+          }}
           ubicacion={ubicacion.length > 0 ? ubicacion : ['Inicio']}
           nombreUsuario={nombreUsuario}
           rol={rol ? (NOMBRE_ROL[rol] ?? rol) : undefined}
