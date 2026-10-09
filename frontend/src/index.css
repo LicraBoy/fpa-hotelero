@@ -1525,22 +1525,6 @@ input[type='file']::file-selector-button {
   letter-spacing: 0.01em;
 }
 
-/* Franja del índice: una sola fila desplazable, para que la tabla quede lo más arriba posible */
-.herramientas-tabla .indice-secciones {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.herramientas-tabla .indice-secciones .chip {
-  flex: none;
-  white-space: nowrap;
-}
-
-.herramientas-tabla .indice-secciones .suave {
-  flex: none;
-}
-
 .ley-fav {
   color: var(--ok);
   font-weight: 600;

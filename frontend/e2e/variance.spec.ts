@@ -212,14 +212,14 @@ test('la búsqueda resalta lo encontrado, cuenta las líneas y no pliega nada', 
   expect(await page.locator('img[src="x"]').count()).toBe(0) // lo escrito nunca se interpreta
 })
 
-test('el índice de secciones lleva a la sección y la despliega', async ({ page }) => {
+test('«Saltar a» lleva a la sección y la despliega', async ({ page }) => {
   await abrirVariance(page)
-  const indice = page.getByRole('navigation', { name: 'Ir a una sección' })
-  await expect(indice.getByRole('button', { name: /Expenses/ })).toBeVisible()
+  const saltar = page.getByLabel('Ir a sección')
+  await expect(saltar.getByRole('option', { name: /Expenses/ })).toHaveCount(1)
   const boton = page.getByRole('table').getByRole('button', { name: /Expenses/ })
   await boton.click() // plegada
   await expect(boton).toHaveAttribute('aria-expanded', 'false')
-  await indice.getByRole('button', { name: /Expenses/ }).click()
+  await saltar.selectOption({ label: 'Expenses' })
   await expect(boton).toHaveAttribute('aria-expanded', 'true')
   await expect(page.getByRole('rowheader', { name: 'Salaries' })).toBeVisible()
 })

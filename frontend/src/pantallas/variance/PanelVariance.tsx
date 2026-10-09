@@ -262,6 +262,26 @@ function ReporteVariance({
             ))}
           </select>
         </label>
+        {grupos.length > 1 && (
+          <label className="chip-filtro">
+            Saltar a
+            <select
+              aria-label="Ir a sección"
+              value=""
+              onChange={(e) => {
+                const g = grupos[Number(e.target.value)]
+                if (g) irASeccion(g.seccion?.id ?? null)
+              }}
+            >
+              <option value="">Elegir sección…</option>
+              {grupos.map((g, i) => (
+                <option key={`${g.seccion?.id ?? 'sin'}-${i}`} value={i}>
+                  {etiquetas[i]}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="chip-filtro">
           Buscar línea
           <input
@@ -370,21 +390,6 @@ function ReporteVariance({
             <>
               <div className="herramientas-tabla">
               <div className="barra-lectura">
-                {grupos.length > 1 && (
-                  <nav className="indice-secciones" aria-label="Ir a una sección">
-                    <span className="suave">Ir a:</span>
-                    {grupos.map((g, i) => (
-                      <button
-                        key={`${g.seccion?.id ?? 'sin'}-${i}`}
-                        type="button"
-                        className="chip"
-                        onClick={() => irASeccion(g.seccion?.id ?? null)}
-                      >
-                        {etiquetas[i]}
-                      </button>
-                    ))}
-                  </nav>
-                )}
                 <p className="suave cuenta-lineas" role="status">
                   {busqueda !== '' && (
                     <>
