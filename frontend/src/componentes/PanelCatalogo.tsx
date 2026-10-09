@@ -3,6 +3,7 @@ import { obtenerTipado } from '../api/cliente'
 import type { NodoCatalogo } from '../api/tipos'
 import { useDatos } from '../api/useDatos'
 import { ImportarCatalogo } from './ImportarCatalogo'
+import { EncabezadoPagina } from './EncabezadoPagina'
 import { Cargando, Insignia, MensajeError } from './Insignia'
 
 function textoBuscable(n: NodoCatalogo): string {
@@ -53,7 +54,7 @@ export function PanelCatalogo({ hotelId, version, puedeImportar, alCambiar }: Pr
     <>
       {puedeImportar && <ImportarCatalogo hotelId={hotelId} alCambiar={alCambiar} />}
       <section className="tarjeta" aria-labelledby="titulo-catalogo">
-        <h2 id="titulo-catalogo">Catálogo de cuentas</h2>
+        <EncabezadoPagina id="titulo-catalogo" titulo="Catálogo de cuentas" />
         {arbol.cargando && <Cargando />}
         {arbol.error && <MensajeError texto={arbol.error} />}
         {arbol.datos && arbol.datos.length === 0 && (

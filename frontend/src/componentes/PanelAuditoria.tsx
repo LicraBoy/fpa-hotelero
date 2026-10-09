@@ -1,6 +1,7 @@
 import { obtenerTipado } from '../api/cliente'
 import { useDatos } from '../api/useDatos'
-import { Cargando, Insignia, MensajeError } from './Insignia'
+import { EncabezadoPagina } from './EncabezadoPagina'
+import { Cargando, EstadoVacio, Insignia, MensajeError } from './Insignia'
 
 const TONO_ACCION: Record<string, 'ok' | 'aviso' | 'error' | 'info'> = {
   'carga.creada': 'ok',
@@ -27,13 +28,16 @@ export function PanelAuditoria({ hotelId, version }: { hotelId: number; version:
   )
   return (
     <section className="tarjeta" aria-labelledby="titulo-auditoria">
-      <h2 id="titulo-auditoria">Bitácora de auditoría</h2>
-      <p className="suave">Cada carga, reemplazo y rechazo queda registrado. No se puede editar ni borrar.</p>
+      <EncabezadoPagina
+        id="titulo-auditoria"
+        titulo="Bitácora de auditoría"
+        subtitulo="Cada carga, reemplazo y rechazo queda registrado. No se puede editar ni borrar."
+      />
       {eventos.cargando && <Cargando />}
       {eventos.error && <MensajeError texto={eventos.error} />}
-      {eventos.datos && eventos.datos.length === 0 && <p className="suave">Sin eventos todavía.</p>}
+      {eventos.datos && eventos.datos.length === 0 && <EstadoVacio>Sin eventos todavía.</EstadoVacio>}
       {eventos.datos && eventos.datos.length > 0 && (
-        <div className="tabla-contenedor tabla-alta">
+        <div className="tabla-contenedor tabla-alta tabla-marco">
           <table className="tabla">
             <thead>
               <tr>

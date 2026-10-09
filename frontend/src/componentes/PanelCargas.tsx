@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { obtenerTipado } from '../api/cliente'
 import { useDatos } from '../api/useDatos'
 import { formatoDinero } from '../util/dinero'
-import { Cargando, Insignia, MensajeError } from './Insignia'
+import { EncabezadoPagina } from './EncabezadoPagina'
+import { Cargando, EstadoVacio, Insignia, MensajeError } from './Insignia'
 import { ReporteCalidadVista } from './ReporteCalidadVista'
 import { SubirArchivo } from './SubirArchivo'
 
@@ -29,14 +30,18 @@ export function PanelCargas({ hotelId, puedeCargar, version, alCambiar }: Props)
     <>
       {puedeCargar && <SubirArchivo hotelId={hotelId} alCambiar={alCambiar} />}
       <section className="tarjeta" aria-labelledby="titulo-cargas">
-        <h2 id="titulo-cargas">Cargas</h2>
+        <EncabezadoPagina
+          id="titulo-cargas"
+          titulo="Cargas"
+          subtitulo="Historial de archivos cargados; solo la carga vigente de cada mes entra al cálculo."
+        />
         {cargas.cargando && <Cargando />}
         {cargas.error && <MensajeError texto={cargas.error} />}
         {cargas.datos && cargas.datos.length === 0 && (
-          <p className="suave">Todavía no hay cargas en este hotel.</p>
+          <EstadoVacio>Todavía no hay cargas en este hotel.</EstadoVacio>
         )}
         {cargas.datos && cargas.datos.length > 0 && (
-          <div className="tabla-contenedor">
+          <div className="tabla-contenedor tabla-marco">
             <table className="tabla">
               <thead>
                 <tr>

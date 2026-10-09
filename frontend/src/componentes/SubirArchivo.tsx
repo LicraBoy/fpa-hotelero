@@ -60,7 +60,7 @@ export function SubirArchivo({ hotelId, alCambiar }: Props) {
   return (
     <section className="tarjeta" aria-labelledby="titulo-subir">
       <h2 id="titulo-subir">Subir archivo</h2>
-      <form onSubmit={alEnviar} className="formulario">
+      <form onSubmit={alEnviar} className="formulario" aria-busy={enviando}>
         <p>
           <strong>{NOMBRE_FUENTE}</strong>
           <br />
@@ -76,6 +76,11 @@ export function SubirArchivo({ hotelId, alCambiar }: Props) {
               setResultado({ tipo: 'ninguno' })
             }}
           />
+          {archivo && (
+            <span className="archivo-elegido">
+              {archivo.name} · {Math.max(1, Math.round(archivo.size / 1024)).toLocaleString('es-MX')} KB
+            </span>
+          )}
         </label>
         <label>
           Meses que declara el archivo (opcional)

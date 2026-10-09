@@ -125,7 +125,7 @@ function FilaLinea({
       : null
   return (
     <tr id={`linea-${linea.linea_id}`} className={`fila-${linea.tipo}${destacada ? ' fila-origen' : ''}`}>
-      <th scope="row" className="col-linea">
+      <th scope="row" className="col-linea" title={linea.descripcion}>
         <span className="descripcion">
           <Resaltado texto={linea.descripcion} busqueda={busqueda} />
         </span>

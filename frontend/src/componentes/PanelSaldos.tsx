@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { obtenerTipado } from '../api/cliente'
 import { useDatos } from '../api/useDatos'
 import { formatoDinero, sumar } from '../util/dinero'
-import { Cargando, MensajeError } from './Insignia'
+import { EncabezadoPagina } from './EncabezadoPagina'
+import { Cargando, EstadoVacio, MensajeError } from './Insignia'
 
 interface Props {
   hotelId: number
@@ -28,11 +29,15 @@ export function PanelSaldos({ hotelId, version, puedeVerCargas }: Props) {
 
   return (
     <section className="tarjeta" aria-labelledby="titulo-saldos">
-      <h2 id="titulo-saldos">Saldos por cuenta</h2>
+      <EncabezadoPagina
+        id="titulo-saldos"
+        titulo="Saldos por cuenta"
+        subtitulo="Débito, crédito y resultado de cada cuenta en el mes elegido."
+      />
       {cargas.cargando && <Cargando />}
       {cargas.error && <MensajeError texto={cargas.error} />}
       {!cargas.cargando && periodos.length === 0 && (
-        <p className="suave">Aún no hay meses cargados.</p>
+        <EstadoVacio>Aún no hay meses cargados.</EstadoVacio>
       )}
       {periodos.length > 0 && (
         <>
@@ -90,7 +95,7 @@ function TablaSaldos({
           onChange={(e) => setConsulta(e.target.value)}
         />
       </label>
-      <div className="tabla-contenedor tabla-alta">
+      <div className="tabla-contenedor tabla-alta tabla-marco">
         <table className="tabla">
           <thead>
             <tr>

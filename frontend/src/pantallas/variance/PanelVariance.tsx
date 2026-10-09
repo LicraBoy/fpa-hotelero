@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ErrorApi, descargarVarianceExcel, obtenerTipado } from '../../api/cliente'
 import { useDatos } from '../../api/useDatos'
+import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { puede } from '../../permisos'
 import { useRuta } from '../../ruta/useRuta'
@@ -199,8 +200,33 @@ function ReporteVariance({
     document.getElementById(`linea-${lineaOrigen}`)?.scrollIntoView({ block: 'center' })
   }, [lineaOrigen, hayDatos])
   return (
-    <section className="tarjeta" aria-labelledby="titulo-variance">
-      <h2 id="titulo-variance">Variance</h2>
+    <section aria-labelledby="titulo-variance">
+      <EncabezadoPagina
+        id="titulo-variance"
+        titulo="Variance"
+        subtitulo={
+          datos ? (
+            <>
+              Año fiscal <strong>{datos.ano_fiscal}</strong> · acumulado de{' '}
+              {datos.periodos_ytd.join(', ')} · mapeo v{datos.version_mapeo_id}
+              {datos.version_plan_id !== null ? ` · Budget v${datos.version_plan_id}` : ''}{' '}
+              {datos.periodos_sin_datos.length > 0 && (
+                <Insignia tono="aviso">Acumulado incompleto</Insignia>
+              )}
+            </>
+          ) : undefined
+        }
+        acciones={
+          <button
+            type="button"
+            className="boton"
+            disabled={exportando || periodo === ''}
+            onClick={() => void exportar()}
+          >
+            {exportando ? 'Exportando…' : 'Exportar a Excel'}
+          </button>
+        }
+      />
       <form className="filtros" role="search" onSubmit={(e) => e.preventDefault()}>
         <label>
           Mes
@@ -257,14 +283,6 @@ function ReporteVariance({
           />
           Ocultar líneas sin cifras
         </label>
-        <button
-          type="button"
-          className="boton-exportar"
-          disabled={exportando || periodo === ''}
-          onClick={() => void exportar()}
-        >
-          {exportando ? 'Exportando…' : 'Exportar a Excel'}
-        </button>
       </form>
       {errorExportar && <MensajeError texto={errorExportar} />}
 
@@ -289,14 +307,11 @@ function ReporteVariance({
 
       {datos && (
         <>
-          <p className="suave resumen-variance">
-            Año fiscal <strong>{datos.ano_fiscal}</strong> · acumulado de{' '}
-            {datos.periodos_ytd.join(', ')} · mapeo v{datos.version_mapeo_id}
-            {datos.version_plan_id !== null ? ` · Budget v${datos.version_plan_id}` : ''}{' '}
-            {datos.periodos_sin_datos.length > 0 && (
-              <Insignia tono="aviso">Acumulado incompleto</Insignia>
-            )}
-          </p>
+          {(sinBudgetEnElMes(datos.lineas) || datos.advertencias.length > 0) && (
+            <details className="avisos" open>
+              <summary>
+                Avisos ({datos.advertencias.length + (sinBudgetEnElMes(datos.lineas) ? 1 : 0)})
+              </summary>
           {sinBudgetEnElMes(datos.lineas) && (
             <p className="mensaje mensaje-aviso" role="status">
               <strong>No hay Budget para {periodo}.</strong> Por eso Presupuesto, Variación y % var.
@@ -316,6 +331,8 @@ function ReporteVariance({
                 <li key={a}>{a}</li>
               ))}
             </ul>
+          )}
+            </details>
           )}
           {datos.lineas.length === 0 ? (
             <p className="suave">Ninguna línea coincide con los filtros.</p>

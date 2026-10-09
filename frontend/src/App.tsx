@@ -71,13 +71,36 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="barra">
-        <div>
+      <aside className="lateral">
+        <div className="marca">
           <h1>Plataforma FP&amp;A Hotelera</h1>
           <p className="suave">Torres Mazatlán · Actuals</p>
         </div>
-        <div className="barra-controles">
-          <EstadoApi />
+
+        {hotel && activa && (
+          <nav className="pestanas" aria-label="Secciones">
+            {visibles.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={p.id === activa ? 'pestana activa' : 'pestana'}
+                aria-current={p.id === activa ? 'page' : undefined}
+                onClick={() => {
+                  setPestana(p.id)
+                  window.location.hash = p.id === 'variance' ? '#/variance' : ''
+                }}
+              >
+                {p.nombre}
+              </button>
+            ))}
+          </nav>
+        )}
+
+        <div className="lateral-pie">
+          <div className="lateral-estado">
+            <EstadoApi />
+            {rol && <Insignia tono="info">{NOMBRE_ROL[rol] ?? rol}</Insignia>}
+          </div>
           <label>
             Usuario (desarrollo)
             <select value={usuario} onChange={(e) => cambiarUsuario(e.target.value)}>
@@ -100,44 +123,26 @@ export default function App() {
               </select>
             </label>
           )}
-          {rol && <Insignia tono="info">{NOMBRE_ROL[rol] ?? rol}</Insignia>}
+          <p className="aviso-desarrollo" role="note">
+            Modo desarrollo: el usuario se elige a mano. En producción entrará con el inicio de
+            sesión corporativo.
+          </p>
         </div>
-      </header>
+      </aside>
 
-      <p className="aviso-desarrollo" role="note">
-        Modo desarrollo: el usuario se elige a mano. En producción entrará con el inicio de sesión
-        corporativo.
-      </p>
+      <div className="principal">
+        <main className={activa === 'variance' ? 'contenido' : 'contenido contenido-estrecho'}>
+          {hoteles.cargando && <Cargando />}
+          {hoteles.error && (
+            <MensajeError
+              texto={`${hoteles.error}. Si la API está encendida, verifica que corra con FPA_ENTORNO=desarrollo.`}
+            />
+          )}
+          {hoteles.datos && hoteles.datos.length === 0 && (
+            <p className="mensaje mensaje-aviso">Este usuario no tiene hoteles asignados.</p>
+          )}
 
-      <main className="contenido">
-        {hoteles.cargando && <Cargando />}
-        {hoteles.error && (
-          <MensajeError
-            texto={`${hoteles.error}. Si la API está encendida, verifica que corra con FPA_ENTORNO=desarrollo.`}
-          />
-        )}
-        {hoteles.datos && hoteles.datos.length === 0 && (
-          <p className="mensaje mensaje-aviso">Este usuario no tiene hoteles asignados.</p>
-        )}
-
-        {hotel && activa && (
-          <>
-            <nav className="pestanas" aria-label="Secciones">
-              {visibles.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={p.id === activa ? 'pestana activa' : 'pestana'}
-                  aria-current={p.id === activa ? 'page' : undefined}
-                  onClick={() => {
-                    setPestana(p.id)
-                    window.location.hash = p.id === 'variance' ? '#/variance' : ''
-                  }}
-                >
-                  {p.nombre}
-                </button>
-              ))}
-            </nav>
+          {hotel && activa && (
             <div key={`${usuario}-${hotel.id}`}>
               {activa === 'cargas' && (
                 <PanelCargas
@@ -181,9 +186,9 @@ export default function App() {
               {activa === 'budget' && <PanelBudget hotelId={hotel.id} />}
               {activa === 'auditoria' && <PanelAuditoria hotelId={hotel.id} version={version} />}
             </div>
-          </>
-        )}
-      </main>
+          )}
+        </main>
+      </div>
     </div>
   )
 }

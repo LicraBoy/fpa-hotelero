@@ -1,5 +1,6 @@
 import { obtenerTipado } from '../../api/cliente'
 import { useDatos } from '../../api/useDatos'
+import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
 import { formatoContable } from '../../util/formato'
@@ -45,7 +46,7 @@ export function AsientoVista({ hotelId, periodo, asiento, cuenta, lineaId, bloqu
   )
   const a = datos.datos
   return (
-    <section className="tarjeta" aria-labelledby="titulo-asiento">
+    <section aria-labelledby="titulo-asiento">
       <Migas
         periodo={periodo}
         bloque={bloque}
@@ -58,7 +59,11 @@ export function AsientoVista({ hotelId, periodo, asiento, cuenta, lineaId, bloqu
             : { texto: `Variance ${periodo}`, href: construirRuta({ tipo: 'variance', periodo }) }
         }
       />
-      <h2 id="titulo-asiento">Asiento {asiento}</h2>
+      <EncabezadoPagina
+        id="titulo-asiento"
+        titulo={`Asiento ${asiento}`}
+        subtitulo={`${periodo} · todas las líneas del asiento`}
+      />
       {datos.cargando && <Cargando />}
       {datos.error && <MensajeError texto={datos.error} />}
       {a && (
@@ -75,6 +80,7 @@ export function AsientoVista({ hotelId, periodo, asiento, cuenta, lineaId, bloqu
             </Insignia>
             {a.truncado && <Insignia tono="aviso">Se muestran las primeras líneas</Insignia>}
           </p>
+          <div className="tabla-marco">
           <table className="tabla-simple" aria-label="Líneas del asiento">
             <thead>
               <tr>
@@ -114,6 +120,7 @@ export function AsientoVista({ hotelId, periodo, asiento, cuenta, lineaId, bloqu
               ))}
             </tbody>
           </table>
+          </div>
           {!a.cuadra && (
             <p className="suave nota-pie">
               El reporte trae solo las cuentas de resultados (ingresos, costos y gastos), por eso un

@@ -8,6 +8,7 @@ import {
 } from '../../api/cliente'
 import { useDatos } from '../../api/useDatos'
 import type { LineaEdicionBudget, RespuestaBudget, VistaEdicionBudget } from '../../api/tipos'
+import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import {
   agruparPorSeccionId,
@@ -354,7 +355,7 @@ function VistaEditor(p: PropsVista) {
 
   return (
     <section className="tarjeta" aria-labelledby="titulo-budget">
-      <h2 id="titulo-budget">Budget {p.anoFiscal}</h2>
+      <EncabezadoPagina id="titulo-budget" titulo={`Budget ${p.anoFiscal}`} />
       <p className="suave">
         Escribe el Budget de cada mes; el <strong>Actual</strong> aparece al lado como referencia. Los
         totales se calculan solos. Guardar crea una <strong>versión nueva</strong>: la anterior se

@@ -1,5 +1,6 @@
 import { obtenerTipado } from '../../api/cliente'
 import { useDatos } from '../../api/useDatos'
+import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
 import { aCentavos, aTextoPlano, negar, sumarCentavos } from '../../util/dinero'
@@ -36,7 +37,7 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
   const cuadra = d !== null && sumaCentavos === aCentavos(d.cifra)
 
   return (
-    <section className="tarjeta" aria-labelledby="titulo-desglose">
+    <section aria-labelledby="titulo-desglose">
       <Migas
         periodo={periodo}
         bloque={bloque}
@@ -44,10 +45,16 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
         paso={`Paso 1 de 3 · ${d && d.componentes.length > 0 ? 'Componentes del total' : 'Cuentas de la línea'}`}
         volver={{ texto: `Variance ${periodo}`, href: construirRuta({ tipo: 'variance', periodo }) }}
       />
-      <h2 id="titulo-desglose">
-        Desglose: {d?.descripcion ?? '…'}
-        {d?.codigo_corporativo && <span className="codigo suave"> {d.codigo_corporativo}</span>}
-      </h2>
+      <EncabezadoPagina
+        id="titulo-desglose"
+        titulo={`Desglose: ${d?.descripcion ?? '…'}`}
+        subtitulo={
+          <>
+            {d?.codigo_corporativo && <span className="codigo">{d.codigo_corporativo} · </span>}
+            {periodo} · {bloque === 'mes' ? 'solo el mes' : 'acumulado del año fiscal'}
+          </>
+        }
+      />
       {datos.cargando && <Cargando />}
       {datos.error && <MensajeError texto={datos.error} />}
       {d && (
@@ -74,6 +81,7 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
           )}
 
           {d.componentes.length > 0 ? (
+            <div className="tabla-marco">
             <table className="tabla-simple" aria-label="Componentes del total">
               <thead>
                 <tr>
@@ -102,7 +110,9 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
                 ))}
               </tbody>
             </table>
+            </div>
           ) : d.cuentas.length > 0 ? (
+            <div className="tabla-marco">
             <table className="tabla-simple" aria-label="Cuentas de la línea">
               <thead>
                 <tr>
@@ -165,6 +175,7 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
                 </tr>
               </tfoot>
             </table>
+            </div>
           ) : (
             <p className="suave">
               Esta línea no tiene cuentas vinculadas ni se calcula como un total.

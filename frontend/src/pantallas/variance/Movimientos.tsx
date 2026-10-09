@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ErrorApi, obtenerTipado } from '../../api/cliente'
 import type { MovimientoDetalle, PaginaMovimientos } from '../../api/tipos'
-import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
+import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
+import { Cargando, EstadoVacio, Insignia, MensajeError } from '../../componentes/Insignia'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
 import { aCentavos, aTextoPlano, sumarCentavos } from '../../util/dinero'
 import { formatoContable } from '../../util/formato'
@@ -67,7 +68,7 @@ export function Movimientos({ hotelId, periodo, codigo, bloque, lineaId }: Props
   const faltan = resumen ? resumen.n_movimientos - movimientos.length : 0
 
   return (
-    <section className="tarjeta" aria-labelledby="titulo-movimientos">
+    <section aria-labelledby="titulo-movimientos">
       <Migas
         periodo={periodo}
         bloque={bloque}
@@ -80,10 +81,11 @@ export function Movimientos({ hotelId, periodo, codigo, bloque, lineaId }: Props
             : { texto: `Variance ${periodo}`, href: construirRuta({ tipo: 'variance', periodo }) }
         }
       />
-      <h2 id="titulo-movimientos">
-        Movimientos de {codigo}
-        {primera?.descripcion ? ` · ${primera.descripcion}` : ''}
-      </h2>
+      <EncabezadoPagina
+        id="titulo-movimientos"
+        titulo={`Movimientos de ${codigo}${primera?.descripcion ? ` · ${primera.descripcion}` : ''}`}
+        subtitulo={`${periodo} · ${bloque === 'mes' ? 'solo el mes' : 'acumulado del año fiscal'}`}
+      />
       {error && <MensajeError texto={error} />}
       {primera === null && cargando && <Cargando />}
       {resumen && (
@@ -108,7 +110,7 @@ export function Movimientos({ hotelId, periodo, codigo, bloque, lineaId }: Props
             )}
           </p>
           {movimientos.length === 0 && !cargando ? (
-            <p className="suave">La cuenta no tiene movimientos en este periodo.</p>
+            <EstadoVacio>La cuenta no tiene movimientos en este periodo.</EstadoVacio>
           ) : (
             <div
               className="tabla-variance-contenedor"
