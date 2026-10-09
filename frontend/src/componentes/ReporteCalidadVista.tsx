@@ -10,7 +10,7 @@ export function ReporteCalidadVista({ reporte }: { reporte: ReporteCalidad }) {
   const controles = [...reporte.controles].sort((a, b) => orden[a.severidad] - orden[b.severidad])
   return (
     <div className="reporte-calidad">
-      <p>
+      <p className="calidad-cabecera">
         <strong>Calidad de datos:</strong>{' '}
         <Insignia tono={reporte.aprobado ? 'ok' : 'error'}>
           {reporte.aprobado ? 'Aprobado' : 'Rechazado'}

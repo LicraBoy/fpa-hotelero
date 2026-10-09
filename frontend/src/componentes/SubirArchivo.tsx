@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { ErrorApi, subirCarga } from '../api/cliente'
 import type { Fuente, RespuestaCarga } from '../api/tipos'
 import { formatoDinero } from '../util/dinero'
+import { EncabezadoPagina } from './EncabezadoPagina'
 import { Insignia, MensajeError } from './Insignia'
 import { ReporteCalidadVista } from './ReporteCalidadVista'
 
@@ -59,46 +60,81 @@ export function SubirArchivo({ hotelId, alCambiar }: Props) {
 
   return (
     <section className="tarjeta" aria-labelledby="titulo-subir">
-      <h2 id="titulo-subir">Subir archivo</h2>
-      <form onSubmit={alEnviar} className="formulario" aria-busy={enviando}>
-        <p>
-          <strong>{NOMBRE_FUENTE}</strong>
-          <br />
-          <span className="suave">{AYUDA_FUENTE}</span>
-        </p>
-        <label>
-          Archivo (.xls, .xlsx o .csv)
-          <input
-            type="file"
-            accept=".xls,.xlsx,.csv"
-            onChange={(e) => {
-              setArchivo(e.target.files?.[0] ?? null)
-              setResultado({ tipo: 'ninguno' })
-            }}
-          />
-          {archivo && (
-            <span className="archivo-elegido">
-              {archivo.name} · {Math.max(1, Math.round(archivo.size / 1024)).toLocaleString('es-MX')} KB
+      <EncabezadoPagina
+        id="titulo-subir"
+        titulo="Subir archivo"
+        subtitulo="Cuatro pasos: fuente, archivo, validación y resultado."
+      />
+      <form onSubmit={alEnviar} className="formulario formulario-pasos" aria-busy={enviando}>
+        <ol className="pasos">
+          <li className="paso">
+            <span className="paso-num" aria-hidden="true">
+              1
             </span>
-          )}
-        </label>
-        <label>
-          Meses que declara el archivo (opcional)
-          <input
-            type="text"
-            placeholder="2026-07,2026-08"
-            value={periodos}
-            onChange={(e) => setPeriodos(e.target.value)}
-          />
-          <span className="suave">
-            Si lo llenas, cualquier movimiento fuera de esos meses rechaza la carga.
-          </span>
-        </label>
-        <div>
-          <button type="submit" className="boton" disabled={!archivo || enviando}>
-            {enviando ? 'Enviando…' : 'Subir y validar'}
-          </button>
-        </div>
+            <div className="paso-cuerpo">
+              <h3>Fuente</h3>
+              <p>
+                <strong>{NOMBRE_FUENTE}</strong>
+              </p>
+              <p className="suave">{AYUDA_FUENTE}</p>
+              <p className="formatos">
+                <span className="suave">Formatos permitidos</span>
+                <Insignia tono="info">.xls</Insignia>
+                <Insignia tono="info">.xlsx</Insignia>
+                <Insignia tono="info">.csv</Insignia>
+              </p>
+            </div>
+          </li>
+          <li className="paso">
+            <span className="paso-num" aria-hidden="true">
+              2
+            </span>
+            <div className="paso-cuerpo">
+              <h3>Archivo</h3>
+              <label>
+                Archivo (.xls, .xlsx o .csv)
+                <input
+                  type="file"
+                  accept=".xls,.xlsx,.csv"
+                  onChange={(e) => {
+                    setArchivo(e.target.files?.[0] ?? null)
+                    setResultado({ tipo: 'ninguno' })
+                  }}
+                />
+                {archivo && (
+                  <span className="archivo-elegido">
+                    {archivo.name} · {Math.max(1, Math.round(archivo.size / 1024)).toLocaleString('es-MX')} KB
+                  </span>
+                )}
+              </label>
+            </div>
+          </li>
+          <li className="paso">
+            <span className="paso-num" aria-hidden="true">
+              3
+            </span>
+            <div className="paso-cuerpo">
+              <h3>Validar y subir</h3>
+              <label>
+                Meses que declara el archivo (opcional)
+                <input
+                  type="text"
+                  placeholder="2026-07,2026-08"
+                  value={periodos}
+                  onChange={(e) => setPeriodos(e.target.value)}
+                />
+                <span className="suave">
+                  Si lo llenas, cualquier movimiento fuera de esos meses rechaza la carga.
+                </span>
+              </label>
+              <div>
+                <button type="submit" className="boton" disabled={!archivo || enviando}>
+                  {enviando ? 'Enviando…' : 'Subir y validar'}
+                </button>
+              </div>
+            </div>
+          </li>
+        </ol>
       </form>
       <ResultadoVista
         resultado={resultado}
