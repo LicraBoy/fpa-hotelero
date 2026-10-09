@@ -776,8 +776,12 @@ input[type='file']::file-selector-button {
   text-align: right;
 }
 
+.tabla-variance thead tr:nth-child(1) th {
+  height: 2rem;
+}
+
 .tabla-variance thead tr:nth-child(2) th {
-  top: 2.1rem;
+  top: 2rem;
 }
 
 .tabla-variance thead .grupo-bloque {
@@ -830,14 +834,14 @@ input[type='file']::file-selector-button {
 /* Filas alternadas y la fila bajo el cursor (o con el foco dentro) se distinguen a simple vista */
 .tabla-variance tbody tr:nth-child(even):not(.fila-seccion):not(.fila-total):not(.fila-subtotal) th,
 .tabla-variance tbody tr:nth-child(even):not(.fila-seccion):not(.fila-total):not(.fila-subtotal) td {
-  background-color: color-mix(in srgb, var(--superficie), var(--fila-par));
+  background-color: color-mix(in srgb, var(--superficie) 97%, var(--texto));
 }
 
 .tabla-variance tbody tr:not(.fila-seccion):hover th,
 .tabla-variance tbody tr:not(.fila-seccion):hover td,
 .tabla-variance tbody tr:not(.fila-seccion):focus-within th,
 .tabla-variance tbody tr:not(.fila-seccion):focus-within td {
-  background-color: color-mix(in srgb, var(--superficie), var(--fila-hover));
+  background-color: color-mix(in srgb, var(--superficie) 88%, var(--primario));
 }
 
 .tabla-variance .coincidencia {
@@ -1095,4 +1099,85 @@ input[type='file']::file-selector-button {
 
 .importar-budget {
   margin: 0.75rem 0;
+}
+
+/* Foco visible en todo lo interactivo (teclado) */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+select:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
+}
+
+/* Impresión: solo el reporte, en hoja horizontal y sin barras ni filtros */
+@media print {
+  @page {
+    size: landscape;
+    margin: 12mm;
+  }
+
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .app {
+    display: block;
+  }
+
+  .lateral,
+  .filtros,
+  .leyenda-variance,
+  .barra-lectura,
+  .avisos,
+  .encabezado-acciones,
+  .migas,
+  .boton,
+  .boton-volver {
+    display: none !important;
+  }
+
+  .contenido {
+    padding: 0;
+  }
+
+  .tabla-variance-contenedor,
+  .tabla-marco,
+  .tabla-alta {
+    max-height: none;
+    overflow: visible;
+    border: none;
+  }
+
+  .tabla-variance {
+    width: 100%;
+    font-size: 7.5pt;
+  }
+
+  .tabla-variance th,
+  .tabla-variance td {
+    position: static !important;
+    padding: 1pt 3pt;
+  }
+
+  .tabla-variance thead {
+    display: table-header-group;
+  }
+
+  .tabla-variance tr {
+    break-inside: avoid;
+  }
+
+  .tabla-variance .col-linea {
+    min-width: 0;
+    max-width: none;
+    white-space: normal;
+  }
 }
