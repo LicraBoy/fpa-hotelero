@@ -5,6 +5,7 @@ import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Icono } from '../../componentes/Iconos'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
+import { porcentajeBarra } from '../../util/barras'
 import { aCentavos, aTextoPlano, negar, sumarCentavos } from '../../util/dinero'
 import { formatoContable } from '../../util/formato'
 import { Migas } from './Migas'
@@ -35,6 +36,13 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
     ? sumarCentavos(d.componentes.map((c) => (c.signo < 0 ? negar(c.importe) : c.importe)))
     : 0n
   const sumaCentavos = d && d.componentes.length > 0 ? sumaComponentes : sumaCuentas
+  // Peso de cada cuenta en la línea: |aporte| ÷ Σ|aportes| (solo geometría de la barra, con enteros)
+  const sumaAbsAportes = d
+    ? d.cuentas.reduce((n, c) => {
+        const a = aCentavos(c.aporte)
+        return n + (a < 0n ? -a : a)
+      }, 0n)
+    : 0n
   const suma = aTextoPlano(sumaCentavos)
   const cuadra = d !== null && sumaCentavos === aCentavos(d.cifra)
 
@@ -139,6 +147,7 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
                   <th scope="col" className="num">
                     Aporte a la línea
                   </th>
+                  <th scope="col">Peso en la línea</th>
                   <th scope="col" className="num">
                     Movimientos
                   </th>
@@ -165,6 +174,9 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
                     <td className="num">{c.signo > 0 ? '+' : '−'}</td>
                     <td className="num">{formatoContable(c.neto)}</td>
                     <td className="num">{formatoContable(c.aporte)}</td>
+                    <td>
+                      <PesoCuenta aporte={c.aporte} total={sumaAbsAportes} />
+                    </td>
                     <td className="num">{c.n_movimientos}</td>
                     <td>
                       {c.estado === 'sin_movimientos' && (
@@ -183,7 +195,7 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
                     Suma
                   </th>
                   <td className="num">{formatoContable(aTextoPlano(sumaCuentas))}</td>
-                  <td colSpan={2} />
+                  <td colSpan={3} />
                 </tr>
               </tfoot>
             </table>
@@ -200,5 +212,19 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
         </>
       )}
     </section>
+  )
+}
+
+/** Barra con el peso de una cuenta en su línea (|aporte| ÷ Σ|aportes|). */
+function PesoCuenta({ aporte, total }: { aporte: string; total: bigint }) {
+  const ancho = porcentajeBarra(aporte, total)
+  return (
+    <span className="peso-cuenta">
+      <svg className="barra-valor" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">
+        <rect className="barra-fondo" x="0" y="0" width="100" height="8" rx="2" />
+        {ancho > 0 && <rect className="barra-actual" x="0" y="0" width={ancho} height="8" rx="2" />}
+      </svg>
+      <span className="peso-texto">{ancho.toFixed(1)}%</span>
+    </span>
   )
 }

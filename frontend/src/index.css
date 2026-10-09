@@ -2610,6 +2610,35 @@ body {
   margin-top: var(--e2);
 }
 
+/* Desglose: peso de cada cuenta en su línea */
+.peso-cuenta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  min-width: 9rem;
+}
+
+.peso-cuenta .barra-valor {
+  width: 5.5rem;
+  height: 7px;
+}
+
+.peso-texto {
+  min-width: 3rem;
+  color: var(--suave);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-simple {
+  font-size: 0.88rem;
+}
+
+.tabla-simple th,
+.tabla-simple td {
+  height: 2.5rem;
+}
+
 /* Foco visible en todo lo interactivo (teclado) */
 a:focus-visible,
 button:focus-visible,
