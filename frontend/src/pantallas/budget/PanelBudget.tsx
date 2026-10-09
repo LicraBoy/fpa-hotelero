@@ -354,19 +354,32 @@ function VistaEditor(p: PropsVista) {
   const grupos = agruparPorSeccionId(lineasMostradas)
 
   return (
-    <section className="tarjeta" aria-labelledby="titulo-budget">
-      <EncabezadoPagina id="titulo-budget" titulo={`Budget ${p.anoFiscal}`} />
-      <p className="suave">
-        Escribe el Budget de cada mes; el <strong>Actual</strong> aparece al lado como referencia. Los
-        totales se calculan solos. Guardar crea una <strong>versión nueva</strong>: la anterior se
-        conserva. Las líneas sin cuentas (como el <strong>Exchange Rate</strong>) también dejan
-        escribir su Actual de cada mes.{' '}
-        {datos.version ? (
-          <Insignia tono="info">Versión {datos.version.numero} · {datos.version.nombre_archivo}</Insignia>
-        ) : (
-          <Insignia tono="aviso">Todavía no hay Budget para este año</Insignia>
-        )}
-      </p>
+    <section aria-labelledby="titulo-budget">
+      <EncabezadoPagina
+        id="titulo-budget"
+        titulo={`Budget ${p.anoFiscal}`}
+        subtitulo={
+          datos.version ? (
+            <Insignia tono="info">Versión {datos.version.numero} · {datos.version.nombre_archivo}</Insignia>
+          ) : (
+            <Insignia tono="aviso">Todavía no hay Budget para este año</Insignia>
+          )
+        }
+        acciones={
+          <Insignia tono={totalCambios === 0 ? 'neutro' : 'aviso'}>
+            {totalCambios === 0 ? 'Sin cambios' : `${plural(totalCambios, 'cambio', 'cambios')} sin guardar`}
+          </Insignia>
+        }
+      />
+      <details className="notas-reporte" open={!datos.version}>
+        <summary>Cómo funciona</summary>
+        <p className="suave nota-pie">
+          Escribe el Budget de cada mes; el <strong>Actual</strong> aparece al lado como referencia.
+          Los totales se calculan solos. Guardar crea una <strong>versión nueva</strong>: la anterior
+          se conserva. Las líneas sin cuentas (como el <strong>Exchange Rate</strong>) también dejan
+          escribir su Actual de cada mes.
+        </p>
+      </details>
       {datos.advertencias.map((a) => (
         <p key={a} className="mensaje mensaje-aviso" role="status">
           {a}
@@ -376,7 +389,7 @@ function VistaEditor(p: PropsVista) {
       <ImportarExcel hotelId={p.hotelId} alImportar={p.recargar} hayCambios={totalCambios > 0} />
 
       <div className="filtros">
-        <label>
+        <label className="chip-filtro">
           Año fiscal
           <select value={p.anoFiscal} onChange={(e) => p.alElegirAno(e.target.value)}>
             {p.anos.map((a) => (
@@ -386,7 +399,7 @@ function VistaEditor(p: PropsVista) {
             ))}
           </select>
         </label>
-        <label>
+        <label className="chip-filtro">
           Sección
           <select value={seccionActiva} onChange={(e) => p.setSeccion(e.target.value)}>
             <option value={TODAS}>Todas (más lento)</option>
@@ -397,11 +410,11 @@ function VistaEditor(p: PropsVista) {
             ))}
           </select>
         </label>
-        <label>
+        <label className="chip-filtro">
           Buscar línea
           <input type="search" value={p.texto} onChange={(e) => p.setTexto(e.target.value)} />
         </label>
-        <label className="casilla">
+        <label className="casilla chip-casilla">
           <input
             type="checkbox"
             checked={p.soloEditables}
@@ -411,8 +424,8 @@ function VistaEditor(p: PropsVista) {
         </label>
       </div>
 
-      <div className="filtros" role="group" aria-label="Copiar el Actual">
-        <label>
+      <div className="filtros herramienta-copiar" role="group" aria-label="Copiar el Actual">
+        <label className="chip-filtro">
           Ajuste sobre el Actual (%)
           <input
             type="text"
@@ -422,7 +435,7 @@ function VistaEditor(p: PropsVista) {
             onChange={(e) => p.setPorcentaje(e.target.value)}
           />
         </label>
-        <label className="casilla">
+        <label className="casilla chip-casilla">
           <input
             type="checkbox"
             checked={p.soloVacios}
@@ -497,7 +510,33 @@ function VistaEditor(p: PropsVista) {
         </table>
       </div>
 
-      <div className="acciones-budget">
+      {p.confirmando && (
+        <div className="mensaje mensaje-aviso" role="status">
+          <p>
+            <strong>
+              Vas a guardar {plural(totalCambios, 'cambio', 'cambios')} en{' '}
+              {plural(lineasConCambio, 'línea', 'líneas')}.
+            </strong>{' '}
+            {cambios.length > 0 && (
+              <>
+                Se crea la versión {(datos.version?.numero ?? 0) + 1} del Budget {p.anoFiscal}; la
+                anterior queda en el historial.{' '}
+              </>
+            )}
+            {cambiosActual.length > 0 && (
+              <>Los Actuales capturados se guardan con tu nombre y quedan en la bitácora. </>
+            )}
+            El Variance los usará de inmediato.
+          </p>
+          <button type="button" className="boton" disabled={p.guardando} onClick={() => void guardar()}>
+            {p.guardando ? 'Guardando…' : 'Confirmar y guardar'}
+          </button>{' '}
+          <button type="button" className="boton boton-secundario" onClick={() => p.setConfirmando(false)}>
+            Cancelar
+          </button>
+        </div>
+      )}
+      <div className="acciones-budget acciones-fijas">
         <span className="suave" role="status">
           {totalCambios === 0
             ? 'Sin cambios.'
@@ -526,32 +565,6 @@ function VistaEditor(p: PropsVista) {
         </button>
       </div>
 
-      {p.confirmando && (
-        <div className="mensaje mensaje-aviso" role="status">
-          <p>
-            <strong>
-              Vas a guardar {plural(totalCambios, 'cambio', 'cambios')} en{' '}
-              {plural(lineasConCambio, 'línea', 'líneas')}.
-            </strong>{' '}
-            {cambios.length > 0 && (
-              <>
-                Se crea la versión {(datos.version?.numero ?? 0) + 1} del Budget {p.anoFiscal}; la
-                anterior queda en el historial.{' '}
-              </>
-            )}
-            {cambiosActual.length > 0 && (
-              <>Los Actuales capturados se guardan con tu nombre y quedan en la bitácora. </>
-            )}
-            El Variance los usará de inmediato.
-          </p>
-          <button type="button" className="boton" disabled={p.guardando} onClick={() => void guardar()}>
-            {p.guardando ? 'Guardando…' : 'Confirmar y guardar'}
-          </button>{' '}
-          <button type="button" className="boton boton-secundario" onClick={() => p.setConfirmando(false)}>
-            Cancelar
-          </button>
-        </div>
-      )}
     </section>
   )
 }

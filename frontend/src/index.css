@@ -1606,6 +1606,64 @@ input[type='file']::file-selector-button {
   color: var(--texto);
 }
 
+/* ---------- Budget: herramientas, celdas editables y barra de acciones fija ---------- */
+.herramienta-copiar {
+  margin-top: 0;
+}
+
+.tabla-variance-contenedor:has(.tabla-budget) {
+  max-height: max(360px, calc(100vh - 370px));
+}
+
+.tabla-budget .entrada-budget {
+  width: 7.5rem;
+  padding: 0.18rem 0.4rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: var(--superficie);
+  color: var(--texto);
+  text-align: right;
+}
+
+.tabla-budget .entrada-budget:hover {
+  border-color: var(--acento-borde);
+}
+
+.tabla-budget .entrada-budget:focus-visible {
+  border-color: var(--primario);
+  box-shadow: 0 0 0 3px var(--acento-suave);
+  outline: none;
+}
+
+.tabla-budget td.editada {
+  background: var(--acento-suave);
+}
+
+.tabla-budget .entrada-invalida {
+  border-color: var(--error);
+  background: var(--error-fondo);
+}
+
+.acciones-fijas {
+  position: sticky;
+  bottom: 0;
+  z-index: 8;
+  margin-top: var(--e3);
+  padding: var(--e3) var(--e4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: var(--superficie);
+  box-shadow: 0 -6px 18px rgba(31, 29, 51, 0.08);
+}
+
+:root[data-tema='oscuro'] .acciones-fijas {
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.acciones-fijas .suave {
+  font-size: 0.88rem;
+}
+
 .ley-fav {
   color: var(--ok);
   font-weight: 600;
