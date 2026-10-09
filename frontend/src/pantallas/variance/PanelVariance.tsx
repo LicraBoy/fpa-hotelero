@@ -19,6 +19,7 @@ import {
 import { AsientoVista } from './AsientoVista'
 import { Desglose } from './Desglose'
 import { Movimientos } from './Movimientos'
+import { AvisoItem } from './AvisoItem'
 import { PanelLinea } from './PanelLinea'
 import { LeyendaVariance, TablaVariance } from './TablaVariance'
 
@@ -143,6 +144,7 @@ function ReporteVariance({
     [hotelId, periodo, seccionId, soloTotales, busqueda],
   )
 
+  const indicePeriodo = periodos.indexOf(periodo)
   const { grupos, ocultas } = useMemo(() => {
     const todos = variance.datos
       ? agruparPorSeccion(variance.datos.lineas, variance.datos.secciones)
@@ -216,14 +218,27 @@ function ReporteVariance({
         titulo="Variance"
         subtitulo={
           datos ? (
-            <>
-              Año fiscal <strong>{datos.ano_fiscal}</strong> · acumulado de{' '}
-              {datos.periodos_ytd.join(', ')} · mapeo v{datos.version_mapeo_id}
-              {datos.version_plan_id !== null ? ` · Budget v${datos.version_plan_id}` : ''}{' '}
-              {datos.periodos_sin_datos.length > 0 && (
-                <Insignia tono="aviso">Acumulado incompleto</Insignia>
+            <ul className="meta-reporte" aria-label="Contexto del reporte">
+              <li className="meta-chip">
+                <Icono nombre="calendario" tamano={14} /> Año fiscal <strong>{datos.ano_fiscal}</strong>
+              </li>
+              <li className="meta-chip">
+                Acumulado: <strong>{datos.periodos_ytd.join(', ')}</strong>
+              </li>
+              <li className="meta-chip">
+                Mapeo <strong>v{datos.version_mapeo_id}</strong>
+              </li>
+              {datos.version_plan_id !== null && (
+                <li className="meta-chip">
+                  Budget <strong>v{datos.version_plan_id}</strong>
+                </li>
               )}
-            </>
+              {datos.periodos_sin_datos.length > 0 && (
+                <li>
+                  <Insignia tono="aviso">Acumulado incompleto</Insignia>
+                </li>
+              )}
+            </ul>
           ) : undefined
         }
         acciones={
@@ -233,28 +248,50 @@ function ReporteVariance({
             disabled={exportando || periodo === ''}
             onClick={() => void exportar()}
           >
-            {exportando ? 'Exportando…' : 'Exportar a Excel'}
+            <Icono nombre="exportar" tamano={16} /> {exportando ? 'Exportando…' : 'Exportar a Excel'}
           </button>
         }
       />
-      <form className="filtros" role="search" onSubmit={(e) => e.preventDefault()}>
-        <label className="chip-filtro">
-          Mes
-          <select
-            aria-label="Mes"
-            value={periodo}
-            onChange={(e) => navegar({ tipo: 'variance', periodo: e.target.value })}
-            disabled={periodos.length === 0}
-          >
-            {periodos.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="chip-filtro">
-          Sección
+      <form className="barra-filtros" role="search" onSubmit={(e) => e.preventDefault()}>
+        <div className="filtro-campo">
+          <span className="filtro-etiqueta">Periodo</span>
+          <div className="selector-mes">
+            <button
+              type="button"
+              className="boton-paso"
+              aria-label="Periodo anterior"
+              disabled={indicePeriodo < 0 || indicePeriodo >= periodos.length - 1}
+              onClick={() => navegar({ tipo: 'variance', periodo: periodos[indicePeriodo + 1] })}
+            >
+              <span className="icono-izq">
+                <Icono nombre="chevron" tamano={16} />
+              </span>
+            </button>
+            <select
+              aria-label="Mes"
+              value={periodo}
+              onChange={(e) => navegar({ tipo: 'variance', periodo: e.target.value })}
+              disabled={periodos.length === 0}
+            >
+              {periodos.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="boton-paso"
+              aria-label="Periodo siguiente"
+              disabled={indicePeriodo <= 0}
+              onClick={() => navegar({ tipo: 'variance', periodo: periodos[indicePeriodo - 1] })}
+            >
+              <Icono nombre="chevron" tamano={16} />
+            </button>
+          </div>
+        </div>
+        <div className="filtro-campo">
+          <span className="filtro-etiqueta">Sección</span>
           <select
             aria-label="Sección"
             value={seccionId ?? ''}
@@ -267,10 +304,10 @@ function ReporteVariance({
               </option>
             ))}
           </select>
-        </label>
+        </div>
         {grupos.length > 1 && (
-          <label className="chip-filtro">
-            Saltar a
+          <div className="filtro-campo">
+            <span className="filtro-etiqueta">Saltar a</span>
             <select
               aria-label="Ir a sección"
               value=""
@@ -286,33 +323,41 @@ function ReporteVariance({
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         )}
-        <label className="chip-filtro">
-          Buscar línea
-          <input
-            type="search"
-            value={textoBusqueda}
-            maxLength={100}
-            onChange={(e) => setTextoBusqueda(e.target.value)}
-          />
+        <label className="filtro-campo filtro-busqueda">
+          <span className="filtro-etiqueta">Buscar línea</span>
+          <span className="campo-busqueda">
+            <Icono nombre="buscar" tamano={16} />
+            <input
+              type="search"
+              placeholder="Nombre de la línea"
+              value={textoBusqueda}
+              maxLength={100}
+              onChange={(e) => setTextoBusqueda(e.target.value)}
+            />
+          </span>
         </label>
-        <label className="casilla chip-casilla">
-          <input
-            type="checkbox"
-            checked={soloTotales}
-            onChange={(e) => setSoloTotales(e.target.checked)}
-          />
-          Solo totales y subtotales
-        </label>
-        <label className="casilla chip-casilla">
-          <input
-            type="checkbox"
-            checked={ocultarVacias}
-            onChange={(e) => setOcultarVacias(e.target.checked)}
-          />
-          Ocultar líneas sin cifras
-        </label>
+        <div className="filtro-interruptores">
+          <label className="interruptor">
+            <input
+              type="checkbox"
+              checked={soloTotales}
+              onChange={(e) => setSoloTotales(e.target.checked)}
+            />
+            <span className="interruptor-pista" aria-hidden="true" />
+            Solo totales y subtotales
+          </label>
+          <label className="interruptor">
+            <input
+              type="checkbox"
+              checked={ocultarVacias}
+              onChange={(e) => setOcultarVacias(e.target.checked)}
+            />
+            <span className="interruptor-pista" aria-hidden="true" />
+            Ocultar líneas sin cifras
+          </label>
+        </div>
       </form>
       {errorExportar && <MensajeError texto={errorExportar} />}
 
@@ -341,6 +386,7 @@ function ReporteVariance({
             <section className="kpis" aria-label="Resumen del mes">
               <TarjetaKpi
                 titulo="Líneas con variación desfavorable"
+                icono="tendenciaAbajo"
                 valor={
                   <>
                     {resumen.desfavorables} <span className="kpi-de">de {resumen.conVariacion}</span>
@@ -360,15 +406,39 @@ function ReporteVariance({
               />
               <TarjetaKpi
                 titulo="Mayor desviación desfavorable"
+                icono="alerta"
                 valor={resumen.mayorDesfavorable ? formatoContable(resumen.mayorDesfavorable.variacion) : '—'}
                 detalle={resumen.mayorDesfavorable?.descripcion ?? 'Ninguna línea desfavorable'}
                 tono={resumen.mayorDesfavorable ? 'desfavorable' : 'neutro'}
               />
               <TarjetaKpi
                 titulo="Mayor desviación favorable"
+                icono="tendenciaArriba"
                 valor={resumen.mayorFavorable ? formatoContable(resumen.mayorFavorable.variacion) : '—'}
                 detalle={resumen.mayorFavorable?.descripcion ?? 'Ninguna línea favorable'}
                 tono={resumen.mayorFavorable ? 'favorable' : 'neutro'}
+              />
+              <TarjetaKpi
+                titulo="Cobertura de presupuesto"
+                icono="objetivo"
+                valor={
+                  <>
+                    {resumen.conPresupuesto} <span className="kpi-de">de {resumen.detalleTotal}</span>
+                  </>
+                }
+                detalle="líneas con presupuesto este mes"
+                extra={
+                  <BarraApilada
+                    tramos={[
+                      { etiqueta: 'con presupuesto', cantidad: resumen.conPresupuesto, tono: 'favorable' },
+                      {
+                        etiqueta: 'sin presupuesto',
+                        cantidad: resumen.detalleTotal - resumen.conPresupuesto,
+                        tono: 'neutro',
+                      },
+                    ]}
+                  />
+                }
               />
             </section>
           )}
@@ -393,7 +463,9 @@ function ReporteVariance({
           {datos.advertencias.length > 0 && (
             <ul className="mensaje mensaje-aviso advertencias" role="status" aria-label="Advertencias">
               {datos.advertencias.map((a) => (
-                <li key={a}>{a}</li>
+                <li key={a}>
+                  <AvisoItem texto={a} />
+                </li>
               ))}
             </ul>
           )}

@@ -14,6 +14,9 @@ export interface ResumenVariance {
   favorables: number
   /** Con Variación calculada pero exactamente en cero. */
   sinVariacion: number
+  /** Líneas de detalle del reporte y cuántas de ellas traen Presupuesto en el mes. */
+  detalleTotal: number
+  conPresupuesto: number
   mayorDesfavorable: ExtremoVariance | null
   mayorFavorable: ExtremoVariance | null
 }
@@ -29,12 +32,18 @@ export function resumirVariance(lineas: LineaVariance[]): ResumenVariance {
     desfavorables: 0,
     favorables: 0,
     sinVariacion: 0,
+    detalleTotal: 0,
+    conPresupuesto: 0,
     mayorDesfavorable: null,
     mayorFavorable: null,
   }
   let peor = 0n
   let mejor = 0n
   for (const linea of lineas) {
+    if (linea.tipo === 'detalle') {
+      resumen.detalleTotal += 1
+      if (linea.mes.budget !== null) resumen.conPresupuesto += 1
+    }
     if (linea.tipo !== 'detalle' || linea.mes.var === null) continue
     let centavos: bigint
     try {

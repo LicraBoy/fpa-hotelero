@@ -22,6 +22,10 @@ export type NombreIcono =
   | 'imprimir'
   | 'cerrar'
   | 'info'
+  | 'tendenciaAbajo'
+  | 'tendenciaArriba'
+  | 'objetivo'
+  | 'calendario'
 
 const TRAZOS: Record<NombreIcono, string[]> = {
   informe: ['M5 3h10l4 4v14H5z', 'M15 3v4h4', 'M8 17v-4', 'M12 17v-7', 'M16 17v-2'],
@@ -43,6 +47,10 @@ const TRAZOS: Record<NombreIcono, string[]> = {
   densidad: ['M4 6h16', 'M4 10h16', 'M4 14h16', 'M4 18h16'],
   imprimir: ['M7 9V3h10v6', 'M7 17H4v-7h16v7h-3', 'M7 14h10v7H7z'],
   cerrar: ['M6 6l12 12', 'M18 6L6 18'],
+  tendenciaAbajo: ['M3 7l6 6 4-4 8 8', 'M15 17h6v-6'],
+  tendenciaArriba: ['M3 17l6-6 4 4 8-8', 'M15 7h6v6'],
+  objetivo: ['M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z', 'M12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8z', 'M12 12h.01'],
+  calendario: ['M4 6h16v14H4z', 'M4 10h16', 'M8 3v4', 'M16 3v4'],
   info: ['M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z', 'M12 11v6', 'M12 7.5h.01'],
 }
 

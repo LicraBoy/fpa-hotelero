@@ -50,6 +50,8 @@ test('sin Variación calculada no hay resumen ni extremos inventados', () => {
     desfavorables: 0,
     favorables: 0,
     sinVariacion: 0,
+    detalleTotal: 1,
+    conPresupuesto: 1,
     mayorDesfavorable: null,
     mayorFavorable: null,
   })
