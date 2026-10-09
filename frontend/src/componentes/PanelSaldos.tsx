@@ -4,6 +4,7 @@ import { useDatos } from '../api/useDatos'
 import { formatoDinero, sumar } from '../util/dinero'
 import { EncabezadoPagina } from './EncabezadoPagina'
 import { Cargando, EstadoVacio, MensajeError } from './Insignia'
+import { TarjetaKpi } from './TarjetaKpi'
 
 interface Props {
   hotelId: number
@@ -24,11 +25,12 @@ export function PanelSaldos({ hotelId, version, puedeVerCargas }: Props) {
     [cargas.datos],
   )
   const [elegido, setElegido] = useState('')
+  const [consulta, setConsulta] = useState('')
   // El mes activo se deriva: el elegido si sigue disponible, si no el más reciente.
   const periodo = periodos.includes(elegido) ? elegido : (periodos[0] ?? '')
 
   return (
-    <section className="tarjeta" aria-labelledby="titulo-saldos">
+    <section aria-labelledby="titulo-saldos">
       <EncabezadoPagina
         id="titulo-saldos"
         titulo="Saldos por cuenta"
@@ -41,17 +43,30 @@ export function PanelSaldos({ hotelId, version, puedeVerCargas }: Props) {
       )}
       {periodos.length > 0 && (
         <>
-          <label className="buscador">
-            Mes
-            <select value={periodo} onChange={(e) => setElegido(e.target.value)}>
-              {periodos.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </label>
-          {periodo && <TablaSaldos hotelId={hotelId} periodo={periodo} version={version} />}
+          <div className="filtros">
+            <label className="chip-filtro">
+              Mes
+              <select value={periodo} onChange={(e) => setElegido(e.target.value)}>
+                {periodos.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="chip-filtro chip-ancho">
+              Filtrar por código de cuenta
+              <input
+                type="search"
+                placeholder="Ej. 4001"
+                value={consulta}
+                onChange={(e) => setConsulta(e.target.value)}
+              />
+            </label>
+          </div>
+          {periodo && (
+            <TablaSaldos hotelId={hotelId} periodo={periodo} version={version} consulta={consulta} />
+          )}
         </>
       )}
     </section>
@@ -62,10 +77,12 @@ function TablaSaldos({
   hotelId,
   periodo,
   version,
+  consulta,
 }: {
   hotelId: number
   periodo: string
   version: number
+  consulta: string
 }) {
   const saldos = useDatos(
     () => obtenerTipado('/api/v1/hoteles/{hotel_id}/saldos', {
@@ -74,7 +91,6 @@ function TablaSaldos({
       }),
     [hotelId, periodo, version],
   )
-  const [consulta, setConsulta] = useState('')
   const filas = useMemo(() => {
     const q = consulta.trim().toLowerCase()
     return (saldos.datos ?? []).filter((s) => !q || s.cuenta_codigo.toLowerCase().includes(q))
@@ -86,15 +102,15 @@ function TablaSaldos({
 
   return (
     <>
-      <label className="buscador">
-        Filtrar por código de cuenta
-        <input
-          type="search"
-          placeholder="Ej. 4001"
-          value={consulta}
-          onChange={(e) => setConsulta(e.target.value)}
+      <section className="kpis" aria-label="Resumen de saldos">
+        <TarjetaKpi
+          titulo="Cuentas"
+          valor={filas.length}
+          detalle={consulta.trim() ? 'que coinciden con el filtro' : `con movimientos en ${periodo}`}
         />
-      </label>
+        <TarjetaKpi titulo="Débito total" valor={sumar(filas.map((s) => s.suma_debito))} detalle={periodo} />
+        <TarjetaKpi titulo="Crédito total" valor={sumar(filas.map((s) => s.suma_credito))} detalle={periodo} />
+      </section>
       <div className="tabla-contenedor tabla-alta tabla-marco">
         <table className="tabla">
           <thead>
