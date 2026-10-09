@@ -1581,6 +1581,11 @@ input[type='file']::file-selector-button {
   color: var(--texto);
 }
 
+/* un solo dato por bloque: la cifra va debajo de su etiqueta; con varios («Mostrados 3 de 3») van en línea */
+.cuadre > span:has(> strong:only-of-type) strong {
+  display: block;
+}
+
 .cuadre .insignia {
   margin-left: auto;
   padding: 3px 12px;
