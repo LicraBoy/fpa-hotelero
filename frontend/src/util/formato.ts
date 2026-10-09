@@ -56,3 +56,10 @@ export function esDesfavorable(variacion: string | null | undefined): boolean {
   const v = leer(variacion, 2)
   return v !== null && v.negativo && v.unidades !== 0n
 }
+
+/** ¿La variación es favorable? (positiva, según la convención favorable-positivo del reporte). */
+export function esFavorable(variacion: string | null | undefined): boolean {
+  if (variacion === null || variacion === undefined) return false
+  const v = leer(variacion, 2)
+  return v !== null && !v.negativo && v.unidades !== 0n
+}

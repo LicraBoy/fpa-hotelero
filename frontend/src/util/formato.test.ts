@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { esDesfavorable, formatoContable, formatoPorcentaje } from './formato.ts'
+import { esDesfavorable, esFavorable, formatoContable, formatoPorcentaje } from './formato.ts'
 
 test('formato contable: miles, dos decimales y negativos entre paréntesis', () => {
   assert.equal(formatoContable('1234.5'), '1,234.50')
@@ -47,4 +47,11 @@ test('variación desfavorable: solo los negativos distintos de cero', () => {
   assert.equal(esDesfavorable('-0.00'), false)
   assert.equal(esDesfavorable('12.5'), false)
   assert.equal(esDesfavorable(null), false)
+})
+
+test('esFavorable: positiva sí; cero, negativa y vacía no', () => {
+  assert.equal(esFavorable('10.50'), true)
+  assert.equal(esFavorable('0.00'), false)
+  assert.equal(esFavorable('-3.00'), false)
+  assert.equal(esFavorable(null), false)
 })

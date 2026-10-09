@@ -3,7 +3,10 @@ import { ErrorApi, descargarVarianceExcel, obtenerTipado } from '../../api/clien
 import { useDatos } from '../../api/useDatos'
 import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
+import { TarjetaKpi } from '../../componentes/TarjetaKpi'
 import { puede } from '../../permisos'
+import { formatoContable } from '../../util/formato'
+import { resumirVariance } from '../../util/resumenVariance'
 import { useRuta } from '../../ruta/useRuta'
 import {
   agruparPorSeccion,
@@ -140,6 +143,7 @@ function ReporteVariance({
       : []
     return ocultarVacias ? sinLineasVacias(todos) : { grupos: todos, ocultas: 0 }
   }, [variance.datos, ocultarVacias])
+  const resumen = useMemo(() => (variance.datos ? resumirVariance(variance.datos.lineas) : null), [variance.datos])
   const encontradas = grupos.reduce((n, g) => n + g.lineas.length, 0)
   const etiquetas = etiquetasDeSecciones(grupos.map((g) => g.seccion?.descripcion ?? 'Sin sección'))
 
@@ -228,7 +232,7 @@ function ReporteVariance({
         }
       />
       <form className="filtros" role="search" onSubmit={(e) => e.preventDefault()}>
-        <label>
+        <label className="chip-filtro">
           Mes
           <select
             aria-label="Mes"
@@ -243,7 +247,7 @@ function ReporteVariance({
             ))}
           </select>
         </label>
-        <label>
+        <label className="chip-filtro">
           Sección
           <select
             aria-label="Sección"
@@ -258,7 +262,7 @@ function ReporteVariance({
             ))}
           </select>
         </label>
-        <label>
+        <label className="chip-filtro">
           Buscar línea
           <input
             type="search"
@@ -267,7 +271,7 @@ function ReporteVariance({
             onChange={(e) => setTextoBusqueda(e.target.value)}
           />
         </label>
-        <label className="casilla">
+        <label className="casilla chip-casilla">
           <input
             type="checkbox"
             checked={soloTotales}
@@ -275,7 +279,7 @@ function ReporteVariance({
           />
           Solo totales y subtotales
         </label>
-        <label className="casilla">
+        <label className="casilla chip-casilla">
           <input
             type="checkbox"
             checked={ocultarVacias}
@@ -307,6 +311,32 @@ function ReporteVariance({
 
       {datos && (
         <>
+          {resumen && resumen.conVariacion > 0 && (
+            <section className="kpis" aria-label="Resumen del mes">
+              <TarjetaKpi
+                titulo="Líneas con variación desfavorable"
+                valor={
+                  <>
+                    {resumen.desfavorables} <span className="kpi-de">de {resumen.conVariacion}</span>
+                  </>
+                }
+                detalle={`${resumen.favorables} favorables · en el mes ${periodo}`}
+                tono={resumen.desfavorables > 0 ? 'desfavorable' : 'neutro'}
+              />
+              <TarjetaKpi
+                titulo="Mayor desviación desfavorable"
+                valor={resumen.mayorDesfavorable ? formatoContable(resumen.mayorDesfavorable.variacion) : '—'}
+                detalle={resumen.mayorDesfavorable?.descripcion ?? 'Ninguna línea desfavorable'}
+                tono={resumen.mayorDesfavorable ? 'desfavorable' : 'neutro'}
+              />
+              <TarjetaKpi
+                titulo="Mayor desviación favorable"
+                valor={resumen.mayorFavorable ? formatoContable(resumen.mayorFavorable.variacion) : '—'}
+                detalle={resumen.mayorFavorable?.descripcion ?? 'Ninguna línea favorable'}
+                tono={resumen.mayorFavorable ? 'favorable' : 'neutro'}
+              />
+            </section>
+          )}
           {(sinBudgetEnElMes(datos.lineas) || datos.advertencias.length > 0) && (
             <details className="avisos" open>
               <summary>
@@ -338,7 +368,7 @@ function ReporteVariance({
             <p className="suave">Ninguna línea coincide con los filtros.</p>
           ) : (
             <>
-              <LeyendaVariance />
+              <div className="herramientas-tabla">
               <div className="barra-lectura">
                 {grupos.length > 1 && (
                   <nav className="indice-secciones" aria-label="Ir a una sección">
@@ -376,6 +406,8 @@ function ReporteVariance({
                   )}
                 </p>
               </div>
+              <LeyendaVariance />
+              </div>
               {grupos.length === 0 ? (
                 <p className="suave">Todas las líneas están sin cifras: desmarca «Ocultar líneas sin cifras».</p>
               ) : (
@@ -391,10 +423,13 @@ function ReporteVariance({
               )}
             </>
           )}
-          <p className="suave nota-pie">
-            Variación favorable = positiva. Ingresos y utilidades: real − presupuesto; gastos:
-            presupuesto − real. Los importes se muestran a centavos; el cálculo es exacto.
-          </p>
+          <details className="notas-reporte" open>
+            <summary>Notas del reporte</summary>
+            <p className="suave nota-pie">
+              Variación favorable = positiva. Ingresos y utilidades: real − presupuesto; gastos:
+              presupuesto − real. Los importes se muestran a centavos; el cálculo es exacto.
+            </p>
+          </details>
         </>
       )}
     </section>

@@ -1,6 +1,6 @@
 import type { CifrasVariance, LineaVariance } from '../../api/tipos'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
-import { esDesfavorable, formatoContable, formatoPorcentaje } from '../../util/formato'
+import { esDesfavorable, esFavorable, formatoContable, formatoPorcentaje } from '../../util/formato'
 import { anclaDeSeccion, trozosResaltados, type GrupoSeccion } from './agrupar'
 
 interface Props {
@@ -61,7 +61,8 @@ function CeldasBloque({
     )
   }
   const desfavorable = esDesfavorable(cifras.var)
-  const mala = desfavorable ? 'desfavorable' : ''
+  // El sentido (favorable / desfavorable) ya lo define la regla del reporte: aquí solo se pinta
+  const mala = desfavorable ? 'desfavorable' : esFavorable(cifras.var) ? 'favorable' : ''
   return (
     <>
       <td className={celda(bloque, 0)}>
@@ -83,7 +84,7 @@ function CeldasBloque({
         )}
         {formatoContable(cifras.var)}
       </td>
-      <td className={celda(bloque, 3, mala)}>{formatoPorcentaje(cifras.pct)}</td>
+      <td className={celda(bloque, 3, `col-pct ${mala}`.trim())}>{formatoPorcentaje(cifras.pct)}</td>
     </>
   )
 }
@@ -267,8 +268,8 @@ export function LeyendaVariance() {
       <span className="leyenda-bloque bloque-ytd">Acumulado del año fiscal</span>
       <span className="leyenda-bloque bloque-anual">Presupuesto anual</span>
       <span>
-        <span className="desfavorable">▼ (rojo)</span> = desfavorable · normal = favorable · «—» = sin
-        dato
+        <span className="ley-fav">▲ favorable</span> ·{' '}
+        <span className="ley-des">▼ desfavorable</span> · «—» = sin dato
       </span>
     </div>
   )

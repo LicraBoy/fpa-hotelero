@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { fijarUsuarioDev, obtenerTipado } from './api/cliente'
 import { useDatos } from './api/useDatos'
-import { EstadoApi } from './componentes/EstadoApi'
-import { Cargando, Insignia, MensajeError } from './componentes/Insignia'
+import { BarraSuperior } from './componentes/BarraSuperior'
+import { Icono, Logo, type NombreIcono } from './componentes/Iconos'
+import { Cargando, MensajeError } from './componentes/Insignia'
 import { PanelAuditoria } from './componentes/PanelAuditoria'
 import { PanelCargas } from './componentes/PanelCargas'
 import { PanelCatalogo } from './componentes/PanelCatalogo'
@@ -43,15 +44,29 @@ export default function App() {
     : (hoteles.datos?.find((h) => h.id === hotelId) ?? hoteles.datos?.[0])
   const rol = hotel?.rol
 
-  const pestanas: { id: Pestana; nombre: string; visible: boolean }[] = [
-    { id: 'cargas', nombre: 'Cargas', visible: puede(rol, 'carga:leer') || puede(rol, 'carga:crear') },
-    { id: 'catalogo', nombre: 'Catálogo', visible: puede(rol, 'catalogo:leer') },
-    { id: 'saldos', nombre: 'Saldos', visible: puede(rol, 'saldos:leer') },
-    { id: 'variance', nombre: 'Variance', visible: puede(rol, 'variance:leer') },
-    { id: 'budget', nombre: 'Budget', visible: puede(rol, 'budget:importar') },
-    { id: 'auditoria', nombre: 'Auditoría', visible: puede(rol, 'auditoria:leer') },
+  // La barra lateral agrupa las secciones; el orden de los grupos y de sus ítems es el de lectura.
+  const grupos: { titulo: string; items: { id: Pestana; nombre: string; icono: NombreIcono; visible: boolean }[] }[] = [
+    {
+      titulo: 'Reportes',
+      items: [
+        { id: 'variance', nombre: 'Variance', icono: 'informe', visible: puede(rol, 'variance:leer') },
+        { id: 'budget', nombre: 'Budget', icono: 'presupuesto', visible: puede(rol, 'budget:importar') },
+      ],
+    },
+    {
+      titulo: 'Datos',
+      items: [
+        { id: 'cargas', nombre: 'Cargas', icono: 'subir', visible: puede(rol, 'carga:leer') || puede(rol, 'carga:crear') },
+        { id: 'catalogo', nombre: 'Catálogo', icono: 'catalogo', visible: puede(rol, 'catalogo:leer') },
+        { id: 'saldos', nombre: 'Saldos', icono: 'saldos', visible: puede(rol, 'saldos:leer') },
+      ],
+    },
+    {
+      titulo: 'Control',
+      items: [{ id: 'auditoria', nombre: 'Auditoría', icono: 'auditoria', visible: puede(rol, 'auditoria:leer') }],
+    },
   ]
-  const visibles = pestanas.filter((p) => p.visible)
+  const visibles = grupos.flatMap((g) => g.items).filter((p) => p.visible)
   // Una ruta de Variance (#/variance/...) manda: abre esa pestaña aunque el rol no la tenga
   // visible; `RutaProtegida` decide si se muestra o responde "Sin acceso" (sin consultar nada).
   const { ruta } = useRuta()
@@ -69,38 +84,59 @@ export default function App() {
     setHotelId(null)
   }
 
+  const nombreActiva = visibles.find((p) => p.id === activa)?.nombre
+  const grupoActivo = grupos.find((g) => g.items.some((p) => p.id === activa))?.titulo
+  const detalle: Record<string, string> = { desglose: 'Desglose', cuenta: 'Movimientos', asiento: 'Asiento' }
+  const ubicacion = [
+    ...(grupoActivo ? [grupoActivo] : []),
+    ...(nombreActiva ? [nombreActiva] : []),
+    ...(activa === 'variance' && detalle[ruta.tipo] ? [detalle[ruta.tipo]] : []),
+  ]
+  const nombreUsuario = USUARIOS_DESARROLLO.find((u) => u.email === usuario)?.nombre ?? usuario
+
   return (
     <div className="app">
       <aside className="lateral">
         <div className="marca">
-          <h1>Plataforma FP&amp;A Hotelera</h1>
-          <p className="suave">Torres Mazatlán · Actuals</p>
+          <Logo />
+          <div>
+            <h1>Plataforma FP&amp;A Hotelera</h1>
+            <p className="suave">{hotel?.nombre ?? 'Torres Mazatlán'}</p>
+          </div>
         </div>
 
         {hotel && activa && (
-          <nav className="pestanas" aria-label="Secciones">
-            {visibles.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                className={p.id === activa ? 'pestana activa' : 'pestana'}
-                aria-current={p.id === activa ? 'page' : undefined}
-                onClick={() => {
-                  setPestana(p.id)
-                  window.location.hash = p.id === 'variance' ? '#/variance' : ''
-                }}
-              >
-                {p.nombre}
-              </button>
-            ))}
+          <nav className="navegacion" aria-label="Secciones">
+            {grupos.map((g) => {
+              const items = g.items.filter((p) => p.visible)
+              if (items.length === 0) return null
+              return (
+                <div key={g.titulo} className="nav-grupo" role="group" aria-label={g.titulo}>
+                  <p className="nav-titulo" aria-hidden="true">
+                    {g.titulo}
+                  </p>
+                  {items.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={p.id === activa ? 'pestana activa' : 'pestana'}
+                      aria-current={p.id === activa ? 'page' : undefined}
+                      onClick={() => {
+                        setPestana(p.id)
+                        window.location.hash = p.id === 'variance' ? '#/variance' : ''
+                      }}
+                    >
+                      <Icono nombre={p.icono} />
+                      <span>{p.nombre}</span>
+                    </button>
+                  ))}
+                </div>
+              )
+            })}
           </nav>
         )}
 
         <div className="lateral-pie">
-          <div className="lateral-estado">
-            <EstadoApi />
-            {rol && <Insignia tono="info">{NOMBRE_ROL[rol] ?? rol}</Insignia>}
-          </div>
           <label>
             Usuario (desarrollo)
             <select value={usuario} onChange={(e) => cambiarUsuario(e.target.value)}>
@@ -111,18 +147,6 @@ export default function App() {
               ))}
             </select>
           </label>
-          {hoteles.datos && hoteles.datos.length > 0 && (
-            <label>
-              Hotel
-              <select value={hotel?.id ?? ''} onChange={(e) => setHotelId(Number(e.target.value))}>
-                {hoteles.datos.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.nombre}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
           <p className="aviso-desarrollo" role="note">
             Modo desarrollo: el usuario se elige a mano. En producción entrará con el inicio de
             sesión corporativo.
@@ -131,6 +155,26 @@ export default function App() {
       </aside>
 
       <div className="principal">
+        <BarraSuperior
+          ubicacion={ubicacion.length > 0 ? ubicacion : ['Inicio']}
+          nombreUsuario={nombreUsuario}
+          rol={rol ? (NOMBRE_ROL[rol] ?? rol) : undefined}
+          hotel={
+            hoteles.datos && hoteles.datos.length > 0 ? (
+              <label className="selector-hotel">
+                <Icono nombre="hotel" />
+                <span className="solo-lectores">Hotel</span>
+                <select value={hotel?.id ?? ''} onChange={(e) => setHotelId(Number(e.target.value))}>
+                  {hoteles.datos.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : undefined
+          }
+        />
         <main className={activa === 'variance' ? 'contenido' : 'contenido contenido-estrecho'}>
           {hoteles.cargando && <Cargando />}
           {hoteles.error && (
