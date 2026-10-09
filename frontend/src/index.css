@@ -1883,6 +1883,47 @@ input[type='file']::file-selector-button {
   }
 }
 
+/* ---------- Auditoría: bitácora y detalle del evento ---------- */
+.auditoria-cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  gap: var(--e4);
+  align-items: start;
+}
+
+.auditoria-cuerpo .tabla-alta {
+  max-height: 65vh;
+}
+
+.filtros .suave {
+  align-self: center;
+  margin: 0;
+}
+
+.enlace-fila {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primario);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.enlace-fila:hover {
+  text-decoration: underline;
+}
+
+.tabla tbody tr.fila-elegida td {
+  background: var(--acento-suave);
+}
+
+@media (max-width: 1100px) {
+  .auditoria-cuerpo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .ley-fav {
   color: var(--ok);
   font-weight: 600;
