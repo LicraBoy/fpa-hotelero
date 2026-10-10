@@ -53,6 +53,7 @@ class CuentaDesgloseSalida(BaseModel):
     aporte: Decimal
     n_movimientos: int
     estado: Literal["con_movimientos", "sin_movimientos", "no_en_catalogo"]
+    nota: str | None = None
 
 
 class MotivoCeroSalida(BaseModel):

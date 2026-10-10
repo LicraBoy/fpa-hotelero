@@ -79,6 +79,7 @@ class CuentaDesglose:
     n_movimientos: int
     # con_movimientos | sin_movimientos (en los periodos del bloque) | no_en_catalogo
     estado: str = "con_movimientos"
+    nota: str | None = None  # anotación del vínculo en el mapeo (p. ej. «No se utiliza»)
 
 
 @dataclass(frozen=True)
@@ -279,6 +280,7 @@ def desglose_de_linea(
                 v.signo * neto,
                 n,
                 estado,
+                v.nota,
             )
         )
     salida.cuentas.sort(key=lambda c: c.cuenta_codigo)

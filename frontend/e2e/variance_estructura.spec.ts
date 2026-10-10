@@ -120,3 +120,32 @@ test('el desglose muestra el peso de cada cuenta en su línea', async ({ page })
   await expect(cuentas.getByRole('columnheader', { name: 'Peso en la línea' })).toBeVisible()
   await expect(cuentas.getByRole('row', { name: /6009001\.001/ })).toContainText('100.0%') // única cuenta
 })
+
+test('una cuenta anotada «No se utiliza» muestra su nota en el desglose de la línea', async ({ page, request }) => {
+  const analista = { 'X-Usuario-Dev': 'analista@torres.local' }
+  const contralor = { 'X-Usuario-Dev': 'contralor@torres.local' }
+  const hotel: number = (await (await request.get('/api/v1/hoteles', { headers: analista })).json())[0].id
+  const base = `/api/v1/hoteles/${hotel}`
+  const reporte = await (await request.get(`${base}/variance?periodo=2026-08`, { headers: analista })).json()
+  const linea = reporte.lineas.find((l: { descripcion: string }) => l.descripcion === 'Unused Expense')
+  // Una versión nueva del mapeo: la cuenta se pone en la línea y queda anotada
+  let r = await request.post(`${base}/mapeo/versiones`, { headers: analista })
+  expect(r.status(), await r.text()).toBe(201)
+  const borrador: number = (await r.json()).id
+  r = await request.put(`${base}/mapeo/versiones/${borrador}/vinculos`, {
+    headers: analista,
+    data: { linea_id: linea.linea_id, cuenta_codigo: '9999999.999', signo: 1, nota: 'No se utiliza (prueba)' },
+  })
+  expect(r.status(), await r.text()).toBe(200)
+  r = await request.post(`${base}/mapeo/versiones/${borrador}/aprobar`, {
+    headers: contralor,
+    data: { periodos: ['2026-07', '2026-08'] },
+  })
+  expect(r.status(), await r.text()).toBe(200)
+
+  await page.goto('/')
+  await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Analista' })
+  await page.goto(`/#/variance/2026-08/linea/${linea.linea_id}?bloque=mes`)
+  const cuentas = page.getByRole('table', { name: 'Cuentas de la línea' })
+  await expect(cuentas.getByRole('row', { name: /9999999\.999/ })).toContainText('No se utiliza (prueba)')
+})

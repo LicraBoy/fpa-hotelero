@@ -849,6 +849,17 @@
             "title": "Neto",
             "type": "string"
           },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
           "signo": {
             "title": "Signo",
             "type": "integer"
@@ -2691,6 +2702,18 @@
             "title": "Linea Id",
             "type": "integer"
           },
+          "nota": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
           "signo": {
             "title": "Signo",
             "type": "integer"
@@ -2713,6 +2736,17 @@
           "linea_id": {
             "title": "Linea Id",
             "type": "integer"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
           },
           "origen": {
             "title": "Origen",

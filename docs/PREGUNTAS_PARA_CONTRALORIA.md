@@ -66,6 +66,8 @@ El CON130 de septiembre cuadra: **Débito = Crédito = 66,323,973.22**, 8,280 mo
 | **P12** | **Budget en pantalla:** ¿quién puede **editarlo** (hoy: Contralor y Analista) y **quién lo aprueba**? ¿Se parte siempre de tu Excel o a veces del **Actual del año anterior**? Ojo: si se **vuelve a importar el Excel**, reemplaza el Budget vigente, incluido lo que se capturó a mano (la versión anterior queda en el historial). ¿Qué flujo prefieres? | |
 | **P18** | **Puerto Vallarta:** ¿usa el mismo Novohit y un catálogo de cuentas parecido? ¿Cuándo se incorpora? | |
 
+| **P22** | **Mgmt & Check In (mapeo v4):** (a) ¿La línea «Severance Pay» de tu mapeo es la «Education Bonus» de la hoja del reporte (misma posición y código 028-0111-60010-000)? (b) Las cuentas en rojo «No se utiliza» quedaron vinculadas por su nombre: 6009030→Insurance, 6009043→Non-Deductible, 6009012→Meals & Entertain, 6009010.004→Other Fringe, 6009084/6009085/6009085.150→Allocated Expenses y 6009028→Postage (la única que mostraste). ¿Es correcto? (c) `6009001.004` (Holidays) y `6009020` (Equipment) ya suman: septiembre +12,745.51. | |
+
 ---
 
 ## Resumen: qué es urgente

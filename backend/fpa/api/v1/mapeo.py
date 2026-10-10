@@ -108,6 +108,7 @@ class VinculoSalida(BaseModel):
     cuenta_codigo: str
     signo: int
     origen: str
+    nota: str | None = None
 
 
 class ExclusionSalida(BaseModel):
@@ -126,6 +127,7 @@ class VinculoEntrada(BaseModel):
     linea_id: Annotated[int, Field(ge=1, le=ID_MAX)]
     cuenta_codigo: str = Field(min_length=1, max_length=40)
     signo: int
+    nota: str | None = Field(default=None, max_length=160)
 
 
 class ExclusionEntrada(BaseModel):
@@ -218,7 +220,11 @@ def detalle_version(
         **_version(version).model_dump(),
         vinculos=[
             VinculoSalida(
-                linea_id=v.linea_id, cuenta_codigo=v.cuenta_codigo, signo=v.signo, origen=v.origen
+                linea_id=v.linea_id,
+                cuenta_codigo=v.cuenta_codigo,
+                signo=v.signo,
+                origen=v.origen,
+                nota=v.nota,
             )
             for v in repo.vinculos(version.id)
         ],
@@ -293,6 +299,7 @@ def poner_vinculo(
             linea_id=entrada.linea_id,
             cuenta_codigo=entrada.cuenta_codigo,
             signo=entrada.signo,
+            nota=entrada.nota,
             **_kw(contexto),
         )
         db.commit()
@@ -300,7 +307,11 @@ def poner_vinculo(
         db.rollback()
         raise _error(e) from None
     return VinculoSalida(
-        linea_id=v.linea_id, cuenta_codigo=v.cuenta_codigo, signo=v.signo, origen=v.origen
+        linea_id=v.linea_id,
+        cuenta_codigo=v.cuenta_codigo,
+        signo=v.signo,
+        origen=v.origen,
+        nota=v.nota,
     )
 
 

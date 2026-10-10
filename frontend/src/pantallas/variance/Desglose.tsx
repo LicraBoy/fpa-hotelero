@@ -185,6 +185,7 @@ export function Desglose({ hotelId, periodo, lineaId, bloque }: Props) {
                       {c.estado === 'no_en_catalogo' && (
                         <Insignia tono="aviso">No está en el catálogo</Insignia>
                       )}
+                      {c.nota && <Insignia tono="neutro">{c.nota}</Insignia>}
                     </td>
                   </tr>
                 ))}

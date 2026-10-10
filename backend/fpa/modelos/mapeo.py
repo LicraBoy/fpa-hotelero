@@ -73,6 +73,8 @@ class MapeoLineaCuenta(Base):
     cuenta_codigo: Mapped[str] = mapped_column(String(40), index=True)
     signo: Mapped[int] = mapped_column(Integer)  # +1 o -1
     origen: Mapped[str] = mapped_column(String(10), default="excel")  # excel | manual
+    # Anotación libre del vínculo (p. ej. «No se utiliza»): se ve en el desglose del reporte
+    nota: Mapped[str | None] = mapped_column(String(160), nullable=True)
 
 
 class CuentaExcluidaMapeo(Base):

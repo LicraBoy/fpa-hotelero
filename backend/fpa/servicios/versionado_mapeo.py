@@ -113,6 +113,7 @@ def crear_borrador_desde(
                     cuenta_codigo=v.cuenta_codigo,
                     signo=v.signo,
                     origen=v.origen,
+                    nota=v.nota,
                 )
             )
         for e in ctx.repo.excluidas(origen.id):
@@ -144,8 +145,12 @@ def agregar_vinculo(
     linea_id: int,
     cuenta_codigo: str,
     signo: int,
+    nota: str | None = None,
 ) -> MapeoLineaCuenta:
-    """Agrega un vínculo cuenta -> línea de detalle, o cambia su signo si ya existe."""
+    """Agrega un vínculo cuenta -> línea de detalle, o cambia su signo si ya existe.
+
+    `nota` es una anotación opcional del vínculo (p. ej. «No se utiliza»); si ya existía y no se
+    manda una nota nueva, se conserva la que tenía."""
     ctx = _Contexto(db, organizacion_id, hotel_id, usuario_id)
     version = ctx.borrador_editable(version_id)
     if signo not in (1, -1):
@@ -182,11 +187,14 @@ def agregar_vinculo(
             cuenta_codigo=codigo,
             signo=signo,
             origen="manual",
+            nota=nota,
         )
         db.add(existente)
     else:
         existente.signo = signo
         existente.origen = "manual"
+        if nota is not None:
+            existente.nota = nota
     # Una cuenta que ahora tiene línea deja de estar excluida
     db.execute(
         delete(CuentaExcluidaMapeo).where(
@@ -205,6 +213,7 @@ def agregar_vinculo(
             "cuenta": codigo,
             "signo": signo,
             "signo_anterior": anterior,
+            "nota": nota,
         },
     )
     return existente

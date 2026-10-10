@@ -56,9 +56,22 @@ Código: `calculo/variance.py::variance_pct`.
 - **Anual:** Actual = ese promedio; Presupuesto = 18; Variación = Presupuesto − Actual.
 
 ## 7. Cuentas omitidas a propósito
-`4002020`, `4003001.010`, `4003001.020`, `6009020`, `6009001.004`, `6006012.001`:
-«todavía no se ocupan» (Contraloría). Se excluyen del mapeo con ese motivo (`python -m fpa.mapeo_omitir`,
-solo desarrollo, auditado). Si un día se ocupan: nueva versión del mapeo que las vincule a una línea.
+`4002020`, `4003001.010`, `4003001.020` y `6006012.001`: «todavía no se ocupan» (Contraloría). Se excluyen
+del mapeo con ese motivo (`python -m fpa.mapeo_omitir`, solo desarrollo, auditado). Si un día se ocupan:
+nueva versión del mapeo que las vincule a una línea.
+
+`6009001.004` (Holidays) y `6009020` (Equipment) también estaban omitidas, pero **desde el mapeo v4
+(Mgmt & Check In) ya tienen línea** y suman al reporte (septiembre: 5,850.68 y 6,894.83).
+
+### Mapeo v4 de «Mgmt & Check In» (`python -m fpa.mapeo_mgmt_checkin`, solo desarrollo)
+Aplica el mapeo línea → cuentas entregado por Contraloría: 21 vínculos nuevos sobre la v3 (la v3 se
+conserva). Las cuentas que el catálogo corporativo marca en rojo **«No se utiliza»** (#N/D: `6009010.004`,
+`6009012`, `6009028`, `6009030`, `6009043`, `6009084`, `6009085`, `6009085.150`) **se ponen en su línea con
+una nota** (`mapeo_linea_cuenta.nota`) que el desglose muestra; si algún día tuvieran movimientos,
+sumarían a esa línea. El Excel escribe `6009085.15`: en el catálogo es `6009085.150` (Excel pierde el cero
+final). La línea que Contraloría llama «Severance Pay» es «Education Bonus» en la hoja del reporte (misma
+posición y código corporativo): lleva `6009001.011`. Siguen como captura manual: Dues/Subscriptions y
+Miscellaneous. Efecto: solo septiembre cambia (+12,745.51 en Total Mgmt & Check In); julio y agosto igual.
 
 ## 8. Límites conocidos
 - Acumulado de septiembre corto en líneas con cuentas de balance (IVA, Income Tax) hasta tener el CON130 de julio y agosto (P19).
@@ -85,7 +98,7 @@ Nada de esto está fijo en el código: casi todo se vuelve a leer del Excel de C
 |---|---|---|
 | Sentido de la Variación de una línea (Presupuesto−Actual o al revés) | Subir el Excel de Variance actualizado a `POST /hoteles/{id}/reporte/convenciones` | Tabla `convencion_linea` (se reemplaza; auditado) |
 | Qué cuentas o líneas suma una línea, o un coeficiente (p. ej. 16 %) | Importar de nuevo el Excel con las fórmulas (`reporte/importar`): se leen las referencias de `Jul-Ago` | Nueva versión de la estructura y de las reglas de suma |
-| Vincular una cuenta a otra línea, o dejar de omitir una de las 6 | Nueva versión del mapeo y su aprobación; el motivo de omisión se cambia con `fpa.mapeo_omitir` | Mapeo versionado (la anterior se conserva) |
+| Vincular una cuenta a otra línea, o dejar de omitir una de las 4 | Nueva versión del mapeo y su aprobación; el motivo de omisión se cambia con `fpa.mapeo_omitir` | Mapeo versionado (la anterior se conserva) |
 | Fórmula del % | Editar `calculo/variance.py::variance_pct` y actualizar `test_variance_calculo.py` (único lugar con código) | Código + pruebas |
 | Budget de un año fiscal nuevo | Pestaña Budget → importar el Excel (el título `FY 27/28` define los 12 meses) | Versión nueva de Budget |
 | Una cifra de Actual sin cuentas | Capturarla en la pestaña Budget (o importar el Excel del Envio) | `valor_capturado`, auditado |

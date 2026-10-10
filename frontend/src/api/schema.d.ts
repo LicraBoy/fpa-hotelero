@@ -919,6 +919,8 @@ export interface components {
             n_movimientos: number;
             /** Neto */
             neto: string;
+            /** Nota */
+            nota?: string | null;
             /** Signo */
             signo: number;
         };
@@ -1486,6 +1488,8 @@ export interface components {
             cuenta_codigo: string;
             /** Linea Id */
             linea_id: number;
+            /** Nota */
+            nota?: string | null;
             /** Signo */
             signo: number;
         };
@@ -1495,6 +1499,8 @@ export interface components {
             cuenta_codigo: string;
             /** Linea Id */
             linea_id: number;
+            /** Nota */
+            nota?: string | null;
             /** Origen */
             origen: string;
             /** Signo */
