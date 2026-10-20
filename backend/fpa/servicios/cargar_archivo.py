@@ -27,6 +27,7 @@ from fpa.repositorios.catalogo import RepositorioCatalogo
 from fpa.servicios.auditoria import auditar
 from fpa.servicios.cargas import DatosArchivo, registrar_carga
 from fpa.servicios.catalogo import actualizar_catalogo
+from fpa.servicios.cierre_candado import PeriodoCerrado, exigir_abierto
 from fpa.servicios.saldos import recalcular_saldos
 
 
@@ -137,6 +138,17 @@ def cargar_archivo(
     controles = reporte.a_dict()
 
     por_periodo = _agrupar(resultado)
+    # Un periodo aprobado o bloqueado no acepta recargas (el mismo archivo no cambia nada)
+    cambios = [
+        mes
+        for mes in por_periodo
+        if (vigente := repo.vigente_de_periodo(mes)) is None or vigente.sha256 != archivo.sha256
+    ]
+    try:
+        exigir_abierto(db, hotel_id, cambios)
+    except PeriodoCerrado as e:
+        evento("carga.rechazada", None, {**base, "motivos": [str(e)]})
+        return ResultadoCarga(Resolucion.RECHAZADA, motivos=[str(e)])
     nuevos: list[str] = []
     iguales: list[CargaArchivo] = []
     en_conflicto: dict[str, CargaArchivo] = {}

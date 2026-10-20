@@ -47,6 +47,7 @@ from fpa.seguridad.archivos import (
 from fpa.servicios.acceso_secciones import ids_visibles
 from fpa.servicios.actual import version_de_mapeo
 from fpa.servicios.auditoria import auditar
+from fpa.servicios.cierre import estado_de
 
 router = APIRouter(tags=["comentarios"], responses=RESPUESTAS_REPORTE)
 
@@ -191,6 +192,13 @@ def _hilo(db: Session, contexto: ContextoHotel, raiz_id: int) -> ComentarioLinea
     if raiz is None or (visibles is not None and raiz.linea_id not in visibles):
         raise HTTPException(status_code=404, detail="Comentario no encontrado")
     return raiz
+
+
+def _exigir_no_bloqueado(db: Session, contexto: ContextoHotel, periodo: str) -> None:
+    if estado_de(db, contexto.hotel_id, periodo) == "bloqueado":
+        raise HTTPException(
+            status_code=409, detail=f"El cierre de {periodo} está bloqueado: ya no admite cambios"
+        )
 
 
 def _armar(db: Session, raices: list[ComentarioLinea]) -> list[ComentarioSalida]:
@@ -354,6 +362,7 @@ def crear(
         or (visibles is not None and linea.id not in visibles)
     ):
         raise HTTPException(status_code=404, detail="Línea no encontrada")
+    _exigir_no_bloqueado(db, contexto, entrada.periodo)
     _validar_responsable(db, contexto, entrada.responsable_id)
     ahora = ahora_utc()
     comentario = ComentarioLinea(
@@ -417,6 +426,7 @@ def responder(
     comentario_id: IdRuta, entrada: TextoNuevo, contexto: Crear, db: Session = Depends(get_db)
 ) -> ComentarioSalida:
     raiz = _hilo(db, contexto, comentario_id)
+    _exigir_no_bloqueado(db, contexto, raiz.periodo)
     ahora = ahora_utc()
     respuesta = ComentarioLinea(
         hotel_id=raiz.hotel_id,
@@ -463,6 +473,7 @@ def editar(
     if objetivo is None:
         raise HTTPException(status_code=404, detail="Comentario no encontrado")
     raiz = _hilo(db, contexto, objetivo.padre_id or objetivo.id)
+    _exigir_no_bloqueado(db, contexto, raiz.periodo)
     if objetivo.autor_id != contexto.principal.usuario_id:
         raise HTTPException(status_code=403, detail="Solo el autor puede editar su comentario")
     if entrada.texto != objetivo.texto:
@@ -490,6 +501,7 @@ def cambiar_estatus(
     comentario_id: IdRuta, entrada: CambioEstatus, contexto: Crear, db: Session = Depends(get_db)
 ) -> ComentarioSalida:
     raiz = _hilo(db, contexto, comentario_id)
+    _exigir_no_bloqueado(db, contexto, raiz.periodo)
     actual = raiz.estatus or "pendiente"
     if entrada.estatus != actual:
         rol = contexto.principal.roles_por_hotel[contexto.hotel_id]
@@ -523,6 +535,7 @@ def asignar_responsable(
     db: Session = Depends(get_db),
 ) -> ComentarioSalida:
     raiz = _hilo(db, contexto, comentario_id)
+    _exigir_no_bloqueado(db, contexto, raiz.periodo)
     rol = contexto.principal.roles_por_hotel[contexto.hotel_id]
     if contexto.principal.usuario_id != raiz.autor_id and not rol_tiene_permiso(
         rol, Permiso.COMENTARIO_RESOLVER
@@ -570,6 +583,7 @@ def adjuntar(
     db: Session = Depends(get_db),
 ) -> ComentarioSalida:
     raiz = _hilo(db, contexto, comentario_id)
+    _exigir_no_bloqueado(db, contexto, raiz.periodo)
     ya = db.scalar(
         select(func.count())
         .select_from(AdjuntoComentario)

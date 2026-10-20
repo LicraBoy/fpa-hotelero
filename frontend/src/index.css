@@ -3280,3 +3280,31 @@ input:focus-visible,
   gap: var(--e2);
   align-items: center;
 }
+
+/* Cierre del periodo */
+.cierre-periodo {
+  display: grid;
+  gap: var(--e2);
+  padding: var(--e3) var(--e4);
+  margin-bottom: var(--e3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: var(--superficie);
+}
+
+.cierre-estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e3);
+}
+
+.cierre-nota {
+  max-width: 560px;
+}
+
+.historial-cierre {
+  margin: var(--e2) 0 0;
+  padding-left: var(--e4);
+  font-size: 0.8rem;
+}

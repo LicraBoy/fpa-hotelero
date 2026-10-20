@@ -27,6 +27,7 @@ from fpa.servicios.acceso_secciones import (
     ids_visibles,
 )
 from fpa.servicios.auditoria import auditar
+from fpa.servicios.cierre import versiones_congeladas
 from fpa.servicios.drilldown import (
     LIMITE_MAXIMO,
     CursorInvalido,
@@ -169,8 +170,14 @@ def desglose(
     """Qué hay detrás de la cifra de una línea: sus cuentas, o los componentes de un total."""
     exigir_linea(db, contexto, linea_id)
     try:
+        congeladas = versiones_congeladas(db, contexto.hotel_id, periodo)
         d = desglose_de_linea(
-            db, hotel_id=contexto.hotel_id, periodo=periodo, linea_id=linea_id, bloque=bloque
+            db,
+            hotel_id=contexto.hotel_id,
+            periodo=periodo,
+            linea_id=linea_id,
+            bloque=bloque,
+            version_mapeo_id=congeladas[0] if congeladas else None,
         )
     except LookupError as e:
         raise HTTPException(

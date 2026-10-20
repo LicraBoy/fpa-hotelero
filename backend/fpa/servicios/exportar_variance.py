@@ -106,6 +106,7 @@ def generar_excel(
     periodos_ytd: Sequence[str],
     insumos: InsumosFormulas | None = None,
     comentarios: dict[tuple[int, str], str] | None = None,
+    estado_cierre: str = "borrador",
 ) -> bytes:
     """`lineas` ya viene en el orden del reporte; `secciones` da sus encabezados.
 
@@ -236,6 +237,7 @@ def generar_excel(
     renglones = [
         f"Variance de {periodo} · año fiscal {ano_fiscal}",
         *(_NOTAS_FORMULAS if insumos is not None else []),
+        f"Estado del cierre: {estado_cierre}",
         f"Mapeo de cuentas: versión {version_mapeo}",
         f"Budget: versión {version_budget}" if version_budget is not None else "Budget: ninguno",
         "Variación favorable = positiva. Ingresos y utilidades: real - presupuesto; gastos: "

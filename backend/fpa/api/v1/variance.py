@@ -25,6 +25,7 @@ from fpa.modelos.organizacion import Hotel
 from fpa.modelos.reporte import LineaReporte
 from fpa.servicios.acceso_secciones import exigir_acceso_completo, restriccion
 from fpa.servicios.auditoria import auditar
+from fpa.servicios.cierre import estado_de, versiones_congeladas
 from fpa.servicios.comentarios_excel import comentarios_por_linea
 from fpa.servicios.exportar_variance import generar_excel, nombre_de_archivo
 from fpa.servicios.reportes import cache_variance
@@ -136,6 +137,11 @@ def variance(
     """
     if not _RE_PERIODO.match(periodo):
         raise HTTPException(status_code=422, detail="El periodo debe ser AAAA-MM")
+    if version_mapeo_id is None and version_plan_id is None:
+        # un periodo aprobado o bloqueado se calcula con las versiones con que se aprobó
+        congeladas = versiones_congeladas(db, contexto.hotel_id, periodo)
+        if congeladas is not None:
+            version_mapeo_id, version_plan_id = congeladas
     clave = cache_variance.clave(
         organizacion_id=contexto.organizacion_id,
         hotel_id=contexto.hotel_id,
@@ -249,6 +255,10 @@ def exportar(
     algunas secciones no puede exportar (el libro trae todo el reporte).
     """
     exigir_acceso_completo(contexto)
+    if version_mapeo_id is None and version_plan_id is None:
+        congeladas = versiones_congeladas(db, contexto.hotel_id, periodo)
+        if congeladas is not None:
+            version_mapeo_id, version_plan_id = congeladas
     try:
         r = calcular_variance(
             db,
@@ -279,6 +289,7 @@ def exportar(
         version_budget=r.version_plan_id,
         periodos_ytd=r.periodos_ytd,
         insumos=r.insumos,
+        estado_cierre=estado_de(db, contexto.hotel_id, r.periodo),
         comentarios=(
             comentarios_por_linea(db, contexto.hotel_id, r.periodo)
             if contexto.principal.puede(contexto.hotel_id, Permiso.COMENTARIO_LEER)

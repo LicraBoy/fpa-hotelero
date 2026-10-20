@@ -4,6 +4,7 @@ from fpa.modelos.auditoria import EventoAuditoria
 from fpa.modelos.base import Base
 from fpa.modelos.cargas import CargaArchivo, EstadoCarga, Movimiento
 from fpa.modelos.catalogo import CuentaLocal
+from fpa.modelos.cierre import CierrePeriodo, CierreTransicion
 from fpa.modelos.comentarios import AdjuntoComentario, ComentarioLinea, ComentarioRevision
 from fpa.modelos.identidad import Asignacion, AsignacionDepartamento, Rol, Sesion, Usuario
 from fpa.modelos.mapeo import CuentaExcluidaMapeo, MapeoLineaCuenta, VersionMapeo
@@ -23,6 +24,8 @@ __all__ = [
     "AsignacionDepartamento",
     "Base",
     "CargaArchivo",
+    "CierrePeriodo",
+    "CierreTransicion",
     "ComentarioLinea",
     "ComentarioRevision",
     "ConvencionLinea",

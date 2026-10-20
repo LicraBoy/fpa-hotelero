@@ -421,6 +421,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/cierres": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar */
+        get: operations["listar_api_v1_hoteles__hotel_id__cierres_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/cierres/{periodo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detalle */
+        get: operations["detalle_api_v1_hoteles__hotel_id__cierres__periodo__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/cierres/{periodo}/transiciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cambiar Estado */
+        post: operations["cambiar_estado_api_v1_hoteles__hotel_id__cierres__periodo__transiciones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/comentarios": {
         parameters: {
             query?: never;
@@ -1081,6 +1132,13 @@ export interface components {
             /** Periodo */
             periodo: string;
         };
+        /** CambioEstado */
+        CambioEstado: {
+            /** Hacia */
+            hacia: string;
+            /** Nota */
+            nota?: string | null;
+        };
         /** CambioEstatus */
         CambioEstatus: {
             /**
@@ -1213,6 +1271,31 @@ export interface components {
             budget: string | null;
             /** Periodo */
             periodo: string;
+        };
+        /** CierreSalida */
+        CierreSalida: {
+            /** Comentarios Pendientes */
+            comentarios_pendientes: number;
+            /** Congelado */
+            congelado: {
+                [key: string]: unknown;
+            } | null;
+            /** Estado */
+            estado: string;
+            /** Historial */
+            historial: components["schemas"]["TransicionSalida"][];
+            /** Huella Cifras */
+            huella_cifras: string | null;
+            /** Periodo */
+            periodo: string;
+            /** Transiciones Posibles */
+            transiciones_posibles: components["schemas"]["TransicionPosible"][];
+            /** Version Estructura Id */
+            version_estructura_id: number | null;
+            /** Version Mapeo Id */
+            version_mapeo_id: number | null;
+            /** Version Plan Id */
+            version_plan_id: number | null;
         };
         /** CifrasSalida */
         CifrasSalida: {
@@ -1811,6 +1894,13 @@ export interface components {
             /** Texto */
             texto: string;
         };
+        /** ResumenCierre */
+        ResumenCierre: {
+            /** Estado */
+            estado: string;
+            /** Periodo */
+            periodo: string;
+        };
         /** ResumenSalida */
         ResumenSalida: {
             /** Credito */
@@ -1855,6 +1945,31 @@ export interface components {
         TextoNuevo: {
             /** Texto */
             texto: string;
+        };
+        /** TransicionPosible */
+        TransicionPosible: {
+            /** Etiqueta */
+            etiqueta: string;
+            /** Hacia */
+            hacia: string;
+            /** Pide Nota */
+            pide_nota: boolean;
+        };
+        /** TransicionSalida */
+        TransicionSalida: {
+            /**
+             * Creado En
+             * Format: date-time
+             */
+            creado_en: string;
+            /** Desde */
+            desde: string;
+            /** Hacia */
+            hacia: string;
+            /** Nota */
+            nota: string | null;
+            /** Usuario */
+            usuario: string;
         };
         /** UsuarioAdmin */
         UsuarioAdmin: {
@@ -3224,6 +3339,173 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    listar_api_v1_hoteles__hotel_id__cierres_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumenCierre"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detalle_api_v1_hoteles__hotel_id__cierres__periodo__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                periodo: string;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CierreSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cambiar_estado_api_v1_hoteles__hotel_id__cierres__periodo__transiciones_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                periodo: string;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioEstado"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CierreSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La transición no existe desde el estado actual, o falta el mapeo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Falta la nota que ese cambio exige */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

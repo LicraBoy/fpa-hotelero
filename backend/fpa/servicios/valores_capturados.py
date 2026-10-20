@@ -22,6 +22,7 @@ from fpa.repositorios.mapeo import RepositorioMapeo
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.servicios.actual import version_de_mapeo
 from fpa.servicios.auditoria import auditar
+from fpa.servicios.cierre_candado import PeriodoCerrado, exigir_abierto
 from fpa.servicios.reglas_suma import reglas_como_mapa
 
 IMPORTE_MAXIMO = Decimal("1000000000000")
@@ -80,6 +81,10 @@ def capturar_actuales(
         raise LookupError("Primero importa la estructura del reporte (reporte/importar)")
     if not valores:
         raise CapturaInvalida("No hay valores que guardar")
+    try:
+        exigir_abierto(db, hotel_id, [v.periodo for v in valores])
+    except PeriodoCerrado as e:
+        raise CapturaInvalida(str(e)) from None
     capturables = lineas_capturables(db, hotel_id)
     nombres = {x.id: x.descripcion for x in RepositorioReporte(db, hotel_id).lineas(estructura.id)}
 

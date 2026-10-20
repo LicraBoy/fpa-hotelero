@@ -307,6 +307,33 @@
         "title": "CambioEntrada",
         "type": "object"
       },
+      "CambioEstado": {
+        "properties": {
+          "hacia": {
+            "maxLength": 12,
+            "minLength": 1,
+            "title": "Hacia",
+            "type": "string"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          }
+        },
+        "required": [
+          "hacia"
+        ],
+        "title": "CambioEstado",
+        "type": "object"
+      },
       "CambioEstatus": {
         "properties": {
           "estatus": {
@@ -710,6 +737,106 @@
           "actual_origen"
         ],
         "title": "CeldaEdicion",
+        "type": "object"
+      },
+      "CierreSalida": {
+        "properties": {
+          "comentarios_pendientes": {
+            "title": "Comentarios Pendientes",
+            "type": "integer"
+          },
+          "congelado": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Congelado"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "historial": {
+            "items": {
+              "$ref": "#/components/schemas/TransicionSalida"
+            },
+            "title": "Historial",
+            "type": "array"
+          },
+          "huella_cifras": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Huella Cifras"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "transiciones_posibles": {
+            "items": {
+              "$ref": "#/components/schemas/TransicionPosible"
+            },
+            "title": "Transiciones Posibles",
+            "type": "array"
+          },
+          "version_estructura_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Estructura Id"
+          },
+          "version_mapeo_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Mapeo Id"
+          },
+          "version_plan_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Plan Id"
+          }
+        },
+        "required": [
+          "periodo",
+          "estado",
+          "transiciones_posibles",
+          "historial",
+          "version_mapeo_id",
+          "version_plan_id",
+          "version_estructura_id",
+          "huella_cifras",
+          "congelado",
+          "comentarios_pendientes"
+        ],
+        "title": "CierreSalida",
         "type": "object"
       },
       "CifrasSalida": {
@@ -2596,6 +2723,24 @@
         "title": "RespuestaSalida",
         "type": "object"
       },
+      "ResumenCierre": {
+        "properties": {
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "periodo",
+          "estado"
+        ],
+        "title": "ResumenCierre",
+        "type": "object"
+      },
       "ResumenSalida": {
         "properties": {
           "credito": {
@@ -2722,6 +2867,70 @@
           "texto"
         ],
         "title": "TextoNuevo",
+        "type": "object"
+      },
+      "TransicionPosible": {
+        "properties": {
+          "etiqueta": {
+            "title": "Etiqueta",
+            "type": "string"
+          },
+          "hacia": {
+            "title": "Hacia",
+            "type": "string"
+          },
+          "pide_nota": {
+            "title": "Pide Nota",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hacia",
+          "etiqueta",
+          "pide_nota"
+        ],
+        "title": "TransicionPosible",
+        "type": "object"
+      },
+      "TransicionSalida": {
+        "properties": {
+          "creado_en": {
+            "format": "date-time",
+            "title": "Creado En",
+            "type": "string"
+          },
+          "desde": {
+            "title": "Desde",
+            "type": "string"
+          },
+          "hacia": {
+            "title": "Hacia",
+            "type": "string"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "usuario": {
+            "title": "Usuario",
+            "type": "string"
+          }
+        },
+        "required": [
+          "desde",
+          "hacia",
+          "usuario",
+          "nota",
+          "creado_en"
+        ],
+        "title": "TransicionSalida",
         "type": "object"
       },
       "UsuarioAdmin": {
@@ -4827,6 +5036,195 @@
         "summary": "Importar Catalogo Oficial",
         "tags": [
           "catalogo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/cierres": {
+      "get": {
+        "operationId": "listar_api_v1_hoteles__hotel_id__cierres_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResumenCierre"
+                  },
+                  "title": "Response Listar Api V1 Hoteles  Hotel Id  Cierres Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar",
+        "tags": [
+          "cierres"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/cierres/{periodo}": {
+      "get": {
+        "operationId": "detalle_api_v1_hoteles__hotel_id__cierres__periodo__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CierreSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detalle",
+        "tags": [
+          "cierres"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/cierres/{periodo}/transiciones": {
+      "post": {
+        "operationId": "cambiar_estado_api_v1_hoteles__hotel_id__cierres__periodo__transiciones_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioEstado"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CierreSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "La transición no existe desde el estado actual, o falta el mapeo"
+          },
+          "422": {
+            "description": "Falta la nota que ese cambio exige"
+          }
+        },
+        "summary": "Cambiar Estado",
+        "tags": [
+          "cierres"
         ]
       }
     },

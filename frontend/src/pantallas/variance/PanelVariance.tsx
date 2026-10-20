@@ -18,6 +18,7 @@ import {
 } from './agrupar'
 import { AsientoVista } from './AsientoVista'
 import { Desglose } from './Desglose'
+import { CierrePeriodo } from './CierrePeriodo'
 import { Movimientos } from './Movimientos'
 import { AvisoItem } from './AvisoItem'
 import { PanelLinea } from './PanelLinea'
@@ -275,6 +276,9 @@ function ReporteVariance({
           )
         }
       />
+      {puede(rol, 'cierre:leer') && periodo !== '' && (
+        <CierrePeriodo hotelId={hotelId} periodo={periodo} alCambiar={variance.recargar} />
+      )}
       <form className="barra-filtros" role="search" onSubmit={(e) => e.preventDefault()}>
         <div className="filtro-campo">
           <span className="filtro-etiqueta">Periodo</span>
