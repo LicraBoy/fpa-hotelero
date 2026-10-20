@@ -44,6 +44,7 @@ Estados: `[DECIDIDO]` ya definido · `[PROPUESTA]` recomendación técnica · `[
 | Respaldos | No aplica | Respaldos cifrados y restauración probada | Fase 6 |
 | Componentes del frontend | Solo React + CSS propio | Una librería MIT (Mantine o MUI), TanStack Query, TanStack Table, cliente API generado desde OpenAPI | Fase 4 |
 | Lenguaje del backend | Python | Se mantiene; Java/Spring solo si TI lo exige `[POR VALIDAR]` | — |
+| Inicio de sesión | Usuarios locales: `argon2id` + TOTP + sesión en cookie `HttpOnly` (ADR 0005, Fase 5.1) `[DECIDIDO, avisar a TI]`; dependencias nuevas `argon2-cffi` y `pyotp` | OIDC con el proveedor de la empresa si TI lo ofrece (se agrega otro `ProveedorIdentidad`); `FPA_COOKIE_SEGURA=true` detrás de HTTPS | Cuando TI lo defina |
 
 ## 3. Avisos técnicos conocidos de hoy
 - Al correr las pruebas aparece una advertencia de Starlette sobre `httpx` (se sugiere `httpx2`). No afecta el funcionamiento; se revisa al actualizar dependencias.

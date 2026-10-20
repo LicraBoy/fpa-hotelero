@@ -259,6 +259,28 @@
         "title": "CambioEntrada",
         "type": "object"
       },
+      "CambioPassword": {
+        "properties": {
+          "actual": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Actual",
+            "type": "string"
+          },
+          "nueva": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Nueva",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actual",
+          "nueva"
+        ],
+        "title": "CambioPassword",
+        "type": "object"
+      },
       "CapturaEntrada": {
         "properties": {
           "valores": {
@@ -599,6 +621,21 @@
         "title": "CifrasSalida",
         "type": "object"
       },
+      "CodigoMfa": {
+        "properties": {
+          "codigo": {
+            "maxLength": 12,
+            "minLength": 1,
+            "title": "Codigo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo"
+        ],
+        "title": "CodigoMfa",
+        "type": "object"
+      },
       "ComponenteEdicion": {
         "properties": {
           "factor": {
@@ -661,6 +698,21 @@
           "factor"
         ],
         "title": "ComponenteSalida",
+        "type": "object"
+      },
+      "ConfirmarPassword": {
+        "properties": {
+          "password": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "ConfirmarPassword",
         "type": "object"
       },
       "ConflictoSalida": {
@@ -969,6 +1021,34 @@
           "motivos_cero"
         ],
         "title": "DesgloseSalida",
+        "type": "object"
+      },
+      "EstadoAuth": {
+        "properties": {
+          "autenticado": {
+            "title": "Autenticado",
+            "type": "boolean"
+          },
+          "entorno": {
+            "title": "Entorno",
+            "type": "string"
+          },
+          "usuario": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UsuarioSesion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "entorno",
+          "autenticado"
+        ],
+        "title": "EstadoAuth",
         "type": "object"
       },
       "EstructuraSalida": {
@@ -1477,6 +1557,58 @@
           "anual"
         ],
         "title": "LineaVarianceSalida",
+        "type": "object"
+      },
+      "LoginEntrada": {
+        "properties": {
+          "codigo": {
+            "anyOf": [
+              {
+                "maxLength": 12,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo"
+          },
+          "email": {
+            "maxLength": 254,
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginEntrada",
+        "type": "object"
+      },
+      "MfaIniciada": {
+        "properties": {
+          "secreto": {
+            "title": "Secreto",
+            "type": "string"
+          },
+          "uri": {
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "secreto",
+          "uri"
+        ],
+        "title": "MfaIniciada",
         "type": "object"
       },
       "MotivoCeroSalida": {
@@ -2120,6 +2252,52 @@
           "linea_total_id"
         ],
         "title": "SeccionSalida",
+        "type": "object"
+      },
+      "UsuarioSesion": {
+        "properties": {
+          "debe_activar_mfa": {
+            "title": "Debe Activar Mfa",
+            "type": "boolean"
+          },
+          "debe_cambiar_password": {
+            "title": "Debe Cambiar Password",
+            "type": "boolean"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "roles_por_hotel": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Roles Por Hotel",
+            "type": "object"
+          },
+          "totp_activo": {
+            "title": "Totp Activo",
+            "type": "boolean"
+          },
+          "usuario_id": {
+            "title": "Usuario Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "usuario_id",
+          "email",
+          "nombre",
+          "roles_por_hotel",
+          "totp_activo",
+          "debe_cambiar_password",
+          "debe_activar_mfa"
+        ],
+        "title": "UsuarioSesion",
         "type": "object"
       },
       "ValidationError": {
@@ -2918,6 +3096,208 @@
         "summary": "Ready",
         "tags": [
           "salud"
+        ]
+      }
+    },
+    "/api/v1/auth/cambiar-password": {
+      "post": {
+        "operationId": "cambiar_password_api_v1_auth_cambiar_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cambiar Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/estado": {
+      "get": {
+        "description": "Para la pantalla de entrada: en qué entorno está y si ya hay sesión (sin exigirla).",
+        "operationId": "estado_api_v1_auth_estado_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoAuth"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Estado",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioSesion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "description": "Cierra la sesión de este navegador (si la hay) y borra la cookie.",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/confirmar": {
+      "post": {
+        "operationId": "confirmar_mfa_api_v1_auth_mfa_confirmar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CodigoMfa"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirmar Mfa",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/desactivar": {
+      "post": {
+        "operationId": "desactivar_mfa_api_v1_auth_mfa_desactivar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmarPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Desactivar Mfa",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/iniciar": {
+      "post": {
+        "description": "Genera un secreto nuevo para la app de autenticación; no queda activo hasta confirmarlo.",
+        "operationId": "iniciar_mfa_api_v1_auth_mfa_iniciar_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaIniciada"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Iniciar Mfa",
+        "tags": [
+          "auth"
         ]
       }
     },

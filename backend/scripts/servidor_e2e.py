@@ -23,7 +23,8 @@ TEMPORAL.mkdir()
 os.environ["FPA_DATABASE_URL"] = f"sqlite:///{(TEMPORAL / 'e2e.db').as_posix()}"
 os.environ["FPA_STORAGE_DIR"] = str(TEMPORAL / "storage")
 os.environ["FPA_ENTORNO"] = "desarrollo"
-os.environ["FPA_CORS_ORIGINS"] = '["http://localhost:5181","http://127.0.0.1:5181"]'
+WEB = os.environ.get("FPA_E2E_WEB", "5181")
+os.environ["FPA_CORS_ORIGINS"] = f'["http://localhost:{WEB}","http://127.0.0.1:{WEB}"]'
 sys.path.insert(0, str(RAIZ))
 
 from alembic import command  # noqa: E402
@@ -31,11 +32,19 @@ from alembic.config import Config  # noqa: E402
 
 command.upgrade(Config(str(RAIZ / "alembic.ini")), "head")
 
+from sqlalchemy import select  # noqa: E402
+
 from fpa.db import SessionLocal  # noqa: E402
+from fpa.modelos import Usuario  # noqa: E402
+from fpa.seguridad.credenciales import hashear  # noqa: E402
 from fpa.semilla import sembrar_torres  # noqa: E402
+
+CLAVE_E2E = "Clave-e2e-2026"  # solo para las pruebas de inicio de sesión (esta base se borra)
 
 with SessionLocal() as db:
     sembrar_torres(db)
+    contralor = db.scalars(select(Usuario).where(Usuario.email == "contralor@torres.local")).one()
+    contralor.password_hash = hashear(CLAVE_E2E)
     db.commit()
 
 import uvicorn  # noqa: E402

@@ -26,6 +26,7 @@ export type NombreIcono =
   | 'tendenciaArriba'
   | 'objetivo'
   | 'calendario'
+  | 'usuario'
 
 const TRAZOS: Record<NombreIcono, string[]> = {
   informe: ['M5 3h10l4 4v14H5z', 'M15 3v4h4', 'M8 17v-4', 'M12 17v-7', 'M16 17v-2'],
@@ -51,6 +52,7 @@ const TRAZOS: Record<NombreIcono, string[]> = {
   tendenciaArriba: ['M3 17l6-6 4 4 8-8', 'M15 7h6v6'],
   objetivo: ['M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z', 'M12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8z', 'M12 12h.01'],
   calendario: ['M4 6h16v14H4z', 'M4 10h16', 'M8 3v4', 'M16 3v4'],
+  usuario: ['M12 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8z', 'M4 21a8 8 0 0 1 16 0'],
   info: ['M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z', 'M12 11v6', 'M12 7.5h.01'],
 }
 

@@ -6,6 +6,8 @@ import { resolve } from 'node:path'
 // propio frontend (puerto 5181): no tocan la base ni los puertos de desarrollo (8100 / 5180).
 const PY_WINDOWS = resolve('../backend/.venv/Scripts/python.exe')
 const PY_UNIX = resolve('../backend/.venv/bin/python')
+// Si 5181 está ocupado por otro programa: FPA_E2E_WEB=5191 (el servidor de pruebas lo respeta).
+const WEB = process.env.FPA_E2E_WEB ?? '5181'
 const python = process.env.FPA_PYTHON ?? (existsSync(PY_WINDOWS) ? PY_WINDOWS : PY_UNIX)
 
 export default defineConfig({
@@ -17,7 +19,7 @@ export default defineConfig({
   reporter: [['list']],
   globalSetup: './e2e/preparar.ts',
   use: {
-    baseURL: 'http://localhost:5181',
+    baseURL: `http://localhost:${WEB}`,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     locale: 'es-MX',
@@ -34,10 +36,10 @@ export default defineConfig({
       // El build de producción servido con su CSP estricta (`vite preview`): cualquier script o
       // estilo en línea rompe la prueba, igual que rompería en producción.
       command: 'npm run build && npm run preview',
-      url: 'http://localhost:5181',
+      url: `http://localhost:${WEB}`,
       reuseExistingServer: false,
       timeout: 120_000,
-      env: { FPA_WEB_PUERTO: '5181', FPA_API_URL: 'http://127.0.0.1:8101' },
+      env: { FPA_WEB_PUERTO: WEB, FPA_API_URL: 'http://127.0.0.1:8101' },
     },
   ],
   projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],

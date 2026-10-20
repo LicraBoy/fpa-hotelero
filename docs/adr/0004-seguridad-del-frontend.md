@@ -7,6 +7,8 @@ El frontend muestra cifras financieras y asientos con conceptos escritos por ter
 huéspedes). Un XSS ahí expondría datos de todo el hotel. Hoy la identidad es una cabecera de
 desarrollo; TI definirá el inicio de sesión corporativo (OIDC).
 
+> **Actualización (Fase 5.1, ADR 0005):** la sesión real ya existe y va en la cookie `HttpOnly` del punto 4; el punto 3 sigue vigente (nada de credenciales en el almacenamiento del navegador).
+
 ## Decisión
 1. **CSP estricta, sin nada en línea.** El frontend se sirve con
    `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self';

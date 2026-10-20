@@ -18,6 +18,19 @@ class Settings(BaseSettings):
     # Por defecto es "produccion": nadie se autentica hasta configurar OIDC (seguro por defecto).
     entorno: str = "produccion"
 
+    # Sesiones y contraseñas de los usuarios locales (ADR 0005)
+    cookie_nombre: str = "fpa_sesion"
+    # `Secure`: el navegador solo la envía por HTTPS (y por http://localhost). Sin HTTPS en la red
+    # interna, poner FPA_COOKIE_SEGURA=false (menos seguro: TI debe saberlo).
+    cookie_segura: bool = True
+    sesion_inactividad_min: int = 480  # cierra la sesión tras 8 h sin usar
+    sesion_maxima_h: int = 12  # y, pase lo que pase, a las 12 h
+    login_max_intentos: int = 5  # intentos fallidos seguidos antes de bloquear la cuenta
+    login_bloqueo_min: int = 15
+    password_min_largo: int = 10
+    # Roles que deben tener TOTP activo (se avisa al entrar) `[POR VALIDAR con Contraloría/TI]`
+    mfa_roles_obligatorios: list[str] = []
+
     # Archivos subidos: se guardan fuera de cualquier carpeta pública (storage/ no se versiona).
     storage_dir: str = "./storage"
     carga_max_bytes: int = 25 * 1024 * 1024

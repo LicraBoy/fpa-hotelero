@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { UsuarioSesion } from './api/auth'
 import { fijarUsuarioDev, obtenerTipado } from './api/cliente'
 import { useDatos } from './api/useDatos'
 import { BarraSuperior } from './componentes/BarraSuperior'
@@ -8,6 +9,7 @@ import { PanelAuditoria } from './componentes/PanelAuditoria'
 import { PanelCargas } from './componentes/PanelCargas'
 import { PanelCatalogo } from './componentes/PanelCatalogo'
 import { PanelSaldos } from './componentes/PanelSaldos'
+import { PanelCuenta } from './pantallas/cuenta/PanelCuenta'
 import { PanelBudget } from './pantallas/budget/PanelBudget'
 import { PanelVariance } from './pantallas/variance/PanelVariance'
 import { RutaProtegida } from './ruta/RutaProtegida'
@@ -16,7 +18,14 @@ import { useRuta } from './ruta/useRuta'
 import { NOMBRE_ROL, USUARIOS_DESARROLLO, puede } from './permisos'
 import { guardarLateralPlegado, guardarUsuarioDev, leerLateralPlegado, leerUsuarioDev } from './util/preferencias'
 
-type Pestana = 'cargas' | 'catalogo' | 'saldos' | 'variance' | 'budget' | 'auditoria'
+type Pestana = 'cargas' | 'catalogo' | 'saldos' | 'variance' | 'budget' | 'auditoria' | 'cuenta'
+
+/** Sesión real (inicio de sesión con contraseña); sin ella se usa el selector de desarrollo. */
+export interface SesionApp {
+  usuario: UsuarioSesion
+  recargar: () => void
+  cerrar: () => void
+}
 
 function usuarioInicial(): string {
   const guardado = leerUsuarioDev()
@@ -24,12 +33,20 @@ function usuarioInicial(): string {
   return USUARIOS_DESARROLLO[0].email
 }
 
-export default function App() {
-  const [usuario, setUsuario] = useState(() => {
+export default function App({
+  sesion,
+  alProbarLogin,
+}: {
+  sesion?: SesionApp
+  alProbarLogin?: () => void
+}) {
+  const [usuarioDev, setUsuario] = useState(() => {
     const inicial = usuarioInicial()
-    fijarUsuarioDev(inicial)
+    fijarUsuarioDev(sesion ? null : inicial)
     return inicial
   })
+  // Quién está activo: la persona con sesión o el usuario de prueba elegido a mano
+  const usuario = sesion ? `sesion-${sesion.usuario.usuario_id}` : usuarioDev
   const [hotelId, setHotelId] = useState<number | null>(null)
   const [pestana, setPestana] = useState<Pestana>('cargas')
   const [version, setVersion] = useState(0)
@@ -65,7 +82,10 @@ export default function App() {
     },
     {
       titulo: 'Control',
-      items: [{ id: 'auditoria', nombre: 'Auditoría', icono: 'auditoria', visible: puede(rol, 'auditoria:leer') }],
+      items: [
+        { id: 'auditoria', nombre: 'Auditoría', icono: 'auditoria', visible: puede(rol, 'auditoria:leer') },
+        { id: 'cuenta', nombre: 'Mi cuenta', icono: 'usuario', visible: sesion !== undefined },
+      ],
     },
   ]
   const visibles = grupos.flatMap((g) => g.items).filter((p) => p.visible)
@@ -94,7 +114,9 @@ export default function App() {
     ...(nombreActiva ? [nombreActiva] : []),
     ...(activa === 'variance' && detalle[ruta.tipo] ? [detalle[ruta.tipo]] : []),
   ]
-  const nombreUsuario = USUARIOS_DESARROLLO.find((u) => u.email === usuario)?.nombre ?? usuario
+  const nombreUsuario = sesion
+    ? sesion.usuario.nombre
+    : (USUARIOS_DESARROLLO.find((u) => u.email === usuarioDev)?.nombre ?? usuarioDev)
 
   return (
     <div className={lateralPlegado ? 'app app-plegado' : 'app'}>
@@ -138,22 +160,39 @@ export default function App() {
           </nav>
         )}
 
-        <div className="lateral-pie">
-          <label>
-            Usuario (desarrollo)
-            <select value={usuario} onChange={(e) => cambiarUsuario(e.target.value)}>
-              {USUARIOS_DESARROLLO.map((u) => (
-                <option key={u.email} value={u.email}>
-                  {u.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p className="aviso-desarrollo" role="note">
-            Modo desarrollo: el usuario se elige a mano. En producción entrará con el inicio de
-            sesión corporativo.
-          </p>
-        </div>
+        {sesion ? (
+          <div className="lateral-pie">
+            <p className="lateral-usuario">
+              {sesion.usuario.nombre}
+              <span className="suave">{sesion.usuario.email}</span>
+            </p>
+            <button type="button" className="boton boton-secundario" onClick={sesion.cerrar}>
+              Cerrar sesión
+            </button>
+          </div>
+        ) : (
+          <div className="lateral-pie">
+            <label>
+              Usuario (desarrollo)
+              <select value={usuarioDev} onChange={(e) => cambiarUsuario(e.target.value)}>
+                {USUARIOS_DESARROLLO.map((u) => (
+                  <option key={u.email} value={u.email}>
+                    {u.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="aviso-desarrollo" role="note">
+              Modo desarrollo: el usuario se elige a mano. En producción se entra con usuario y
+              contraseña.
+            </p>
+            {alProbarLogin && (
+              <button type="button" className="boton boton-secundario" onClick={alProbarLogin}>
+                Probar inicio de sesión real
+              </button>
+            )}
+          </div>
+        )}
       </aside>
 
       <div className="principal">
@@ -236,6 +275,9 @@ export default function App() {
               )}
               {activa === 'budget' && <PanelBudget hotelId={hotel.id} />}
               {activa === 'auditoria' && <PanelAuditoria hotelId={hotel.id} version={version} />}
+              {activa === 'cuenta' && sesion && (
+                <PanelCuenta usuario={sesion.usuario} alCambiar={sesion.recargar} />
+              )}
             </div>
           )}
         </main>

@@ -6,6 +6,7 @@ from fastapi.openapi.utils import get_openapi
 
 from fpa.api import health
 from fpa.api.v1 import (
+    auth,
     budget,
     cargas,
     catalogo,
@@ -18,6 +19,7 @@ from fpa.api.v1 import (
 from fpa.config import settings
 from fpa.seguridad.cabeceras import CabecerasDeSeguridad
 from fpa.seguridad.invalidar_cache import InvalidarCacheTrasEscritura
+from fpa.seguridad.origen import ProtegerOrigen
 
 
 def _openapi_con_errores_de_negocio(app: FastAPI) -> dict[str, Any]:
@@ -38,6 +40,7 @@ def crear_app() -> FastAPI:
     app.openapi = lambda: _openapi_con_errores_de_negocio(app)  # type: ignore[method-assign]
     app.add_middleware(InvalidarCacheTrasEscritura)
     app.add_middleware(CabecerasDeSeguridad)
+    app.add_middleware(ProtegerOrigen)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -45,6 +48,7 @@ def crear_app() -> FastAPI:
         allow_headers=["Authorization", "Content-Type"],
     )
     app.include_router(health.router, prefix="/api")
+    app.include_router(auth.router, prefix="/api/v1")
     app.include_router(identidad.router, prefix="/api/v1")
     app.include_router(catalogo.router, prefix="/api/v1")
     app.include_router(saldos.router, prefix="/api/v1")

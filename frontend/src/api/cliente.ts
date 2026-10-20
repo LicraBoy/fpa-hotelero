@@ -1,4 +1,4 @@
-import { credencialesActuales } from './sesion'
+import { avisarNoAutorizado, credencialesActuales } from './sesion'
 import type { paths } from './schema'
 import type {
   CuerpoVersionBudget,
@@ -15,10 +15,11 @@ export class ErrorApi extends Error {
   readonly estado: number
   readonly detalle: string
 
-  constructor(estado: number, detalle: string) {
+  constructor(estado: number, detalle: string, avisar401 = true) {
     super(detalle)
     this.estado = estado
     this.detalle = detalle
+    if (estado === 401 && avisar401) avisarNoAutorizado()
   }
 }
 

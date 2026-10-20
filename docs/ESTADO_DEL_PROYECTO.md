@@ -17,7 +17,8 @@
 | 2 Catálogo corporativo y mapeo | **Código listo** (2.1 a 2.6); falta aprobación de Contraloría |
 | 3 Motor de Variance | **Código listo** (3.1 a 3.7); falta el Excel de septiembre de Contraloría |
 | 4 Reporting y frontend | **Código listo** (4.1 a 4.7, 4.9 y 4.10); 4.8 preparada con el Excel de Mazatlán, falta la sesión con Contraloría |
-| 5 a 14 | Pendientes |
+| **5 Comentarios, workflow, roles y auditoría** | **En curso:** 5.1 identidad real hecha; faltan 5.2 a 5.5 (5.6 diferida) |
+| 6 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
 | Sub-fase | Estado |
@@ -53,6 +54,13 @@
 | 3.5 Variance y Variance % (`calculo/variance.py`) | **Hecha** |
 | 3.6 Prueba dorada de agosto (`calculo/motor.py`, `servicios/variance.py`, `GET /hoteles/{id}/variance`, `tests/test_variance_dorada.py`) | **Hecha, con 19 excepciones documentadas** |
 | 3.7 Segunda prueba: septiembre (`tests/test_variance_septiembre.py`: consistencia del YTD, Budget no inventado, validación; arnés de diferencia cero) | **Hecha el arnés; falta el Excel de septiembre** |
+
+### Sub-fases de la Fase 5
+| Sub-fase | Estado |
+|---|---|
+| 5.1 Identidad real (`api/v1/auth.py`, `seguridad/{credenciales,sesiones,origen}.py`, migración `0016`, `scripts/crear_contralor.py`, `src/Raiz.tsx`, `pantallas/cuenta/`, ADR 0005): login con bloqueo, TOTP, sesión en cookie `HttpOnly`, cambio de contraseña, CSRF por `Origin`, auditoría de accesos. **Avisar a TI:** dependencias `argon2-cffi` y `pyotp` | **Hecha** |
+| 5.2 Roles, permisos y departamentos · 5.3 Comentarios · 5.4 Workflow de cierre · 5.5 Auditoría con hash e historial de la cifra | Pendientes (plan aprobado) |
+| 5.6 Notificaciones | Diferida (requiere servidor de correo de TI) |
 
 ### Sub-fases de la Fase 4
 | Sub-fase | Estado |

@@ -4,7 +4,7 @@ from fpa.modelos.auditoria import EventoAuditoria
 from fpa.modelos.base import Base
 from fpa.modelos.cargas import CargaArchivo, EstadoCarga, Movimiento
 from fpa.modelos.catalogo import CuentaLocal
-from fpa.modelos.identidad import Asignacion, Rol, Usuario
+from fpa.modelos.identidad import Asignacion, Rol, Sesion, Usuario
 from fpa.modelos.mapeo import CuentaExcluidaMapeo, MapeoLineaCuenta, VersionMapeo
 from fpa.modelos.organizacion import Hotel, Organizacion
 from fpa.modelos.plan import LineaPlan, LineaPlanMensual, ValorCapturado, VersionPlan
@@ -35,6 +35,7 @@ __all__ = [
     "ReglaSumaLinea",
     "Rol",
     "SaldoMensualCuenta",
+    "Sesion",
     "Usuario",
     "ValorCapturado",
     "VersionEstructuraReporte",

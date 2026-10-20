@@ -369,7 +369,7 @@ Repositorio: `C:\Users\mzamora\Desktop\fpa-hotelero`, separado de la carpeta de 
 ### Fase 5 — Comentarios, workflow, roles y auditoría (L)
 | Sub-fase | Qué se hace | Qué se prueba |
 |---|---|---|
-| 5.1 Identidad real | Integración OIDC con el proveedor de la empresa `[POR VALIDAR con TI]`; MFA | Sesión caduca; token revocado deja de funcionar |
+| 5.1 Identidad real **[HECHA, ADR 0005]** | Usuarios locales `argon2id` + TOTP con sesiones del servidor (TI dio libertad de tecnología); OIDC queda como proveedor futuro | Sesión caduca; token revocado deja de funcionar |
 | 5.2 Roles y permisos | Matriz: contralor, analista, responsable de área, dirección, auditoría | **Prueba de matriz completa**: cada rol × cada endpoint |
 | 5.3 Comentarios | Por línea y periodo (mes/YTD), responsable, estatus, evidencia | Texto con HTML/script se escapa; adjuntos pasan por la validación de 8.5 |
 | 5.4 Workflow de cierre | Borrador → Comentado → Revisado → Aprobado → Bloqueado | Estados inválidos rechazados; un periodo bloqueado no acepta recargas |

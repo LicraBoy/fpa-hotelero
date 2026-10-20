@@ -44,6 +44,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/cambiar-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cambiar Password */
+        post: operations["cambiar_password_api_v1_auth_cambiar_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Estado
+         * @description Para la pantalla de entrada: en qué entorno está y si ya hay sesión (sin exigirla).
+         */
+        get: operations["estado_api_v1_auth_estado_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_api_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Logout
+         * @description Cierra la sesión de este navegador (si la hay) y borra la cookie.
+         */
+        post: operations["logout_api_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmar Mfa */
+        post: operations["confirmar_mfa_api_v1_auth_mfa_confirmar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/desactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desactivar Mfa */
+        post: operations["desactivar_mfa_api_v1_auth_mfa_desactivar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/iniciar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Iniciar Mfa
+         * @description Genera un secreto nuevo para la app de autenticación; no queda activo hasta confirmarlo.
+         */
+        post: operations["iniciar_mfa_api_v1_auth_mfa_iniciar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles": {
         parameters: {
             query?: never;
@@ -714,6 +842,13 @@ export interface components {
             /** Periodo */
             periodo: string;
         };
+        /** CambioPassword */
+        CambioPassword: {
+            /** Actual */
+            actual: string;
+            /** Nueva */
+            nueva: string;
+        };
         /** CapturaEntrada */
         CapturaEntrada: {
             /** Valores */
@@ -827,6 +962,11 @@ export interface components {
             /** Var */
             var: string | null;
         };
+        /** CodigoMfa */
+        CodigoMfa: {
+            /** Codigo */
+            codigo: string;
+        };
         /** ComponenteEdicion */
         ComponenteEdicion: {
             /** Factor */
@@ -850,6 +990,11 @@ export interface components {
             signo: number;
             /** Tipo */
             tipo: string;
+        };
+        /** ConfirmarPassword */
+        ConfirmarPassword: {
+            /** Password */
+            password: string;
         };
         /** ConflictoSalida */
         ConflictoSalida: {
@@ -952,6 +1097,14 @@ export interface components {
             suma: string;
             /** Tipo */
             tipo: string;
+        };
+        /** EstadoAuth */
+        EstadoAuth: {
+            /** Autenticado */
+            autenticado: boolean;
+            /** Entorno */
+            entorno: string;
+            usuario?: components["schemas"]["UsuarioSesion"] | null;
         };
         /** EstructuraSalida */
         EstructuraSalida: {
@@ -1115,6 +1268,22 @@ export interface components {
             /** Tipo */
             tipo: string;
             ytd: components["schemas"]["CifrasSalida"];
+        };
+        /** LoginEntrada */
+        LoginEntrada: {
+            /** Codigo */
+            codigo?: string | null;
+            /** Email */
+            email: string;
+            /** Password */
+            password: string;
+        };
+        /** MfaIniciada */
+        MfaIniciada: {
+            /** Secreto */
+            secreto: string;
+            /** Uri */
+            uri: string;
         };
         /** MotivoCeroSalida */
         MotivoCeroSalida: {
@@ -1307,6 +1476,25 @@ export interface components {
             id: number;
             /** Linea Total Id */
             linea_total_id: number | null;
+        };
+        /** UsuarioSesion */
+        UsuarioSesion: {
+            /** Debe Activar Mfa */
+            debe_activar_mfa: boolean;
+            /** Debe Cambiar Password */
+            debe_cambiar_password: boolean;
+            /** Email */
+            email: string;
+            /** Nombre */
+            nombre: string;
+            /** Roles Por Hotel */
+            roles_por_hotel: {
+                [key: string]: string;
+            };
+            /** Totp Activo */
+            totp_activo: boolean;
+            /** Usuario Id */
+            usuario_id: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -1584,6 +1772,190 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    cambiar_password_api_v1_auth_cambiar_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioPassword"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    estado_api_v1_auth_estado_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstadoAuth"];
+                };
+            };
+        };
+    };
+    login_api_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsuarioSesion"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_api_v1_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmar_mfa_api_v1_auth_mfa_confirmar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodigoMfa"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    desactivar_mfa_api_v1_auth_mfa_desactivar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmarPassword"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    iniciar_mfa_api_v1_auth_mfa_iniciar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaIniciada"];
                 };
             };
         };
