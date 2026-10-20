@@ -105,6 +105,7 @@ def generar_excel(
     version_budget: int | None,
     periodos_ytd: Sequence[str],
     insumos: InsumosFormulas | None = None,
+    comentarios: dict[tuple[int, str], str] | None = None,
 ) -> bytes:
     """`lineas` ya viene en el orden del reporte; `secciones` da sus encabezados.
 
@@ -199,6 +200,13 @@ def generar_excel(
             _cifras(hoja, fila, 3, r.mes, calculada or linea.id in capturadas)
             _cifras(hoja, fila, 8, r.ytd, calculada)
             _cifras(hoja, fila, 13, r.anual, calculada)
+        for bloque, columna in (("mes", 7), ("ytd", 12)):
+            comentario = (comentarios or {}).get((linea.id, bloque))
+            if comentario:
+                escribir_texto(hoja, fila, columna, comentario)
+                hoja.cell(row=fila, column=columna).alignment = Alignment(
+                    wrap_text=True, vertical="top"
+                )
         if linea.tipo in ("total", "subtotal"):
             for columna in range(1, 17):
                 celda = hoja.cell(row=fila, column=columna)

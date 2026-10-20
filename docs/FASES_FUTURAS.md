@@ -106,7 +106,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 |---|---|---|
 | 5.1 Identidad real **[HECHA]** | Usuarios locales con `argon2id`, TOTP y sesiones del servidor (TI dio libertad de tecnología; ADR 0005). OIDC queda como proveedor futuro | Sesión caduca; token revocado deja de funcionar |
 | 5.2 Roles y permisos **[HECHA]** | Matriz completa por rol y por hotel; el responsable de departamento ve y comentará solo las secciones asignadas; pantalla Usuarios | Prueba de toda la matriz rol × endpoint |
-| 5.3 Comentarios | Por línea y periodo (mes y acumulado), con responsable, estatus y evidencia | Texto con HTML o script se muestra como texto; adjuntos con la misma validación de archivos |
+| 5.3 Comentarios **[HECHA]** | Por línea y periodo (mes y acumulado), con responsable, estatus y evidencia; el umbral para exigir comentario queda apagado `[POR VALIDAR]` | Texto con HTML o script se muestra como texto; adjuntos con la misma validación de archivos |
 | 5.4 Workflow de cierre | Borrador → Comentado → Revisado → Aprobado → Bloqueado | Estados inválidos rechazados; un periodo bloqueado no acepta recargas |
 | 5.5 Auditoría reforzada | Bitácora con hash encadenado; en PostgreSQL, sin permiso de modificar | Alterar un evento se detecta |
 | 5.6 Notificaciones | Aviso por correo a responsables (opcional) | Sin datos sensibles en el cuerpo |

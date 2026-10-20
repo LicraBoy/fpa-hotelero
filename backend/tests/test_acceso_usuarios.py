@@ -1,12 +1,11 @@
 """Fase 5.2: secciones asignadas a responsables y administración de usuarios."""
 
 import pytest
-import test_versionado_mapeo as tv
 from conftest import Mundo, como
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from test_versionado_mapeo import Escenario, fila
+from test_versionado_mapeo import Escenario
 
 from fpa.config import settings
 from fpa.identidad.dependencias import obtener_proveedor
@@ -14,35 +13,11 @@ from fpa.identidad.proveedor import crear_proveedor
 from fpa.main import app
 from fpa.modelos import AsignacionDepartamento, EventoAuditoria, Usuario
 from fpa.seguridad.credenciales import verificar
-from fpa.servicios.versionado_mapeo import aprobar
 
 CONTRALOR = "contralor_ab@test.local"
 ANALISTA = "analista_a@test.local"
 RESPONSABLE = "responsable_a@test.local"
 AUDITORIA_B = "auditoria_b@test.local"  # solo hotel B
-
-# Dos secciones: Rooms (Ingreso) y Admin (Gasto)
-ESTRUCTURA = [
-    fila(),
-    fila("Account #", "Account Description", "AUGUST"),
-    fila(None, None, "Actual"),
-    fila("R o o m s"),
-    fila("029-0000-1-000", "Ingreso", 100, "=-'4001002.001'!L5", None),
-    fila(None, "T o t a l  R o o m s", 100, "=S5", None),
-    fila("A d m i n"),
-    fila("029-0000-2-000", "Gasto", 30, "='6009001.001'!L9", None),
-]
-
-
-@pytest.fixture
-def esc(db: Session, mundo: Mundo, monkeypatch: pytest.MonkeyPatch) -> Escenario:
-    monkeypatch.setattr(tv, "EJEMPLO", ESTRUCTURA)
-    e = Escenario(
-        db, mundo, [tv._mov("4001002.001", "0", "100"), tv._mov("6009001.001", "30", "0")]
-    )
-    aprobar(db, version_id=e.borrador.id, **e.kw)  # type: ignore[union-attr, arg-type]
-    db.commit()
-    return e
 
 
 def _asignar(db: Session, mundo: Mundo, *secciones: str) -> None:

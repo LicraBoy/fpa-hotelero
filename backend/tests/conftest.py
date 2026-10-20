@@ -14,6 +14,7 @@ from fpa.main import app
 from fpa.modelos import Asignacion, Base, Hotel, Organizacion, Usuario
 from fpa.semilla import sembrar_roles
 from fpa.servicios.reportes import cache_variance
+from fpa.servicios.versionado_mapeo import aprobar
 
 
 @pytest.fixture(autouse=True)
@@ -114,3 +115,33 @@ def contar() -> Callable[[Session, type], int]:
         return len(db.scalars(select(modelo)).all())
 
     return _contar
+
+
+# Dos secciones: Rooms (Ingreso) y Admin (Gasto). Se arma al usarse: `test_versionado_mapeo`
+# importa este módulo, así que no puede importarse arriba sin un ciclo.
+def _filas_dos_secciones() -> list[tuple[object, ...]]:
+    from test_versionado_mapeo import fila
+
+    return [
+        fila(),
+        fila("Account #", "Account Description", "AUGUST"),
+        fila(None, None, "Actual"),
+        fila("R o o m s"),
+        fila("029-0000-1-000", "Ingreso", 100, "=-'4001002.001'!L5", None),
+        fila(None, "T o t a l  R o o m s", 100, "=S5", None),
+        fila("A d m i n"),
+        fila("029-0000-2-000", "Gasto", 30, "='6009001.001'!L9", None),
+    ]
+
+
+@pytest.fixture
+def esc(db: Session, mundo: Mundo, monkeypatch: pytest.MonkeyPatch):  # type: ignore[no-untyped-def]
+    import test_versionado_mapeo as tv
+
+    monkeypatch.setattr(tv, "EJEMPLO", _filas_dos_secciones())
+    e = tv.Escenario(
+        db, mundo, [tv._mov("4001002.001", "0", "100"), tv._mov("6009001.001", "30", "0")]
+    )
+    aprobar(db, version_id=e.borrador.id, **e.kw)
+    db.commit()
+    return e

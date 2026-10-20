@@ -25,6 +25,8 @@ interface Props {
   lineaSeleccionada?: number | null
   alSeleccionar?: (lineaId: number) => void
   compacta?: boolean
+  /** Hilos de comentarios por línea (suma de mes y acumulado) para el indicador de la fila. */
+  comentarios?: Record<number, { total: number; pendientes: number }>
 }
 
 type ClaveBloque = 'mes' | 'ytd' | 'anual'
@@ -122,6 +124,7 @@ function FilaLinea({
   destacada,
   seleccionada,
   alSeleccionar,
+  comentarios,
 }: {
   linea: LineaVariance
   periodo: string
@@ -130,6 +133,7 @@ function FilaLinea({
   destacada: boolean
   seleccionada: boolean
   alSeleccionar?: (lineaId: number) => void
+  comentarios?: { total: number; pendientes: number }
 }) {
   const calculada = linea.tipo !== 'informativa'
   const enlace = (bloque: Bloque) =>
@@ -158,6 +162,17 @@ function FilaLinea({
             <Resaltado texto={linea.descripcion} busqueda={busqueda} />
           </span>
           {linea.codigo_corporativo && <span className="codigo">{linea.codigo_corporativo}</span>}
+          {comentarios && comentarios.total > 0 && (
+            <span
+              className={comentarios.pendientes > 0 ? 'marca-comentarios pendientes' : 'marca-comentarios'}
+              role="img"
+              aria-label={`${comentarios.total} comentarios, ${comentarios.pendientes} pendientes`}
+              title={`${comentarios.total} comentarios, ${comentarios.pendientes} pendientes`}
+            >
+              <Icono nombre="comentario" tamano={13} />
+              {comentarios.total}
+            </span>
+          )}
           {alSeleccionar && (
             <button
               type="button"
@@ -214,6 +229,7 @@ export function TablaVariance({
   lineaSeleccionada = null,
   alSeleccionar,
   compacta = false,
+  comentarios,
 }: Props) {
   const buscando = busqueda.trim() !== ''
   const grupos3: { clave: ClaveBloque; titulo: string; contexto: string }[] = [
@@ -315,6 +331,7 @@ export function TablaVariance({
                     destacada={l.linea_id === lineaDestacada}
                     seleccionada={l.linea_id === lineaSeleccionada}
                     alSeleccionar={alSeleccionar}
+                    comentarios={comentarios?.[l.linea_id]}
                   />
                 ))}
               </SeccionFilas>

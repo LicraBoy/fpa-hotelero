@@ -3,6 +3,7 @@ import type { CifrasVariance, LineaVariance } from '../../api/tipos'
 import { Icono } from '../../componentes/Iconos'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
 import { maximoAbsoluto, porcentajeBarra } from '../../util/barras'
+import { ComentariosLinea } from './ComentariosLinea'
 import { esDesfavorable, esFavorable, formatoContable, formatoPorcentaje } from '../../util/formato'
 import { etiquetaMesLargo, etiquetaRangoMeses } from '../../util/periodos'
 
@@ -14,6 +15,8 @@ interface Props {
   /** Si el rol puede abrir el desglose, se ofrecen los enlaces a sus cuentas. */
   puedeDesglosar: boolean
   alCerrar: () => void
+  /** Comentarios de la línea: se muestran si el rol puede leerlos. */
+  comentarios?: { hotelId: number; puedeComentar: boolean; alCambiar: () => void }
 }
 
 const TIPO: Record<string, string> = {
@@ -83,7 +86,7 @@ function BloquePanel({
  * Panel lateral con el detalle de una línea: Mes, Acumulado y Presupuesto anual, con barras Actual
  * contra Presupuesto. Solo usa las cifras que la línea ya trae; no consulta nada ni calcula Variance.
  */
-export function PanelLinea({ linea, periodo, periodosYtd, anoFiscal, puedeDesglosar, alCerrar }: Props) {
+export function PanelLinea({ linea, periodo, periodosYtd, anoFiscal, puedeDesglosar, alCerrar, comentarios }: Props) {
   const cerrar = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -137,6 +140,15 @@ export function PanelLinea({ linea, periodo, periodosYtd, anoFiscal, puedeDesglo
         enlace={null}
         textoEnlace=""
       />
+      {comentarios && linea.tipo !== 'seccion' && (
+        <ComentariosLinea
+          hotelId={comentarios.hotelId}
+          periodo={periodo}
+          lineaId={linea.linea_id}
+          puedeComentar={comentarios.puedeComentar}
+          alCambiar={comentarios.alCambiar}
+        />
+      )}
     </aside>
   )
 }

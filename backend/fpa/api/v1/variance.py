@@ -25,6 +25,7 @@ from fpa.modelos.organizacion import Hotel
 from fpa.modelos.reporte import LineaReporte
 from fpa.servicios.acceso_secciones import exigir_acceso_completo, restriccion
 from fpa.servicios.auditoria import auditar
+from fpa.servicios.comentarios_excel import comentarios_por_linea
 from fpa.servicios.exportar_variance import generar_excel, nombre_de_archivo
 from fpa.servicios.reportes import cache_variance
 from fpa.servicios.variance import PlanIncompatible, ReporteVariance, calcular_variance
@@ -278,6 +279,11 @@ def exportar(
         version_budget=r.version_plan_id,
         periodos_ytd=r.periodos_ytd,
         insumos=r.insumos,
+        comentarios=(
+            comentarios_por_linea(db, contexto.hotel_id, r.periodo)
+            if contexto.principal.puede(contexto.hotel_id, Permiso.COMENTARIO_LEER)
+            else None
+        ),
     )
     auditar(
         db,

@@ -17,7 +17,7 @@
 | 2 Catálogo corporativo y mapeo | **Código listo** (2.1 a 2.6); falta aprobación de Contraloría |
 | 3 Motor de Variance | **Código listo** (3.1 a 3.7); falta el Excel de septiembre de Contraloría |
 | 4 Reporting y frontend | **Código listo** (4.1 a 4.7, 4.9 y 4.10); 4.8 preparada con el Excel de Mazatlán, falta la sesión con Contraloría |
-| **5 Comentarios, workflow, roles y auditoría** | **En curso:** 5.1 y 5.2 hechas; faltan 5.3 a 5.5 (5.6 diferida) |
+| **5 Comentarios, workflow, roles y auditoría** | **En curso:** 5.1 a 5.3 hechas; faltan 5.4 y 5.5 (5.6 diferida) |
 | 6 a 14 | Pendientes |
 
 ### Sub-fases de la Fase 1
@@ -60,7 +60,8 @@
 |---|---|
 | 5.1 Identidad real (`api/v1/auth.py`, `seguridad/{credenciales,sesiones,origen}.py`, migración `0016`, `scripts/crear_contralor.py`, `src/Raiz.tsx`, `pantallas/cuenta/`, ADR 0005): login con bloqueo, TOTP, sesión en cookie `HttpOnly`, cambio de contraseña, CSRF por `Origin`, auditoría de accesos. **Avisar a TI:** dependencias `argon2-cffi` y `pyotp` | **Hecha** |
 | 5.2 Roles, permisos y departamentos (`identidad/permisos.py` con 8 permisos nuevos de usuarios, comentarios y cierre; `AsignacionDepartamento`, migración `0017`; `servicios/acceso_secciones.py`; `api/v1/usuarios.py`; pantalla **Usuarios** en `src/pantallas/usuarios/`): el **responsable de departamento** entra al Variance pero solo ve las secciones asignadas (líneas, desglose, movimientos de sus cuentas); sin secciones no ve líneas; no exporta ni abre asientos (mezclan secciones). El **Contralor** crea usuarios (contraseña temporal de una sola vez), cambia rol y secciones, desactiva, restablece contraseña y desbloquea; un hotel nunca se queda sin Contralor activo. Prueba de la matriz rol × endpoint en `tests/test_acceso_usuarios.py` | **Hecha** |
-| 5.3 Comentarios · 5.4 Workflow de cierre · 5.5 Auditoría con hash e historial de la cifra | Pendientes (plan aprobado) |
+| 5.3 Comentarios (`modelos/comentarios.py`, migración `0018`, `api/v1/comentarios.py`, `servicios/comentarios_excel.py`, `src/pantallas/variance/ComentariosLinea.tsx`): hilo por línea + periodo + bloque (mes o acumulado) con responsable, estatus pendiente → explicado → aprobado (aprobar o reabrir exige `comentario:resolver`), respuestas, edición solo del autor con historial de versiones, y **evidencia** (PDF, PNG, JPG o .xlsx, máx. 10 MB y 5 por comentario; se valida el contenido, se rechazan PDF con scripts, se guarda en disco bajo su hash y se descarga siempre como archivo). El responsable de departamento solo ve y comenta sus secciones. La tabla del Variance marca cada línea con su conteo (sin columnas nuevas) y el Excel exportado llena las columnas COMMENTS y YTD COMMENTS como texto. **No incluido:** umbral para exigir comentario (P24) | **Hecha** |
+| 5.4 Workflow de cierre · 5.5 Auditoría con hash e historial de la cifra | Pendientes (plan aprobado) |
 | 5.6 Notificaciones | Diferida (requiere servidor de correo de TI) |
 
 ### Sub-fases de la Fase 4

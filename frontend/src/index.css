@@ -3210,3 +3210,73 @@ input:focus-visible,
   gap: var(--e3);
   flex-wrap: wrap;
 }
+
+/* Comentarios */
+.marca-comentarios {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--superficie-2);
+  border: 1px solid var(--borde);
+  color: var(--suave);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.marca-comentarios.pendientes {
+  background: var(--aviso-fondo);
+  border-color: var(--aviso);
+  color: var(--aviso);
+}
+
+.comentarios-linea {
+  display: grid;
+  gap: var(--e3);
+  margin-top: var(--e4);
+}
+
+.hilo {
+  display: grid;
+  gap: var(--e2);
+  padding: var(--e3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.hilo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--suave);
+}
+
+.hilo-texto {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.hilo-respuesta {
+  margin-left: var(--e4);
+  padding-left: var(--e3);
+  border-left: 2px solid var(--borde);
+}
+
+.hilo textarea,
+.comentarios-linea textarea {
+  width: 100%;
+  min-height: 64px;
+  font: inherit;
+}
+
+.hilo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  align-items: center;
+}

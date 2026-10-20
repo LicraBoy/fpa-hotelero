@@ -4,6 +4,7 @@ from fpa.modelos.auditoria import EventoAuditoria
 from fpa.modelos.base import Base
 from fpa.modelos.cargas import CargaArchivo, EstadoCarga, Movimiento
 from fpa.modelos.catalogo import CuentaLocal
+from fpa.modelos.comentarios import AdjuntoComentario, ComentarioLinea, ComentarioRevision
 from fpa.modelos.identidad import Asignacion, AsignacionDepartamento, Rol, Sesion, Usuario
 from fpa.modelos.mapeo import CuentaExcluidaMapeo, MapeoLineaCuenta, VersionMapeo
 from fpa.modelos.organizacion import Hotel, Organizacion
@@ -17,10 +18,13 @@ from fpa.modelos.reporte import (
 from fpa.modelos.saldos import SaldoMensualCuenta
 
 __all__ = [
+    "AdjuntoComentario",
     "Asignacion",
     "AsignacionDepartamento",
     "Base",
     "CargaArchivo",
+    "ComentarioLinea",
+    "ComentarioRevision",
     "ConvencionLinea",
     "CuentaExcluidaMapeo",
     "CuentaLocal",

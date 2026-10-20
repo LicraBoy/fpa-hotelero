@@ -123,6 +123,27 @@ function ReporteVariance({
   const [compacta, setCompacta] = useState(false)
   const [errorExportar, setErrorExportar] = useState<string | null>(null)
 
+  // Indicadores de comentarios por línea (solo si el rol puede leerlos)
+  const verComentarios = puede(rol, 'comentario:leer')
+  const [versionComentarios, setVersionComentarios] = useState(0)
+  const conteos = useDatos(
+    () =>
+      verComentarios && periodo !== ''
+        ? obtenerTipado('/api/v1/hoteles/{hotel_id}/comentarios/conteos', {
+            path: { hotel_id: hotelId },
+            query: { periodo },
+          })
+        : Promise.resolve(null),
+    [hotelId, periodo, verComentarios, versionComentarios],
+  )
+  const comentariosPorLinea: Record<number, { total: number; pendientes: number }> = {}
+  for (const [id, bloques] of Object.entries(conteos.datos?.por_linea ?? {})) {
+    comentariosPorLinea[Number(id)] = Object.values(bloques).reduce(
+      (a, b) => ({ total: a.total + b.total, pendientes: a.pendientes + b.pendientes }),
+      { total: 0, pendientes: 0 },
+    )
+  }
+
   useEffect(() => {
     const espera = setTimeout(() => setBusqueda(textoBusqueda.trim()), ESPERA_BUSQUEDA_MS)
     return () => clearTimeout(espera)
@@ -541,6 +562,7 @@ function ReporteVariance({
                   lineaSeleccionada={lineaPanel}
                   alSeleccionar={(id) => setLineaPanel((actual) => (actual === id ? null : id))}
                   compacta={compacta}
+                  comentarios={comentariosPorLinea}
                 />
               )}
             </>
@@ -553,6 +575,15 @@ function ReporteVariance({
               anoFiscal={datos.ano_fiscal}
               puedeDesglosar={puede(rol, 'drilldown:leer')}
               alCerrar={() => setLineaPanel(null)}
+              comentarios={
+                verComentarios
+                  ? {
+                      hotelId,
+                      puedeComentar: puede(rol, 'comentario:crear'),
+                      alCambiar: () => setVersionComentarios((v) => v + 1),
+                    }
+                  : undefined
+              }
             />
           )}
           <details className="notas-reporte" open>

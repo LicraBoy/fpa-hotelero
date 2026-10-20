@@ -155,6 +155,43 @@ def inspeccionar_xls(ruta: Path) -> None:
         raise ArchivoRechazado(415, "Los libros con macros no se aceptan")
 
 
+_FIRMAS_EVIDENCIA = {
+    ".pdf": b"%PDF-",
+    ".png": b"\x89PNG\r\n\x1a\n",
+    ".jpg": b"\xff\xd8\xff",
+    ".jpeg": b"\xff\xd8\xff",
+}
+EXTENSIONES_EVIDENCIA = (*_FIRMAS_EVIDENCIA, ".xlsx")
+# Un PDF que ejecuta código o abre programas al verse no es evidencia
+_PDF_ACTIVO = (b"/JavaScript", b"/JS", b"/Launch", b"/OpenAction", b"/EmbeddedFile")
+
+
+def verificar_nombre_evidencia(nombre: str) -> str:
+    """Evidencia de un comentario: PDF, imagen (PNG/JPG) o libro .xlsx. Devuelve la extensión."""
+    minusculas = nombre.lower()
+    if minusculas.endswith(".xlsm"):
+        raise ArchivoRechazado(415, "Los archivos con macros (.xlsm) no se aceptan")
+    for extension in EXTENSIONES_EVIDENCIA:
+        if minusculas.endswith(extension):
+            return extension
+    raise ArchivoRechazado(415, "Solo se aceptan PDF, imágenes PNG o JPG y libros .xlsx")
+
+
+def inspeccionar_evidencia(ruta: Path, extension: str, limites: LimitesArchivo) -> None:
+    """El contenido debe corresponder a la extensión (no se confía en el nombre)."""
+    if extension == ".xlsx":
+        inspeccionar_xlsx(ruta, limites)
+        return
+    with ruta.open("rb") as f:
+        inicio = f.read(16)
+    if not inicio.startswith(_FIRMAS_EVIDENCIA[extension]):
+        raise ArchivoRechazado(415, "El contenido no corresponde al tipo de archivo")
+    if extension == ".pdf":
+        contenido = ruta.read_bytes()  # acotado por el tamaño máximo de la subida
+        if any(marca in contenido for marca in _PDF_ACTIVO):
+            raise ArchivoRechazado(415, "El PDF trae contenido activo (scripts o adjuntos)")
+
+
 def limpiar_temporales(carpeta: Path, edad_maxima_s: float = 3600.0) -> None:
     """Borra temporales huérfanos (p. ej. tras una caída). Si uno está en uso, se omite."""
     if not carpeta.exists():

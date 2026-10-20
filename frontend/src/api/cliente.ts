@@ -238,3 +238,41 @@ export async function enviarJson<T>(
   if (!r.ok) throw new ErrorApi(r.status, mensajeDeError(json, r.status))
   return json as T | null
 }
+
+/** Sube la evidencia de un comentario (PDF, PNG, JPG o .xlsx). Devuelve el hilo actualizado. */
+export async function subirAdjuntoComentario<T>(
+  hotelId: number,
+  comentarioId: number,
+  archivo: File,
+): Promise<T> {
+  const formulario = new FormData()
+  formulario.append('archivo', archivo)
+  const r = await fetch(`/api/v1/hoteles/${hotelId}/comentarios/${comentarioId}/adjuntos`, {
+    method: 'POST',
+    body: formulario,
+    headers: cabeceras(),
+  })
+  const json = await leerJson(r)
+  if (!r.ok) throw new ErrorApi(r.status, mensajeDeError(json, r.status))
+  return json as T
+}
+
+/** Descarga la evidencia de un comentario; el archivo se entrega al usuario y no se guarda. */
+export async function descargarAdjuntoComentario(
+  hotelId: number,
+  comentarioId: number,
+  adjuntoId: number,
+  nombre: string,
+): Promise<void> {
+  const r = await fetch(
+    `/api/v1/hoteles/${hotelId}/comentarios/${comentarioId}/adjuntos/${adjuntoId}`,
+    { headers: cabeceras() },
+  )
+  if (!r.ok) throw new ErrorApi(r.status, mensajeDeError(await leerJson(r), r.status))
+  const url = URL.createObjectURL(await r.blob())
+  const enlace = document.createElement('a')
+  enlace.href = url
+  enlace.download = nombre
+  enlace.click()
+  URL.revokeObjectURL(url)
+}

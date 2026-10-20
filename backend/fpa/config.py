@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     # Archivos subidos: se guardan fuera de cualquier carpeta pública (storage/ no se versiona).
     storage_dir: str = "./storage"
     carga_max_bytes: int = 25 * 1024 * 1024
+    adjunto_max_bytes: int = 10 * 1024 * 1024  # evidencia de un comentario
+    adjuntos_max_por_comentario: int = 5
     # Límites anti zip-bomb (los Excel reales: razón ≈ 35, 9.5 MB, 351 entradas)
     zip_max_entradas: int = 2000
     zip_max_descomprimido: int = 200 * 1024 * 1024

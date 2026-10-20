@@ -421,6 +421,149 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/comentarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar */
+        get: operations["listar_api_v1_hoteles__hotel_id__comentarios_get"];
+        put?: never;
+        /** Crear */
+        post: operations["crear_api_v1_hoteles__hotel_id__comentarios_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/comentarios/conteos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Conteos
+         * @description Cuántos hilos hay por línea y bloque (para el indicador de la tabla del Variance).
+         */
+        get: operations["conteos_api_v1_hoteles__hotel_id__comentarios_conteos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Editar
+         * @description Cambia el texto del comentario raíz o de una respuesta; la versión anterior se conserva.
+         */
+        patch: operations["editar_api_v1_hoteles__hotel_id__comentarios__comentario_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}/adjuntos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Adjuntar */
+        post: operations["adjuntar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}/adjuntos/{adjunto_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Descargar */
+        get: operations["descargar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos__adjunto_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}/estatus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Cambiar Estatus */
+        put: operations["cambiar_estatus_api_v1_hoteles__hotel_id__comentarios__comentario_id__estatus_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}/responsable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Asignar Responsable */
+        put: operations["asignar_responsable_api_v1_hoteles__hotel_id__comentarios__comentario_id__responsable_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}/respuestas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Responder */
+        post: operations["responder_api_v1_hoteles__hotel_id__comentarios__comentario_id__respuestas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/mapeo/versiones": {
         parameters: {
             query?: never;
@@ -807,6 +950,19 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AdjuntoSalida */
+        AdjuntoSalida: {
+            /** Autor */
+            autor: string;
+            /** Creado En */
+            creado_en: string;
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+            /** Tamano */
+            tamano: number;
+        };
         /** AprobacionEntrada */
         AprobacionEntrada: {
             /** Notas */
@@ -830,6 +986,14 @@ export interface components {
             periodo: string;
             /** Truncado */
             truncado: boolean;
+        };
+        /** Body_adjuntar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos_post */
+        Body_adjuntar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos_post: {
+            /**
+             * Archivo
+             * @description PDF, PNG, JPG o .xlsx
+             */
+            archivo: string;
         };
         /** Body_importar_api_v1_hoteles__hotel_id__budget_importar_post */
         Body_importar_api_v1_hoteles__hotel_id__budget_importar_post: {
@@ -917,12 +1081,25 @@ export interface components {
             /** Periodo */
             periodo: string;
         };
+        /** CambioEstatus */
+        CambioEstatus: {
+            /**
+             * Estatus
+             * @enum {string}
+             */
+            estatus: "pendiente" | "explicado" | "aprobado";
+        };
         /** CambioPassword */
         CambioPassword: {
             /** Actual */
             actual: string;
             /** Nueva */
             nueva: string;
+        };
+        /** CambioResponsable */
+        CambioResponsable: {
+            /** Responsable Id */
+            responsable_id: number | null;
         };
         /** CambiosUsuario */
         CambiosUsuario: {
@@ -1053,6 +1230,57 @@ export interface components {
             /** Codigo */
             codigo: string;
         };
+        /** ComentarioNuevo */
+        ComentarioNuevo: {
+            /**
+             * Bloque
+             * @enum {string}
+             */
+            bloque: "mes" | "ytd";
+            /** Linea Id */
+            linea_id: number;
+            /** Periodo */
+            periodo: string;
+            /** Responsable Id */
+            responsable_id?: number | null;
+            /** Texto */
+            texto: string;
+        };
+        /** ComentarioSalida */
+        ComentarioSalida: {
+            /** Actualizado En */
+            actualizado_en: string;
+            /** Adjuntos */
+            adjuntos: components["schemas"]["AdjuntoSalida"][];
+            /** Autor */
+            autor: string;
+            /** Autor Id */
+            autor_id: number;
+            /** Bloque */
+            bloque: string;
+            /** Creado En */
+            creado_en: string;
+            /** Editado */
+            editado: boolean;
+            /** Estatus */
+            estatus: string;
+            /** Id */
+            id: number;
+            /** Linea Descripcion */
+            linea_descripcion: string;
+            /** Linea Id */
+            linea_id: number;
+            /** Periodo */
+            periodo: string;
+            /** Responsable */
+            responsable: string | null;
+            /** Responsable Id */
+            responsable_id: number | null;
+            /** Respuestas */
+            respuestas: components["schemas"]["RespuestaSalida"][];
+            /** Texto */
+            texto: string;
+        };
         /** ComponenteEdicion */
         ComponenteEdicion: {
             /** Factor */
@@ -1102,6 +1330,22 @@ export interface components {
             n_vigente: number;
             /** Periodo */
             periodo: string;
+        };
+        /** ConteoLinea */
+        ConteoLinea: {
+            /** Pendientes */
+            pendientes: number;
+            /** Total */
+            total: number;
+        };
+        /** Conteos */
+        Conteos: {
+            /** Por Linea */
+            por_linea: {
+                [key: string]: {
+                    [key: string]: components["schemas"]["ConteoLinea"];
+                };
+            };
         };
         /** ControlCalidadSalida */
         ControlCalidadSalida: {
@@ -1355,6 +1599,17 @@ export interface components {
             tipo: string;
             ytd: components["schemas"]["CifrasSalida"];
         };
+        /** ListaComentarios */
+        ListaComentarios: {
+            /** Asignables */
+            asignables: {
+                [key: string]: string;
+            };
+            /** Comentarios */
+            comentarios: components["schemas"]["ComentarioSalida"][];
+            /** Puede Resolver */
+            puede_resolver: boolean;
+        };
         /** ListaUsuarios */
         ListaUsuarios: {
             /** Roles */
@@ -1541,6 +1796,21 @@ export interface components {
             /** Ya No Vienen */
             ya_no_vienen: string[];
         };
+        /** RespuestaSalida */
+        RespuestaSalida: {
+            /** Autor */
+            autor: string;
+            /** Autor Id */
+            autor_id: number;
+            /** Creado En */
+            creado_en: string;
+            /** Editado */
+            editado: boolean;
+            /** Id */
+            id: number;
+            /** Texto */
+            texto: string;
+        };
         /** ResumenSalida */
         ResumenSalida: {
             /** Credito */
@@ -1580,6 +1850,11 @@ export interface components {
             id: number;
             /** Linea Total Id */
             linea_total_id: number | null;
+        };
+        /** TextoNuevo */
+        TextoNuevo: {
+            /** Texto */
+            texto: string;
         };
         /** UsuarioAdmin */
         UsuarioAdmin: {
@@ -2936,6 +3211,590 @@ export interface operations {
             };
             /** @description No es un libro .xls válido o trae macros */
             415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_api_v1_hoteles__hotel_id__comentarios_get: {
+        parameters: {
+            query: {
+                /** @description AAAA-MM */
+                periodo: string;
+                linea_id?: number | null;
+                bloque?: ("mes" | "ytd") | null;
+            };
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListaComentarios"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_api_v1_hoteles__hotel_id__comentarios_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComentarioNuevo"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComentarioSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    conteos_api_v1_hoteles__hotel_id__comentarios_conteos_get: {
+        parameters: {
+            query: {
+                /** @description AAAA-MM */
+                periodo: string;
+            };
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conteos"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    editar_api_v1_hoteles__hotel_id__comentarios__comentario_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comentario_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TextoNuevo"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComentarioSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Solo el autor edita su comentario */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    adjuntar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comentario_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_adjuntar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComentarioSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Archivo demasiado grande */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Tipo no válido */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    descargar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos__adjunto_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comentario_id: number;
+                adjunto_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cambiar_estatus_api_v1_hoteles__hotel_id__comentarios__comentario_id__estatus_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comentario_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioEstatus"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComentarioSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    asignar_responsable_api_v1_hoteles__hotel_id__comentarios__comentario_id__responsable_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comentario_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioResponsable"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComentarioSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    responder_api_v1_hoteles__hotel_id__comentarios__comentario_id__respuestas_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comentario_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TextoNuevo"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComentarioSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

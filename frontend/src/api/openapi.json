@@ -1,6 +1,39 @@
 {
   "components": {
     "schemas": {
+      "AdjuntoSalida": {
+        "properties": {
+          "autor": {
+            "title": "Autor",
+            "type": "string"
+          },
+          "creado_en": {
+            "title": "Creado En",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "tamano": {
+            "title": "Tamano",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "tamano",
+          "autor",
+          "creado_en"
+        ],
+        "title": "AdjuntoSalida",
+        "type": "object"
+      },
       "AprobacionEntrada": {
         "properties": {
           "notas": {
@@ -79,6 +112,21 @@
           "movimientos"
         ],
         "title": "AsientoSalida",
+        "type": "object"
+      },
+      "Body_adjuntar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos_post": {
+        "properties": {
+          "archivo": {
+            "contentMediaType": "application/octet-stream",
+            "description": "PDF, PNG, JPG o .xlsx",
+            "title": "Archivo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_adjuntar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos_post",
         "type": "object"
       },
       "Body_importar_api_v1_hoteles__hotel_id__budget_importar_post": {
@@ -259,6 +307,24 @@
         "title": "CambioEntrada",
         "type": "object"
       },
+      "CambioEstatus": {
+        "properties": {
+          "estatus": {
+            "enum": [
+              "pendiente",
+              "explicado",
+              "aprobado"
+            ],
+            "title": "Estatus",
+            "type": "string"
+          }
+        },
+        "required": [
+          "estatus"
+        ],
+        "title": "CambioEstatus",
+        "type": "object"
+      },
       "CambioPassword": {
         "properties": {
           "actual": {
@@ -279,6 +345,28 @@
           "nueva"
         ],
         "title": "CambioPassword",
+        "type": "object"
+      },
+      "CambioResponsable": {
+        "properties": {
+          "responsable_id": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsable Id"
+          }
+        },
+        "required": [
+          "responsable_id"
+        ],
+        "title": "CambioResponsable",
         "type": "object"
       },
       "CambiosUsuario": {
@@ -692,6 +780,162 @@
         "title": "CodigoMfa",
         "type": "object"
       },
+      "ComentarioNuevo": {
+        "properties": {
+          "bloque": {
+            "enum": [
+              "mes",
+              "ytd"
+            ],
+            "title": "Bloque",
+            "type": "string"
+          },
+          "linea_id": {
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "periodo": {
+            "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+            "title": "Periodo",
+            "type": "string"
+          },
+          "responsable_id": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsable Id"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "linea_id",
+          "periodo",
+          "bloque",
+          "texto"
+        ],
+        "title": "ComentarioNuevo",
+        "type": "object"
+      },
+      "ComentarioSalida": {
+        "properties": {
+          "actualizado_en": {
+            "title": "Actualizado En",
+            "type": "string"
+          },
+          "adjuntos": {
+            "items": {
+              "$ref": "#/components/schemas/AdjuntoSalida"
+            },
+            "title": "Adjuntos",
+            "type": "array"
+          },
+          "autor": {
+            "title": "Autor",
+            "type": "string"
+          },
+          "autor_id": {
+            "title": "Autor Id",
+            "type": "integer"
+          },
+          "bloque": {
+            "title": "Bloque",
+            "type": "string"
+          },
+          "creado_en": {
+            "title": "Creado En",
+            "type": "string"
+          },
+          "editado": {
+            "title": "Editado",
+            "type": "boolean"
+          },
+          "estatus": {
+            "title": "Estatus",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "linea_descripcion": {
+            "title": "Linea Descripcion",
+            "type": "string"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "responsable": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsable"
+          },
+          "responsable_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsable Id"
+          },
+          "respuestas": {
+            "items": {
+              "$ref": "#/components/schemas/RespuestaSalida"
+            },
+            "title": "Respuestas",
+            "type": "array"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "linea_id",
+          "linea_descripcion",
+          "periodo",
+          "bloque",
+          "texto",
+          "autor_id",
+          "autor",
+          "responsable_id",
+          "responsable",
+          "estatus",
+          "creado_en",
+          "actualizado_en",
+          "editado",
+          "adjuntos",
+          "respuestas"
+        ],
+        "title": "ComentarioSalida",
+        "type": "object"
+      },
       "ComponenteEdicion": {
         "properties": {
           "factor": {
@@ -826,6 +1070,43 @@
           "credito_nuevo"
         ],
         "title": "ConflictoSalida",
+        "type": "object"
+      },
+      "ConteoLinea": {
+        "properties": {
+          "pendientes": {
+            "title": "Pendientes",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "pendientes"
+        ],
+        "title": "ConteoLinea",
+        "type": "object"
+      },
+      "Conteos": {
+        "properties": {
+          "por_linea": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/ConteoLinea"
+              },
+              "type": "object"
+            },
+            "title": "Por Linea",
+            "type": "object"
+          }
+        },
+        "required": [
+          "por_linea"
+        ],
+        "title": "Conteos",
         "type": "object"
       },
       "ControlCalidadSalida": {
@@ -1615,6 +1896,35 @@
         "title": "LineaVarianceSalida",
         "type": "object"
       },
+      "ListaComentarios": {
+        "properties": {
+          "asignables": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Asignables",
+            "type": "object"
+          },
+          "comentarios": {
+            "items": {
+              "$ref": "#/components/schemas/ComentarioSalida"
+            },
+            "title": "Comentarios",
+            "type": "array"
+          },
+          "puede_resolver": {
+            "title": "Puede Resolver",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "comentarios",
+          "asignables",
+          "puede_resolver"
+        ],
+        "title": "ListaComentarios",
+        "type": "object"
+      },
       "ListaUsuarios": {
         "properties": {
           "roles": {
@@ -2248,6 +2558,44 @@
         "title": "RespuestaImportacion",
         "type": "object"
       },
+      "RespuestaSalida": {
+        "properties": {
+          "autor": {
+            "title": "Autor",
+            "type": "string"
+          },
+          "autor_id": {
+            "title": "Autor Id",
+            "type": "integer"
+          },
+          "creado_en": {
+            "title": "Creado En",
+            "type": "string"
+          },
+          "editado": {
+            "title": "Editado",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "texto",
+          "autor_id",
+          "autor",
+          "creado_en",
+          "editado"
+        ],
+        "title": "RespuestaSalida",
+        "type": "object"
+      },
       "ResumenSalida": {
         "properties": {
           "credito": {
@@ -2361,6 +2709,19 @@
           "linea_total_id"
         ],
         "title": "SeccionSalida",
+        "type": "object"
+      },
+      "TextoNuevo": {
+        "properties": {
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "texto"
+        ],
+        "title": "TextoNuevo",
         "type": "object"
       },
       "UsuarioAdmin": {
@@ -4466,6 +4827,711 @@
         "summary": "Importar Catalogo Oficial",
         "tags": [
           "catalogo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/comentarios": {
+      "get": {
+        "operationId": "listar_api_v1_hoteles__hotel_id__comentarios_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "AAAA-MM",
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "description": "AAAA-MM",
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "linea_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Linea Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "bloque",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "mes",
+                    "ytd"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bloque"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaComentarios"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar",
+        "tags": [
+          "comentarios"
+        ]
+      },
+      "post": {
+        "operationId": "crear_api_v1_hoteles__hotel_id__comentarios_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComentarioNuevo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComentarioSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Crear",
+        "tags": [
+          "comentarios"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/comentarios/conteos": {
+      "get": {
+        "description": "Cuántos hilos hay por línea y bloque (para el indicador de la tabla del Variance).",
+        "operationId": "conteos_api_v1_hoteles__hotel_id__comentarios_conteos_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "AAAA-MM",
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "description": "AAAA-MM",
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conteos"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Conteos",
+        "tags": [
+          "comentarios"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}": {
+      "patch": {
+        "description": "Cambia el texto del comentario raíz o de una respuesta; la versión anterior se conserva.",
+        "operationId": "editar_api_v1_hoteles__hotel_id__comentarios__comentario_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "comentario_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Comentario Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextoNuevo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComentarioSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Solo el autor edita su comentario"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Editar",
+        "tags": [
+          "comentarios"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}/adjuntos": {
+      "post": {
+        "operationId": "adjuntar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "comentario_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Comentario Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_adjuntar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComentarioSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "413": {
+            "description": "Archivo demasiado grande"
+          },
+          "415": {
+            "description": "Tipo no válido"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Adjuntar",
+        "tags": [
+          "comentarios"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}/adjuntos/{adjunto_id}": {
+      "get": {
+        "operationId": "descargar_api_v1_hoteles__hotel_id__comentarios__comentario_id__adjuntos__adjunto_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "comentario_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Comentario Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "adjunto_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Adjunto Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {}
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Descargar",
+        "tags": [
+          "comentarios"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}/estatus": {
+      "put": {
+        "operationId": "cambiar_estatus_api_v1_hoteles__hotel_id__comentarios__comentario_id__estatus_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "comentario_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Comentario Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioEstatus"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComentarioSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cambiar Estatus",
+        "tags": [
+          "comentarios"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}/responsable": {
+      "put": {
+        "operationId": "asignar_responsable_api_v1_hoteles__hotel_id__comentarios__comentario_id__responsable_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "comentario_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Comentario Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioResponsable"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComentarioSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Asignar Responsable",
+        "tags": [
+          "comentarios"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/comentarios/{comentario_id}/respuestas": {
+      "post": {
+        "operationId": "responder_api_v1_hoteles__hotel_id__comentarios__comentario_id__respuestas_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "comentario_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Comentario Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextoNuevo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComentarioSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Responder",
+        "tags": [
+          "comentarios"
         ]
       }
     },
