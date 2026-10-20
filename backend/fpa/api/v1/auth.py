@@ -277,6 +277,15 @@ def iniciar_mfa(
     if usuario.totp_activo:
         raise HTTPException(status_code=409, detail="El segundo factor ya está activo")
     usuario.totp_secreto = nuevo_secreto_totp()
+    auditar(
+        db,
+        organizacion_id=usuario.organizacion_id,
+        hotel_id=None,
+        usuario_id=usuario.id,
+        accion="auth.mfa_iniciado",
+        entidad="usuario",
+        entidad_id=usuario.id,
+    )
     db.commit()
     return MfaIniciada(
         secreto=usuario.totp_secreto, uri=uri_totp(usuario.totp_secreto, usuario.email)

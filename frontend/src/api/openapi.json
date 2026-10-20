@@ -1722,6 +1722,85 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HechoSalida": {
+        "properties": {
+          "detalle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detalle"
+          },
+          "fecha": {
+            "format": "date-time",
+            "title": "Fecha",
+            "type": "string"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          },
+          "titulo": {
+            "title": "Titulo",
+            "type": "string"
+          },
+          "usuario": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usuario"
+          }
+        },
+        "required": [
+          "fecha",
+          "tipo",
+          "titulo",
+          "detalle",
+          "usuario"
+        ],
+        "title": "HechoSalida",
+        "type": "object"
+      },
+      "HistorialSalida": {
+        "properties": {
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "hechos": {
+            "items": {
+              "$ref": "#/components/schemas/HechoSalida"
+            },
+            "title": "Hechos",
+            "type": "array"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "linea_id",
+          "descripcion",
+          "periodo",
+          "hechos"
+        ],
+        "title": "HistorialSalida",
+        "type": "object"
+      },
       "HotelSalida": {
         "properties": {
           "codigo": {
@@ -1748,6 +1827,53 @@
           "rol"
         ],
         "title": "HotelSalida",
+        "type": "object"
+      },
+      "IntegridadSalida": {
+        "properties": {
+          "eventos": {
+            "title": "Eventos",
+            "type": "integer"
+          },
+          "integra": {
+            "title": "Integra",
+            "type": "boolean"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          },
+          "primer_alterado_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primer Alterado Id"
+          },
+          "ultimo_hash": {
+            "title": "Ultimo Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "integra",
+          "eventos",
+          "ultimo_hash",
+          "primer_alterado_id",
+          "motivo"
+        ],
+        "title": "IntegridadSalida",
         "type": "object"
       },
       "LineaEdicionSalida": {
@@ -4311,6 +4437,60 @@
         "summary": "Listar Auditoria",
         "tags": [
           "cargas"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/auditoria/verificar": {
+      "get": {
+        "description": "Recorre la bitácora de toda la organización (la cadena es una por organización).",
+        "operationId": "verificar_cadena_api_v1_hoteles__hotel_id__auditoria_verificar_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegridadSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verificar Cadena",
+        "tags": [
+          "auditoria"
         ]
       }
     },
@@ -7749,6 +7929,83 @@
         "summary": "Desglose",
         "tags": [
           "drilldown"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/variance/lineas/{linea_id}/historial": {
+      "get": {
+        "operationId": "historial_de_cifra_api_v1_hoteles__hotel_id__variance_lineas__linea_id__historial_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistorialSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Historial De Cifra",
+        "tags": [
+          "variance"
         ]
       }
     },

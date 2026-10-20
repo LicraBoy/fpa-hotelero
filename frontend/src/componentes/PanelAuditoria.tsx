@@ -3,6 +3,7 @@ import { obtenerTipado } from '../api/cliente'
 import type { EventoAuditoria } from '../api/tipos'
 import { useDatos } from '../api/useDatos'
 import { EncabezadoPagina } from './EncabezadoPagina'
+import { IntegridadAuditoria } from './IntegridadAuditoria'
 import { Cargando, EstadoVacio, Insignia, MensajeError } from './Insignia'
 
 type Tono = 'ok' | 'aviso' | 'error' | 'info'
@@ -75,8 +76,9 @@ export function PanelAuditoria({ hotelId, version }: { hotelId: number; version:
       <EncabezadoPagina
         id="titulo-auditoria"
         titulo="Bitácora de auditoría"
-        subtitulo="Cada carga, reemplazo y rechazo queda registrado. No se puede editar ni borrar."
+        subtitulo="Cada acción queda registrada y encadenada con la anterior. No se puede editar ni borrar."
       />
+      <IntegridadAuditoria hotelId={hotelId} version={version} />
       {eventos.cargando && <Cargando />}
       {eventos.error && <MensajeError texto={eventos.error} />}
       {eventos.datos && eventos.datos.length === 0 && <EstadoVacio>Sin eventos todavía.</EstadoVacio>}

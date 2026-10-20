@@ -98,7 +98,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 ---
 
-## Fase 5 — Comentarios, workflow, roles y auditoría `[PENDIENTE]` (L)
+## Fase 5 — Comentarios, workflow, roles y auditoría `[CÓDIGO LISTO; falta validación de Contraloría]` (L)
 
 **Objetivo:** que las variaciones se expliquen y se aprueben dentro del sistema.
 
@@ -108,7 +108,7 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 5.2 Roles y permisos **[HECHA]** | Matriz completa por rol y por hotel; el responsable de departamento ve y comentará solo las secciones asignadas; pantalla Usuarios | Prueba de toda la matriz rol × endpoint |
 | 5.3 Comentarios **[HECHA]** | Por línea y periodo (mes y acumulado), con responsable, estatus y evidencia; el umbral para exigir comentario queda apagado `[POR VALIDAR]` | Texto con HTML o script se muestra como texto; adjuntos con la misma validación de archivos |
 | 5.4 Workflow de cierre **[HECHA]** | Borrador → Comentado → Revisado → Aprobado → Bloqueado, con versiones congeladas al aprobar | Estados inválidos rechazados; un periodo bloqueado no acepta recargas |
-| 5.5 Auditoría reforzada | Bitácora con hash encadenado; en PostgreSQL, sin permiso de modificar | Alterar un evento se detecta |
+| 5.5 Auditoría reforzada **[HECHA]** | Bitácora con hash encadenado (ADR 0006) e historial de la cifra; en PostgreSQL, sin permiso de modificar (`docs/bitacora_postgresql.sql`, al migrar) | Alterar un evento se detecta |
 | 5.6 Notificaciones | Aviso por correo a responsables (opcional) | Sin datos sensibles en el cuerpo |
 
 **Pregunta abierta:** quién comenta hoy y con qué umbral (las columnas de comentarios están vacías en agosto).

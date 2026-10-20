@@ -4,6 +4,7 @@ import { Icono } from '../../componentes/Iconos'
 import { construirRuta, type Bloque } from '../../ruta/ruta'
 import { maximoAbsoluto, porcentajeBarra } from '../../util/barras'
 import { ComentariosLinea } from './ComentariosLinea'
+import { HistorialCifra } from './HistorialCifra'
 import { esDesfavorable, esFavorable, formatoContable, formatoPorcentaje } from '../../util/formato'
 import { etiquetaMesLargo, etiquetaRangoMeses } from '../../util/periodos'
 
@@ -140,6 +141,7 @@ export function PanelLinea({ linea, periodo, periodosYtd, anoFiscal, puedeDesglo
         enlace={null}
         textoEnlace=""
       />
+      {comentarios && <HistorialCifra hotelId={comentarios.hotelId} periodo={periodo} lineaId={linea.linea_id} />}
       {comentarios && linea.tipo !== 'seccion' && (
         <ComentariosLinea
           hotelId={comentarios.hotelId}

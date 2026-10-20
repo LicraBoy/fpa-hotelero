@@ -27,6 +27,9 @@ class EventoAuditoria(Base):
     entidad_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     detalle: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     creado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ahora_utc)
+    # Cadena de hashes (Fase 5.5): ver `servicios/cadena_auditoria.py`
+    hash_previo: Mapped[str] = mapped_column(String(64), default="")
+    hash: Mapped[str] = mapped_column(String(64), default="")
 
 
 class AuditoriaInmutable(RuntimeError):

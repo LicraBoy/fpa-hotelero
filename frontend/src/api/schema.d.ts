@@ -248,6 +248,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/auditoria/verificar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verificar Cadena
+         * @description Recorre la bitácora de toda la organización (la cadena es una por organización).
+         */
+        get: operations["verificar_cadena_api_v1_hoteles__hotel_id__auditoria_verificar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/budget/capturados": {
         parameters: {
             query?: never;
@@ -980,6 +1000,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/variance/lineas/{linea_id}/historial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Historial De Cifra */
+        get: operations["historial_de_cifra_api_v1_hoteles__hotel_id__variance_lineas__linea_id__historial_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/yo": {
         parameters: {
             query?: never;
@@ -1592,6 +1629,33 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][] | string;
         };
+        /** HechoSalida */
+        HechoSalida: {
+            /** Detalle */
+            detalle: string | null;
+            /**
+             * Fecha
+             * Format: date-time
+             */
+            fecha: string;
+            /** Tipo */
+            tipo: string;
+            /** Titulo */
+            titulo: string;
+            /** Usuario */
+            usuario: string | null;
+        };
+        /** HistorialSalida */
+        HistorialSalida: {
+            /** Descripcion */
+            descripcion: string;
+            /** Hechos */
+            hechos: components["schemas"]["HechoSalida"][];
+            /** Linea Id */
+            linea_id: number;
+            /** Periodo */
+            periodo: string;
+        };
         /** HotelSalida */
         HotelSalida: {
             /** Codigo */
@@ -1602,6 +1666,19 @@ export interface components {
             nombre: string;
             /** Rol */
             rol: string;
+        };
+        /** IntegridadSalida */
+        IntegridadSalida: {
+            /** Eventos */
+            eventos: number;
+            /** Integra */
+            integra: boolean;
+            /** Motivo */
+            motivo: string | null;
+            /** Primer Alterado Id */
+            primer_alterado_id: number | null;
+            /** Ultimo Hash */
+            ultimo_hash: string;
         };
         /** LineaEdicionSalida */
         LineaEdicionSalida: {
@@ -2640,6 +2717,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventoSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verificar_cadena_api_v1_hoteles__hotel_id__auditoria_verificar_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegridadSalida"];
                 };
             };
             /** @description No autenticado */
@@ -5389,6 +5518,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DesgloseSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    historial_de_cifra_api_v1_hoteles__hotel_id__variance_lineas__linea_id__historial_get: {
+        parameters: {
+            query: {
+                periodo: string;
+            };
+            header?: never;
+            path: {
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistorialSalida"];
                 };
             };
             /** @description No autenticado */

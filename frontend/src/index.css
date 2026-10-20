@@ -3308,3 +3308,25 @@ input:focus-visible,
   padding-left: var(--e4);
   font-size: 0.8rem;
 }
+
+/* Integridad de la bitácora e historial de la cifra */
+.integridad {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e3);
+  margin-bottom: var(--e3);
+}
+
+.historial-cifra {
+  margin-top: var(--e4);
+}
+
+.historial-lista {
+  display: grid;
+  gap: var(--e2);
+  margin: var(--e2) 0 0;
+  padding-left: var(--e4);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
