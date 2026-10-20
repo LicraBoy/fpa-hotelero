@@ -9,6 +9,7 @@ import { PanelAuditoria } from './componentes/PanelAuditoria'
 import { PanelCargas } from './componentes/PanelCargas'
 import { PanelCatalogo } from './componentes/PanelCatalogo'
 import { PanelSaldos } from './componentes/PanelSaldos'
+import { PanelUsuarios } from './pantallas/usuarios/PanelUsuarios'
 import { PanelCuenta } from './pantallas/cuenta/PanelCuenta'
 import { PanelBudget } from './pantallas/budget/PanelBudget'
 import { PanelVariance } from './pantallas/variance/PanelVariance'
@@ -18,7 +19,7 @@ import { useRuta } from './ruta/useRuta'
 import { NOMBRE_ROL, USUARIOS_DESARROLLO, puede } from './permisos'
 import { guardarLateralPlegado, guardarUsuarioDev, leerLateralPlegado, leerUsuarioDev } from './util/preferencias'
 
-type Pestana = 'cargas' | 'catalogo' | 'saldos' | 'variance' | 'budget' | 'auditoria' | 'cuenta'
+type Pestana = 'cargas' | 'catalogo' | 'saldos' | 'variance' | 'budget' | 'auditoria' | 'usuarios' | 'cuenta'
 
 /** Sesión real (inicio de sesión con contraseña); sin ella se usa el selector de desarrollo. */
 export interface SesionApp {
@@ -84,6 +85,7 @@ export default function App({
       titulo: 'Control',
       items: [
         { id: 'auditoria', nombre: 'Auditoría', icono: 'auditoria', visible: puede(rol, 'auditoria:leer') },
+        { id: 'usuarios', nombre: 'Usuarios', icono: 'usuario', visible: puede(rol, 'usuarios:administrar') },
         { id: 'cuenta', nombre: 'Mi cuenta', icono: 'usuario', visible: sesion !== undefined },
       ],
     },
@@ -275,6 +277,9 @@ export default function App({
               )}
               {activa === 'budget' && <PanelBudget hotelId={hotel.id} />}
               {activa === 'auditoria' && <PanelAuditoria hotelId={hotel.id} version={version} />}
+              {activa === 'usuarios' && (
+                <PanelUsuarios hotelId={hotel.id} yoId={sesion?.usuario.usuario_id} />
+              )}
               {activa === 'cuenta' && sesion && (
                 <PanelCuenta usuario={sesion.usuario} alCambiar={sesion.recargar} />
               )}

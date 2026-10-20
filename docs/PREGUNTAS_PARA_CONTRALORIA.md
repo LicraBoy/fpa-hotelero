@@ -67,6 +67,7 @@ El CON130 de septiembre cuadra: **Débito = Crédito = 66,323,973.22**, 8,280 mo
 | **P18** | **Puerto Vallarta:** ¿usa el mismo Novohit y un catálogo de cuentas parecido? ¿Cuándo se incorpora? | |
 
 | **P22** | **Mgmt & Check In (mapeo v4):** (a) ¿La línea «Severance Pay» de tu mapeo es la «Education Bonus» de la hoja del reporte (misma posición y código 028-0111-60010-000)? (b) Las cuentas en rojo «No se utiliza» quedaron vinculadas por su nombre: 6009030→Insurance, 6009043→Non-Deductible, 6009012→Meals & Entertain, 6009010.004→Other Fringe, 6009084/6009085/6009085.150→Allocated Expenses y 6009028→Postage (la única que mostraste). ¿Es correcto? (c) `6009001.004` (Holidays) y `6009020` (Equipment) ya suman: septiembre +12,745.51. | |
+| **P23** | **Roles y secciones (Fase 5.2):** (a) ¿Los 5 roles y sus permisos (Blueprint §30) son los correctos? (b) ¿Quiénes son los **responsables de departamento** y qué **secciones** del Variance le tocan a cada uno? (c) ¿Un responsable debe poder ver los **movimientos de las cuentas** de su sección o solo las cifras? (hoy sí los ve, pero no los asientos completos). (d) ¿Debe ser **obligatoria la verificación en dos pasos** para Contralor y Analista? | |
 
 ---
 

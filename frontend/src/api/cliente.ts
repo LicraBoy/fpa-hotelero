@@ -220,3 +220,21 @@ export async function guardarActualesCapturados(
   if (!r.ok) throw new ErrorApi(r.status, mensajeDeError(cuerpo, r.status))
   return (cuerpo as { guardados: number }).guardados
 }
+
+/** Petición con cuerpo JSON (POST/PATCH/PUT); devuelve el cuerpo de la respuesta (o null si no hay). */
+export async function enviarJson<T>(
+  metodo: 'POST' | 'PATCH' | 'PUT',
+  ruta: string,
+  cuerpo?: object,
+): Promise<T | null> {
+  const encabezados = cabeceras()
+  if (cuerpo) encabezados.set('Content-Type', 'application/json')
+  const r = await fetch(ruta, {
+    method: metodo,
+    headers: encabezados,
+    body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+  })
+  const json = await leerJson(r)
+  if (!r.ok) throw new ErrorApi(r.status, mensajeDeError(json, r.status))
+  return json as T | null
+}

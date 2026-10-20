@@ -219,6 +219,8 @@ export interface paths {
         /**
          * Asiento
          * @description Todas las líneas de un asiento en el periodo, con sus totales de Débito y Crédito.
+         *
+         *     Un asiento mezcla cuentas de varias secciones: quien tiene el acceso limitado no puede verlo.
          */
         get: operations["asiento_api_v1_hoteles__hotel_id__asientos__asiento__get"];
         put?: never;
@@ -624,6 +626,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/usuarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar */
+        get: operations["listar_api_v1_hoteles__hotel_id__usuarios_get"];
+        put?: never;
+        /** Crear */
+        post: operations["crear_api_v1_hoteles__hotel_id__usuarios_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/usuarios/{usuario_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Actualizar */
+        patch: operations["actualizar_api_v1_hoteles__hotel_id__usuarios__usuario_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/usuarios/{usuario_id}/desbloquear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desbloquear */
+        post: operations["desbloquear_api_v1_hoteles__hotel_id__usuarios__usuario_id__desbloquear_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/usuarios/{usuario_id}/restablecer-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restablecer Password
+         * @description Nueva clave temporal (se muestra una vez); cierra sus sesiones y lo obliga a cambiarla.
+         */
+        post: operations["restablecer_password_api_v1_hoteles__hotel_id__usuarios__usuario_id__restablecer_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/variance": {
         parameters: {
             query?: never;
@@ -680,7 +754,8 @@ export interface paths {
          * @description Descarga el Variance completo en Excel, con fórmulas vivas; queda en la bitácora.
          *
          *     Los filtros de la pantalla (`seccion_id`, `tipo`, `q`) se aceptan por compatibilidad pero se
-         *     ignoran: las fórmulas de los totales necesitan todas sus partes.
+         *     ignoran: las fórmulas de los totales necesitan todas sus partes. Quien solo tiene asignadas
+         *     algunas secciones no puede exportar (el libro trae todo el reporte).
          */
         get: operations["exportar_api_v1_hoteles__hotel_id__variance_exportar_get"];
         put?: never;
@@ -848,6 +923,17 @@ export interface components {
             actual: string;
             /** Nueva */
             nueva: string;
+        };
+        /** CambiosUsuario */
+        CambiosUsuario: {
+            /** Activo */
+            activo?: boolean | null;
+            /** Nombre */
+            nombre?: string | null;
+            /** Rol */
+            rol?: string | null;
+            /** Secciones */
+            secciones?: string[] | null;
         };
         /** CapturaEntrada */
         CapturaEntrada: {
@@ -1269,6 +1355,19 @@ export interface components {
             tipo: string;
             ytd: components["schemas"]["CifrasSalida"];
         };
+        /** ListaUsuarios */
+        ListaUsuarios: {
+            /** Roles */
+            roles: {
+                [key: string]: string;
+            };
+            /** Roles Por Seccion */
+            roles_por_seccion: string[];
+            /** Secciones Disponibles */
+            secciones_disponibles: string[];
+            /** Usuarios */
+            usuarios: components["schemas"]["UsuarioAdmin"][];
+        };
         /** LoginEntrada */
         LoginEntrada: {
             /** Codigo */
@@ -1375,6 +1474,11 @@ export interface components {
             /** Siguiente Cursor */
             siguiente_cursor: string | null;
         };
+        /** PasswordTemporal */
+        PasswordTemporal: {
+            /** Password Temporal */
+            password_temporal: string;
+        };
         /** ReglaEdicion */
         ReglaEdicion: {
             /** Componentes */
@@ -1476,6 +1580,46 @@ export interface components {
             id: number;
             /** Linea Total Id */
             linea_total_id: number | null;
+        };
+        /** UsuarioAdmin */
+        UsuarioAdmin: {
+            /** Activo */
+            activo: boolean;
+            /** Bloqueado */
+            bloqueado: boolean;
+            /** Debe Cambiar Password */
+            debe_cambiar_password: boolean;
+            /** Email */
+            email: string;
+            /** Nombre */
+            nombre: string;
+            /** Rol */
+            rol: string;
+            /** Rol Nombre */
+            rol_nombre: string;
+            /** Secciones */
+            secciones: string[];
+            /** Totp Activo */
+            totp_activo: boolean;
+            /** Usuario Id */
+            usuario_id: number;
+        };
+        /** UsuarioCreado */
+        UsuarioCreado: {
+            /** Password Temporal */
+            password_temporal: string | null;
+            usuario: components["schemas"]["UsuarioAdmin"];
+        };
+        /** UsuarioNuevo */
+        UsuarioNuevo: {
+            /** Email */
+            email: string;
+            /** Nombre */
+            nombre: string;
+            /** Rol */
+            rol: string;
+            /** Secciones */
+            secciones?: string[];
         };
         /** UsuarioSesion */
         UsuarioSesion: {
@@ -3560,6 +3704,289 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SaldoSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_api_v1_hoteles__hotel_id__usuarios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListaUsuarios"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_api_v1_hoteles__hotel_id__usuarios_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UsuarioNuevo"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsuarioCreado"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El usuario ya tiene acceso a este hotel */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    actualizar_api_v1_hoteles__hotel_id__usuarios__usuario_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usuario_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambiosUsuario"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsuarioAdmin"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El cambio dejaría al hotel sin un Contralor activo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    desbloquear_api_v1_hoteles__hotel_id__usuarios__usuario_id__desbloquear_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usuario_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restablecer_password_api_v1_hoteles__hotel_id__usuarios__usuario_id__restablecer_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usuario_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordTemporal"];
                 };
             };
             /** @description No autenticado */

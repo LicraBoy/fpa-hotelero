@@ -124,7 +124,9 @@ def test_errores(cliente: TestClient, mundo: Mundo, db: Session) -> None:
 def test_permisos_y_aislamiento(cliente: TestClient, mundo: Mundo, db: Session) -> None:
     _preparar(db, mundo)
     assert _pedir(cliente, mundo, usuario=CONTRALOR).status_code == 200
-    assert _pedir(cliente, mundo, usuario=RESPONSABLE).status_code == 403
+    # el responsable de departamento entra, pero sin secciones asignadas no ve ninguna línea
+    sin_secciones = _pedir(cliente, mundo, usuario=RESPONSABLE)
+    assert sin_secciones.status_code == 200 and sin_secciones.json()["lineas"] == []
     assert _pedir(cliente, mundo, usuario=OTRA_ORG).status_code == 404
     sin_sesion = cliente.get(f"/api/v1/hoteles/{mundo.hotel_a}/variance?periodo=2026-08")
     assert sin_sesion.status_code == 401

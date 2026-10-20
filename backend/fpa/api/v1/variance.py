@@ -23,6 +23,7 @@ from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
 from fpa.identidad.permisos import Permiso
 from fpa.modelos.organizacion import Hotel
 from fpa.modelos.reporte import LineaReporte
+from fpa.servicios.acceso_secciones import exigir_acceso_completo, restriccion
 from fpa.servicios.auditoria import auditar
 from fpa.servicios.exportar_variance import generar_excel, nombre_de_archivo
 from fpa.servicios.reportes import cache_variance
@@ -164,6 +165,18 @@ def variance(
     else:
         estado = "hit"
     modelo, crudo = guardado
+    permitidas = restriccion(contexto)
+    if permitidas is not None:
+        # Responsable de departamento: solo sus secciones (sin avisos que hablen de las demás)
+        ids = {x.id for x in modelo.secciones if x.descripcion in permitidas}
+        modelo = modelo.model_copy(
+            update={
+                "secciones": [x for x in modelo.secciones if x.id in ids],
+                "lineas": [x for x in modelo.lineas if x.seccion_id in ids],
+                "advertencias": [],
+            }
+        )
+        crudo = modelo.model_dump_json().encode()
     if seccion_id is None and not tipo and not q:
         contenido = crudo
     else:
@@ -231,8 +244,10 @@ def exportar(
     """Descarga el Variance completo en Excel, con fórmulas vivas; queda en la bitácora.
 
     Los filtros de la pantalla (`seccion_id`, `tipo`, `q`) se aceptan por compatibilidad pero se
-    ignoran: las fórmulas de los totales necesitan todas sus partes.
+    ignoran: las fórmulas de los totales necesitan todas sus partes. Quien solo tiene asignadas
+    algunas secciones no puede exportar (el libro trae todo el reporte).
     """
+    exigir_acceso_completo(contexto)
     try:
         r = calcular_variance(
             db,

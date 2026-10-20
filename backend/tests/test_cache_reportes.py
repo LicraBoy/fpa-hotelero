@@ -295,8 +295,9 @@ def test_otro_usuario_del_mismo_hotel_comparte_la_entrada_pero_pasa_por_la_autor
     _preparar(db, mundo)
     assert _x_cache(_pedir(cliente, mundo, usuario=ANALISTA)) == "miss"
     assert _x_cache(_pedir(cliente, mundo, usuario=CONTRALOR)) == "hit"
-    # la caché no salta el permiso: sin permiso, 403 aunque la entrada exista
-    assert _pedir(cliente, mundo, usuario="responsable_a@test.local").status_code == 403
+    # la caché no salta la restricción: el responsable sin secciones no recibe las líneas guardadas
+    r = _pedir(cliente, mundo, usuario="responsable_a@test.local")
+    assert r.status_code == 200 and r.json()["lineas"] == []
     assert _pedir(cliente, mundo, usuario="contralor_c@test.local").status_code == 404
 
 

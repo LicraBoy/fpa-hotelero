@@ -9,8 +9,6 @@ indica otra cosa, el usuario queda como Contralor del hotel con código `MZT` (T
 """
 
 import argparse
-import secrets
-import string
 import sys
 from pathlib import Path
 
@@ -21,15 +19,9 @@ from sqlalchemy import select
 from fpa.db import SessionLocal
 from fpa.modelos import Asignacion, Hotel, Usuario
 from fpa.modelos.base import ahora_utc
-from fpa.seguridad.credenciales import hashear
+from fpa.seguridad.credenciales import contrasena_temporal, hashear
 from fpa.seguridad.sesiones import revocar_todas
 from fpa.semilla import CODIGO_HOTEL, sembrar_roles
-
-
-def contrasena_temporal() -> str:
-    alfabeto = string.ascii_letters + string.digits
-    cuerpo = "".join(secrets.choice(alfabeto) for _ in range(14))
-    return f"{cuerpo[:7]}-{cuerpo[7:]}1a"  # siempre trae letras y número
 
 
 def main() -> int:

@@ -3182,3 +3182,31 @@ input:focus-visible,
   overflow-wrap: anywhere;
   user-select: all;
 }
+
+/* Administración de usuarios */
+.bloque {
+  display: block;
+  font-weight: 400;
+}
+
+.grupo-secciones {
+  display: grid;
+  gap: var(--e2);
+  padding: var(--e3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.opcion-seccion {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--e2);
+  font-weight: 400;
+}
+
+.acciones-formulario {
+  display: flex;
+  gap: var(--e3);
+  flex-wrap: wrap;
+}

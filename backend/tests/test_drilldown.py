@@ -357,7 +357,9 @@ def test_api_permisos_y_aislamiento(cliente: TestClient, mundo: Mundo, db: Sessi
     for ruta in rutas:
         assert cliente.get(_url(mundo, ruta), headers=como(CONTRALOR)).status_code == 200
         assert cliente.get(_url(mundo, ruta), headers=como(ANALISTA)).status_code == 200
-        assert cliente.get(_url(mundo, ruta), headers=como(RESPONSABLE)).status_code == 403
+        # el responsable sin secciones asignadas no ve línea, cuenta ni (nunca) asientos
+        sin_acceso = 403 if ruta.startswith("asientos") else 404
+        assert cliente.get(_url(mundo, ruta), headers=como(RESPONSABLE)).status_code == sin_acceso
         assert cliente.get(_url(mundo, ruta), headers=como(OTRA_ORG)).status_code == 404
         assert cliente.get(_url(mundo, ruta)).status_code == 401
         # El hotel B (donde el contralor sí tiene acceso) no ve nada del A: ni su mapeo ni sus

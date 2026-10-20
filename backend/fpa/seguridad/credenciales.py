@@ -9,6 +9,8 @@ la aplicación queda como mejora `[POR VALIDAR con TI]` (ADR 0005).
 from __future__ import annotations
 
 import re
+import secrets
+import string
 
 import pyotp
 from argon2 import PasswordHasher
@@ -45,6 +47,13 @@ def verificar(hash_guardado: str | None, contrasena: str) -> bool:
     except (VerificationError, InvalidHashError):
         return False
     return bool(correcta) and hash_guardado is not None
+
+
+def contrasena_temporal() -> str:
+    """Clave de un solo uso para entregar a un usuario nuevo (siempre trae letras y número)."""
+    alfabeto = string.ascii_letters + string.digits
+    cuerpo = "".join(secrets.choice(alfabeto) for _ in range(14))
+    return f"{cuerpo[:7]}-{cuerpo[7:]}1a"
 
 
 def necesita_nuevo_hash(hash_guardado: str) -> bool:

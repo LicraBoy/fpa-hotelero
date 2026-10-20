@@ -14,6 +14,7 @@ from fpa.api.v1 import (
     identidad,
     mapeo,
     saldos,
+    usuarios,
     variance,
 )
 from fpa.config import settings
@@ -50,6 +51,7 @@ def crear_app() -> FastAPI:
     app.include_router(health.router, prefix="/api")
     app.include_router(auth.router, prefix="/api/v1")
     app.include_router(identidad.router, prefix="/api/v1")
+    app.include_router(usuarios.router, prefix="/api/v1")
     app.include_router(catalogo.router, prefix="/api/v1")
     app.include_router(saldos.router, prefix="/api/v1")
     app.include_router(cargas.router, prefix="/api/v1")

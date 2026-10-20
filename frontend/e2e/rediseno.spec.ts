@@ -15,7 +15,7 @@ test('la barra lateral agrupa las secciones y solo muestra lo que el rol puede v
   const nav = page.getByRole('navigation', { name: 'Secciones' })
   await expect(nav.getByRole('group', { name: 'Reportes' }).getByRole('button')).toHaveText(['Variance', 'Budget'])
   await expect(nav.getByRole('group', { name: 'Datos' }).getByRole('button')).toHaveText(['Cargas', 'Catálogo', 'Saldos'])
-  await expect(nav.getByRole('group', { name: 'Control' }).getByRole('button')).toHaveText(['Auditoría'])
+  await expect(nav.getByRole('group', { name: 'Control' }).getByRole('button')).toHaveText(['Auditoría', 'Usuarios'])
   // el analista no ve Auditoría: su grupo desaparece completo
   await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Analista' })
   await expect(pestana(page, 'Cargas')).toBeVisible()

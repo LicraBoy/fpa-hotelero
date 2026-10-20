@@ -20,6 +20,12 @@ from fpa.db import get_db
 from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
 from fpa.identidad.permisos import Permiso
 from fpa.modelos.cargas import Movimiento
+from fpa.servicios.acceso_secciones import (
+    exigir_acceso_completo,
+    exigir_cuenta,
+    exigir_linea,
+    ids_visibles,
+)
 from fpa.servicios.auditoria import auditar
 from fpa.servicios.drilldown import (
     LIMITE_MAXIMO,
@@ -161,6 +167,7 @@ def desglose(
     db: Session = Depends(get_db),
 ) -> DesgloseSalida:
     """Qué hay detrás de la cifra de una línea: sus cuentas, o los componentes de un total."""
+    exigir_linea(db, contexto, linea_id)
     try:
         d = desglose_de_linea(
             db, hotel_id=contexto.hotel_id, periodo=periodo, linea_id=linea_id, bloque=bloque
@@ -169,6 +176,7 @@ def desglose(
         raise HTTPException(
             status_code=404, detail=str(e.args[0]) if e.args else "No encontrado"
         ) from None
+    visibles = ids_visibles(db, contexto)
     return DesgloseSalida(
         linea_id=d.linea_id,
         descripcion=d.descripcion,
@@ -180,7 +188,11 @@ def desglose(
         suma=d.suma,
         cuadra=d.cuadra,
         cuentas=[CuentaDesgloseSalida(**vars(c)) for c in d.cuentas],
-        componentes=[ComponenteSalida(**vars(c)) for c in d.componentes],
+        componentes=[
+            ComponenteSalida(**vars(c))
+            for c in d.componentes
+            if visibles is None or c.linea_id in visibles
+        ],
         codigo_corporativo=d.codigo_corporativo,
         motivos_cero=[MotivoCeroSalida(**vars(m)) for m in d.motivos_cero],
     )
@@ -203,6 +215,7 @@ def movimientos(
     db: Session = Depends(get_db),
 ) -> PaginaSalida:
     """Movimientos de una cuenta, paginados por cursor (keyset, nunca OFFSET)."""
+    exigir_cuenta(db, contexto, cuenta_codigo)
     try:
         p = movimientos_de_cuenta(
             db,
@@ -255,7 +268,11 @@ def asiento(
     periodo: Periodo,
     db: Session = Depends(get_db),
 ) -> AsientoSalida:
-    """Todas las líneas de un asiento en el periodo, con sus totales de Débito y Crédito."""
+    """Todas las líneas de un asiento en el periodo, con sus totales de Débito y Crédito.
+
+    Un asiento mezcla cuentas de varias secciones: quien tiene el acceso limitado no puede verlo.
+    """
+    exigir_acceso_completo(contexto)
     v = vista_de_asiento(db, hotel_id=contexto.hotel_id, periodo=periodo, asiento=asiento)
     if not v.movimientos:
         raise HTTPException(status_code=404, detail="Asiento no encontrado en ese periodo")

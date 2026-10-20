@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from fpa.config import settings
 from fpa.identidad.principal import Principal
-from fpa.modelos.identidad import Asignacion, Rol, Usuario
+from fpa.modelos.identidad import Asignacion, AsignacionDepartamento, Rol, Usuario
 from fpa.seguridad.sesiones import sesion_vigente
 
 CABECERA_DESARROLLO = "X-Usuario-Dev"
@@ -32,11 +32,19 @@ def principal_de_usuario(db: Session, usuario: Usuario) -> Principal:
         .join(Rol, Rol.id == Asignacion.rol_id)
         .where(Asignacion.usuario_id == usuario.id)
     ).all()
+    secciones: dict[int, set[str]] = {}
+    for hotel_id, seccion in db.execute(
+        select(AsignacionDepartamento.hotel_id, AsignacionDepartamento.seccion).where(
+            AsignacionDepartamento.usuario_id == usuario.id
+        )
+    ):
+        secciones.setdefault(hotel_id, set()).add(seccion)
     return Principal(
         usuario_id=usuario.id,
         email=usuario.email,
         organizacion_id=usuario.organizacion_id,
         roles_por_hotel=dict(filas),
+        secciones_por_hotel={h: frozenset(v) for h, v in secciones.items()},
     )
 
 

@@ -104,19 +104,15 @@ test('una ruta con basura se rechaza y no ejecuta nada', async ({ page }) => {
   }
 })
 
-test('sin permiso no se muestra la pantalla de Variance ni se consulta nada', async ({ page }) => {
+test('sin permiso de drill-down no se muestra el detalle ni se consulta nada', async ({ page }) => {
   const peticiones: string[] = []
   page.on('request', (r) => peticiones.push(new URL(r.url()).pathname))
   await page.goto('/')
-  await elegirUsuario(page, 'Responsable de área')
-  await expect(pestana(page, 'Catálogo')).toBeVisible()
-  await expect(pestana(page, 'Variance')).toHaveCount(0)
+  // Dirección ve el reporte, pero no el detalle de cuentas y movimientos
+  await elegirUsuario(page, 'Dirección')
+  await expect(pestana(page, 'Variance')).toBeVisible()
 
   peticiones.length = 0
-  await page.evaluate(() => {
-    window.location.hash = '#/variance/2026-08'
-  })
-  await expect(page.getByRole('alert', { name: 'Sin acceso' })).toBeVisible()
   await page.evaluate(() => {
     window.location.hash = '#/variance/2026-08/cuenta/6009001.001?bloque=mes'
   })

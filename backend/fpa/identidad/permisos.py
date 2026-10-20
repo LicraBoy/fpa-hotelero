@@ -19,6 +19,14 @@ class Permiso(StrEnum):
     BUDGET_IMPORTAR = "budget:importar"
     VARIANCE_LEER = "variance:leer"
     DRILLDOWN_LEER = "drilldown:leer"
+    USUARIOS_ADMINISTRAR = "usuarios:administrar"
+    COMENTARIO_LEER = "comentario:leer"
+    COMENTARIO_CREAR = "comentario:crear"
+    COMENTARIO_RESOLVER = "comentario:resolver"
+    CIERRE_LEER = "cierre:leer"
+    CIERRE_REVISAR = "cierre:revisar"
+    CIERRE_APROBAR = "cierre:aprobar"
+    CIERRE_BLOQUEAR = "cierre:bloquear"
 
 
 class RolCodigo(StrEnum):
@@ -55,10 +63,24 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.BUDGET_IMPORTAR,
             Permiso.VARIANCE_LEER,
             Permiso.DRILLDOWN_LEER,
+            Permiso.COMENTARIO_LEER,
+            Permiso.COMENTARIO_CREAR,
+            Permiso.COMENTARIO_RESOLVER,
+            Permiso.CIERRE_LEER,
+            Permiso.CIERRE_REVISAR,
         }
     ),
+    # Ve y comenta solo las secciones del Variance que tiene asignadas (`AsignacionDepartamento`)
     RolCodigo.RESPONSABLE_AREA: frozenset(
-        {Permiso.HOTEL_LEER, Permiso.CATALOGO_LEER, Permiso.REPORTE_LEER}
+        {
+            Permiso.HOTEL_LEER,
+            Permiso.CATALOGO_LEER,
+            Permiso.REPORTE_LEER,
+            Permiso.VARIANCE_LEER,
+            Permiso.DRILLDOWN_LEER,
+            Permiso.COMENTARIO_LEER,
+            Permiso.COMENTARIO_CREAR,
+        }
     ),
     RolCodigo.DIRECCION: frozenset(
         {
@@ -70,6 +92,8 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.MAPEO_LEER,
             Permiso.BUDGET_LEER,
             Permiso.VARIANCE_LEER,
+            Permiso.COMENTARIO_LEER,
+            Permiso.CIERRE_LEER,
         }
     ),
     RolCodigo.AUDITORIA: frozenset(
@@ -84,9 +108,14 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.BUDGET_LEER,
             Permiso.VARIANCE_LEER,
             Permiso.DRILLDOWN_LEER,
+            Permiso.COMENTARIO_LEER,
+            Permiso.CIERRE_LEER,
         }
     ),
 }
+
+# Roles que solo ven las secciones del reporte que se les asignaron.
+ROLES_POR_SECCION = frozenset({RolCodigo.RESPONSABLE_AREA})
 
 
 def rol_tiene_permiso(rol: str, permiso: Permiso) -> bool:

@@ -6,7 +6,7 @@ import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Icono } from '../../componentes/Iconos'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { TarjetaKpi } from '../../componentes/TarjetaKpi'
-import { puede } from '../../permisos'
+import { puede, tieneAccesoLimitado } from '../../permisos'
 import { formatoContable } from '../../util/formato'
 import { resumirVariance } from '../../util/resumenVariance'
 import { useRuta } from '../../ruta/useRuta'
@@ -242,6 +242,7 @@ function ReporteVariance({
           ) : undefined
         }
         acciones={
+          tieneAccesoLimitado(rol) ? undefined : (
           <button
             type="button"
             className="boton"
@@ -250,6 +251,7 @@ function ReporteVariance({
           >
             <Icono nombre="exportar" tamano={16} /> {exportando ? 'Exportando…' : 'Exportar a Excel'}
           </button>
+          )
         }
       />
       <form className="barra-filtros" role="search" onSubmit={(e) => e.preventDefault()}>
@@ -610,6 +612,7 @@ export function PanelVariance({ hotelId, rol, alIrABudget }: Props) {
           codigo={ruta.codigo}
           bloque={ruta.bloque}
           lineaId={ruta.lineaId}
+          puedeVerAsiento={!tieneAccesoLimitado(rol)}
         />
       )
     case 'asiento':

@@ -49,6 +49,22 @@ class Asignacion(Base):
     rol_id: Mapped[int] = mapped_column(ForeignKey("rol.id"))
 
 
+class AsignacionDepartamento(Base):
+    """Sección del Variance que ve y comenta un responsable de departamento en un hotel.
+
+    Se guarda el **nombre** de la sección (p. ej. «Rooms»): los ids de línea cambian cuando se
+    importa otra versión de la estructura, el nombre no. `[POR VALIDAR con Contraloría]`.
+    """
+
+    __tablename__ = "asignacion_departamento"
+    __table_args__ = (UniqueConstraint("usuario_id", "hotel_id", "seccion"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id"), index=True)
+    hotel_id: Mapped[int] = mapped_column(ForeignKey("hotel.id"), index=True)
+    seccion: Mapped[str] = mapped_column(String(300))
+
+
 class Sesion(Base):
     """Sesión abierta de un usuario. Solo se guarda el SHA-256 del token que tiene el navegador."""
 

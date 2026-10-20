@@ -281,6 +281,62 @@
         "title": "CambioPassword",
         "type": "object"
       },
+      "CambiosUsuario": {
+        "properties": {
+          "activo": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activo"
+          },
+          "nombre": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre"
+          },
+          "rol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rol"
+          },
+          "secciones": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secciones"
+          }
+        },
+        "title": "CambiosUsuario",
+        "type": "object"
+      },
       "CapturaEntrada": {
         "properties": {
           "valores": {
@@ -1559,6 +1615,46 @@
         "title": "LineaVarianceSalida",
         "type": "object"
       },
+      "ListaUsuarios": {
+        "properties": {
+          "roles": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "object"
+          },
+          "roles_por_seccion": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles Por Seccion",
+            "type": "array"
+          },
+          "secciones_disponibles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Secciones Disponibles",
+            "type": "array"
+          },
+          "usuarios": {
+            "items": {
+              "$ref": "#/components/schemas/UsuarioAdmin"
+            },
+            "title": "Usuarios",
+            "type": "array"
+          }
+        },
+        "required": [
+          "usuarios",
+          "roles",
+          "roles_por_seccion",
+          "secciones_disponibles"
+        ],
+        "title": "ListaUsuarios",
+        "type": "object"
+      },
       "LoginEntrada": {
         "properties": {
           "codigo": {
@@ -1931,6 +2027,19 @@
         "title": "PaginaSalida",
         "type": "object"
       },
+      "PasswordTemporal": {
+        "properties": {
+          "password_temporal": {
+            "title": "Password Temporal",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password_temporal"
+        ],
+        "title": "PasswordTemporal",
+        "type": "object"
+      },
       "ReglaEdicion": {
         "properties": {
           "componentes": {
@@ -2252,6 +2361,126 @@
           "linea_total_id"
         ],
         "title": "SeccionSalida",
+        "type": "object"
+      },
+      "UsuarioAdmin": {
+        "properties": {
+          "activo": {
+            "title": "Activo",
+            "type": "boolean"
+          },
+          "bloqueado": {
+            "title": "Bloqueado",
+            "type": "boolean"
+          },
+          "debe_cambiar_password": {
+            "title": "Debe Cambiar Password",
+            "type": "boolean"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "rol": {
+            "title": "Rol",
+            "type": "string"
+          },
+          "rol_nombre": {
+            "title": "Rol Nombre",
+            "type": "string"
+          },
+          "secciones": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Secciones",
+            "type": "array"
+          },
+          "totp_activo": {
+            "title": "Totp Activo",
+            "type": "boolean"
+          },
+          "usuario_id": {
+            "title": "Usuario Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "usuario_id",
+          "email",
+          "nombre",
+          "rol",
+          "rol_nombre",
+          "activo",
+          "secciones",
+          "totp_activo",
+          "bloqueado",
+          "debe_cambiar_password"
+        ],
+        "title": "UsuarioAdmin",
+        "type": "object"
+      },
+      "UsuarioCreado": {
+        "properties": {
+          "password_temporal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password Temporal"
+          },
+          "usuario": {
+            "$ref": "#/components/schemas/UsuarioAdmin"
+          }
+        },
+        "required": [
+          "usuario",
+          "password_temporal"
+        ],
+        "title": "UsuarioCreado",
+        "type": "object"
+      },
+      "UsuarioNuevo": {
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          },
+          "nombre": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Nombre",
+            "type": "string"
+          },
+          "rol": {
+            "title": "Rol",
+            "type": "string"
+          },
+          "secciones": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Secciones",
+            "type": "array"
+          }
+        },
+        "required": [
+          "email",
+          "nombre",
+          "rol"
+        ],
+        "title": "UsuarioNuevo",
         "type": "object"
       },
       "UsuarioSesion": {
@@ -3379,7 +3608,7 @@
     },
     "/api/v1/hoteles/{hotel_id}/asientos/{asiento}": {
       "get": {
-        "description": "Todas las líneas de un asiento en el periodo, con sus totales de Débito y Crédito.",
+        "description": "Todas las líneas de un asiento en el periodo, con sus totales de Débito y Crédito.\n\nUn asiento mezcla cuentas de varias secciones: quien tiene el acceso limitado no puede verlo.",
         "operationId": "asiento_api_v1_hoteles__hotel_id__asientos__asiento__get",
         "parameters": [
           {
@@ -5189,6 +5418,322 @@
         ]
       }
     },
+    "/api/v1/hoteles/{hotel_id}/usuarios": {
+      "get": {
+        "operationId": "listar_api_v1_hoteles__hotel_id__usuarios_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaUsuarios"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar",
+        "tags": [
+          "usuarios"
+        ]
+      },
+      "post": {
+        "operationId": "crear_api_v1_hoteles__hotel_id__usuarios_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsuarioNuevo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioCreado"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El usuario ya tiene acceso a este hotel"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Crear",
+        "tags": [
+          "usuarios"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/usuarios/{usuario_id}": {
+      "patch": {
+        "operationId": "actualizar_api_v1_hoteles__hotel_id__usuarios__usuario_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "usuario_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Usuario Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambiosUsuario"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioAdmin"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El cambio dejaría al hotel sin un Contralor activo"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Actualizar",
+        "tags": [
+          "usuarios"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/usuarios/{usuario_id}/desbloquear": {
+      "post": {
+        "operationId": "desbloquear_api_v1_hoteles__hotel_id__usuarios__usuario_id__desbloquear_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "usuario_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Usuario Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Desbloquear",
+        "tags": [
+          "usuarios"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/usuarios/{usuario_id}/restablecer-password": {
+      "post": {
+        "description": "Nueva clave temporal (se muestra una vez); cierra sus sesiones y lo obliga a cambiarla.",
+        "operationId": "restablecer_password_api_v1_hoteles__hotel_id__usuarios__usuario_id__restablecer_password_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "usuario_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Usuario Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordTemporal"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restablecer Password",
+        "tags": [
+          "usuarios"
+        ]
+      }
+    },
     "/api/v1/hoteles/{hotel_id}/variance": {
       "get": {
         "description": "Variance del periodo con el mapeo aprobado y el Budget vigente (o las indicadas).\n\nEl reporte completo se guarda en la caché del servidor (se invalida al cargar o aprobar); los\nfiltros se aplican sobre él. La cabecera `X-Cache` dice si salió de la caché (`hit`) o se\ncalculó (`miss`); el resultado es el mismo.",
@@ -5483,7 +6028,7 @@
     },
     "/api/v1/hoteles/{hotel_id}/variance/exportar": {
       "get": {
-        "description": "Descarga el Variance completo en Excel, con fórmulas vivas; queda en la bitácora.\n\nLos filtros de la pantalla (`seccion_id`, `tipo`, `q`) se aceptan por compatibilidad pero se\nignoran: las fórmulas de los totales necesitan todas sus partes.",
+        "description": "Descarga el Variance completo en Excel, con fórmulas vivas; queda en la bitácora.\n\nLos filtros de la pantalla (`seccion_id`, `tipo`, `q`) se aceptan por compatibilidad pero se\nignoran: las fórmulas de los totales necesitan todas sus partes. Quien solo tiene asignadas\nalgunas secciones no puede exportar (el libro trae todo el reporte).",
         "operationId": "exportar_api_v1_hoteles__hotel_id__variance_exportar_get",
         "parameters": [
           {

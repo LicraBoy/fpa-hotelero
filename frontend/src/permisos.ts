@@ -16,6 +16,14 @@ export type Permiso =
   | 'budget:importar'
   | 'variance:leer'
   | 'drilldown:leer'
+  | 'usuarios:administrar'
+  | 'comentario:leer'
+  | 'comentario:crear'
+  | 'comentario:resolver'
+  | 'cierre:leer'
+  | 'cierre:revisar'
+  | 'cierre:aprobar'
+  | 'cierre:bloquear'
 
 const POR_ROL: Record<string, Permiso[]> = {
   contralor: [
@@ -33,6 +41,14 @@ const POR_ROL: Record<string, Permiso[]> = {
     'budget:importar',
     'variance:leer',
     'drilldown:leer',
+    'usuarios:administrar',
+    'comentario:leer',
+    'comentario:crear',
+    'comentario:resolver',
+    'cierre:leer',
+    'cierre:revisar',
+    'cierre:aprobar',
+    'cierre:bloquear',
   ],
   analista: [
     'carga:crear',
@@ -47,8 +63,20 @@ const POR_ROL: Record<string, Permiso[]> = {
     'budget:importar',
     'variance:leer',
     'drilldown:leer',
+    'comentario:leer',
+    'comentario:crear',
+    'comentario:resolver',
+    'cierre:leer',
+    'cierre:revisar',
   ],
-  responsable_area: ['catalogo:leer', 'reporte:leer'],
+  responsable_area: [
+    'catalogo:leer',
+    'reporte:leer',
+    'variance:leer',
+    'drilldown:leer',
+    'comentario:leer',
+    'comentario:crear',
+  ],
   direccion: [
     'carga:leer',
     'catalogo:leer',
@@ -57,6 +85,8 @@ const POR_ROL: Record<string, Permiso[]> = {
     'mapeo:leer',
     'budget:leer',
     'variance:leer',
+    'comentario:leer',
+    'cierre:leer',
   ],
   auditoria: [
     'carga:leer',
@@ -68,6 +98,8 @@ const POR_ROL: Record<string, Permiso[]> = {
     'budget:leer',
     'variance:leer',
     'drilldown:leer',
+    'comentario:leer',
+    'cierre:leer',
   ],
 }
 
@@ -77,6 +109,11 @@ export const NOMBRE_ROL: Record<string, string> = {
   responsable_area: 'Responsable de departamento',
   direccion: 'Dirección',
   auditoria: 'Auditoría / consulta',
+}
+
+/** Roles que solo ven las secciones del reporte que se les asignaron (espejo del backend). */
+export function tieneAccesoLimitado(rol: string | undefined): boolean {
+  return rol === 'responsable_area'
 }
 
 export function puede(rol: string | undefined, permiso: Permiso): boolean {

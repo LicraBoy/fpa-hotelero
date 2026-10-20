@@ -17,12 +17,14 @@ interface Props {
   bloque: Bloque
   /** Línea del reporte desde la que se llegó (para las migas y «Volver»). */
   lineaId?: number
+  /** Quien tiene el acceso limitado a sus secciones no puede abrir asientos (mezclan secciones). */
+  puedeVerAsiento?: boolean
 }
 
 const POR_PAGINA = 50
 
 /** Movimientos de una cuenta, de 50 en 50 con "Cargar más" (paginación por cursor). */
-export function Movimientos({ hotelId, periodo, codigo, bloque, lineaId }: Props) {
+export function Movimientos({ hotelId, periodo, codigo, bloque, lineaId, puedeVerAsiento = true }: Props) {
   const nombreLinea = useNombreLinea(hotelId, periodo, lineaId, bloque)
   const rutaLinea =
     lineaId === undefined ? null : construirRuta({ tipo: 'desglose', periodo, lineaId, bloque })
@@ -150,18 +152,22 @@ export function Movimientos({ hotelId, periodo, codigo, bloque, lineaId }: Props
                     <tr key={m.id}>
                       <td>{m.fecha}</td>
                       <th scope="row">
-                        <a
-                          href={construirRuta({
-                            tipo: 'asiento',
-                            periodo: m.periodo,
-                            asiento: m.asiento,
-                            cuenta: codigo,
-                            bloque,
-                            ...(lineaId === undefined ? {} : { lineaId }),
-                          })}
-                        >
-                          {m.asiento}
-                        </a>
+                        {puedeVerAsiento ? (
+                          <a
+                            href={construirRuta({
+                              tipo: 'asiento',
+                              periodo: m.periodo,
+                              asiento: m.asiento,
+                              cuenta: codigo,
+                              bloque,
+                              ...(lineaId === undefined ? {} : { lineaId }),
+                            })}
+                          >
+                            {m.asiento}
+                          </a>
+                        ) : (
+                          m.asiento
+                        )}
                       </th>
                       {/* El concepto lo escribe un tercero: se muestra como texto, nunca como HTML */}
                       <td>{m.concepto}</td>
