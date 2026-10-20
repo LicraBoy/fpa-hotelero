@@ -24,6 +24,8 @@ La plataforma será **independiente** y funcionará como una capa superior que:
 
 La plataforma deberá poder coexistir con los sistemas actuales de cada hotel.
 
+> **Requisito permanente:** la visión integral del producto y las reglas que de ella se derivan están en `docs/VISION_DEL_PRODUCTO.md`.
+
 ---
 
 # 1. REFERENCIA PRINCIPAL: BOARD
