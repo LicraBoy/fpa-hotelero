@@ -584,11 +584,11 @@
 
 /* Tabla: grupos separados con más peso, tabla sobre superficie propia */
 :root {
-  --borde-fuerte: #cfc9e6;
+  --borde-fuerte: #c3cedb;
 }
 
 :root[data-tema='oscuro'] {
-  --borde-fuerte: #4a4570;
+  --borde-fuerte: #35495d;
 }
 
 .tabla-variance-contenedor {
@@ -860,7 +860,7 @@
 .tabla-variance .col-linea {
   min-width: 15rem;
   max-width: 15rem;
-  box-shadow: 6px 0 8px -8px rgba(31, 29, 51, 0.25);
+  box-shadow: 6px 0 8px -8px rgba(23, 43, 77, 0.22);
 }
 
 .linea-contenido {
@@ -1100,7 +1100,7 @@
   overflow-y: auto;
   border-left: 1px solid var(--borde);
   background: var(--superficie);
-  box-shadow: -14px 0 34px rgba(31, 29, 51, 0.14);
+  box-shadow: -14px 0 34px rgba(11, 20, 32, 0.16);
 }
 
 :root[data-tema='oscuro'] .panel-linea {
