@@ -125,6 +125,8 @@ test('quien sí tiene permiso ve la pantalla de Variance', async ({ page }) => {
   await page.goto('/')
   await elegirUsuario(page, 'Analista')
   await pestana(page, 'Variance').click()
-  await expect(page.getByRole('region', { name: 'Variance' })).toBeVisible()
+  // exact: evita la ambigüedad con la región interna "Tabla de Variance" (role=region,
+  // sin exact el nombre hace match por subcadena) cuando el reporte ya tiene datos de otra prueba.
+  await expect(page.getByRole('region', { name: 'Variance', exact: true })).toBeVisible()
   await expect(page.getByRole('alert', { name: 'Sin acceso' })).toHaveCount(0)
 })
