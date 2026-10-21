@@ -17,8 +17,8 @@
   flex-direction: column;
   gap: var(--e4);
   padding: var(--e4) var(--e3);
-  background: var(--superficie);
-  border-right: 1px solid var(--borde);
+  background: var(--petroleo);
+  border-right: 1px solid color-mix(in srgb, var(--petroleo) 80%, white);
 }
 
 .marca {
@@ -26,28 +26,31 @@
   align-items: center;
   gap: var(--e3);
   padding: var(--e1) var(--e2) var(--e3);
+  border-bottom: 1px solid color-mix(in srgb, var(--petroleo) 80%, white);
 }
 
 .marca h1 {
   line-height: 1.2;
-  color: var(--texto);
+  color: var(--petroleo-texto);
+  font-size: 0.95rem;
 }
 
 .marca .suave {
   margin-top: 2px;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
+  color: color-mix(in srgb, var(--petroleo-texto) 65%, transparent);
 }
 
 .logo-fondo {
-  fill: var(--primario);
+  fill: var(--acento);
 }
 
 .logo-trazo {
-  stroke: var(--primario-texto);
+  stroke: var(--petroleo-texto);
 }
 
 .logo-punto {
-  fill: var(--primario-texto);
+  fill: var(--petroleo-texto);
 }
 
 /* Navegación agrupada */
@@ -70,7 +73,7 @@
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--suave);
+  color: color-mix(in srgb, var(--petroleo-texto) 55%, transparent);
 }
 
 .pestana {
@@ -81,7 +84,7 @@
   border: none;
   border-radius: var(--radio);
   padding: 9px var(--e3);
-  color: var(--texto);
+  color: color-mix(in srgb, var(--petroleo-texto) 85%, transparent);
   font: inherit;
   font-size: 0.93rem;
   text-align: left;
@@ -89,23 +92,23 @@
 }
 
 .pestana .icono {
-  color: var(--suave);
+  color: color-mix(in srgb, var(--petroleo-texto) 55%, transparent);
   flex: none;
 }
 
 .pestana:hover {
-  background: var(--neutro-fondo);
+  background: color-mix(in srgb, var(--petroleo) 85%, white);
 }
 
 .pestana.activa {
-  background: var(--acento-suave);
-  color: var(--primario);
+  background: color-mix(in srgb, var(--petroleo) 70%, var(--primario));
+  color: #ffffff;
   font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--primario);
+  box-shadow: inset 3px 0 0 var(--acento);
 }
 
 .pestana.activa .icono {
-  color: var(--primario);
+  color: #ffffff;
 }
 
 .pestana:focus-visible,
@@ -121,9 +124,9 @@
   flex-direction: column;
   gap: var(--e3);
   padding: var(--e3);
-  border: 1px solid var(--borde);
+  border: 1px solid color-mix(in srgb, var(--petroleo) 80%, white);
   border-radius: var(--radio-grande);
-  background: var(--superficie-2);
+  background: color-mix(in srgb, var(--petroleo) 90%, white);
 }
 
 .lateral-pie label {
@@ -132,7 +135,7 @@
   gap: 4px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--suave);
+  color: color-mix(in srgb, var(--petroleo-texto) 70%, transparent);
 }
 
 .lateral-pie select {
