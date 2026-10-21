@@ -13,7 +13,7 @@ function iniciales(nombre: string): string {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
+    .map((p) => p.replace(/[^\p{L}\p{N}]/gu, '')[0]?.toUpperCase() ?? '')
   return letras.join('') || '?'
 }
 

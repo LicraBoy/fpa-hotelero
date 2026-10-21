@@ -82,6 +82,8 @@
 select,
 input[type='text'],
 input[type='search'],
+input[type='password'],
+input[type='email'],
 input[type='file'] {
   font: inherit;
   padding: 7px 9px;

@@ -1,0 +1,81 @@
+/* Pulido final de la interfaz (etapa 4 del rediseño). Va después de las hojas por área para ganar en la cascada. */
+
+/* Datos: dos tarjetas con título de tarjeta (más chico que el título de página de Finanzas/Administración) */
+.pantalla-datos > .tarjeta + .tarjeta {
+  margin-top: var(--e4);
+}
+
+.pantalla-datos .tarjeta .encabezado-pagina h2,
+.pantalla-datos .tarjeta > h2 {
+  margin: 0 0 var(--e2);
+  font-size: 1.2rem;
+  font-weight: 650;
+  letter-spacing: -0.012em;
+}
+
+/* Budget: «Importar» se ve como «Cómo funciona» (pliegue en una pieza con borde), no como texto suelto */
+.importar-budget {
+  margin: var(--e3) 0;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.importar-budget > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e2) var(--e3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--suave);
+  list-style: none;
+  cursor: pointer;
+}
+
+.importar-budget > summary::before {
+  content: '▸';
+  color: var(--primario);
+}
+
+.importar-budget[open] > summary::before {
+  content: '▾';
+}
+
+.importar-budget > :not(summary) {
+  margin-left: var(--e3);
+  margin-right: var(--e3);
+}
+
+.importar-budget[open] {
+  padding-bottom: var(--e3);
+}
+
+/* Tarjetas de resumen: en pantallas medianas van de dos en dos (no tres y una huérfana) */
+@media (max-width: 1100px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Menú de usuario: el nombre se recorta con puntos suspensivos en vez de partirse letra por letra */
+.menu-usuario-datos strong,
+.menu-usuario-datos .suave {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+/* Mi cuenta: aire entre el título de cada tarjeta y su contenido */
+.cuenta .tarjeta h3 {
+  margin: 0 0 var(--e3);
+}
+
+/* Historial de la cifra: pliegue del mismo estilo que las notas del reporte */
+.historial-cifra > summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--suave);
+}

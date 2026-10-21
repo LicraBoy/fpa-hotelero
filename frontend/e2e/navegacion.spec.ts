@@ -52,3 +52,16 @@ test('el menú lateral no lista nada que el rol no pueda abrir', async ({ page }
   await expect(nav.getByRole('button', { name: 'Budget' })).toHaveCount(0)
   await expect(nav.getByRole('button', { name: 'Auditoría' })).toBeVisible()
 })
+
+test('sin ruta se abre la primera pantalla y la dirección se completa sin mensaje de error', async ({ page }) => {
+  await page.goto('/')
+  await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Contralor' })
+  await expect(pestana(page, 'Variance')).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByRole('alert', { name: 'Ruta no válida' })).toHaveCount(0)
+  await expect(page).toHaveURL(/#\/variance$/)
+  await page.evaluate(() => {
+    window.location.hash = '#/no-existe'
+  })
+  await expect(page).toHaveURL(/#\/variance$/)
+  await expect(page.getByRole('alert', { name: 'Ruta no válida' })).toHaveCount(0)
+})

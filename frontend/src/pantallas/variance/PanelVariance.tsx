@@ -620,6 +620,7 @@ export function PanelVariance({ hotelId, rol, alIrABudget }: Props) {
         : null
   if (lineaDeLaRuta !== null && lineaDeLaRuta !== lineaOrigen) setLineaOrigen(lineaDeLaRuta)
   switch (ruta.tipo) {
+    case 'sin-ruta': // se completa a #/variance (ver App.tsx); mientras tanto se muestra igual
     case 'variance':
       return (
         <ReporteVariance

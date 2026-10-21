@@ -27,7 +27,7 @@ export function PanelCargas({ hotelId, puedeCargar, version, alCambiar }: Props)
   )
 
   return (
-    <>
+    <div className="pantalla-datos">
       {puedeCargar && <SubirArchivo hotelId={hotelId} alCambiar={alCambiar} />}
       <section className="tarjeta" aria-labelledby="titulo-cargas">
         <EncabezadoPagina
@@ -85,7 +85,7 @@ export function PanelCargas({ hotelId, puedeCargar, version, alCambiar }: Props)
         )}
         {seleccionada !== null && <DetalleCarga hotelId={hotelId} cargaId={seleccionada} />}
       </section>
-    </>
+    </div>
   )
 }
 

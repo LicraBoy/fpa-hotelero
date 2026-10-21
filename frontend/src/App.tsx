@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { UsuarioSesion } from './api/auth'
 import { fijarUsuarioDev, obtenerTipado } from './api/cliente'
 import { useDatos } from './api/useDatos'
@@ -76,6 +76,16 @@ export default function App({
         : null
   const activa: IdPantalla | undefined = pedida ?? abribles[0]?.id
   const permitida = activa !== undefined && abribles.some((p) => p.id === activa)
+
+  // Sin ruta (o con una que no existe) la barra de direcciones pasa a la pantalla que se está viendo,
+  // sin agregar un paso al historial; así lo que se ve siempre se puede enlazar.
+  const rutaDeVariance = window.location.hash.startsWith('#/variance')
+  useEffect(() => {
+    if (!hotel || !activa || !permitida) return
+    if (ruta.tipo === 'sin-ruta' || (ruta.tipo === 'invalida' && !rutaDeVariance)) {
+      window.location.replace(rutaDe(activa))
+    }
+  }, [hotel, activa, permitida, ruta.tipo, rutaDeVariance])
 
   function cambiarUsuario(email: string) {
     fijarUsuarioDev(email) // antes de que los paneles vuelvan a consultar

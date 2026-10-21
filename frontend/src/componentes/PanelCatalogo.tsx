@@ -77,7 +77,7 @@ export function PanelCatalogo({ hotelId, version, puedeImportar, alCambiar }: Pr
   const filtrando = consulta.trim() !== '' || estado !== 'todos'
 
   return (
-    <>
+    <div className="pantalla-datos">
       {puedeImportar && <ImportarCatalogo hotelId={hotelId} alCambiar={alCambiar} />}
       <section className="tarjeta" aria-labelledby="titulo-catalogo">
         <EncabezadoPagina id="titulo-catalogo" titulo="Catálogo de cuentas" />
@@ -136,7 +136,7 @@ export function PanelCatalogo({ hotelId, version, puedeImportar, alCambiar }: Pr
           </>
         )}
       </section>
-    </>
+    </div>
   )
 }
 

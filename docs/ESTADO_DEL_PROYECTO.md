@@ -4,6 +4,8 @@
 
 > Visión integral del producto (requisito permanente): `docs/VISION_DEL_PRODUCTO.md`.
 
+> **Rediseño de interfaz y navegación (oct-2026, rama `ui/rediseno-navegacion`):** catálogo único de pantallas (`frontend/src/ruta/navegacion.ts`), ruta por hash para cada pantalla, menú de usuario, CSS dividido en `frontend/src/estilos/` y pulido por área, sin funcionalidad nueva. Capturas en `docs/imagenes/rediseno/`.
+
 ## Fase actual
 **Fase 1 — Data Hub: Actuals: HECHA** (sub-fases 1.0 a 1.9; la 1.9 es el **catálogo oficial de cuentas**, reporte CON020 de Novohit). Además tiene **frontend de la Fase 1** y **pruebas de navegador con Playwright**. **Fase 2 — Catálogo corporativo y mapeo: sub-fases 2.1 a 2.6 HECHAS; falta la aprobación de Contraloría** (ver Pendientes). **Fase 3 — Motor de Variance: sub-fases 3.1 a 3.7 hechas** (la prueba dorada de Vallarta tiene 19 excepciones documentadas; la de **Mazatlán**, 12 en el Actual y 27 en la Variación; septiembre sin referencia de Contraloría todavía).
 
