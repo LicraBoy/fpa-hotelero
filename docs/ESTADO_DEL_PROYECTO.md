@@ -2,6 +2,8 @@
 
 Última actualización: 02-oct-2026
 
+> **Vista «Por departamento» (rama `fase-departamentos`):** `servicios/departamentos.py`, `api/v1/departamentos.py` (`GET /variance/departamentos?periodo=`), `src/pantallas/departamentos/`. Agrupa el Actual de las cuentas vinculadas por el `depto_ef` y el tipo (`grupo_ef`) del catálogo de Novohit; las cuentas sin departamento o sin tipo se muestran aparte. No hay Budget ni variación por departamento. Con la base de desarrollo (septiembre): de 574 cuentas vinculadas, 354 no traen departamento ni tipo (incluye el ingreso principal).
+
 > Visión integral del producto (requisito permanente): `docs/VISION_DEL_PRODUCTO.md`.
 
 > **Rediseño de interfaz y navegación (oct-2026, rama `ui/rediseno-navegacion`):** catálogo único de pantallas (`frontend/src/ruta/navegacion.ts`), ruta por hash para cada pantalla, menú de usuario, CSS dividido en `frontend/src/estilos/` y pulido por área, sin funcionalidad nueva. Capturas en `docs/imagenes/rediseno/`.

@@ -12,6 +12,7 @@ from fpa.api.v1 import (
     catalogo,
     cierres,
     comentarios,
+    departamentos,
     drilldown,
     historial,
     identidad,
@@ -58,6 +59,7 @@ def crear_app() -> FastAPI:
     app.include_router(usuarios.router, prefix="/api/v1")
     app.include_router(comentarios.router, prefix="/api/v1")
     app.include_router(cierres.router, prefix="/api/v1")
+    app.include_router(departamentos.router, prefix="/api/v1")
     app.include_router(integridad.router, prefix="/api/v1")
     app.include_router(historial.router, prefix="/api/v1")
     app.include_router(catalogo.router, prefix="/api/v1")

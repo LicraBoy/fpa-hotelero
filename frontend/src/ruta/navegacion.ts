@@ -3,11 +3,12 @@
 // módulo nuevo se agrega una entrada y nada más; nunca se listan módulos futuros.
 
 import type { NombreIcono } from '../componentes/nombreIcono.ts'
-import { puede, type Permiso } from '../permisos.ts'
+import { puede, tieneAccesoLimitado, type Permiso } from '../permisos.ts'
 
 export type IdPantalla =
   | 'variance'
   | 'budget'
+  | 'departamentos'
   | 'cargas'
   | 'catalogo'
   | 'saldos'
@@ -27,11 +28,21 @@ export interface Pantalla {
   permisos: Permiso[]
   /** Solo existe con inicio de sesión real (no con el selector de desarrollo). */
   soloConSesion?: boolean
+  /** No la ve quien solo tiene asignadas algunas secciones del reporte (cruza secciones). */
+  soloAccesoCompleto?: boolean
 }
 
 export const PANTALLAS: readonly Pantalla[] = [
   { id: 'variance', nombre: 'Variance', grupo: 'Finanzas', icono: 'informe', permisos: ['variance:leer'] },
   { id: 'budget', nombre: 'Budget', grupo: 'Finanzas', icono: 'presupuesto', permisos: ['budget:importar'] },
+  {
+    id: 'departamentos',
+    nombre: 'Por departamento',
+    grupo: 'Finanzas',
+    icono: 'catalogo',
+    permisos: ['variance:leer'],
+    soloAccesoCompleto: true,
+  },
   { id: 'cargas', nombre: 'Cargas', grupo: 'Datos', icono: 'subir', permisos: ['carga:leer', 'carga:crear'] },
   { id: 'catalogo', nombre: 'Catálogo', grupo: 'Datos', icono: 'catalogo', permisos: ['catalogo:leer'] },
   { id: 'saldos', nombre: 'Saldos', grupo: 'Datos', icono: 'saldos', permisos: ['saldos:leer'] },
@@ -55,6 +66,7 @@ export function pantallaDe(id: IdPantalla): Pantalla {
 /** ¿Puede este rol abrir la pantalla? (El servidor autoriza igual y siempre.) */
 export function puedeAbrir(p: Pantalla, rol: string | undefined, conSesion: boolean): boolean {
   if (p.soloConSesion && !conSesion) return false
+  if (p.soloAccesoCompleto && tieneAccesoLimitado(rol)) return false
   return p.permisos.length === 0 ? rol !== undefined : p.permisos.some((x) => puede(rol, x))
 }
 

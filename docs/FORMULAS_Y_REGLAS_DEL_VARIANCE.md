@@ -108,3 +108,12 @@ Reglas al cambiar algo:
 1. Correr `pytest`: `test_variance_dorada_mzt.py` compara con julio y agosto del Excel y avisa si algo se movió.
 2. Si el cambio es intencional, actualizar la lista de excepciones de esa prueba y este documento.
 3. Registrar la decisión de Contraloría (quién, cuándo) en `docs/adr/` o en `PREGUNTAS_PARA_CONTRALORIA.md`.
+
+## Importes por departamento (vista «Por departamento»)
+
+- Importe de una cuenta en un mes = `signo del vínculo × neto del mes` (el mismo del Actual del Variance); acumulado = suma de los meses del año fiscal con carga.
+- Se agrupa por `depto_ef` del catálogo oficial y por tipo según `grupo_ef`: `INCOME` → ingreso, `PAYROLL EXPENS` → nómina, `OPS EXPENSES` → operación, `COST OF GOODS` → costo, `OTHER EXPENSES` y cualquier valor nuevo → otros; vacío → «sin tipo».
+- Gasto = nómina + operación + costo + otros; Resultado = ingreso − gasto. Lo «sin tipo» no entra en gasto ni resultado.
+- Una cuenta vinculada a varias líneas suma una vez por vínculo (como el Variance). Las cuentas sin departamento van a la fila «Sin departamento».
+- Un periodo Aprobado o Bloqueado usa el mapeo congelado en su cierre.
+- **No hay Budget ni variación por departamento:** el Budget es por línea del reporte, no por cuenta.

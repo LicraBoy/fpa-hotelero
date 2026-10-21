@@ -11,6 +11,7 @@ import { PanelCatalogo } from './componentes/PanelCatalogo'
 import { PanelSaldos } from './componentes/PanelSaldos'
 import { PanelUsuarios } from './pantallas/usuarios/PanelUsuarios'
 import { PanelCuenta } from './pantallas/cuenta/PanelCuenta'
+import { PanelDepartamentos } from './pantallas/departamentos/PanelDepartamentos'
 import { PanelBudget } from './pantallas/budget/PanelBudget'
 import { PanelVariance } from './pantallas/variance/PanelVariance'
 import { MenuUsuario } from './componentes/MenuUsuario'
@@ -261,6 +262,13 @@ export default function App({
                 </RutaProtegida>
               )}
               {activa === 'budget' && <PanelBudget hotelId={hotel.id} />}
+              {activa === 'departamentos' && (
+                <PanelDepartamentos
+                  hotelId={hotel.id}
+                  puedeVerCargas={puede(rol, 'carga:leer')}
+                  puedeDesglosar={puede(rol, 'drilldown:leer')}
+                />
+              )}
               {activa === 'auditoria' && <PanelAuditoria hotelId={hotel.id} version={version} />}
               {activa === 'usuarios' && (
                 <PanelUsuarios hotelId={hotel.id} yoId={sesion?.usuario.usuario_id} />

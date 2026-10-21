@@ -1393,6 +1393,180 @@
         "title": "CuentaDesgloseSalida",
         "type": "object"
       },
+      "CuentaSalida": {
+        "properties": {
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "mes": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Mes",
+            "type": "string"
+          },
+          "n_lineas": {
+            "title": "N Lineas",
+            "type": "integer"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          },
+          "ytd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ytd",
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo",
+          "descripcion",
+          "tipo",
+          "mes",
+          "ytd",
+          "n_lineas"
+        ],
+        "title": "CuentaSalida",
+        "type": "object"
+      },
+      "DepartamentoSalida": {
+        "properties": {
+          "cuentas": {
+            "items": {
+              "$ref": "#/components/schemas/CuentaSalida"
+            },
+            "title": "Cuentas",
+            "type": "array"
+          },
+          "departamento": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Departamento"
+          },
+          "gasto": {
+            "$ref": "#/components/schemas/ImportesSalida"
+          },
+          "ingreso": {
+            "$ref": "#/components/schemas/ImportesSalida"
+          },
+          "n_cuentas": {
+            "title": "N Cuentas",
+            "type": "integer"
+          },
+          "por_tipo": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ImportesSalida"
+            },
+            "title": "Por Tipo",
+            "type": "object"
+          },
+          "resultado": {
+            "$ref": "#/components/schemas/ImportesSalida"
+          }
+        },
+        "required": [
+          "departamento",
+          "por_tipo",
+          "ingreso",
+          "gasto",
+          "resultado",
+          "n_cuentas",
+          "cuentas"
+        ],
+        "title": "DepartamentoSalida",
+        "type": "object"
+      },
+      "DepartamentosSalida": {
+        "properties": {
+          "cuentas_sin_departamento": {
+            "title": "Cuentas Sin Departamento",
+            "type": "integer"
+          },
+          "cuentas_sin_tipo": {
+            "title": "Cuentas Sin Tipo",
+            "type": "integer"
+          },
+          "cuentas_vinculadas": {
+            "title": "Cuentas Vinculadas",
+            "type": "integer"
+          },
+          "departamentos": {
+            "items": {
+              "$ref": "#/components/schemas/DepartamentoSalida"
+            },
+            "title": "Departamentos",
+            "type": "array"
+          },
+          "detalle_de_cuentas": {
+            "title": "Detalle De Cuentas",
+            "type": "boolean"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "periodos_sin_datos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Periodos Sin Datos",
+            "type": "array"
+          },
+          "periodos_ytd": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Periodos Ytd",
+            "type": "array"
+          },
+          "tipos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tipos",
+            "type": "array"
+          },
+          "total": {
+            "$ref": "#/components/schemas/DepartamentoSalida"
+          },
+          "version_mapeo_id": {
+            "title": "Version Mapeo Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "periodo",
+          "version_mapeo_id",
+          "periodos_ytd",
+          "periodos_sin_datos",
+          "tipos",
+          "cuentas_vinculadas",
+          "cuentas_sin_departamento",
+          "cuentas_sin_tipo",
+          "departamentos",
+          "total",
+          "detalle_de_cuentas"
+        ],
+        "title": "DepartamentosSalida",
+        "type": "object"
+      },
       "DesgloseSalida": {
         "properties": {
           "bloque": {
@@ -1827,6 +2001,26 @@
           "rol"
         ],
         "title": "HotelSalida",
+        "type": "object"
+      },
+      "ImportesSalida": {
+        "properties": {
+          "mes": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Mes",
+            "type": "string"
+          },
+          "ytd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ytd",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mes",
+          "ytd"
+        ],
+        "title": "ImportesSalida",
         "type": "object"
       },
       "IntegridadSalida": {
@@ -7667,6 +7861,74 @@
         "summary": "Movimientos",
         "tags": [
           "drilldown"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/variance/departamentos": {
+      "get": {
+        "operationId": "por_departamento_api_v1_hoteles__hotel_id__variance_departamentos_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "AAAA-MM",
+            "in": "query",
+            "name": "periodo",
+            "required": true,
+            "schema": {
+              "description": "AAAA-MM",
+              "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+              "title": "Periodo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartamentosSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso o acceso limitado"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "El Budget y el mapeo usan estructuras del reporte distintas"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Por Departamento",
+        "tags": [
+          "variance"
         ]
       }
     },

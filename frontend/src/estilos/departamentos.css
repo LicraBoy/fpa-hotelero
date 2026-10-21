@@ -1,0 +1,47 @@
+/* Por departamento: tabla de importes por departamento y tipo, con las cuentas de cada uno */
+
+.selector-bloque {
+  display: flex;
+  gap: var(--e2);
+  align-items: center;
+}
+
+.tabla-departamentos th[scope='row'] {
+  text-align: left;
+  font-weight: 600;
+}
+
+.boton-pliegue {
+  font: inherit;
+  font-weight: 600;
+  color: var(--texto);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.boton-pliegue:disabled {
+  cursor: default;
+}
+
+.boton-pliegue:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
+}
+
+.fila-sin-departamento th,
+.fila-sin-departamento td {
+  background: var(--aviso-fondo);
+}
+
+.fila-cuenta td {
+  font-size: 0.85rem;
+  background: var(--superficie-2);
+}
+
+.tabla-departamentos tfoot th,
+.tabla-departamentos tfoot td {
+  font-weight: 700;
+}

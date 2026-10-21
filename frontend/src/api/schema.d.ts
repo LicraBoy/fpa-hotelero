@@ -956,6 +956,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/variance/departamentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Por Departamento */
+        get: operations["por_departamento_api_v1_hoteles__hotel_id__variance_departamentos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/variance/exportar": {
         parameters: {
             query?: never;
@@ -1519,6 +1536,61 @@ export interface components {
             /** Signo */
             signo: number;
         };
+        /** CuentaSalida */
+        CuentaSalida: {
+            /** Codigo */
+            codigo: string;
+            /** Descripcion */
+            descripcion: string | null;
+            /** Mes */
+            mes: string;
+            /** N Lineas */
+            n_lineas: number;
+            /** Tipo */
+            tipo: string;
+            /** Ytd */
+            ytd: string;
+        };
+        /** DepartamentoSalida */
+        DepartamentoSalida: {
+            /** Cuentas */
+            cuentas: components["schemas"]["CuentaSalida"][];
+            /** Departamento */
+            departamento: string | null;
+            gasto: components["schemas"]["ImportesSalida"];
+            ingreso: components["schemas"]["ImportesSalida"];
+            /** N Cuentas */
+            n_cuentas: number;
+            /** Por Tipo */
+            por_tipo: {
+                [key: string]: components["schemas"]["ImportesSalida"];
+            };
+            resultado: components["schemas"]["ImportesSalida"];
+        };
+        /** DepartamentosSalida */
+        DepartamentosSalida: {
+            /** Cuentas Sin Departamento */
+            cuentas_sin_departamento: number;
+            /** Cuentas Sin Tipo */
+            cuentas_sin_tipo: number;
+            /** Cuentas Vinculadas */
+            cuentas_vinculadas: number;
+            /** Departamentos */
+            departamentos: components["schemas"]["DepartamentoSalida"][];
+            /** Detalle De Cuentas */
+            detalle_de_cuentas: boolean;
+            /** Periodo */
+            periodo: string;
+            /** Periodos Sin Datos */
+            periodos_sin_datos: string[];
+            /** Periodos Ytd */
+            periodos_ytd: string[];
+            /** Tipos */
+            tipos: string[];
+            total: components["schemas"]["DepartamentoSalida"];
+            /** Version Mapeo Id */
+            version_mapeo_id: number;
+        };
         /** DesgloseSalida */
         DesgloseSalida: {
             /** Bloque */
@@ -1666,6 +1738,13 @@ export interface components {
             nombre: string;
             /** Rol */
             rol: string;
+        };
+        /** ImportesSalida */
+        ImportesSalida: {
+            /** Mes */
+            mes: string;
+            /** Ytd */
+            ytd: string;
         };
         /** IntegridadSalida */
         IntegridadSalida: {
@@ -5424,6 +5503,68 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    por_departamento_api_v1_hoteles__hotel_id__variance_departamentos_get: {
+        parameters: {
+            query: {
+                /** @description AAAA-MM */
+                periodo: string;
+            };
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepartamentosSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso o acceso limitado */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El Budget y el mapeo usan estructuras del reporte distintas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
