@@ -1,4 +1,7 @@
-/* Por departamento: tabla de importes por departamento y tipo, con las cuentas de cada uno */
+/* Por departamento: tabla de importes por departamento y tipo, con las cuentas de cada uno.
+   Reusa el lenguaje visual de tabla-variance (tipografía, bordes, color favorable/desfavorable);
+   aquí solo se ajusta lo propio de esta tabla (columna de nombre más ancha, sangría de cuentas,
+   divisor antes de Gasto/Resultado, peso de las filas de departamento). */
 
 .selector-bloque {
   display: flex;
@@ -6,14 +9,19 @@
   align-items: center;
 }
 
-.tabla-departamentos th[scope='row'] {
-  text-align: left;
-  font-weight: 600;
+/* La columna de nombre de Variance es angosta y de ancho fijo: aquí el contenido (nombre del
+   departamento + "N cuentas") necesita más aire y puede partirse en dos líneas sin problema. */
+.tabla-departamentos .col-linea {
+  min-width: 16rem;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 .boton-pliegue {
   font: inherit;
-  font-weight: 600;
+  font-weight: inherit;
   color: var(--texto);
   background: transparent;
   border: 0;
@@ -31,14 +39,43 @@
   outline-offset: 2px;
 }
 
-.fila-sin-departamento th,
-.fila-sin-departamento td {
-  background: var(--aviso-fondo);
+/* Fila de departamento: mismo tratamiento que una sección de Variance (fondo tenue, acento a la
+   izquierda, nombre en negrita) para que se lea de inmediato como fila "padre". */
+.fila-departamento th {
+  background: var(--acento-suave);
+  box-shadow: inset 3px 0 0 var(--primario);
 }
 
+.fila-departamento .boton-pliegue {
+  font-weight: 650;
+}
+
+/* "Sin departamento" es una categoría estructural (cuentas sin clasificar), no una advertencia
+   activa -el aviso real ya está en la tarjeta de arriba-, así que se distingue con cursiva y texto
+   suave en vez de un fondo ámbar permanente. */
+.fila-sin-departamento th,
+.fila-sin-departamento td {
+  font-style: italic;
+  color: var(--suave);
+}
+
+.fila-sin-departamento .boton-pliegue {
+  color: var(--suave);
+}
+
+/* Cuentas de un departamento: sangradas bajo su fila padre, como el detalle bajo una sección */
 .fila-cuenta td {
   font-size: 0.85rem;
   background: var(--superficie-2);
+}
+
+.tabla-departamentos td.fila-cuenta-nombre {
+  padding-left: 1.8rem;
+}
+
+/* Separador entre el desglose por tipo y las dos columnas de resumen (Gasto, Resultado) */
+.inicio-resumen {
+  border-left: 2px solid var(--borde-fuerte);
 }
 
 .tabla-departamentos tfoot th,

@@ -5,7 +5,7 @@ import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Cargando, EstadoVacio, MensajeError } from '../../componentes/Insignia'
 import { TarjetaKpi } from '../../componentes/TarjetaKpi'
 import { construirRuta } from '../../ruta/ruta'
-import { formatoContable } from '../../util/formato'
+import { esDesfavorable, esFavorable, formatoContable } from '../../util/formato'
 
 interface Props {
   hotelId: number
@@ -154,20 +154,22 @@ function Tabla({
         </p>
       )}
 
-      <div className="tabla-contenedor tabla-alta tabla-marco">
-        <table className="tabla tabla-departamentos">
+      <div className="tabla-variance-contenedor" role="region" aria-label="Tabla de departamentos" tabIndex={0}>
+        <table className="tabla-variance tabla-departamentos">
           <caption className="solo-lectores">
             Importes por departamento, {bloque === 'mes' ? 'del mes' : 'acumulado del año fiscal'}
           </caption>
           <thead>
             <tr>
-              <th scope="col">Departamento</th>
+              <th scope="col" className="col-linea">
+                Departamento
+              </th>
               {tipos.map((t) => (
                 <th key={t} scope="col" className="num">
                   {ETIQUETA_TIPO[t] ?? t}
                 </th>
               ))}
-              <th scope="col" className="num">
+              <th scope="col" className="num inicio-resumen">
                 Gasto
               </th>
               <th scope="col" className="num">
@@ -178,10 +180,12 @@ function Tabla({
           <tbody>
             {d.departamentos.map((f) => {
               const abierto = abiertos.has(clave(f.departamento))
+              const desfavorable = esDesfavorable(f.resultado[bloque])
+              const sentido = desfavorable ? 'desfavorable' : esFavorable(f.resultado[bloque]) ? 'favorable' : ''
               return (
                 <Fragment key={clave(f.departamento)}>
-                  <tr className={f.departamento === null ? 'fila-sin-departamento' : undefined}>
-                    <th scope="row">
+                  <tr className={f.departamento === null ? 'fila-sin-departamento' : 'fila-departamento'}>
+                    <th scope="row" className="col-linea">
                       <button
                         type="button"
                         className="boton-pliegue"
@@ -198,15 +202,21 @@ function Tabla({
                         {formatoContable(f.por_tipo[t]?.[bloque])}
                       </td>
                     ))}
-                    <td className="num">{formatoContable(f.gasto[bloque])}</td>
-                    <td className="num">
+                    <td className="num inicio-resumen">{formatoContable(f.gasto[bloque])}</td>
+                    <td className={`num ${sentido}`.trim()}>
+                      {desfavorable && (
+                        <>
+                          <span aria-hidden="true">▼ </span>
+                          <span className="solo-lectores">Desfavorable: </span>
+                        </>
+                      )}
                       <strong>{formatoContable(f.resultado[bloque])}</strong>
                     </td>
                   </tr>
                   {abierto &&
                     f.cuentas.map((c) => (
                       <tr key={c.codigo} className="fila-cuenta">
-                        <td>
+                        <td className="col-linea fila-cuenta-nombre">
                           {puedeDesglosar ? (
                             <a href={construirRuta({ tipo: 'cuenta', periodo, codigo: c.codigo, bloque })}>
                               <code>{c.codigo}</code>
@@ -220,7 +230,7 @@ function Tabla({
                           {ETIQUETA_TIPO[c.tipo] ?? c.tipo}
                           {c.n_lineas > 1 ? ` · en ${c.n_lineas} líneas` : ''}
                         </td>
-                        <td className="num" colSpan={2}>
+                        <td className="num inicio-resumen" colSpan={2}>
                           {formatoContable(bloque === 'mes' ? c.mes : c.ytd)}
                         </td>
                       </tr>
@@ -230,14 +240,16 @@ function Tabla({
             })}
           </tbody>
           <tfoot>
-            <tr>
-              <th scope="row">Total ({d.cuentas_vinculadas} cuentas vinculadas)</th>
+            <tr className="fila-total">
+              <th scope="row" className="col-linea">
+                Total ({d.cuentas_vinculadas} cuentas vinculadas)
+              </th>
               {tipos.map((t) => (
                 <td key={t} className="num">
                   {formatoContable(d.total.por_tipo[t]?.[bloque])}
                 </td>
               ))}
-              <td className="num">{formatoContable(d.total.gasto[bloque])}</td>
+              <td className="num inicio-resumen">{formatoContable(d.total.gasto[bloque])}</td>
               <td className="num">{formatoContable(d.total.resultado[bloque])}</td>
             </tr>
           </tfoot>
