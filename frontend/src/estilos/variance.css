@@ -1479,10 +1479,8 @@
 
 .filtro-etiqueta {
   color: var(--suave);
-  font-size: 0.68rem;
-  font-weight: 650;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 
 .barra-filtros select,
@@ -1498,9 +1496,14 @@
 }
 
 .barra-filtros select {
-  padding: 0 var(--e3);
+  padding: 0 1.9rem 0 var(--e3);
   min-width: 9rem;
   max-width: 14rem;
+  appearance: none;
+  background-image: var(--flecha-select);
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 15px;
 }
 
 .barra-filtros select:hover,
@@ -1530,13 +1533,19 @@
 
 .selector-mes select {
   height: 100%;
-  min-width: 6.2rem;
+  min-width: 7.4rem;
+  padding: 0 1.7rem 0 var(--e3);
   border: none;
   border-left: 1px solid var(--borde);
   border-right: 1px solid var(--borde);
   border-radius: 0;
-  background: transparent;
-  text-align: center;
+  background-color: transparent;
+  background-image: var(--flecha-select);
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 14px;
+  appearance: none;
+  text-align: left;
   font-weight: 650;
 }
 

@@ -94,6 +94,16 @@ input[type='file'] {
   max-width: 100%;
 }
 
+/* Flecha propia en vez de la del navegador (se ve genérica frente al resto de la interfaz) */
+select {
+  padding-right: 1.9rem;
+  appearance: none;
+  background-image: var(--flecha-select);
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 15px;
+}
+
 select:focus-visible,
 input:focus-visible {
   outline: 2px solid var(--primario);

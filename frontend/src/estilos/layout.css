@@ -214,8 +214,12 @@
 
 .selector-hotel select {
   border: none;
-  background: transparent;
-  padding: 6px 4px;
+  background-color: transparent;
+  background-image: var(--flecha-select);
+  background-repeat: no-repeat;
+  background-position: right 2px center;
+  background-size: 14px;
+  padding: 6px 1.4rem 6px 4px;
   font-weight: 600;
 }
 
