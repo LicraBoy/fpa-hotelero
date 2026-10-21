@@ -1,0 +1,50 @@
+/* Entrada de Tailwind. No define colores propios: los toma de las variables de tokens.css
+   (una sola fuente de verdad) para que las utilidades de Tailwind y el CSS escrito a mano
+   compartan exactamente la misma paleta y escala de espaciado. */
+@import 'tailwindcss';
+
+/* El tema oscuro de la app es un interruptor manual (data-tema="oscuro" en <html>,
+   ver util/aplicarTema.ts), no solo prefers-color-scheme: las utilidades dark: de Tailwind
+   deben seguir ese atributo. */
+@custom-variant dark (&:where([data-tema='oscuro'], [data-tema='oscuro'] *));
+
+@theme {
+  --font-sans: 'Inter Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-texto: var(--texto);
+  --color-suave: var(--suave);
+  --color-borde: var(--borde);
+  --color-petroleo: var(--petroleo);
+  --color-petroleo-texto: var(--petroleo-texto);
+  --color-ejecutivo: var(--primario);
+  --color-ejecutivo-hover: var(--primario-hover);
+  --color-primario-texto: var(--primario-texto);
+  --color-acento: var(--acento);
+  --color-acento-suave: var(--acento-suave);
+  --color-acento-borde: var(--acento-borde);
+  --color-ok: var(--ok);
+  --color-ok-fondo: var(--ok-fondo);
+  --color-aviso: var(--aviso);
+  --color-aviso-fondo: var(--aviso-fondo);
+  --color-error: var(--error);
+  --color-error-fondo: var(--error-fondo);
+  --color-info: var(--info);
+  --color-info-fondo: var(--info-fondo);
+  --color-fav: var(--ok);
+  --color-fav-fondo: var(--fav-fondo);
+  --color-des: var(--error);
+  --color-des-fondo: var(--des-fondo);
+
+  --spacing-e1: var(--e1);
+  --spacing-e2: var(--e2);
+  --spacing-e3: var(--e3);
+  --spacing-e4: var(--e4);
+  --spacing-e5: var(--e5);
+  --spacing-e6: var(--e6);
+
+  --radius-e: var(--radio);
+  --radius-e-grande: var(--radio-grande);
+}

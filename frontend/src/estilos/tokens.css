@@ -1,35 +1,42 @@
-/* Tokens de diseño (colores, espaciado, radios), tema oscuro y base tipográfica */
+/* Tokens de diseño (colores, espaciado, radios), tema oscuro y base tipográfica.
+   Fuente única de verdad: estas variables también se mapean a utilidades de Tailwind
+   en tailwind.css (@theme), así que cualquier cambio de paleta se hace aquí. */
 
 :root {
-  /* Identidad: violeta sobrio sobre neutros lavanda. ok/aviso/error conservan su significado. */
-  --fondo: #f6f5fb;
+  /* Identidad financiera hotelera: azul petróleo (navegación), azul ejecutivo (acciones y
+     selección), verde azulado (acento secundario) sobre neutros claros. ok/aviso/error
+     conservan su significado semántico real (favorable/desfavorable/advertencia). */
+  --fondo: #f3f6fa;
   --superficie: #ffffff;
-  --superficie-2: #faf9fe;
-  --texto: #1f1d33;
-  --suave: #5f6178;
-  --borde: #e6e3f2;
-  --primario: #5b45c9;
-  --primario-hover: #4a37ad;
+  --superficie-2: #f8fafc;
+  --texto: #172b4d;
+  --suave: #64748b;
+  --borde: #dce4ed;
+  --petroleo: #142b43;
+  --petroleo-texto: #e8edf4;
+  --primario: #2563eb;
+  --primario-hover: #1d4ed8;
   --primario-texto: #ffffff;
-  --acento-suave: #efebfd;
-  --acento-borde: #d9d0fa;
-  --ok: #1e6b3a;
-  --ok-fondo: #e6f4ea;
+  --acento: #0f766e;
+  --acento-suave: #e6f1fd;
+  --acento-borde: #bfdbfe;
+  --ok: #0f766e;
+  --ok-fondo: #e3f2f0;
   --aviso: #8a5a00;
   --aviso-fondo: #fff4d6;
   --error: #b42318;
   --error-fondo: #fde8e6;
   --info: #1f4e9c;
   --info-fondo: #e6eefb;
-  --neutro-fondo: #efedf7;
-  --fav-fondo: #e4f4ea;
+  --neutro-fondo: #eef2f7;
+  --fav-fondo: #e3f2ec;
   --des-fondo: #fdeaea;
   --tinte-mes: transparent;
-  --tinte-ytd: rgba(91, 69, 201, 0.04);
-  --tinte-anual: rgba(31, 29, 51, 0.045);
+  --tinte-ytd: rgba(37, 99, 235, 0.04);
+  --tinte-anual: rgba(20, 43, 67, 0.045);
   --realce: #fff0a6;
-  --fila-par: rgba(31, 29, 51, 0.025);
-  --fila-hover: rgba(91, 69, 201, 0.1);
+  --fila-par: rgba(20, 43, 67, 0.025);
+  --fila-hover: rgba(37, 99, 235, 0.08);
 
   /* Escala de espaciado, radios y sombras */
   --e1: 4px;
@@ -40,46 +47,51 @@
   --e6: 32px;
   --radio: 8px;
   --radio-grande: 14px;
-  --sombra: 0 1px 2px rgba(31, 29, 51, 0.05), 0 4px 14px rgba(91, 69, 201, 0.05);
+  --sombra: 0 1px 2px rgba(23, 43, 77, 0.05), 0 4px 14px rgba(20, 43, 67, 0.05);
   --ancho-lateral: 236px;
   --alto-barra: 57px;
 
   color-scheme: light;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Tema oscuro diseñado aparte: superficies violeta profundo, no una simple inversión.
+/* Tema oscuro diseñado aparte (no es la paleta clara invertida).
    Lo activa data-tema="oscuro" (ConmutadorTema: preferencia del usuario o tema del sistema). */
 :root[data-tema='oscuro'] {
-  --fondo: #121120;
-  --superficie: #1b1930;
-  --superficie-2: #211f39;
-  --texto: #ebe9f7;
-  --suave: #a6a4c0;
-  --borde: #322f50;
-  --primario: #a99af7;
-  --primario-hover: #c0b4fa;
-  --primario-texto: #16122a;
-  --acento-suave: #2b2650;
-  --acento-borde: #433b7a;
-  --ok: #6ee7a0;
-  --ok-fondo: #12301f;
+  --fondo: #0b1420;
+  --superficie: #13202f;
+  --superficie-2: #182838;
+  --texto: #e7edf5;
+  --suave: #93a4b8;
+  --borde: #26384a;
+  --petroleo: #0b1420;
+  --petroleo-texto: #dbe6f2;
+  --primario: #5b9bf9;
+  --primario-hover: #7eb0fa;
+  --primario-texto: #0b1420;
+  --acento: #2dd4bf;
+  --acento-suave: #142b43;
+  --acento-borde: #24415e;
+  --ok: #2dd4bf;
+  --ok-fondo: #0f2b27;
   --aviso: #f5c451;
   --aviso-fondo: #33290f;
   --error: #ff8f86;
   --error-fondo: #3a1a18;
   --info: #8fb4f7;
   --info-fondo: #172a4a;
-  --neutro-fondo: #262340;
-  --fav-fondo: #14301f;
+  --neutro-fondo: #1a2735;
+  --fav-fondo: #0f2b24;
   --des-fondo: #3b1c20;
   --tinte-mes: transparent;
-  --tinte-ytd: rgba(169, 154, 247, 0.07);
-  --tinte-anual: rgba(235, 233, 247, 0.05);
+  --tinte-ytd: rgba(91, 155, 249, 0.07);
+  --tinte-anual: rgba(231, 237, 245, 0.05);
   --realce: #6b5a12;
-  --fila-par: rgba(235, 233, 247, 0.03);
-  --fila-hover: rgba(169, 154, 247, 0.16);
+  --fila-par: rgba(231, 237, 245, 0.03);
+  --fila-hover: rgba(91, 155, 249, 0.14);
   --sombra: none;
   color-scheme: dark;
 }

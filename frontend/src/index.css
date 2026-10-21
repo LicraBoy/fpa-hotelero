@@ -1,4 +1,5 @@
 /* Estilos de la aplicación. El orden de los imports es el de la cascada: no lo cambies sin revisar. */
+@import './estilos/tailwind.css';
 @import './estilos/tokens.css';
 @import './estilos/layout.css';
 @import './estilos/componentes.css';

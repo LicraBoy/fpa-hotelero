@@ -1,13 +1,7 @@
 /* Variance: tabla jerárquica, panel de la línea, cabecera, filtros y avisos */
 
-/* ================= Variance v2: tipografía Inter, tabla jerárquica y panel de la línea ================= */
-:root {
-  font-family: 'Inter Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
-  font-size: 15px;
-  font-optical-sizing: auto;
-  -webkit-font-smoothing: antialiased;
-}
-
+/* ================= Variance v2: tabla jerárquica y panel de la línea =================
+   La tipografía (Inter Variable) vive ahora en tokens.css: es global, no solo de Variance. */
 body {
   letter-spacing: -0.006em;
 }
