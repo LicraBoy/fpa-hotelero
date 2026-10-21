@@ -160,6 +160,8 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 **Por confirmar:** año fiscal (julio–junio o calendario) y horizonte.
 
+**Librerías de pronóstico y análisis:** ver `docs/adr/0007-librerias-de-datos-y-ciencia-de-datos.md` (también aplica a las Fases 9 y 12); se elige con una validación con datos reales.
+
 ---
 
 ## Fase 9 — Drivers y escenarios `[PENDIENTE]` (L)
