@@ -32,6 +32,7 @@ const TRAZOS: Record<NombreIcono, string[]> = {
   comentario: ['M4 5h16v11H9l-5 4z', 'M8 9h8', 'M8 12h5'],
   usuario: ['M12 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8z', 'M4 21a8 8 0 0 1 16 0'],
   info: ['M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z', 'M12 11v6', 'M12 7.5h.01'],
+  check: ['M5 12l5 5 9-10'],
 }
 
 export function Icono({ nombre, tamano = 18 }: { nombre: NombreIcono; tamano?: number }) {

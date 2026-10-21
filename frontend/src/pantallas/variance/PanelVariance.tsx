@@ -267,7 +267,7 @@ function ReporteVariance({
           tieneAccesoLimitado(rol) ? undefined : (
           <button
             type="button"
-            className="boton"
+            className="boton boton-secundario"
             disabled={exportando || periodo === ''}
             onClick={() => void exportar()}
           >
@@ -476,6 +476,9 @@ function ReporteVariance({
               </summary>
           {sinBudgetEnElMes(datos.lineas) && (
             <p className="mensaje mensaje-aviso" role="status">
+              <span className="aviso-icono aviso-icono-info" aria-hidden="true">
+                <Icono nombre="info" tamano={14} />
+              </span>
               <strong>No hay Budget para {periodo}.</strong> Por eso Presupuesto, Variación y % var.
               salen en «—» (el Actual sí se calcula).{' '}
               {alIrABudget ? (
@@ -524,31 +527,33 @@ function ReporteVariance({
                 <button type="button" className="boton-herramienta" onClick={() => window.print()}>
                   <Icono nombre="imprimir" tamano={16} /> Imprimir
                 </button>
+                <LeyendaVariance />
               </div>
               <div className="herramientas-tabla">
-              <div className="barra-lectura">
-                <p className="suave cuenta-lineas" role="status">
-                  {busqueda !== '' && (
-                    <>
-                      <strong>
-                        {encontradas} {encontradas === 1 ? 'línea encontrada' : 'líneas encontradas'}
-                      </strong>{' '}
-                      para «{busqueda}»
-                      {grupos.length > 0 && ` en ${grupos.length} ${grupos.length === 1 ? 'sección' : 'secciones'}`}.{' '}
-                    </>
-                  )}
-                  {ocultas > 0 && (
-                    <>
-                      Hay {ocultas} {ocultas === 1 ? 'línea oculta' : 'líneas ocultas'} por no tener
-                      cifras.{' '}
-                      <button type="button" className="enlace" onClick={() => setOcultarVacias(false)}>
-                        Mostrarlas
-                      </button>
-                    </>
-                  )}
-                </p>
-              </div>
-              <LeyendaVariance />
+                <div className="barra-lectura">
+                  <p className="suave cuenta-lineas" role="status">
+                    {busqueda !== '' && (
+                      <>
+                        <strong>
+                          {encontradas} {encontradas === 1 ? 'línea encontrada' : 'líneas encontradas'}
+                        </strong>{' '}
+                        para «{busqueda}»
+                        {grupos.length > 0 &&
+                          ` en ${grupos.length} ${grupos.length === 1 ? 'sección' : 'secciones'}`}
+                        .{' '}
+                      </>
+                    )}
+                    {ocultas > 0 && (
+                      <>
+                        Hay {ocultas} {ocultas === 1 ? 'línea oculta' : 'líneas ocultas'} por no tener
+                        cifras.{' '}
+                        <button type="button" className="enlace" onClick={() => setOcultarVacias(false)}>
+                          Mostrarlas
+                        </button>
+                      </>
+                    )}
+                  </p>
+                </div>
               </div>
               {grupos.length === 0 ? (
                 <p className="suave">Todas las líneas están sin cifras: desmarca «Ocultar líneas sin cifras».</p>

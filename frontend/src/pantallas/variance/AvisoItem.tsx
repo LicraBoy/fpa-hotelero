@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Icono } from '../../componentes/Iconos'
 
 const LIMITE = 170
 
@@ -8,6 +9,9 @@ export function AvisoItem({ texto }: { texto: string }) {
   const largo = texto.length > LIMITE
   return (
     <>
+      <span className="aviso-icono" aria-hidden="true">
+        <Icono nombre="alerta" tamano={14} />
+      </span>
       <span className={largo && !abierto ? 'aviso-texto aviso-recortado' : 'aviso-texto'}>{texto}</span>
       {largo && (
         <button

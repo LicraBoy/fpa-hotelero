@@ -27,3 +27,4 @@ export type NombreIcono =
   | 'calendario'
   | 'usuario'
   | 'comentario'
+  | 'check'

@@ -539,27 +539,21 @@
 }
 
 /* Índice de secciones y leyenda en una sola franja */
+/* El aviso de líneas ocultas va en su propia línea, debajo del toolbar+leyenda */
 .herramientas-tabla {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--e2) var(--e5);
-  margin: var(--e3) 0 var(--e2);
+  margin: var(--e1) 0 var(--e2);
 }
 
 .herramientas-tabla .barra-lectura {
-  flex: 1 1 24rem;
-  margin: 0;
-}
-
-.herramientas-tabla .leyenda-variance {
-  flex: 0 1 auto;
   margin: 0;
 }
 
 .leyenda-bloque {
   display: none;
+}
+
+.barra-herramientas .leyenda-variance {
+  margin: 0 0 0 auto;
 }
 
 .notas-reporte {
@@ -745,11 +739,12 @@
   font-weight: 600;
 }
 
-/* --- Barra de herramientas --- */
+/* --- Barra de herramientas: botones a la izquierda, leyenda a la derecha, una sola fila --- */
 .barra-herramientas {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--e2);
+  align-items: center;
+  gap: var(--e2) var(--e4);
   margin: var(--e3) 0 var(--e1);
 }
 
@@ -1421,26 +1416,37 @@
 /* ================= Era 3: cabecera, barra de filtros, tarjetas y avisos (nivel software) ================= */
 
 /* --- Contexto del reporte en chips --- */
+/* Texto plano bajo el título, sin pastillas: un dato tras otro separados por "·" */
 .meta-reporte {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--e2);
-  margin: var(--e2) 0 0;
+  gap: 4px;
+  margin: 6px 0 0;
   padding: 0;
   list-style: none;
+  color: var(--suave);
+  font-size: 0.86rem;
+}
+
+.meta-reporte li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-reporte li:not(:last-child)::after {
+  content: '·';
+  margin-left: 8px;
+  color: var(--borde-fuerte);
 }
 
 .meta-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  border: 1px solid var(--borde);
-  border-radius: 999px;
-  background: var(--superficie);
+  gap: 4px;
   color: var(--suave);
-  font-size: 0.78rem;
+  font-size: inherit;
 }
 
 .meta-chip strong {
@@ -1449,21 +1455,19 @@
 }
 
 .meta-chip .icono {
-  color: var(--primario);
+  color: var(--suave);
 }
 
 /* --- Barra de filtros: una sola pieza, con campos etiquetados --- */
+/* Una sola fila, sin tarjeta: solo una línea fina abajo para separarla del resto */
 .barra-filtros {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: var(--e3) var(--e4);
-  margin: var(--e4) 0 var(--e3);
-  padding: var(--e3) var(--e4);
-  border: 1px solid var(--borde);
-  border-radius: var(--radio-grande);
-  background: var(--superficie);
-  box-shadow: var(--sombra);
+  margin: var(--e3) 0;
+  padding: 0 0 var(--e3);
+  border-bottom: 1px solid var(--borde);
 }
 
 .filtro-campo {
@@ -1592,16 +1596,13 @@
   outline: none;
 }
 
-/* interruptores */
+/* interruptores: discretos, a la derecha de la misma fila de filtros */
 .filtro-interruptores {
   display: flex;
-  flex: 1 0 100%;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--e2) var(--e5);
-  margin-top: var(--e1);
-  padding-top: var(--e3);
-  border-top: 1px solid var(--borde);
+  gap: var(--e2) var(--e4);
+  margin-left: auto;
 }
 
 .interruptor {
@@ -1633,8 +1634,8 @@
 .interruptor-pista {
   position: relative;
   flex: none;
-  width: 34px;
-  height: 20px;
+  width: 28px;
+  height: 16px;
   border-radius: 999px;
   background: var(--borde-fuerte);
   transition: background 0.15s;
@@ -1643,13 +1644,12 @@
 .interruptor-pista::after {
   content: '';
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 14px;
-  height: 14px;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   transition: transform 0.15s;
 }
 
@@ -1658,7 +1658,7 @@
 }
 
 .interruptor input:checked + .interruptor-pista::after {
-  transform: translateX(14px);
+  transform: translateX(12px);
 }
 
 .interruptor input:focus-visible + .interruptor-pista {
@@ -1794,8 +1794,7 @@
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 2px var(--e3);
-  padding: 10px var(--e4) 10px 2.4rem;
-  position: relative;
+  padding: 10px var(--e4);
   border-bottom: 1px solid var(--borde);
 }
 
@@ -1803,21 +1802,23 @@
   border-bottom: none;
 }
 
-.avisos ul.mensaje > li::before {
-  content: '!';
-  position: absolute;
-  left: var(--e4);
-  top: 11px;
+/* Ícono real (no un "!" de texto): mismo badge en la lista y en el aviso de Budget faltante */
+.aviso-icono {
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
-  width: 17px;
-  height: 17px;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
   border-radius: 50%;
   background: var(--aviso-fondo);
   color: var(--aviso);
-  font-size: 0.7rem;
-  font-weight: 800;
+}
+
+.aviso-icono-info {
+  background: var(--info-fondo);
+  color: var(--info);
 }
 
 .aviso-texto {
@@ -1840,5 +1841,8 @@
 }
 
 .avisos > p.mensaje {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e3);
   padding: 10px var(--e4);
 }
