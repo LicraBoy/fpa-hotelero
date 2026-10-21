@@ -5,7 +5,7 @@ interface Tramo {
 }
 
 /** Barra horizontal apilada de conteos (no de dinero), con su leyenda. SVG con atributos: sin `style=`. */
-export function BarraApilada({ tramos }: { tramos: Tramo[] }) {
+export function BarraApilada({ tramos, sinLeyenda }: { tramos: Tramo[]; sinLeyenda?: boolean }) {
   const total = tramos.reduce((n, t) => n + t.cantidad, 0)
   if (total === 0) return null
   // Posición de cada tramo = suma de los anteriores (sin reasignar variables durante el render)
@@ -26,13 +26,15 @@ export function BarraApilada({ tramos }: { tramos: Tramo[] }) {
           ) : null,
         )}
       </svg>
-      <ul className="barra-leyenda">
-        {tramos.map((t) => (
-          <li key={t.etiqueta}>
-            <span className={`punto punto-${t.tono}`} aria-hidden="true" /> {t.cantidad} {t.etiqueta}
-          </li>
-        ))}
-      </ul>
+      {!sinLeyenda && (
+        <ul className="barra-leyenda">
+          {tramos.map((t) => (
+            <li key={t.etiqueta}>
+              <span className={`punto punto-${t.tono}`} aria-hidden="true" /> {t.cantidad} {t.etiqueta}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

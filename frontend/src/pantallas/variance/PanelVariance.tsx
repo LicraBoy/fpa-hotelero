@@ -8,6 +8,7 @@ import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import { TarjetaKpi } from '../../componentes/TarjetaKpi'
 import { puede, tieneAccesoLimitado } from '../../permisos'
 import { formatoContable } from '../../util/formato'
+import { etiquetaMesLargo } from '../../util/periodos'
 import { resumirVariance } from '../../util/resumenVariance'
 import { useRuta } from '../../ruta/useRuta'
 import {
@@ -240,27 +241,22 @@ function ReporteVariance({
         titulo="Variance"
         subtitulo={
           datos ? (
-            <ul className="meta-reporte" aria-label="Contexto del reporte">
-              <li className="meta-chip">
-                <Icono nombre="calendario" tamano={14} /> Año fiscal <strong>{datos.ano_fiscal}</strong>
-              </li>
-              <li className="meta-chip">
-                Acumulado: <strong>{datos.periodos_ytd.join(', ')}</strong>
-              </li>
-              <li className="meta-chip">
-                Mapeo <strong>v{datos.version_mapeo_id}</strong>
-              </li>
+            <p className="meta-reporte" aria-label="Contexto del reporte">
+              Ejercicio <strong>{datos.ano_fiscal}</strong> · Periodo{' '}
+              <strong>{etiquetaMesLargo(periodo)}</strong> · Mapeo <strong>v{datos.version_mapeo_id}</strong>
               {datos.version_plan_id !== null && (
-                <li className="meta-chip">
-                  Budget <strong>v{datos.version_plan_id}</strong>
-                </li>
+                <>
+                  {' '}
+                  · Budget <strong>v{datos.version_plan_id}</strong>
+                </>
               )}
               {datos.periodos_sin_datos.length > 0 && (
-                <li>
+                <>
+                  {' '}
                   <Insignia tono="aviso">Acumulado incompleto</Insignia>
-                </li>
+                </>
               )}
-            </ul>
+            </p>
           ) : undefined
         }
         acciones={
@@ -410,19 +406,19 @@ function ReporteVariance({
       {datos && (
         <>
           {resumen && resumen.conVariacion > 0 && (
-            <section className="kpis" aria-label="Resumen del mes">
+            <section className="kpis kpis-compactas" aria-label="Resumen del mes">
               <TarjetaKpi
                 titulo="Líneas con variación desfavorable"
-                icono="tendenciaAbajo"
                 valor={
                   <>
                     {resumen.desfavorables} <span className="kpi-de">de {resumen.conVariacion}</span>
                   </>
                 }
-                detalle={`${resumen.favorables} favorables · en el mes ${periodo}`}
+                detalle={`${resumen.favorables} favorables`}
                 tono={resumen.desfavorables > 0 ? 'desfavorable' : 'neutro'}
                 extra={
                   <BarraApilada
+                    sinLeyenda
                     tramos={[
                       { etiqueta: 'favorables', cantidad: resumen.favorables, tono: 'favorable' },
                       { etiqueta: 'desfavorables', cantidad: resumen.desfavorables, tono: 'desfavorable' },
@@ -433,47 +429,31 @@ function ReporteVariance({
               />
               <TarjetaKpi
                 titulo="Mayor desviación desfavorable"
-                icono="alerta"
                 valor={resumen.mayorDesfavorable ? formatoContable(resumen.mayorDesfavorable.variacion) : '—'}
                 detalle={resumen.mayorDesfavorable?.descripcion ?? 'Ninguna línea desfavorable'}
                 tono={resumen.mayorDesfavorable ? 'desfavorable' : 'neutro'}
               />
               <TarjetaKpi
                 titulo="Mayor desviación favorable"
-                icono="tendenciaArriba"
                 valor={resumen.mayorFavorable ? formatoContable(resumen.mayorFavorable.variacion) : '—'}
                 detalle={resumen.mayorFavorable?.descripcion ?? 'Ninguna línea favorable'}
                 tono={resumen.mayorFavorable ? 'favorable' : 'neutro'}
               />
               <TarjetaKpi
                 titulo="Cobertura de presupuesto"
-                icono="objetivo"
                 valor={
                   <>
                     {resumen.conPresupuesto} <span className="kpi-de">de {resumen.detalleTotal}</span>
                   </>
                 }
-                detalle="líneas con presupuesto este mes"
-                extra={
-                  <BarraApilada
-                    tramos={[
-                      { etiqueta: 'con presupuesto', cantidad: resumen.conPresupuesto, tono: 'favorable' },
-                      {
-                        etiqueta: 'sin presupuesto',
-                        cantidad: resumen.detalleTotal - resumen.conPresupuesto,
-                        tono: 'neutro',
-                      },
-                    ]}
-                  />
+                detalle={
+                  resumen.detalleTotal > 0
+                    ? `${Math.round((resumen.conPresupuesto / resumen.detalleTotal) * 100)}% de las líneas`
+                    : 'líneas con presupuesto este mes'
                 }
               />
             </section>
           )}
-          {(sinBudgetEnElMes(datos.lineas) || datos.advertencias.length > 0) && (
-            <details className="avisos" open>
-              <summary>
-                Avisos ({datos.advertencias.length + (sinBudgetEnElMes(datos.lineas) ? 1 : 0)})
-              </summary>
           {sinBudgetEnElMes(datos.lineas) && (
             <p className="mensaje mensaje-aviso" role="status">
               <span className="aviso-icono aviso-icono-info" aria-hidden="true">
@@ -491,14 +471,20 @@ function ReporteVariance({
             </p>
           )}
           {datos.advertencias.length > 0 && (
-            <ul className="mensaje mensaje-aviso advertencias" role="status" aria-label="Advertencias">
-              {datos.advertencias.map((a) => (
-                <li key={a}>
-                  <AvisoItem texto={a} />
-                </li>
-              ))}
-            </ul>
-          )}
+            <details className="avisos">
+              <summary>
+                <span className="aviso-bandeja-titulo">Incidencias del reporte</span>
+                <span className="suave aviso-bandeja-conteo">
+                  {datos.advertencias.length} {datos.advertencias.length === 1 ? 'aviso' : 'avisos'}
+                </span>
+              </summary>
+              <ul className="mensaje mensaje-aviso advertencias" role="status" aria-label="Advertencias">
+                {datos.advertencias.map((a) => (
+                  <li key={a}>
+                    <AvisoItem texto={a} />
+                  </li>
+                ))}
+              </ul>
             </details>
           )}
           {datos.lineas.length === 0 ? (

@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react'
 import { ErrorApi, enviarJson, obtenerTipado } from '../../api/cliente'
 import type { components } from '../../api/schema'
 import { useDatos } from '../../api/useDatos'
-import { Icono } from '../../componentes/Iconos'
 import { Insignia, MensajeError } from '../../componentes/Insignia'
 
 type Cierre = components['schemas']['CierreSalida']
@@ -21,32 +20,17 @@ const TONO = {
   aprobado: 'ok',
   bloqueado: 'ok',
 } as const
-// Orden fijo del flujo. El stepper es solo visual (aria-hidden): no repite las palabras de ETIQUETA
-// como texto, porque la Insignia de abajo ya es la fuente accesible del estado y los e2e la leen
-// con getByText() sin .first() en algún punto — duplicar el texto rompería esa aserción.
-const ORDEN_ESTADOS = ['borrador', 'comentado', 'revisado', 'aprobado', 'bloqueado'] as const
-
-function PasosCierre({ estado }: { estado: string }) {
-  const indice = ORDEN_ESTADOS.indexOf(estado as (typeof ORDEN_ESTADOS)[number])
-  if (indice < 0) return null
-  return (
-    <ol className="cierre-pasos" aria-hidden="true">
-      {ORDEN_ESTADOS.map((e, i) => (
-        <li
-          key={e}
-          className={
-            i < indice ? 'cierre-paso cierre-paso-hecho' : i === indice ? 'cierre-paso cierre-paso-actual' : 'cierre-paso'
-          }
-        >
-          <span className="cierre-paso-circulo">{i < indice ? <Icono nombre="check" tamano={12} /> : i + 1}</span>
-        </li>
-      ))}
-    </ol>
-  )
-}
 
 function fecha(iso: string): string {
   return new Date(iso).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+/** Fecha del último registro del historial (el más reciente, sin asumir su orden). */
+function ultimaActualizacion(historial: Cierre['historial']): string | null {
+  if (historial.length === 0) return null
+  let masReciente = historial[0].creado_en
+  for (const h of historial) if (h.creado_en > masReciente) masReciente = h.creado_en
+  return fecha(masReciente)
 }
 
 interface Props {
@@ -93,14 +77,15 @@ export function CierrePeriodo({ hotelId, periodo, alCambiar }: Props) {
   if (cierre.error) return <MensajeError texto={cierre.error} />
   if (!c) return null
   const cerrado = c.estado === 'aprobado' || c.estado === 'bloqueado'
+  const actualizado = ultimaActualizacion(c.historial)
   return (
     <section className="cierre-periodo" aria-label="Cierre del periodo">
-      <PasosCierre estado={c.estado} />
       <div className="cierre-estado">
         <strong>Cierre</strong>
         <Insignia tono={TONO[c.estado as keyof typeof TONO] ?? 'neutro'}>
           {ETIQUETA[c.estado] ?? c.estado}
         </Insignia>
+        <span className="suave">Última actualización: {actualizado ?? '—'}</span>
         {c.comentarios_pendientes > 0 && !cerrado && (
           <span className="suave">{c.comentarios_pendientes} comentarios pendientes</span>
         )}
@@ -156,7 +141,10 @@ export function CierrePeriodo({ hotelId, periodo, alCambiar }: Props) {
 
       {c.historial.length > 0 && (
         <details>
-          <summary>Historial del cierre ({c.historial.length})</summary>
+          <summary>
+            Historial del cierre · {c.historial.length}{' '}
+            {c.historial.length === 1 ? 'registro' : 'registros'} ↗
+          </summary>
           <ul className="historial-cierre">
             {c.historial.map((h, i) => (
               <li key={i}>

@@ -84,8 +84,8 @@ test('los filtros acotan las líneas: sección, texto y solo totales', async ({ 
 test('la pantalla explica la convención de signo y el Budget del corte', async ({ page }) => {
   await abrirVariance(page)
   await expect(page.getByText('Variación favorable = positiva')).toBeVisible()
-  await expect(page.getByText(/Año fiscal 2026\/27/)).toBeVisible()
-  await expect(page.getByText(/Acumulado: 2026-07, 2026-08/)).toBeVisible()
+  await expect(page.getByText(/Ejercicio 2026\/27/)).toBeVisible()
+  await expect(page.getByText(/Periodo agosto 2026/)).toBeVisible()
 })
 
 test('el encabezado y la columna de la línea quedan fijos al desplazarse', async ({ page }) => {

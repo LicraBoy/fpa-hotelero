@@ -1417,45 +1417,20 @@
 
 /* --- Contexto del reporte en chips --- */
 /* Texto plano bajo el título, sin pastillas: un dato tras otro separados por "·" */
+/* Una sola línea bajo el título: "Ejercicio X · Periodo Y · Mapeo vN · Budget vN" */
 .meta-reporte {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
   margin: 6px 0 0;
-  padding: 0;
-  list-style: none;
   color: var(--suave);
   font-size: 0.86rem;
 }
 
-.meta-reporte li {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.meta-reporte li:not(:last-child)::after {
-  content: '·';
-  margin-left: 8px;
-  color: var(--borde-fuerte);
-}
-
-.meta-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--suave);
-  font-size: inherit;
-}
-
-.meta-chip strong {
+.meta-reporte strong {
   color: var(--texto);
   font-weight: 600;
 }
 
-.meta-chip .icono {
-  color: var(--suave);
+.meta-reporte .insignia {
+  margin-left: 6px;
 }
 
 /* --- Barra de filtros: una sola pieza, con campos etiquetados --- */
@@ -1780,6 +1755,43 @@
   font-size: 0.82rem;
 }
 
+/* Variante compacta (Variance): bloques separados por un divisor fino, sin tarjeta
+   individual (sin fondo, sombra, barra de color ni icono por bloque). */
+.kpis-compactas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.kpis-compactas .kpi {
+  flex: 1 1 11rem;
+  padding: 0 var(--e4) 0 0;
+  margin-right: var(--e4);
+  border: none;
+  border-right: 1px solid var(--borde);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.kpis-compactas .kpi:last-child {
+  border-right: none;
+  padding-right: 0;
+  margin-right: 0;
+}
+
+.kpis-compactas .kpi::before {
+  content: none;
+}
+
+.kpis-compactas .kpi-cabecera {
+  display: block;
+}
+
+.kpis-compactas .barra-apilada svg {
+  margin-top: 6px;
+}
+
 /* --- Avisos: tira compacta, sin bloques amarillos gigantes --- */
 .avisos {
   margin: var(--e3) 0;
@@ -1792,6 +1804,14 @@
   padding: 10px var(--e4);
   color: var(--texto);
   background: var(--superficie-2);
+}
+
+.aviso-bandeja-titulo {
+  font-weight: 650;
+}
+
+.aviso-bandeja-conteo {
+  margin-left: auto;
 }
 
 .avisos > summary::after {

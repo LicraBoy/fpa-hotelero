@@ -88,63 +88,6 @@
   gap: var(--e3);
 }
 
-/* Paso a paso decorativo (aria-hidden): el estado real lo dice la Insignia de abajo */
-.cierre-pasos {
-  display: flex;
-  align-items: center;
-  margin: 0 0 var(--e2);
-  padding: 0;
-  list-style: none;
-}
-
-.cierre-paso {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.cierre-paso:last-child {
-  flex: none;
-}
-
-.cierre-paso:not(:last-child)::after {
-  content: '';
-  flex: 1;
-  height: 2px;
-  margin: 0 6px;
-  background: var(--borde-fuerte);
-}
-
-.cierre-paso-circulo {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: 2px solid var(--borde-fuerte);
-  border-radius: 50%;
-  background: var(--superficie);
-  color: var(--suave);
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-
-.cierre-paso-hecho .cierre-paso-circulo {
-  border-color: var(--primario);
-  background: var(--primario);
-  color: var(--primario-texto);
-}
-
-.cierre-paso-hecho:not(:last-child)::after {
-  background: var(--primario);
-}
-
-.cierre-paso-actual .cierre-paso-circulo {
-  border-color: var(--primario);
-  color: var(--primario);
-}
-
 .cierre-nota {
   max-width: 560px;
 }

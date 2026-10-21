@@ -116,6 +116,8 @@ test('las cifras en pantalla coinciden con las del Excel de Contraloría', async
     .getByRole('button', { name: 'Variance' })
     .click()
   await expect(page.getByRole('region', { name: 'Tabla de Variance' })).toBeVisible()
+  // Las incidencias del reporte empiezan colapsadas (bandeja compacta)
+  await page.locator('.avisos > summary').click()
   await expect(page.getByText(/mapeo \(versión \d+\) deja fuera a propósito 3 cuentas/)).toBeVisible()
 
   const diferencias: string[] = []
