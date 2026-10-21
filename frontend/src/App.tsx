@@ -3,7 +3,7 @@ import type { UsuarioSesion } from './api/auth'
 import { fijarUsuarioDev, obtenerTipado } from './api/cliente'
 import { useDatos } from './api/useDatos'
 import { BarraSuperior } from './componentes/BarraSuperior'
-import { Icono, Logo, type NombreIcono } from './componentes/Iconos'
+import { Icono, Logo } from './componentes/Iconos'
 import { Cargando, MensajeError } from './componentes/Insignia'
 import { PanelAuditoria } from './componentes/PanelAuditoria'
 import { PanelCargas } from './componentes/PanelCargas'
@@ -13,13 +13,13 @@ import { PanelUsuarios } from './pantallas/usuarios/PanelUsuarios'
 import { PanelCuenta } from './pantallas/cuenta/PanelCuenta'
 import { PanelBudget } from './pantallas/budget/PanelBudget'
 import { PanelVariance } from './pantallas/variance/PanelVariance'
-import { RutaProtegida } from './ruta/RutaProtegida'
+import { MenuUsuario } from './componentes/MenuUsuario'
+import { GRUPOS, PANTALLAS, pantallaDe, puedeAbrir, rutaDe, type IdPantalla } from './ruta/navegacion'
+import { RutaProtegida, SinAcceso } from './ruta/RutaProtegida'
 import { permisoDeRuta } from './ruta/ruta'
 import { useRuta } from './ruta/useRuta'
 import { NOMBRE_ROL, USUARIOS_DESARROLLO, puede } from './permisos'
 import { guardarLateralPlegado, guardarUsuarioDev, leerLateralPlegado, leerUsuarioDev } from './util/preferencias'
-
-type Pestana = 'cargas' | 'catalogo' | 'saldos' | 'variance' | 'budget' | 'auditoria' | 'usuarios' | 'cuenta'
 
 /** Sesión real (inicio de sesión con contraseña); sin ella se usa el selector de desarrollo. */
 export interface SesionApp {
@@ -49,7 +49,6 @@ export default function App({
   // Quién está activo: la persona con sesión o el usuario de prueba elegido a mano
   const usuario = sesion ? `sesion-${sesion.usuario.usuario_id}` : usuarioDev
   const [hotelId, setHotelId] = useState<number | null>(null)
-  const [pestana, setPestana] = useState<Pestana>('cargas')
   const [version, setVersion] = useState(0)
   // Barra lateral plegada (solo iconos): deja todo el ancho a las tablas anchas
   const [lateralPlegado, setLateralPlegado] = useState(leerLateralPlegado)
@@ -64,42 +63,19 @@ export default function App({
     : (hoteles.datos?.find((h) => h.id === hotelId) ?? hoteles.datos?.[0])
   const rol = hotel?.rol
 
-  // La barra lateral agrupa las secciones; el orden de los grupos y de sus ítems es el de lectura.
-  const grupos: { titulo: string; items: { id: Pestana; nombre: string; icono: NombreIcono; visible: boolean }[] }[] = [
-    {
-      titulo: 'Reportes',
-      items: [
-        { id: 'variance', nombre: 'Variance', icono: 'informe', visible: puede(rol, 'variance:leer') },
-        { id: 'budget', nombre: 'Budget', icono: 'presupuesto', visible: puede(rol, 'budget:importar') },
-      ],
-    },
-    {
-      titulo: 'Datos',
-      items: [
-        { id: 'cargas', nombre: 'Cargas', icono: 'subir', visible: puede(rol, 'carga:leer') || puede(rol, 'carga:crear') },
-        { id: 'catalogo', nombre: 'Catálogo', icono: 'catalogo', visible: puede(rol, 'catalogo:leer') },
-        { id: 'saldos', nombre: 'Saldos', icono: 'saldos', visible: puede(rol, 'saldos:leer') },
-      ],
-    },
-    {
-      titulo: 'Control',
-      items: [
-        { id: 'auditoria', nombre: 'Auditoría', icono: 'auditoria', visible: puede(rol, 'auditoria:leer') },
-        { id: 'usuarios', nombre: 'Usuarios', icono: 'usuario', visible: puede(rol, 'usuarios:administrar') },
-        { id: 'cuenta', nombre: 'Mi cuenta', icono: 'usuario', visible: sesion !== undefined },
-      ],
-    },
-  ]
-  const visibles = grupos.flatMap((g) => g.items).filter((p) => p.visible)
-  // Una ruta de Variance (#/variance/...) manda: abre esa pestaña aunque el rol no la tenga
-  // visible; `RutaProtegida` decide si se muestra o responde "Sin acceso" (sin consultar nada).
+  // Qué pantalla pide la ruta (la barra de direcciones manda: se puede enlazar y sobrevive a recargar).
+  // Sin ruta válida se abre la primera a la que el rol tiene acceso.
   const { ruta } = useRuta()
-  const enRutaVariance = ['variance', 'desglose', 'cuenta', 'asiento'].includes(ruta.tipo)
-  const activa = enRutaVariance
-    ? 'variance'
-    : visibles.some((p) => p.id === pestana)
-      ? pestana
-      : visibles[0]?.id
+  const conSesion = sesion !== undefined
+  const abribles = PANTALLAS.filter((p) => puedeAbrir(p, rol, conSesion))
+  const pedida: IdPantalla | null =
+    ruta.tipo === 'pantalla'
+      ? ruta.id
+      : ['variance', 'desglose', 'cuenta', 'asiento'].includes(ruta.tipo)
+        ? 'variance'
+        : null
+  const activa: IdPantalla | undefined = pedida ?? abribles[0]?.id
+  const permitida = activa !== undefined && abribles.some((p) => p.id === activa)
 
   function cambiarUsuario(email: string) {
     fijarUsuarioDev(email) // antes de que los paneles vuelvan a consultar
@@ -108,12 +84,11 @@ export default function App({
     setHotelId(null)
   }
 
-  const nombreActiva = visibles.find((p) => p.id === activa)?.nombre
-  const grupoActivo = grupos.find((g) => g.items.some((p) => p.id === activa))?.titulo
+  const actual = activa ? pantallaDe(activa) : undefined
   const detalle: Record<string, string> = { desglose: 'Desglose', cuenta: 'Movimientos', asiento: 'Asiento' }
   const ubicacion = [
-    ...(grupoActivo ? [grupoActivo] : []),
-    ...(nombreActiva ? [nombreActiva] : []),
+    ...(actual?.grupo ? [actual.grupo] : []),
+    ...(actual ? [actual.nombre] : []),
     ...(activa === 'variance' && detalle[ruta.tipo] ? [detalle[ruta.tipo]] : []),
   ]
   const nombreUsuario = sesion
@@ -133,13 +108,13 @@ export default function App({
 
         {hotel && activa && (
           <nav className="navegacion" aria-label="Secciones">
-            {grupos.map((g) => {
-              const items = g.items.filter((p) => p.visible)
+            {GRUPOS.map((grupo) => {
+              const items = abribles.filter((p) => p.grupo === grupo)
               if (items.length === 0) return null
               return (
-                <div key={g.titulo} className="nav-grupo" role="group" aria-label={g.titulo}>
+                <div key={grupo} className="nav-grupo" role="group" aria-label={grupo}>
                   <p className="nav-titulo" aria-hidden="true">
-                    {g.titulo}
+                    {grupo}
                   </p>
                   {items.map((p) => (
                     <button
@@ -148,8 +123,7 @@ export default function App({
                       className={p.id === activa ? 'pestana activa' : 'pestana'}
                       aria-current={p.id === activa ? 'page' : undefined}
                       onClick={() => {
-                        setPestana(p.id)
-                        window.location.hash = p.id === 'variance' ? '#/variance' : ''
+                        window.location.hash = rutaDe(p.id)
                       }}
                     >
                       <Icono nombre={p.icono} />
@@ -164,13 +138,14 @@ export default function App({
 
         {sesion ? (
           <div className="lateral-pie">
-            <p className="lateral-usuario">
-              {sesion.usuario.nombre}
-              <span className="suave">{sesion.usuario.email}</span>
-            </p>
-            <button type="button" className="boton boton-secundario" onClick={sesion.cerrar}>
-              Cerrar sesión
-            </button>
+            <MenuUsuario
+              nombre={sesion.usuario.nombre}
+              correo={sesion.usuario.email}
+              alAbrirCuenta={() => {
+                window.location.hash = rutaDe('cuenta')
+              }}
+              alCerrarSesion={sesion.cerrar}
+            />
           </div>
         ) : (
           <div className="lateral-pie">
@@ -234,7 +209,8 @@ export default function App({
             <p className="mensaje mensaje-aviso">Este usuario no tiene hoteles asignados.</p>
           )}
 
-          {hotel && activa && (
+          {hotel && activa && !permitida && activa !== 'variance' && <SinAcceso />}
+          {hotel && activa && (permitida || activa === 'variance') && (
             <div key={`${usuario}-${hotel.id}`}>
               {activa === 'cargas' && (
                 <PanelCargas
@@ -267,8 +243,7 @@ export default function App({
                     alIrABudget={
                       puede(rol, 'budget:importar')
                         ? () => {
-                            setPestana('budget')
-                            window.location.hash = ''
+                            window.location.hash = rutaDe('budget')
                           }
                         : undefined
                     }

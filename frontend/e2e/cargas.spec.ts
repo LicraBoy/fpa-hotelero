@@ -21,7 +21,7 @@ const pestana = (page: Page, nombre: string) =>
   page.getByRole('navigation', { name: 'Secciones' }).getByRole('button', { name: nombre })
 
 test('la app abre, se conecta a la API y el contralor ve todas las secciones', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await expect(page.getByRole('heading', { name: 'Plataforma FP&A Hotelera', level: 1 })).toBeVisible()
   await expect(page.getByText('API conectada')).toBeVisible()
   for (const nombre of ['Cargas', 'Catálogo', 'Saldos', 'Auditoría']) {
@@ -31,7 +31,7 @@ test('la app abre, se conecta a la API y el contralor ve todas las secciones', a
 })
 
 test('archivos que no son un Excel se rechazan con un mensaje claro', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await elegirUsuario(page, 'Analista')
   await subir(page, 'falso.xlsx')
   await expect(page.getByRole('alert')).toContainText('no es un libro de Excel')
@@ -41,7 +41,7 @@ test('archivos que no son un Excel se rechazan con un mensaje claro', async ({ p
 })
 
 test('subir un CON130 crea la carga y muestra su reporte de calidad', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await elegirUsuario(page, 'Analista')
   await subir(page, 'con130_agosto.xlsx')
   const resultado = page.getByRole('status').filter({ hasText: 'Carga creada' })
@@ -53,7 +53,7 @@ test('subir un CON130 crea la carga y muestra su reporte de calidad', async ({ p
 })
 
 test('el CON130 también se sube como .xls (el de Novohit) y como .csv', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await elegirUsuario(page, 'Analista')
   // El mismo contenido que el .xlsx ya cargado, en otro formato: se reconoce y no cambia nada
   for (const nombre of ['con130_novohit.xls', 'con130_novohit.csv']) {
@@ -67,7 +67,7 @@ test('el CON130 también se sube como .xls (el de Novohit) y como .csv', async (
 })
 
 test('subir el mismo archivo otra vez no cambia nada', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await elegirUsuario(page, 'Analista')
   await subir(page, 'con130_agosto.xlsx')
   await expect(page.getByRole('status')).toContainText('ya estaba cargado')
@@ -76,7 +76,7 @@ test('subir el mismo archivo otra vez no cambia nada', async ({ page }) => {
 })
 
 test('otro archivo del mismo mes pide confirmación y al confirmar reemplaza', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await elegirUsuario(page, 'Analista')
   await subir(page, 'con130_agosto_corregido.xlsx')
   await expect(page.getByRole('status')).toContainText('Ya hay datos cargados para estos meses')
@@ -95,7 +95,7 @@ test('otro archivo del mismo mes pide confirmación y al confirmar reemplaza', a
 })
 
 test('se puede ver la calidad de una carga', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await elegirUsuario(page, 'Analista')
   const cargas = page.getByRole('region', { name: 'Cargas' })
   await cargas.getByRole('row', { name: /vigente/ }).getByRole('button', { name: 'Ver calidad' }).click()
@@ -104,7 +104,7 @@ test('se puede ver la calidad de una carga', async ({ page }) => {
 })
 
 test('el catálogo muestra las cuentas y se puede buscar', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await elegirUsuario(page, 'Analista')
   await pestana(page, 'Catálogo').click()
   await expect(page.getByText('4001002.001')).toBeVisible()
@@ -117,7 +117,7 @@ test('el catálogo muestra las cuentas y se puede buscar', async ({ page }) => {
 test('importar el catálogo oficial da nombres, tipo y departamento a las cuentas', async ({
   page,
 }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await elegirUsuario(page, 'Analista')
   await pestana(page, 'Catálogo').click()
   const importar = page.getByRole('region', { name: 'Importar catálogo oficial' })
@@ -149,7 +149,7 @@ test('importar el catálogo oficial da nombres, tipo y departamento a las cuenta
 })
 
 test('los saldos del mes suman exacto, con el reemplazo aplicado', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await elegirUsuario(page, 'Analista')
   await pestana(page, 'Saldos').click()
   await expect(page.getByLabel('Mes')).toHaveValue('2026-08')
@@ -163,7 +163,7 @@ test('los saldos del mes suman exacto, con el reemplazo aplicado', async ({ page
 })
 
 test('la bitácora registra lo ocurrido y solo la ve contralor o auditoría', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
   await pestana(page, 'Auditoría').click() // usuario predeterminado: contralor
   const bitacora = page.getByRole('region', { name: 'Bitácora de auditoría' })
   for (const accion of [
@@ -179,7 +179,7 @@ test('la bitácora registra lo ocurrido y solo la ve contralor o auditoría', as
 })
 
 test('cada rol ve solo lo que le corresponde', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/cargas')
 
   await elegirUsuario(page, 'Responsable de área')
   await expect(pestana(page, 'Catálogo')).toBeVisible()

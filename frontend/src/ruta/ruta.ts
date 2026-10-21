@@ -3,12 +3,15 @@
 // usarse (viene de la barra de direcciones: es entrada del usuario).
 
 import type { Permiso } from '../permisos'
+import { esIdPantalla, type IdPantalla } from './navegacion.ts'
 
 export type Bloque = 'mes' | 'ytd'
 
 export type Ruta =
   | { tipo: 'sin-ruta' }
   | { tipo: 'invalida' }
+  // Pantallas sin recorrido propio (cargas, budget, catálogo, saldos, auditoría, usuarios, cuenta)
+  | { tipo: 'pantalla'; id: Exclude<IdPantalla, 'variance'> }
   | { tipo: 'variance'; periodo: string | null }
   | { tipo: 'desglose'; periodo: string; lineaId: number; bloque: Bloque }
   // `lineaId` (opcional): la línea del reporte desde la que se llegó, para las migas y «Volver»
@@ -32,7 +35,11 @@ export function parsearRuta(hash: string): Ruta {
   const [camino, consultaTexto = ''] = hash.slice(2).split('?', 2)
   const partes = camino.split('/')
   const consulta = new URLSearchParams(consultaTexto)
-  if (partes[0] !== 'variance') return { tipo: 'invalida' }
+  if (partes[0] !== 'variance') {
+    return partes.length === 1 && esIdPantalla(partes[0]) && partes[0] !== 'variance'
+      ? { tipo: 'pantalla', id: partes[0] }
+      : { tipo: 'invalida' }
+  }
   if (partes.length === 1) return { tipo: 'variance', periodo: null }
   const periodo = partes[1]
   if (!PERIODO.test(periodo)) return { tipo: 'invalida' }
@@ -73,6 +80,8 @@ export function construirRuta(ruta: Ruta): string {
     case 'sin-ruta':
     case 'invalida':
       return '#/'
+    case 'pantalla':
+      return `#/${ruta.id}`
     case 'variance':
       return ruta.periodo ? `#/variance/${ruta.periodo}` : '#/variance'
     case 'desglose':

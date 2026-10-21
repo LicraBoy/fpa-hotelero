@@ -32,7 +32,8 @@ test('entrar, ver Mi cuenta y cerrar sesión', async ({ page }) => {
   const guardado = await page.evaluate(() => JSON.stringify({ ...sessionStorage, ...localStorage }))
   expect(guardado).not.toContain(CLAVE)
 
-  await nav.getByRole('button', { name: 'Mi cuenta' }).click()
+  await page.getByRole('button', { name: 'Menú de usuario' }).click()
+  await page.getByRole('button', { name: 'Mi cuenta' }).click()
   await expect(page.getByRole('heading', { name: 'Mi cuenta' })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Verificación en dos pasos/ })).toBeVisible()
 
@@ -43,6 +44,7 @@ test('entrar, ver Mi cuenta y cerrar sesión', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Secciones' })).toBeVisible()
   await expect(page.getByLabel('Usuario (correo)')).toHaveCount(0)
 
+  await page.getByRole('button', { name: 'Menú de usuario' }).click()
   await page.getByRole('button', { name: 'Cerrar sesión' }).click()
   await expect(page.getByLabel('Usuario (correo)')).toBeVisible()
   await page.reload()

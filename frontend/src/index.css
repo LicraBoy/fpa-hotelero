@@ -3330,3 +3330,79 @@ input:focus-visible,
   font-size: 0.8rem;
   overflow-wrap: anywhere;
 }
+
+/* Menú de usuario (pie de la barra lateral) */
+.menu-usuario {
+  position: relative;
+}
+
+.menu-usuario-boton {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  width: 100%;
+  padding: var(--e2) var(--e3);
+  font: inherit;
+  color: var(--texto);
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+.menu-usuario-boton:hover,
+.menu-usuario-boton[aria-expanded='true'] {
+  background: var(--acento-suave);
+}
+
+.menu-usuario-boton:focus-visible,
+.menu-usuario-opcion:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 1px;
+}
+
+.menu-usuario-datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.menu-usuario-lista {
+  position: absolute;
+  bottom: calc(100% + var(--e2));
+  left: 0;
+  right: 0;
+  display: grid;
+  padding: var(--e2);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  z-index: 20;
+}
+
+.menu-usuario-opcion {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e2) var(--e3);
+  font: inherit;
+  color: var(--texto);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+.menu-usuario-opcion:hover {
+  background: var(--acento-suave);
+}
+
+.app-plegado .menu-usuario-datos {
+  display: none;
+}

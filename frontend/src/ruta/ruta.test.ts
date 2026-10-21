@@ -75,3 +75,14 @@ test('cada pantalla pide su permiso', () => {
   assert.equal(permisoDeRuta({ tipo: 'asiento', periodo: '2026-08', asiento: '1' }), 'drilldown:leer')
   assert.equal(permisoDeRuta({ tipo: 'sin-ruta' }), null)
 })
+
+test('las demás pantallas tienen su ruta y solo acepta las de la lista', () => {
+  for (const id of ['cargas', 'budget', 'catalogo', 'saldos', 'auditoria', 'usuarios', 'cuenta'] as const) {
+    assert.deepEqual(parsearRuta(`#/${id}`), { tipo: 'pantalla', id })
+    assert.equal(construirRuta({ tipo: 'pantalla', id }), `#/${id}`)
+  }
+  assert.deepEqual(parsearRuta('#/variance'), { tipo: 'variance', periodo: null })
+  for (const mala of ['#/inventada', '#/cargas/1', '#/%2e%2e', '#/Cargas', '#/cargas/']) {
+    assert.deepEqual(parsearRuta(mala), { tipo: 'invalida' }, mala)
+  }
+})

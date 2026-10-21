@@ -15,12 +15,15 @@ export function RutaProtegida({
   permiso: Permiso
   children: ReactNode
 }) {
-  if (!puede(rol, permiso)) {
-    return (
-      <section className="mensaje mensaje-aviso" role="alert" aria-label="Sin acceso">
-        <strong>Sin acceso.</strong> Tu rol no tiene permiso para ver esta pantalla.
-      </section>
-    )
-  }
+  if (!puede(rol, permiso)) return <SinAcceso />
   return <>{children}</>
+}
+
+/** Aviso cuando el rol no puede abrir la pantalla; no se consulta nada al servidor. */
+export function SinAcceso() {
+  return (
+    <section className="mensaje mensaje-aviso" role="alert" aria-label="Sin acceso">
+      <strong>Sin acceso.</strong> Tu rol no tiene permiso para ver esta pantalla.
+    </section>
+  )
 }

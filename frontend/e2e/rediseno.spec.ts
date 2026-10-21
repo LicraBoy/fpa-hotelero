@@ -13,19 +13,19 @@ test('la barra lateral agrupa las secciones y solo muestra lo que el rol puede v
   await page.goto('/')
   await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Contralor' })
   const nav = page.getByRole('navigation', { name: 'Secciones' })
-  await expect(nav.getByRole('group', { name: 'Reportes' }).getByRole('button')).toHaveText(['Variance', 'Budget'])
+  await expect(nav.getByRole('group', { name: 'Finanzas' }).getByRole('button')).toHaveText(['Variance', 'Budget'])
   await expect(nav.getByRole('group', { name: 'Datos' }).getByRole('button')).toHaveText(['Cargas', 'Catálogo', 'Saldos'])
-  await expect(nav.getByRole('group', { name: 'Control' }).getByRole('button')).toHaveText(['Auditoría', 'Usuarios'])
+  await expect(nav.getByRole('group', { name: 'Administración' }).getByRole('button')).toHaveText(['Auditoría', 'Usuarios'])
   // el analista no ve Auditoría: su grupo desaparece completo
   await page.getByLabel('Usuario (desarrollo)').selectOption({ label: 'Analista' })
   await expect(pestana(page, 'Cargas')).toBeVisible()
-  await expect(nav.getByRole('group', { name: 'Control' })).toHaveCount(0)
+  await expect(nav.getByRole('group', { name: 'Administración' })).toHaveCount(0)
 })
 
 test('la barra superior muestra dónde estoy, el hotel, el usuario y el estado de la API', async ({ page }) => {
   await abrirVariance(page)
   const ubicacion = page.getByRole('navigation', { name: 'Ubicación' })
-  await expect(ubicacion).toContainText('Reportes')
+  await expect(ubicacion).toContainText('Finanzas')
   await expect(ubicacion).toContainText('Variance')
   await expect(page.getByLabel('Hotel')).toBeVisible()
   await expect(page.getByText('API conectada')).toBeVisible()

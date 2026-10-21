@@ -1,33 +1,9 @@
 // Iconos de línea propios (SVG en el código): sin dependencias y compatibles con la CSP estricta.
 // Son decorativos (`aria-hidden`): el texto que los acompaña es lo que lee un lector de pantalla.
 
-export type NombreIcono =
-  | 'informe'
-  | 'presupuesto'
-  | 'subir'
-  | 'catalogo'
-  | 'saldos'
-  | 'auditoria'
-  | 'buscar'
-  | 'exportar'
-  | 'sol'
-  | 'luna'
-  | 'chevron'
-  | 'alerta'
-  | 'hotel'
-  | 'menu'
-  | 'expandir'
-  | 'plegar'
-  | 'densidad'
-  | 'imprimir'
-  | 'cerrar'
-  | 'info'
-  | 'tendenciaAbajo'
-  | 'tendenciaArriba'
-  | 'objetivo'
-  | 'calendario'
-  | 'usuario'
-  | 'comentario'
+import type { NombreIcono } from './nombreIcono.ts'
+
+export type { NombreIcono }
 
 const TRAZOS: Record<NombreIcono, string[]> = {
   informe: ['M5 3h10l4 4v14H5z', 'M15 3v4h4', 'M8 17v-4', 'M12 17v-7', 'M16 17v-2'],
