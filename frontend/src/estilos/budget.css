@@ -1,5 +1,10 @@
 /* Budget */
 
+.meta-version {
+  margin: 4px 0 0;
+  font-size: 0.86rem;
+}
+
 /* Budget en pantalla */
 .tabla-budget .num:nth-child(5n + 2) {
   border-left: none;
@@ -90,7 +95,7 @@
   border: 1px solid var(--borde);
   border-radius: var(--radio-grande);
   background: var(--superficie);
-  box-shadow: 0 -6px 18px rgba(31, 29, 51, 0.08);
+  box-shadow: 0 -6px 18px rgba(23, 43, 77, 0.08);
 }
 
 :root[data-tema='oscuro'] .acciones-fijas {

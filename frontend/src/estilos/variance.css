@@ -1484,6 +1484,7 @@
 }
 
 .barra-filtros select,
+.barra-filtros input[type='text'],
 .campo-busqueda {
   height: 2.3rem;
   border: 1px solid var(--borde);
@@ -1493,6 +1494,21 @@
   font: inherit;
   font-size: 0.88rem;
   font-weight: 500;
+}
+
+.barra-filtros input[type='text'] {
+  padding: 0 var(--e3);
+  width: 7rem;
+}
+
+.barra-filtros input[type='text']:hover {
+  border-color: var(--acento-borde);
+}
+
+.barra-filtros input[type='text']:focus-visible {
+  border-color: var(--primario);
+  box-shadow: 0 0 0 3px var(--acento-suave);
+  outline: none;
 }
 
 .barra-filtros select {

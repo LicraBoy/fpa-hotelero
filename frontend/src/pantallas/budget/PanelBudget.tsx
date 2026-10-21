@@ -9,6 +9,7 @@ import {
 import { useDatos } from '../../api/useDatos'
 import type { LineaEdicionBudget, RespuestaBudget, VistaEdicionBudget } from '../../api/tipos'
 import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
+import { Icono } from '../../componentes/Iconos'
 import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
 import {
   agruparPorSeccionId,
@@ -360,15 +361,12 @@ function VistaEditor(p: PropsVista) {
         titulo={`Budget ${p.anoFiscal}`}
         subtitulo={
           datos.version ? (
-            <Insignia tono="info">Versión {datos.version.numero} · {datos.version.nombre_archivo}</Insignia>
+            <p className="suave meta-version">
+              Versión {datos.version.numero} · {datos.version.nombre_archivo}
+            </p>
           ) : (
             <Insignia tono="aviso">Todavía no hay Budget para este año</Insignia>
           )
-        }
-        acciones={
-          <Insignia tono={totalCambios === 0 ? 'neutro' : 'aviso'}>
-            {totalCambios === 0 ? 'Sin cambios' : `${plural(totalCambios, 'cambio', 'cambios')} sin guardar`}
-          </Insignia>
         }
       />
       <details className="notas-reporte" open={!datos.version}>
@@ -388,20 +386,20 @@ function VistaEditor(p: PropsVista) {
 
       <ImportarExcel hotelId={p.hotelId} alImportar={p.recargar} hayCambios={totalCambios > 0} />
 
-      <div className="filtros">
-        <label className="chip-filtro">
-          Año fiscal
-          <select value={p.anoFiscal} onChange={(e) => p.alElegirAno(e.target.value)}>
+      <form className="barra-filtros" role="search" onSubmit={(e) => e.preventDefault()}>
+        <div className="filtro-campo">
+          <span className="filtro-etiqueta">Año fiscal</span>
+          <select aria-label="Año fiscal" value={p.anoFiscal} onChange={(e) => p.alElegirAno(e.target.value)}>
             {p.anos.map((a) => (
               <option key={a} value={a}>
                 {a}
               </option>
             ))}
           </select>
-        </label>
-        <label className="chip-filtro">
-          Sección
-          <select value={seccionActiva} onChange={(e) => p.setSeccion(e.target.value)}>
+        </div>
+        <div className="filtro-campo">
+          <span className="filtro-etiqueta">Sección</span>
+          <select aria-label="Sección" value={seccionActiva} onChange={(e) => p.setSeccion(e.target.value)}>
             <option value={TODAS}>Todas (más lento)</option>
             {secciones.map((s) => (
               <option key={s.id} value={String(s.id)}>
@@ -409,40 +407,55 @@ function VistaEditor(p: PropsVista) {
               </option>
             ))}
           </select>
+        </div>
+        <label className="filtro-campo filtro-busqueda">
+          <span className="filtro-etiqueta">Buscar línea</span>
+          <span className="campo-busqueda">
+            <Icono nombre="buscar" tamano={16} />
+            <input
+              type="search"
+              aria-label="Buscar línea"
+              value={p.texto}
+              onChange={(e) => p.setTexto(e.target.value)}
+            />
+          </span>
         </label>
-        <label className="chip-filtro">
-          Buscar línea
-          <input type="search" value={p.texto} onChange={(e) => p.setTexto(e.target.value)} />
-        </label>
-        <label className="casilla chip-casilla">
-          <input
-            type="checkbox"
-            checked={p.soloEditables}
-            onChange={(e) => p.setSoloEditables(e.target.checked)}
-          />
-          Solo líneas editables
-        </label>
-      </div>
+        <div className="filtro-interruptores">
+          <label className="interruptor">
+            <input
+              type="checkbox"
+              checked={p.soloEditables}
+              onChange={(e) => p.setSoloEditables(e.target.checked)}
+            />
+            <span className="interruptor-pista" aria-hidden="true" />
+            Solo líneas editables
+          </label>
+        </div>
+      </form>
 
-      <div className="filtros herramienta-copiar" role="group" aria-label="Copiar el Actual">
-        <label className="chip-filtro">
-          Ajuste sobre el Actual (%)
+      <div className="barra-filtros herramienta-copiar" role="group" aria-label="Copiar el Actual">
+        <div className="filtro-campo">
+          <span className="filtro-etiqueta">Ajuste sobre el Actual (%)</span>
           <input
             type="text"
             inputMode="decimal"
+            aria-label="Ajuste sobre el Actual (%)"
             placeholder="0"
             value={p.porcentaje}
             onChange={(e) => p.setPorcentaje(e.target.value)}
           />
-        </label>
-        <label className="casilla chip-casilla">
-          <input
-            type="checkbox"
-            checked={p.soloVacios}
-            onChange={(e) => p.setSoloVacios(e.target.checked)}
-          />
-          Solo meses sin Budget
-        </label>
+        </div>
+        <div className="filtro-interruptores">
+          <label className="interruptor">
+            <input
+              type="checkbox"
+              checked={p.soloVacios}
+              onChange={(e) => p.setSoloVacios(e.target.checked)}
+            />
+            <span className="interruptor-pista" aria-hidden="true" />
+            Solo meses sin Budget
+          </label>
+        </div>
         <button type="button" className="boton boton-secundario" onClick={copiarActual}>
           Copiar el Actual a las líneas que se ven
         </button>
