@@ -1,0 +1,726 @@
+/* Variance: base, filtros, resumen y recorrido de desglose */
+
+/* ---------- Variance ---------- */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2) var(--e4);
+  align-items: end;
+  position: sticky;
+  top: var(--alto-barra);
+  z-index: 6;
+  margin: var(--e3) 0;
+  padding: var(--e2) var(--e3);
+  background: var(--neutro-fondo);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.filtros label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--suave);
+}
+
+.filtros select,
+.filtros input[type='search'] {
+  padding: 5px 8px;
+  font-size: 0.9rem;
+}
+
+.filtros .casilla {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--texto);
+}
+
+.resumen-variance {
+  margin: 0.5rem 0;
+}
+
+.advertencias {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.avisos {
+  margin: var(--e2) 0;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.avisos > summary {
+  cursor: pointer;
+  padding: var(--e2) var(--e3);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--aviso);
+}
+
+.avisos > summary:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 1px;
+}
+
+.avisos .mensaje {
+  margin: 0 var(--e2) var(--e2);
+  font-size: 0.88rem;
+}
+
+.nota-pie {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.tabla-variance-contenedor {
+  position: relative; /* contiene el texto solo-lectores: sin esto desborda la página */
+  overflow: auto;
+  max-height: max(360px, calc(100vh - 250px));
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.tabla-variance {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-variance th,
+.tabla-variance td {
+  padding: 0.26rem 0.38rem;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+  white-space: nowrap;
+}
+
+.tabla-variance thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--neutro-fondo);
+  border-bottom: 1px solid var(--borde);
+  color: var(--suave);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: right;
+}
+
+.tabla-variance thead tr:nth-child(1) th {
+  height: 2rem;
+}
+
+.tabla-variance thead tr:nth-child(2) th {
+  top: 2rem;
+}
+
+.tabla-variance thead .grupo-bloque {
+  text-align: center;
+  border-left: 1px solid var(--borde);
+  color: var(--primario);
+  background: var(--acento-suave);
+  font-size: 0.8rem;
+  letter-spacing: 0;
+}
+
+.tabla-variance .col-linea {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 14rem;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  font-weight: normal;
+  border-right: 1px solid var(--borde);
+}
+
+.tabla-variance thead .col-linea {
+  z-index: 4;
+}
+
+.tabla-variance .num {
+  text-align: right;
+}
+
+.tabla-variance .inicio-bloque {
+  border-left: 1px solid var(--borde);
+}
+
+/* Cada bloque (Mes, Acumulado, Anual) tiene su tinte: se sigue con la vista de arriba abajo */
+.tabla-variance .bloque-mes {
+  background-image: linear-gradient(var(--tinte-mes), var(--tinte-mes));
+}
+
+.tabla-variance .bloque-ytd {
+  background-image: linear-gradient(var(--tinte-ytd), var(--tinte-ytd));
+}
+
+.tabla-variance .bloque-anual {
+  background-image: linear-gradient(var(--tinte-anual), var(--tinte-anual));
+}
+
+/* Filas alternadas y la fila bajo el cursor (o con el foco dentro) se distinguen a simple vista */
+.tabla-variance tbody tr:nth-child(even):not(.fila-seccion):not(.fila-total):not(.fila-subtotal) th,
+.tabla-variance tbody tr:nth-child(even):not(.fila-seccion):not(.fila-total):not(.fila-subtotal) td {
+  background-color: color-mix(in srgb, var(--superficie) 97%, var(--texto));
+}
+
+.tabla-variance tbody tr:not(.fila-seccion):hover th,
+.tabla-variance tbody tr:not(.fila-seccion):hover td,
+.tabla-variance tbody tr:not(.fila-seccion):focus-within th,
+.tabla-variance tbody tr:not(.fila-seccion):focus-within td {
+  background-color: color-mix(in srgb, var(--superficie) 88%, var(--primario));
+}
+
+.tabla-variance .coincidencia {
+  background: var(--realce);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 0.1em;
+}
+
+.tabla-variance .cuenta-seccion {
+  font-weight: normal;
+  font-size: 0.8rem;
+}
+
+/* Leyenda, índice de secciones y conteo, arriba de la tabla */
+.leyenda-variance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0;
+  font-size: 0.82rem;
+}
+
+.leyenda-bloque {
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+}
+
+.leyenda-bloque.bloque-mes {
+  background: color-mix(in srgb, var(--superficie), var(--tinte-mes) 100%);
+}
+
+.leyenda-bloque.bloque-ytd {
+  background: color-mix(in srgb, var(--superficie), var(--tinte-ytd) 100%);
+}
+
+.leyenda-bloque.bloque-anual {
+  background: color-mix(in srgb, var(--superficie), var(--tinte-anual) 100%);
+}
+
+.barra-lectura {
+  margin-bottom: 0.4rem;
+}
+
+.indice-secciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.82rem;
+}
+
+.chip {
+  font: inherit;
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--info);
+  cursor: pointer;
+}
+
+.chip:hover,
+.chip:focus-visible {
+  background: var(--info-fondo);
+  outline: 2px solid var(--primario);
+  outline-offset: 1px;
+}
+
+.cuenta-lineas {
+  margin: 0.2rem 0;
+  font-size: 0.85rem;
+}
+
+.enlace {
+  all: unset;
+  cursor: pointer;
+  color: var(--primario);
+  text-decoration: underline;
+}
+
+.enlace:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
+}
+
+.tabla-variance .desfavorable {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.tabla-variance .fila-seccion th {
+  background: var(--acento-suave);
+  font-weight: 600;
+}
+
+.tabla-variance .boton-seccion {
+  all: unset;
+  cursor: pointer;
+  color: var(--primario);
+}
+
+.tabla-variance .boton-seccion:focus-visible,
+.tabla-variance-contenedor:focus-visible,
+.tabla-variance a:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
+}
+
+.tabla-variance .fila-total th,
+.tabla-variance .fila-total td,
+.tabla-variance .fila-subtotal th,
+.tabla-variance .fila-subtotal td {
+  font-weight: 700;
+  background: var(--neutro-fondo);
+}
+
+/* subtotal: línea fina; total: línea doble, para distinguir los dos niveles a simple vista */
+.tabla-variance .fila-subtotal td,
+.tabla-variance .fila-subtotal th {
+  border-top: 1px solid var(--suave);
+}
+
+.tabla-variance .fila-total td,
+.tabla-variance .fila-total th {
+  border-top: 3px double var(--texto);
+}
+
+/* el detalle entra con sangría bajo su sección */
+.tabla-variance .fila-detalle th.col-linea,
+.tabla-variance .fila-informativa th.col-linea {
+  padding-left: 1.3rem;
+}
+
+.tabla-variance .fila-informativa th,
+.tabla-variance .fila-informativa td {
+  font-style: italic;
+  color: var(--suave);
+}
+
+.tabla-variance .codigo {
+  font-size: 0.75rem;
+}
+
+.tabla-variance a {
+  color: var(--primario);
+  text-decoration: underline dotted;
+}
+
+/* ---------- Drill-down ---------- */
+.migas ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.migas li + li::before {
+  content: '›';
+  margin-right: 0.4rem;
+  color: var(--suave);
+}
+
+.migas a {
+  color: var(--primario);
+}
+
+.boton-volver {
+  display: inline-block;
+  margin-bottom: 0.6rem;
+  padding: 6px 14px;
+  border: 1px solid var(--primario);
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.por-que-cero {
+  margin: 0.75rem 0;
+  padding: 0.6rem 0.9rem;
+  border-left: 4px solid var(--aviso, #b7791f);
+  background: rgba(183, 121, 31, 0.1);
+}
+
+.por-que-cero ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.fila-origen td,
+.fila-origen th {
+  outline: 2px solid var(--primario);
+  outline-offset: -2px;
+}
+
+.migas-bloque {
+  margin: 0.2rem 0 0.6rem;
+  font-size: 0.8rem;
+}
+
+.cuadre {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  align-items: center;
+  margin: 0.75rem 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--neutro-fondo);
+  border-radius: 6px;
+}
+
+
+/* ---------- Variance: filtros como chips, resumen del mes y tabla ---------- */
+.filtros {
+  position: static;
+  gap: var(--e2) var(--e2);
+  padding: 0;
+  background: none;
+  border: none;
+  margin: var(--e3) 0;
+}
+
+.filtros .chip-filtro,
+.filtros .chip-casilla {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--e2);
+  padding: 4px var(--e3);
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--suave);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.filtros .chip-filtro select,
+.filtros .chip-filtro input[type='search'] {
+  border: none;
+  background: transparent;
+  padding: 3px 2px;
+  color: var(--texto);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.filtros .chip-filtro input[type='search'] {
+  min-width: 13rem;
+  font-weight: 400;
+}
+
+.filtros .chip-filtro:focus-within {
+  border-color: var(--primario);
+  box-shadow: 0 0 0 3px var(--acento-suave);
+}
+
+.filtros .chip-casilla {
+  color: var(--texto);
+  font-weight: 500;
+}
+
+.filtros .chip-casilla:has(input:checked) {
+  background: var(--acento-suave);
+  border-color: var(--acento-borde);
+  color: var(--primario);
+}
+
+/* Resumen del mes: tarjetas compactas con un dato y su sentido */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--e3);
+  margin: var(--e3) 0;
+}
+
+.kpi {
+  padding: var(--e3) var(--e4);
+  border: 1px solid var(--borde);
+  border-left-width: 4px;
+  border-radius: var(--radio-grande);
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+}
+
+.kpi p {
+  margin: 0;
+}
+
+.kpi-desfavorable {
+  border-left-color: var(--error);
+}
+
+.kpi-favorable {
+  border-left-color: var(--ok);
+}
+
+.kpi-neutro {
+  border-left-color: var(--acento-borde);
+}
+
+.kpi-titulo {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--suave);
+}
+
+.kpi-valor {
+  margin-top: 2px;
+  font-size: 1.45rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.kpi-desfavorable .kpi-valor {
+  color: var(--error);
+}
+
+.kpi-favorable .kpi-valor {
+  color: var(--ok);
+}
+
+.kpi-de {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--suave);
+}
+
+.kpi-detalle {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--suave);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Índice de secciones y leyenda en una sola franja */
+.herramientas-tabla {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e2) var(--e5);
+  margin: var(--e3) 0 var(--e2);
+}
+
+.herramientas-tabla .barra-lectura {
+  flex: 1 1 24rem;
+  margin: 0;
+}
+
+.herramientas-tabla .leyenda-variance {
+  flex: 0 1 auto;
+  margin: 0;
+}
+
+.leyenda-bloque {
+  display: none;
+}
+
+.notas-reporte {
+  margin-top: var(--e3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.notas-reporte > summary {
+  cursor: pointer;
+  padding: var(--e2) var(--e3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--suave);
+}
+
+.notas-reporte .nota-pie {
+  margin: 0;
+  padding: 0 var(--e3) var(--e3);
+}
+
+/* Tabla: grupos separados con más peso, tabla sobre superficie propia */
+:root {
+  --borde-fuerte: #cfc9e6;
+}
+
+:root[data-tema='oscuro'] {
+  --borde-fuerte: #4a4570;
+}
+
+.tabla-variance-contenedor {
+  max-height: max(420px, calc(100vh - var(--alto-barra) - var(--e3)));
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+}
+
+.tabla-variance thead .grupo-bloque,
+.tabla-variance .inicio-bloque {
+  border-left: 2px solid var(--borde-fuerte);
+}
+
+.tabla-variance thead .grupo-bloque {
+  font-size: 0.84rem;
+}
+
+.tabla-variance thead .col-linea {
+  font-size: 0.84rem;
+  color: var(--texto);
+}
+
+/* Variación: fondo suave + flecha según la regla ya definida (favorable = positiva) */
+.tabla-variance td.favorable,
+.tabla-variance td.desfavorable {
+  font-weight: 600;
+}
+
+.tabla-variance td.favorable {
+  color: var(--ok);
+  box-shadow: inset 0 0 0 100vmax var(--fav-fondo);
+}
+
+.tabla-variance td.desfavorable {
+  color: var(--error);
+  box-shadow: inset 0 0 0 100vmax var(--des-fondo);
+}
+
+.tabla-variance td.favorable::before {
+  content: '▲ ';
+  font-size: 0.7em;
+}
+
+.tabla-variance td.col-pct.desfavorable::before {
+  content: '▼ ';
+  font-size: 0.7em;
+}
+
+.tabla-variance .fila-seccion th {
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- Drill-down: contexto, cuadre y motivos del cero ---------- */
+.contexto-drill {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin: 0 0 var(--e3);
+  padding: 0;
+  list-style: none;
+}
+
+.chip-dato {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px var(--e3);
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  font-size: 0.8rem;
+}
+
+.chip-dato span {
+  color: var(--suave);
+}
+
+.chip-dato strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.cuadre {
+  gap: var(--e3) var(--e6);
+  padding: var(--e3) var(--e4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+}
+
+.cuadre > span {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.78rem;
+  color: var(--suave);
+}
+
+.cuadre > span strong {
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--texto);
+}
+
+/* un solo dato por bloque: la cifra va debajo de su etiqueta; con varios («Mostrados 3 de 3») van en línea */
+.cuadre > span:has(> strong:only-of-type) strong {
+  display: block;
+}
+
+.cuadre .insignia {
+  margin-left: auto;
+  padding: 3px 12px;
+  font-size: 0.82rem;
+}
+
+.por-que-cero {
+  display: block;
+  border: 1px solid var(--aviso);
+  border-left-width: 4px;
+  border-radius: var(--radio);
+  background: var(--aviso-fondo);
+  color: var(--aviso);
+}
+
+.por-que-cero strong {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+}
+
+.por-que-cero ul {
+  color: var(--texto);
+}
+

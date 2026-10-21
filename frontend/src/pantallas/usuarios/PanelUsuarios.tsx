@@ -316,9 +316,11 @@ export function PanelUsuarios({ hotelId, yoId }: { hotelId: number; yoId?: numbe
                         {u.totp_activo && <Insignia tono="info">2 pasos</Insignia>}
                       </td>
                       <td>
+                        <div className="acciones-fila">
                         <button
                           type="button"
                           className="boton boton-secundario"
+                          aria-label={`Editar ${u.nombre}`}
                           onClick={() => {
                             setClave(null)
                             setNuevo(null)
@@ -332,24 +334,27 @@ export function PanelUsuarios({ hotelId, yoId }: { hotelId: number; yoId?: numbe
                             })
                           }}
                         >
-                          Editar {u.nombre}
+                          Editar
                         </button>
                         <button
                           type="button"
                           className="boton boton-secundario"
+                          aria-label={`Restablecer contraseña de ${u.nombre}`}
                           onClick={() => restablecer(u)}
                         >
-                          Restablecer contraseña de {u.nombre}
+                          Restablecer contraseña
                         </button>
                         {u.bloqueado && (
                           <button
                             type="button"
                             className="boton boton-secundario"
+                            aria-label={`Desbloquear a ${u.nombre}`}
                             onClick={() => desbloquear(u)}
                           >
-                            Desbloquear a {u.nombre}
+                            Desbloquear
                           </button>
                         )}
+                        </div>
                       </td>
                     </tr>
                   ))}

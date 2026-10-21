@@ -8,6 +8,7 @@ import {
   type UsuarioSesion,
 } from '../../api/auth'
 import { ErrorApi } from '../../api/cliente'
+import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Insignia, MensajeError } from '../../componentes/Insignia'
 
 interface Props {
@@ -78,11 +79,12 @@ export function PanelCuenta({ usuario, alCambiar }: Props) {
   }
 
   return (
-    <div className="cuenta">
-      <h2>Mi cuenta</h2>
-      <p className="suave">
-        {usuario.nombre} · {usuario.email}
-      </p>
+    <section className="cuenta" aria-labelledby="titulo-cuenta">
+      <EncabezadoPagina
+        id="titulo-cuenta"
+        titulo="Mi cuenta"
+        subtitulo={`${usuario.nombre} · ${usuario.email}`}
+      />
       {usuario.debe_cambiar_password && (
         <p className="mensaje mensaje-aviso" role="status">
           Tu contraseña es temporal: cámbiala ahora.
@@ -192,6 +194,6 @@ export function PanelCuenta({ usuario, alCambiar }: Props) {
         )}
         {errorMfa && <MensajeError texto={errorMfa} />}
       </section>
-    </div>
+    </section>
   )
 }

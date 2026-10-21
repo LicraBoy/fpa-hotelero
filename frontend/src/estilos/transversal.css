@@ -1,0 +1,83 @@
+/* Foco visible e impresión (van al final para ganar en cascada) */
+
+/* Foco visible en todo lo interactivo (teclado) */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+select:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
+}
+
+/* Impresión: solo el reporte, en hoja horizontal y sin barras ni filtros */
+@media print {
+  @page {
+    size: landscape;
+    margin: 12mm;
+  }
+
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .app {
+    display: block;
+  }
+
+  .lateral,
+  .filtros,
+  .leyenda-variance,
+  .barra-lectura,
+  .avisos,
+  .encabezado-acciones,
+  .migas,
+  .boton,
+  .boton-volver {
+    display: none !important;
+  }
+
+  .contenido {
+    padding: 0;
+  }
+
+  .tabla-variance-contenedor,
+  .tabla-marco,
+  .tabla-alta {
+    max-height: none;
+    overflow: visible;
+    border: none;
+  }
+
+  .tabla-variance {
+    width: 100%;
+    font-size: 7.5pt;
+  }
+
+  .tabla-variance th,
+  .tabla-variance td {
+    position: static !important;
+    padding: 1pt 3pt;
+  }
+
+  .tabla-variance thead {
+    display: table-header-group;
+  }
+
+  .tabla-variance tr {
+    break-inside: avoid;
+  }
+
+  .tabla-variance .col-linea {
+    min-width: 0;
+    max-width: none;
+    white-space: normal;
+  }
+}
+
