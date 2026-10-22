@@ -46,8 +46,15 @@ hechos; se listan explícitamente para no perderlos de vista.
 1. **Calidad de datos, conciliación y trazabilidad de importaciones.** Cada carga (CON130, Budget,
    catálogo) necesita un identificador, un origen, una fecha, un resultado y un historial de
    errores — cuentas sin mapear, periodos inválidos, duplicados, importes rechazados, diferencias
-   de conciliación. *Ya hecho en parte:* `fpa/servicios/cargas.py` registra cada carga; la
-   validación del mapeo (2.4) ya detecta cuentas con movimiento sin vínculo.
+   de conciliación. *Ya hecho (verificado 22-oct-2026):* `CargaArchivo` (`fpa/modelos/cargas.py`)
+   ya trae id, origen (`fuente`, `nombre_archivo`, `sha256`), fecha y resultado; duplicados por
+   hash (mismo archivo → `DUPLICADA`, no hace nada) y vista previa antes de confirmar un reemplazo
+   (`REQUIERE_CONFIRMACION` con reporte de diferencias, `fpa/servicios/cargar_archivo.py` y
+   `budget.py`) — esto cubre "plantillas versionadas, vista previa, prevención de duplicados" del
+   punto 7 de abajo. La validación del mapeo (2.4) ya detecta cuentas con movimiento sin vínculo.
+   *Falta de verdad:* no hay un historial de errores persistido por carga (hoy, si la lectura trae
+   errores, se rechaza todo el archivo con un mensaje — no queda un registro para auditar después)
+   ni un concepto de "importe rechazado" fila por fila.
 
 2. **Versionado inmutable de presupuestos, forecasts, mapeos y escenarios publicados.** Regla
    general: lo aprobado no se sobrescribe, se versiona. Un cambio autorizado crea una versión
@@ -58,14 +65,22 @@ hechos; se listan explícitamente para no perderlos de vista.
 3. **Permisos por rol, departamento y hotel, con separación de funciones.** No basta
    administrador/usuario: quién consulta, quién captura, quién revisa y quién aprueba deben ser
    roles distintos, comprobados en el backend también al exportar (no solo al ver en pantalla).
-   *Ya hecho:* matriz de roles por hotel (5.2); falta el detalle por departamento que exige la
-   captura de Budget (Fase 7.2).
+   *Ya hecho:* matriz de roles por hotel (5.2); y **ya existe el detalle por departamento** que
+   parecía faltar — el rol `responsable_area` (`fpa/identidad/permisos.py`, `ROLES_POR_SECCION`)
+   ya restringe a un jefe de departamento a ver/editar solo las secciones que le asignaron. Hoy
+   aplica a Comentarios (5.2/5.3); cuando se construya la captura de Budget (7.2) es extender ese
+   mismo mecanismo, no inventar uno nuevo.
 
 4. **Calendario fiscal y gestión de periodos.** Un periodo pasa por abierto → revisado → cerrado;
    la reapertura de uno cerrado debe ser un proceso autorizado y explícito, nunca una corrección
-   silenciosa. Hoy no existe como concepto formal — lo necesitan Budget (7), Forecast (8) y
-   cualquier cierre que deba reabrirse. **Se agrega como trabajo explícito antes/durante la Fase
-   7**, no como fase aparte.
+   silenciosa. *Corrección (22-oct-2026, verificado en código):* esto ya existe, mejor de lo que se
+   dijo aquí antes. `CierrePeriodo` (`fpa/modelos/cierre.py`) ya tiene el estado por hotel y
+   periodo (Borrador → Comentado → Revisado → Aprobado → Bloqueado), y la transición
+   **Aprobado → Borrador está etiquetada "Reabrir"**, exige permiso (`CIERRE_APROBAR`) y una nota
+   obligatoria — es justo la reapertura controlada que pide este punto. Lo que **sí falta**: desde
+   **Bloqueado no hay ninguna transición de reapertura** (es terminal — si Contabilidad corrige un
+   mes ya bloqueado, hoy no hay camino definido), y no existe un concepto formal de "año fiscal" ni
+   de fecha límite. Esto se completa antes/durante la Fase 7, no como fase aparte.
 
 5. **Catálogo formal de métricas y reglas de cálculo/agregación.** Cada KPI tiene una sola
    definición: fórmula, unidad, fuente, periodicidad, responsable, regla de agregación y versión —
