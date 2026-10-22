@@ -33,6 +33,8 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 
 **Hito del MVP:** al cerrar la Fase 6, Contraloría cierra un mes real en la plataforma sin Excel paralelo. Las fases 7 en adelante son crecimiento.
 
+**Capacidad transversal condicional (no es una fase numerada):** `docs/Anexo_Futuro_Capa_Datos_Operativos_Hoteleros.md` — conectar en el futuro un PMS (Cloudbeds es solo el proveedor candidato de referencia, no una decisión) para alimentar con datos operativos (ocupación, ADR, RevPAR, reservas, cobros) las Fases 8, 9, 10, 11, 12 y 14, y como diseño detallado de la Fase 15.2. **No se prioriza sobre Budget (7) ni Rolling Forecast (8)**; su propia "Decisión propuesta" dice empezar, cuando esas dos estén estables, por un solo caso de uso: enriquecer el forecast de ingresos de habitaciones con datos operativos validados.
+
 ---
 
 ## Requisitos transversales de gobierno, control y confiabilidad financiera
@@ -308,6 +310,10 @@ sigue disponible para medir qué tan acertada fue.
 
 **Por confirmar:** año fiscal (julio–junio o calendario) y horizonte.
 
+**Dato operativo futuro (condicional):** si se conecta un PMS, el primer caso de uso propuesto es
+enriquecer este forecast con datos operativos validados (ocupación, reservas) — ver
+`docs/Anexo_Futuro_Capa_Datos_Operativos_Hoteleros.md`, no antes de que esta fase esté estable.
+
 **Librerías de pronóstico y análisis:** ver `docs/adr/0007-librerias-de-datos-y-ciencia-de-datos.md` (también aplica a las Fases 9 y 12); se elige con una validación con datos reales.
 
 ---
@@ -329,6 +335,11 @@ financiero de un escenario contra el oficial; y una forma explícita de volver a
 
 **Bloquea a las fases 14 y 15** porque trae las fuentes operativas.
 
+**Dato operativo futuro (condicional):** la sub-fase 9.3 es exactamente donde encajaría un PMS si
+se conecta algún día — arquitectura detallada en
+`docs/Anexo_Futuro_Capa_Datos_Operativos_Hoteleros.md` (adaptador independiente del proveedor,
+contrato canónico, validación antes de usarse en un driver oficial).
+
 ---
 
 ## Fase 10 — Cash Flow `[PENDIENTE]` (L)
@@ -346,6 +357,10 @@ entra o sale, no solo el monto contable — saldos iniciales, cobros, pagos a pr
 impuestos, inversiones, y escenarios de liquidez con esos mismos componentes.
 
 **Por confirmar:** quién gestiona Tesorería y si existe hoy una proyección de efectivo.
+
+**Dato operativo futuro (condicional):** cobros y depósitos de un PMS solo se usan aquí después de
+conciliarlos con banco/Contabilidad (nunca tratar un depósito como efectivo disponible sin
+revisar su naturaleza) — ver `docs/Anexo_Futuro_Capa_Datos_Operativos_Hoteleros.md` §7-8.
 
 ---
 
@@ -371,6 +386,11 @@ comparación homogénea de periodos entre hoteles.
 
 **Por confirmar:** si Puerto Vallarta usa el mismo Novohit y un catálogo parecido; qué significa la línea "PUERTO VALLARTA" en el reporte de Torres.
 
+**Dato operativo futuro (condicional):** si cada hotel usa un PMS distinto, homologar sus
+definiciones de ocupación/ADR antes de comparar — ver
+`docs/Anexo_Futuro_Capa_Datos_Operativos_Hoteleros.md` §2 (fila Fase 11) y su catálogo de
+indicadores (§7).
+
 ---
 
 ## Fase 12 — IA gobernada `[PENDIENTE]` (M)
@@ -389,6 +409,10 @@ cuando no hay información suficiente para responder (en vez de inventar), y dej
 consultas sensibles en la bitácora.
 
 **Condición:** solo después de tener datos y cálculos validados.
+
+**Dato operativo futuro (condicional):** si hay indicadores de un PMS, la IA solo los usa después
+de validar trazabilidad, permisos y calidad — ver
+`docs/Anexo_Futuro_Capa_Datos_Operativos_Hoteleros.md` §2 (fila Fase 12).
 
 ---
 
@@ -423,6 +447,10 @@ horizonte y los supuestos de ROI/NPV/IRR — validados con aritmética decimal (
 meses fiscales y cómo se reconcilian con los datos reales de Contabilidad; responsables y
 frecuencia de actualización por departamento.
 
+**Dato operativo futuro (condicional):** llegadas, salidas y ocupación prevista de un PMS, solo si
+mejoran de verdad la planeación diaria departamental — ver
+`docs/Anexo_Futuro_Capa_Datos_Operativos_Hoteleros.md` §2 (fila Fase 14).
+
 ---
 
 ## Fase 15 — Inteligencia hotelera `[PROPUESTA]` (L)
@@ -446,6 +474,11 @@ frecuencia de actualización por departamento.
 **Llave común de los datos:** habitación + fecha (opiniones, estancias y limpieza); producto + almacén (compras e inventario).
 
 **Por confirmar:** qué sistema guarda las opiniones, si Ama de Llaves registra quién limpia cada habitación, y dónde vive hoy cada fuente.
+
+**Diseño detallado de la 15.2:** `docs/Anexo_Futuro_Capa_Datos_Operativos_Hoteleros.md` es la
+especificación completa para esta sub-fase (contrato canónico de datos, catálogo de indicadores,
+6 etapas de implementación, 14 criterios de aceptación) — Cloudbeds ahí es solo el proveedor de
+referencia, no una decisión; sigue sin resolverse qué PMS usa Recepción hoy.
 
 ---
 
