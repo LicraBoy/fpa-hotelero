@@ -18,6 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO
 
+import clamd
+
 from fpa.config import settings
 
 FIRMA_ZIP = b"PK\x03\x04"
@@ -144,6 +146,7 @@ def inspeccionar_csv(ruta: Path) -> None:
         inicio = f.read(8192)
     if inicio.startswith((FIRMA_ZIP, FIRMA_OLE2)) or b"\x00" in inicio:
         raise ArchivoRechazado(415, "El contenido no es un archivo CSV de texto")
+    escanear_antivirus(ruta)
 
 
 def inspeccionar_xls(ruta: Path) -> None:
@@ -153,6 +156,7 @@ def inspeccionar_xls(ruta: Path) -> None:
         raise ArchivoRechazado(415, "El contenido no es un libro de Excel .xls")
     if _MARCA_MACROS in contenido:
         raise ArchivoRechazado(415, "Los libros con macros no se aceptan")
+    escanear_antivirus(ruta)
 
 
 _FIRMAS_EVIDENCIA = {
@@ -190,6 +194,31 @@ def inspeccionar_evidencia(ruta: Path, extension: str, limites: LimitesArchivo) 
         contenido = ruta.read_bytes()  # acotado por el tamaño máximo de la subida
         if any(marca in contenido for marca in _PDF_ACTIVO):
             raise ArchivoRechazado(415, "El PDF trae contenido activo (scripts o adjuntos)")
+    escanear_antivirus(ruta)
+
+
+def escanear_antivirus(ruta: Path) -> None:
+    """Escanea contra firmas de malware conocido vía `clamd` (ADR 0011).
+
+    Sin `clamd` disponible la subida se RECHAZA (no se degrada a "sin escanear"). Se apaga solo con
+    `FPA_CLAMAV_ACTIVO=false` (pruebas/desarrollo sin clamd instalado) — nunca por defecto en
+    producción.
+    """
+    if not settings.clamav_activo:
+        return
+    try:
+        cliente = clamd.ClamdNetworkSocket(
+            host=settings.clamav_host, port=settings.clamav_puerto, timeout=settings.clamav_timeout_s
+        )
+        ruta_str = os.fspath(ruta)
+        resultado = cliente.scan(ruta_str)
+    except (clamd.ConnectionError, OSError, clamd.ClamdError) as exc:
+        raise ArchivoRechazado(
+            503, "No se pudo comprobar el archivo contra virus; intenta de nuevo en un momento"
+        ) from exc
+    estado = (resultado or {}).get(ruta_str)
+    if estado and estado[0] == "FOUND":
+        raise ArchivoRechazado(415, f"El antivirus rechazó el archivo ({estado[1]})")
 
 
 def limpiar_temporales(carpeta: Path, edad_maxima_s: float = 3600.0) -> None:
@@ -257,3 +286,4 @@ def inspeccionar_xlsx(ruta: Path, limites: LimitesArchivo) -> None:
                 raise ArchivoRechazado(415, "El libro está dañado") from None
             if real != i.file_size:
                 raise ArchivoRechazado(400, "El libro declara un tamaño falso")
+    escanear_antivirus(ruta)

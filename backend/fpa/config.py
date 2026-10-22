@@ -41,6 +41,14 @@ class Settings(BaseSettings):
     zip_max_descomprimido: int = 200 * 1024 * 1024
     zip_max_razon: int = 100
 
+    # Antivirus para archivos subidos (ADR 0011). Sin `clamd` corriendo, las subidas se rechazan
+    # (no se degrada a "sin escanear"). `FPA_CLAMAV_ACTIVO=false` lo apaga explícitamente
+    # (p. ej. en pruebas/desarrollo sin clamd instalado) — nunca por defecto en producción.
+    clamav_activo: bool = True
+    clamav_host: str = "127.0.0.1"
+    clamav_puerto: int = 3310
+    clamav_timeout_s: float = 10.0
+
     # Caché en memoria de los reportes (un proceso). 0 = apagada. Ver servicios/cache_reportes.py
     cache_reportes_ttl_s: float = 300.0
     cache_reportes_max: int = 128

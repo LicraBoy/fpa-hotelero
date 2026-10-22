@@ -19,3 +19,8 @@ schemathesis==4.28.0  # solo pruebas de contrato de la API (desarrollo)
 xlwt==1.3.0  # solo para crear .xls sintéticos en pruebas
 argon2-cffi==25.1.0
 pyotp==2.10.0
+
+# Seguridad (Fase 6.1): auditoría de dependencias y análisis estático
+pip-audit==2.10.1
+bandit==1.9.4
+clamd==1.0.2  # cliente de ClamAV (ADR 0011); el daemon clamd se instala aparte en el servidor

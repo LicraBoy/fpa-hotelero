@@ -1,3 +1,9 @@
+import os
+
+# Sin `clamd` instalado en esta máquina (ADR 0011): se apaga solo para pruebas/desarrollo local.
+# Debe fijarse ANTES de importar fpa.config (el `Settings()` del módulo se construye una sola vez).
+os.environ.setdefault("FPA_CLAMAV_ACTIVO", "false")
+
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 
@@ -7,14 +13,14 @@ from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from fpa.db import get_db
-from fpa.identidad.dependencias import obtener_proveedor
-from fpa.identidad.proveedor import ProveedorDesarrollo
-from fpa.main import app
-from fpa.modelos import Asignacion, Base, Hotel, Organizacion, Usuario
-from fpa.semilla import sembrar_roles
-from fpa.servicios.reportes import cache_variance
-from fpa.servicios.versionado_mapeo import aprobar
+from fpa.db import get_db  # noqa: E402
+from fpa.identidad.dependencias import obtener_proveedor  # noqa: E402
+from fpa.identidad.proveedor import ProveedorDesarrollo  # noqa: E402
+from fpa.main import app  # noqa: E402
+from fpa.modelos import Asignacion, Base, Hotel, Organizacion, Usuario  # noqa: E402
+from fpa.semilla import sembrar_roles  # noqa: E402
+from fpa.servicios.reportes import cache_variance  # noqa: E402
+from fpa.servicios.versionado_mapeo import aprobar  # noqa: E402
 
 
 @pytest.fixture(autouse=True)

@@ -17,10 +17,20 @@ if not exist "%RAIZ%frontend\node_modules" (
   exit /b 1
 )
 
-REM Backend: aplica migraciones, siembra datos de desarrollo y arranca. FPA_ENTORNO=desarrollo
-REM habilita la identidad de desarrollo (cabecera X-Usuario-Dev); NUNCA usarlo fuera de local.
-start "FPA backend (8100)" cmd /k "cd /d %RAIZ%backend && set FPA_ENTORNO=desarrollo&& .venv\Scripts\alembic.exe upgrade head && .venv\Scripts\python.exe -m fpa.semilla && .venv\Scripts\python.exe -m uvicorn fpa.main:app --reload --port 8100"
-start "FPA frontend (5180)" cmd /k "cd /d %RAIZ%frontend && npm run dev"
+REM Migraciones + datos de desarrollo primero (una sola vez; el vigilante solo arranca uvicorn).
+REM FPA_ENTORNO=desarrollo habilita la identidad de desarrollo (cabecera X-Usuario-Dev); NUNCA
+REM usarlo fuera de local.
+set FPA_ENTORNO=desarrollo
+pushd "%RAIZ%backend"
+.venv\Scripts\alembic.exe upgrade head
+.venv\Scripts\python.exe -m fpa.semilla
+popd
+
+REM Cada servidor corre bajo un "vigilante": si se cuelga al arrancar, se topa con el puerto
+REM ocupado, o se cae, se reinicia solo. El registro queda en la carpeta logs\.
+set "VIG=powershell -NoProfile -ExecutionPolicy Bypass -File "%RAIZ%scripts\vigilante.ps1""
+start "Vigilante - backend" %VIG% -Nombre backend -Directorio backend -Archivo ".venv\Scripts\python.exe" -Argumentos "-m uvicorn fpa.main:app --reload --port 8100" -Url http://127.0.0.1:8100/api/health
+start "Vigilante - frontend" %VIG% -Nombre frontend -Directorio frontend -Archivo "cmd.exe" -Argumentos "/c npm run dev" -Url http://127.0.0.1:5180/
 
 REM Espera a que la API responda (migrar + sembrar tarda unos segundos) antes de abrir el navegador.
 set INTENTOS=0
