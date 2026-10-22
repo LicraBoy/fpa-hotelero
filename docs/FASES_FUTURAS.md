@@ -2,7 +2,7 @@
 
 Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Hotelero.md` (sección 7) y el Blueprint funcional aprobado por Contraloría. Este documento resume cada fase para planear; el detalle técnico y las decisiones viven en la arquitectura.
 
-Última actualización: 30-sep-2026
+Última actualización: 22-oct-2026
 
 **Estados:** `[HECHA]` · `[SIGUIENTE]` · `[PENDIENTE]` · `[PROPUESTA]` (fase nueva que aún no está en la arquitectura).
 **Tamaños relativos** (no son fechas): **S** días · **M** 1–2 semanas · **L** más de 2 semanas.
@@ -32,6 +32,72 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 15 | Inteligencia hotelera (cruce de áreas con finanzas) | L | `[PROPUESTA]` | 9 + privacidad definida |
 
 **Hito del MVP:** al cerrar la Fase 6, Contraloría cierra un mes real en la plataforma sin Excel paralelo. Las fases 7 en adelante son crecimiento.
+
+---
+
+## Requisitos transversales de gobierno, control y confiabilidad financiera
+
+Una revisión externa del roadmap (22-oct-2026) señaló un riesgo real: si estas reglas no quedan
+explícitas antes de construir Budget, Forecast, Cash Flow y las fases siguientes, habrá que
+rehacerlas cuando se agregue un hotel o una fuente de datos nueva. No son una fase más — son
+principios que **ya aplican desde la Fase 2** y que toda fase nueva debe respetar. Varios ya están
+hechos; se listan explícitamente para no perderlos de vista.
+
+1. **Calidad de datos, conciliación y trazabilidad de importaciones.** Cada carga (CON130, Budget,
+   catálogo) necesita un identificador, un origen, una fecha, un resultado y un historial de
+   errores — cuentas sin mapear, periodos inválidos, duplicados, importes rechazados, diferencias
+   de conciliación. *Ya hecho en parte:* `fpa/servicios/cargas.py` registra cada carga; la
+   validación del mapeo (2.4) ya detecta cuentas con movimiento sin vínculo.
+
+2. **Versionado inmutable de presupuestos, forecasts, mapeos y escenarios publicados.** Regla
+   general: lo aprobado no se sobrescribe, se versiona. Un cambio autorizado crea una versión
+   nueva; la anterior se conserva completa (no solo el mapeo: también Budget, cada forecast
+   publicado y cada escenario). *Ya hecho:* versionado del mapeo (2.5) y del Budget (3.1); falta
+   extenderlo a Forecast (Fase 8) y Escenarios (Fase 9).
+
+3. **Permisos por rol, departamento y hotel, con separación de funciones.** No basta
+   administrador/usuario: quién consulta, quién captura, quién revisa y quién aprueba deben ser
+   roles distintos, comprobados en el backend también al exportar (no solo al ver en pantalla).
+   *Ya hecho:* matriz de roles por hotel (5.2); falta el detalle por departamento que exige la
+   captura de Budget (Fase 7.2).
+
+4. **Calendario fiscal y gestión de periodos.** Un periodo pasa por abierto → revisado → cerrado;
+   la reapertura de uno cerrado debe ser un proceso autorizado y explícito, nunca una corrección
+   silenciosa. Hoy no existe como concepto formal — lo necesitan Budget (7), Forecast (8) y
+   cualquier cierre que deba reabrirse. **Se agrega como trabajo explícito antes/durante la Fase
+   7**, no como fase aparte.
+
+5. **Catálogo formal de métricas y reglas de cálculo/agregación.** Cada KPI tiene una sola
+   definición: fórmula, unidad, fuente, periodicidad, responsable, regla de agregación y versión —
+   para que no se calcule de una forma en un reporte y de otra en un forecast. Ejemplos a
+   documentar cuando se usen (no todos existen ya en el sistema):
+
+   | Indicador | Definición |
+   |---|---|
+   | Ocupación | Habitaciones ocupadas / habitaciones disponibles |
+   | ADR | Ingresos de habitaciones / habitaciones vendidas |
+   | RevPAR | Ingresos de habitaciones / habitaciones disponibles |
+   | Coste de nómina | Conceptos incluidos, departamentos, periodo y cargas patronales |
+   | Variación financiera | Fórmula, signo, denominador, favorable/desfavorable — **ya definido**, ver `fpa/servicios/variance.py` |
+   | Flujo de caja | Conceptos de cobro/pago incluidos, fecha del movimiento, saldo inicial |
+
+   **Importante para la Fase 11 (multi-hotel):** no todo KPI se agrega sumando o promediando. La
+   ocupación consolidada es habitaciones ocupadas totales / disponibles totales (no el promedio de
+   los porcentajes de cada hotel); el ADR consolidado se pondera por habitaciones vendidas, no es
+   un promedio simple de los ADR de cada hotel. Cada KPI necesita su propia regla de agregación
+   declarada, no una genérica.
+
+6. **Precisión decimal, pruebas financieras y recuperación ante fallos.** *Ya hecho en la Fase 6:*
+   dinero con `Decimal` (ADR 0002), respaldos cifrados con restauración probada (6.4), análisis de
+   dependencias y código estático sin hallazgos (6.1). Cada fase nueva agrega sus propios criterios
+   de aceptación financieros (ver ejemplo en la Fase 7 de abajo) — no basta con que funcione en la
+   pantalla.
+
+7. **Capa de importación robusta** (mejora a lo que ya existe en `fpa/ingesta/`, no una fase
+   nueva): plantillas versionadas, vista previa de los cambios antes de confirmar, prevención de
+   duplicados, conciliación de totales contra la fuente, y trazar cada cifra hasta su archivo de
+   origen. Diseñarlo de forma que, si algún día hay API con Novohit, se sustituya el adaptador sin
+   reescribir la lógica financiera.
 
 ---
 
@@ -146,6 +212,44 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 7.4 Aprobación y bloqueo | Versión oficial inmutable | No se puede editar una versión aprobada |
 | 7.5 Objetivo contra propuesta | Comparar lo que fija Dirección con lo que propone cada área | Las diferencias se calculan y se muestran |
 
+**Requisitos que deben quedar definidos como comportamiento explícito** (revisión externa, 22-oct-2026):
+
+| Capacidad | Comportamiento que debe quedar definido |
+|---|---|
+| Captura dentro de la plataforma | Cada responsable edita sus líneas directamente en el sistema, sin Excel paralelo |
+| Objetivo frente a propuesta | El objetivo autorizado es la referencia; la propuesta se modifica y compara antes de aprobarse |
+| Spreading mensual | Repartir el importe anual con perfiles estacionales, pesos personalizados, importes mensuales o distribución uniforme |
+| Reconciliación del spreading | La suma de los meses coincide exactamente con el importe anual, incluidos los ajustes por redondeo |
+| Validaciones | Importes faltantes, cuentas no permitidas, meses incompletos, líneas sin responsable |
+| Flujo de aprobación | Responsables, estados, comentarios, fechas límite, rechazos y devoluciones para corrección |
+| Bloqueo del presupuesto | Una versión aprobada no admite modificaciones ordinarias; una revisión autorizada publica una versión nueva |
+| Historial y auditoría | Quién cambió un importe, el valor anterior, cuándo y por qué |
+| Cobertura presupuestaria | Qué porcentaje de las líneas requeridas tiene presupuesto y cuáles faltan |
+| Comparación de versiones | Objetivo, propuesta departamental y versión aprobada, una junto a la otra |
+
+**Ejemplo de perfil de distribución mensual** (ilustrativo): un departamento con presupuesto anual
+de mantenimiento de $1,200,000 no necesariamente gasta $100,000 cada mes —
+
+| Periodo | Distribución | Presupuesto |
+|---|---|---|
+| Enero | 5% | $60,000 |
+| Febrero | 5% | $60,000 |
+| Marzo | 8% | $96,000 |
+| Abril-diciembre | 82% | $984,000 |
+| **Total** | **100%** | **$1,200,000** |
+
+El sistema debe permitir elegir un perfil existente, personalizarlo y comprobar que el total anual
+se mantiene; y distinguir entre un reparto automático y una distribución manual aprobada.
+
+**Criterios de aceptación de la Fase 7** (no basta con que funcione en pantalla):
+1. La suma de los importes mensuales distribuidos coincide exactamente con el importe anual.
+2. Un presupuesto aprobado no se puede modificar sin el procedimiento autorizado.
+3. Una nueva versión no altera los valores de la anterior.
+4. Un usuario no puede aprobar presupuestos fuera de sus permisos.
+5. Importar dos veces el mismo archivo no duplica los importes.
+6. Los totales importados se concilian con la fuente, o la diferencia queda identificada.
+7. Las exportaciones muestran la versión, los filtros y el periodo sobre los que se generaron.
+
 ---
 
 ## Fase 8 — Forecast y rolling forecast `[PENDIENTE]` (L)
@@ -157,6 +261,35 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 8.1 Versión de forecast | Actual cerrado + proyección de los meses que faltan | Comparable contra Budget |
 | 8.2 Cierre mensual | Cada cierre sustituye forecast por actual y agrega un mes al horizonte de 12 meses | El cierre no altera versiones anteriores |
 | 8.3 Comparativos | Contra el forecast anterior y contra el Budget | Las diferencias cuadran |
+
+**Precisión necesaria** (revisión externa, 22-oct-2026): debe ser un rolling de 12 meses
+**continuos**, no una previsión hasta el fin del ejercicio fiscal. Distinguir siempre **cuatro**
+conceptos, no tres:
+- **Budget**: el plan original aprobado.
+- **Forecast vigente**: la expectativa actual de lo que va a ocurrir.
+- **Forecast anterior**: la previsión publicada antes de la última actualización (se conserva, no
+  se sobrescribe — ver requisito transversal 2).
+- **Actual**: el resultado real de Contabilidad.
+
+Así se compara no solo Budget contra Actual, sino también qué forecast se tenía antes del cierre
+contra lo que finalmente ocurrió.
+
+**Ejemplo ilustrativo — cierre de septiembre 2026** (el periodo exacto depende de la fecha de
+corte y de si el mes actual ya cerró):
+
+| Tramo | Qué pasa |
+|---|---|
+| Jul-sep | Actuales cerrados: el resultado real sustituye la previsión de esos meses; se conserva el forecast original para comparar |
+| Oct-ago | Proyectados: siguen con sus hipótesis vigentes, actualizables mediante una previsión controlada |
+| Sep 2027 | Se incorpora para mantener 12 meses de horizonte hacia adelante |
+
+**Corrección de un periodo ya cerrado**: sigue el proceso de reapertura del calendario fiscal
+(requisito transversal 4) — nunca se altera silenciosamente la fotografía del forecast que ya se
+publicó.
+
+**Criterios de aceptación de la Fase 8**: al cerrar un mes, el actual ocupa su lugar; los periodos
+ya cerrados mantienen su integridad; el horizonte se extiende; la versión anterior del forecast
+sigue disponible para medir qué tan acertada fue.
 
 **Por confirmar:** año fiscal (julio–junio o calendario) y horizonte.
 
@@ -175,6 +308,10 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 9.3 Fuentes operativas | Conectar Recepción, puntos de venta, nómina | Datos cuadran con la fuente |
 | 9.4 Escenarios | Copias aisladas del plan oficial | Un escenario nunca modifica el Budget aprobado |
 
+**Por definir antes de construir** (revisión externa, 22-oct-2026): catálogo de drivers con
+unidades, fórmulas, responsables y fuentes; dependencias entre variables; comparación del efecto
+financiero de un escenario contra el oficial; y una forma explícita de volver al escenario base.
+
 **Bloquea a las fases 14 y 15** porque trae las fuentes operativas.
 
 ---
@@ -188,6 +325,10 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 10.1 Fuentes | Saldos bancarios, cuentas por cobrar y por pagar, calendario de nómina e impuestos | Datos cuadran con la fuente |
 | 10.2 Calendario | Cuándo se cobra y cuándo se paga | Reglas de antigüedad y vencimiento |
 | 10.3 Escenarios de caja | Menor ocupación, mayor gasto, inversiones | Saldo final = inicial + entradas − salidas |
+
+**Precisión necesaria** (revisión externa, 22-oct-2026): modelar el *momento* en que el dinero
+entra o sale, no solo el monto contable — saldos iniciales, cobros, pagos a proveedores, nómina,
+impuestos, inversiones, y escenarios de liquidez con esos mismos componentes.
 
 **Por confirmar:** quién gestiona Tesorería y si existe hoy una proyección de efectivo.
 
@@ -206,6 +347,13 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 11.3 Validar el formato | Confirmar si usa el mismo Novohit y el mismo CON130 | El lector funciona sin cambios si el formato es el mismo |
 | 11.4 Comparativos | Reportes entre hoteles | Cada usuario solo ve los hoteles que le corresponden |
 
+**Regla de agregación por KPI** (revisión externa, 22-oct-2026 — ver también el requisito
+transversal 5): no todo indicador se agrega sumando o promediando. La ocupación consolidada es
+habitaciones ocupadas totales / disponibles totales de todos los hoteles, nunca el promedio de los
+porcentajes de cada uno; el ADR consolidado se pondera por habitaciones vendidas, no es un promedio
+simple. Falta definir también: permisos por hotel, diferencias entre catálogos contables, y
+comparación homogénea de periodos entre hoteles.
+
 **Por confirmar:** si Puerto Vallarta usa el mismo Novohit y un catálogo parecido; qué significa la línea "PUERTO VALLARTA" en el reporte de Torres.
 
 ---
@@ -220,6 +368,10 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 12.2 Permisos heredados | Ve solo lo que ve el usuario que pregunta | No lee fuera de su alcance |
 | 12.3 Citas de fuente | Toda cifra citada remite a su origen | Toda cifra citada coincide con el motor |
 | 12.4 Defensas | Contenido de archivos y comentarios tratado como no confiable | Resiste intentos de inyección de instrucciones |
+
+**Agregar a los criterios de prueba** (revisión externa, 22-oct-2026): reconocer explícitamente
+cuando no hay información suficiente para responder (en vez de inventar), y dejar registro de las
+consultas sensibles en la bitácora.
 
 **Condición:** solo después de tener datos y cálculos validados.
 
@@ -236,6 +388,10 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 13.3 Evaluación | Retorno, valor presente e IRR con aritmética exacta | Contra casos de libro de texto |
 | 13.4 Escenarios a largo plazo | Plan de 3 a 5 años | CAPEX y gasto operativo no se mezclan |
 
+**Por definir explícitamente** (revisión externa, 22-oct-2026): los flujos de caja incrementales de
+cada proyecto, la inversión inicial, el calendario de desembolsos, la tasa de descuento, el
+horizonte y los supuestos de ROI/NPV/IRR — validados con aritmética decimal (`Decimal`, no floats).
+
 ---
 
 ## Fase 14 — Planeación operativa diaria `[PENDIENTE]` (M)
@@ -247,6 +403,10 @@ Qué sigue después de la Fase 1, en orden. Fuente: `Arquitectura_Tecnica_FPA_Ho
 | 14.1 Tiempo diario | Granularidad de día en el modelo | Totales diarios = mensuales |
 | 14.2 Fuentes diarias | Recepción y puntos de venta | Datos cuadran con la fuente |
 | 14.3 Captura y alertas | Captura por departamento y avisos de desviación | Rendimiento con granularidad diaria |
+
+**Por definir** (revisión externa, 22-oct-2026): cómo se agregan las previsiones diarias a los
+meses fiscales y cómo se reconcilian con los datos reales de Contabilidad; responsables y
+frecuencia de actualización por departamento.
 
 ---
 
