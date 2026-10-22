@@ -10,6 +10,8 @@
 *.db
 *.sqlite3
 storage/
+backend/backups/
+*.enc
 
 # Python
 .venv/

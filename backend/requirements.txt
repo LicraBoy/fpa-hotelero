@@ -24,3 +24,6 @@ pyotp==2.10.0
 pip-audit==2.10.1
 bandit==1.9.4
 clamd==1.0.2  # cliente de ClamAV (ADR 0011); el daemon clamd se instala aparte en el servidor
+psycopg[binary]==3.3.6  # driver de PostgreSQL (ADR 0009)
+cryptography==50.0.2  # cifrado de respaldos (ADR 0010)
+prometheus-client==0.26.0  # métricas mínimas (Fase 6.5)

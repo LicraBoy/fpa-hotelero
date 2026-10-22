@@ -13,14 +13,14 @@ from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from fpa.db import get_db  # noqa: E402
-from fpa.identidad.dependencias import obtener_proveedor  # noqa: E402
-from fpa.identidad.proveedor import ProveedorDesarrollo  # noqa: E402
-from fpa.main import app  # noqa: E402
-from fpa.modelos import Asignacion, Base, Hotel, Organizacion, Usuario  # noqa: E402
-from fpa.semilla import sembrar_roles  # noqa: E402
-from fpa.servicios.reportes import cache_variance  # noqa: E402
-from fpa.servicios.versionado_mapeo import aprobar  # noqa: E402
+from fpa.db import get_db
+from fpa.identidad.dependencias import obtener_proveedor
+from fpa.identidad.proveedor import ProveedorDesarrollo
+from fpa.main import app
+from fpa.modelos import Asignacion, Base, Hotel, Organizacion, Usuario
+from fpa.semilla import sembrar_roles
+from fpa.servicios.reportes import cache_variance
+from fpa.servicios.versionado_mapeo import aprobar
 
 
 @pytest.fixture(autouse=True)
@@ -33,6 +33,18 @@ def cache_limpia() -> Iterator[None]:
 
 @pytest.fixture
 def engine() -> Iterator[Engine]:
+    """SQLite en memoria por defecto; con `FPA_TEST_POSTGRES_URL` corre la MISMA prueba contra
+    PostgreSQL (Fase 6.6 — ADR 0009). Cada prueba limpia el esquema antes y después para quedar
+    aislada igual que con SQLite en memoria."""
+    url_postgres = os.environ.get("FPA_TEST_POSTGRES_URL")
+    if url_postgres:
+        eng = create_engine(url_postgres)
+        Base.metadata.drop_all(eng)
+        Base.metadata.create_all(eng)
+        yield eng
+        Base.metadata.drop_all(eng)
+        eng.dispose()
+        return
     eng = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )

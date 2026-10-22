@@ -20,7 +20,7 @@ files = ["fpa"]
 python_version = "3.13"
 
 [[tool.mypy.overrides]]
-module = ["xlrd", "xlrd.*", "xlwt", "xlwt.*"]
+module = ["xlrd", "xlrd.*", "xlwt", "xlwt.*", "clamd", "clamd.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -208,7 +208,9 @@ def escanear_antivirus(ruta: Path) -> None:
         return
     try:
         cliente = clamd.ClamdNetworkSocket(
-            host=settings.clamav_host, port=settings.clamav_puerto, timeout=settings.clamav_timeout_s
+            host=settings.clamav_host,
+            port=settings.clamav_puerto,
+            timeout=settings.clamav_timeout_s,
         )
         ruta_str = os.fspath(ruta)
         resultado = cliente.scan(ruta_str)

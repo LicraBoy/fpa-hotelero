@@ -4192,6 +4192,27 @@
         ]
       }
     },
+    "/api/metrics": {
+      "get": {
+        "description": "Formato de texto de Prometheus (Fase 6.5). Sin autenticación: no trae datos de negocio,\nsolo conteos/latencias de la propia API — igual que `/health`.",
+        "operationId": "metricas_api_metrics_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "text/plain; version=1.0.0; charset=utf-8": {}
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Metricas",
+        "tags": [
+          "salud"
+        ]
+      }
+    },
     "/api/ready": {
       "get": {
         "description": "La aplicación puede atender peticiones: responde si la base de datos contesta.",

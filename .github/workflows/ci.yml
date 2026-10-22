@@ -1,0 +1,105 @@
+name: CI
+
+# Fase 6.6 del plan (docs/Arquitectura_Tecnica_FPA_Hotelero.md §7): lint + tipos + pruebas en
+# SQLite y PostgreSQL + análisis de dependencias/código + fuga de secretos, en cada push/PR.
+# No corre hasta que exista un repositorio remoto (docs/CAMBIOS_FUTUROS_DE_TECNOLOGIA.md) — este
+# archivo queda listo para ese momento.
+#
+# ubuntu-latest (no windows-latest): los "service containers" de GitHub Actions (el Postgres de
+# abajo) solo funcionan en runners Linux; la app es Python/Node puro, sin nada específico de
+# Windows, así que correr en Linux no cambia lo que se prueba.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: fpa
+          POSTGRES_PASSWORD: fpa
+          POSTGRES_DB: fpa_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fpa"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Instalar dependencias
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements.txt
+
+      - name: Lint (ruff)
+        run: .venv/bin/ruff check .
+
+      - name: Tipos (mypy)
+        run: .venv/bin/mypy
+
+      - name: Análisis estático (bandit)
+        run: .venv/bin/bandit -r fpa -ll
+
+      - name: Auditoría de dependencias (pip-audit)
+        run: .venv/bin/pip-audit -r requirements.txt
+
+      - name: Pruebas (SQLite)
+        env:
+          FPA_ENTORNO: desarrollo
+        run: .venv/bin/pytest -q
+
+      - name: Pruebas (PostgreSQL)
+        env:
+          FPA_ENTORNO: desarrollo
+          FPA_TEST_POSTGRES_URL: postgresql+psycopg://fpa:fpa@localhost:5432/fpa_ci
+        run: .venv/bin/pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint y verificación de seguridad (CSP/XSS)
+        run: npm run lint
+
+      - name: Tipos y build
+        run: npm run build
+
+      - name: Auditoría de dependencias (npm audit)
+        run: npm audit --audit-level=high
+
+  secretos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fuga de secretos (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

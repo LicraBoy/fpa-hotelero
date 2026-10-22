@@ -16,7 +16,7 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
-from evaluador_formulas import Evaluador  # noqa: E402
+from evaluador_formulas import Evaluador
 
 
 def main(ruta: str) -> None:

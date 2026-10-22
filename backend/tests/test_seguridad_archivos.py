@@ -30,7 +30,11 @@ def test_apagado_no_escanea(archivo_temporal: Path, monkeypatch: pytest.MonkeyPa
 
 
 class _ClienteFalso:
-    def __init__(self, resultado: dict[str, tuple[str, str]] | None = None, lanza: Exception | None = None):
+    def __init__(
+        self,
+        resultado: dict[str, tuple[str, str]] | None = None,
+        lanza: Exception | None = None,
+    ):
         self._resultado = resultado
         self._lanza = lanza
 
@@ -48,7 +52,9 @@ def test_archivo_limpio_pasa(archivo_temporal: Path, monkeypatch: pytest.MonkeyP
     escanear_antivirus(archivo_temporal)  # no lanza nada
 
 
-def test_archivo_infectado_se_rechaza(archivo_temporal: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_archivo_infectado_se_rechaza(
+    archivo_temporal: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(archivos.settings, "clamav_activo", True)
     monkeypatch.setattr(
         clamd,
