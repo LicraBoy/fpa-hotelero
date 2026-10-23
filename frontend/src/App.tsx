@@ -209,7 +209,7 @@ export default function App({
             ) : undefined
           }
         />
-        <main className={activa === 'variance' ? 'contenido' : 'contenido contenido-estrecho'}>
+        <main className={activa === 'variance' || activa === 'budget' ? 'contenido' : 'contenido contenido-estrecho'}>
           {hoteles.cargando && <Cargando />}
           {hoteles.error && (
             <MensajeError

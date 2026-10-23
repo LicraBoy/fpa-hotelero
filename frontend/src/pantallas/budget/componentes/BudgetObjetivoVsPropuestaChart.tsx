@@ -11,109 +11,185 @@ interface Props {
   onSeleccionarSeccion?: (seccion: string) => void
 }
 
+const formatoCompacto = (n: number) => {
+  if (n <= 0) return ''
+  const millones = n / 1_000_000
+  if (millones >= 1) return `$${millones.toFixed(1)}M`
+  if (millones >= 0.1) return `$${millones.toFixed(2)}M`
+  if (n >= 1000) return `$${(n / 1000).toFixed(0)}k`
+  return `$${n.toFixed(0)}`
+}
+
 /**
- * Objetivo vs. Propuesta por sección (spec §4.2.A). El texto exacto del tooltip y de la tabla
- * alterna sale siempre de `formatoMicros` sobre los micros reales, nunca del `number` que Plotly
- * grafica (ese solo define la posición de la barra) — la gráfica nunca es la fuente de verdad de
- * una cifra. Los colores de las trazas son los tokens de la app, no la paleta por defecto de
- * Plotly, para que no se vea como una plantilla genérica.
+ * Objetivo vs. Propuesta por sección (spec §4.2.A y referencia visual).
+ * Gráfico de barras verticales agrupadas con etiquetas de valor superiores
+ * y paleta coordinada azul/verde de alta fidelidad financiera.
  */
 export function BudgetObjetivoVsPropuestaChart({ porSeccion, onSeleccionarSeccion }: Props) {
   const [comoTabla, setComoTabla] = useState(false)
   const serie = useMemo(() => serieObjetivoVsPropuesta(porSeccion), [porSeccion])
   const colores = useColoresTema()
 
-  if (serie.length === 0) return null
+  const serieTop = useMemo(() => {
+    if (serie.length <= 5) return serie
+    const ordenadas = [...serie].sort((a, b) => {
+      const maxA = Math.max(a.propuesta, a.objetivo)
+      const maxB = Math.max(b.propuesta, b.objetivo)
+      return maxB - maxA
+    })
 
-  const secciones = serie.map((s) => s.seccion)
-  const textoObjetivo = serie.map((s) => formatoMicros(s.objetivoMicros))
-  const textoPropuesta = serie.map((s) => formatoMicros(s.propuestaMicros))
+    const top = ordenadas.slice(0, 5)
+    const resto = ordenadas.slice(5)
+
+    const objetivoResto = resto.reduce((acc, s) => acc + s.objetivo, 0)
+    const propuestaResto = resto.reduce((acc, s) => acc + s.propuesta, 0)
+    const objetivoRestoMicros = resto.reduce((acc, s) => acc + s.objetivoMicros, 0n)
+    const propuestaRestoMicros = resto.reduce((acc, s) => acc + s.propuestaMicros, 0n)
+    const diferenciaMicros = propuestaRestoMicros - objetivoRestoMicros
+    const diferenciaPct =
+      objetivoRestoMicros !== 0n ? Number((diferenciaMicros * 10_000n) / objetivoRestoMicros) / 100 : null
+
+    top.push({
+      seccion: 'Otras',
+      objetivo: objetivoResto,
+      propuesta: propuestaResto,
+      objetivoMicros: objetivoRestoMicros,
+      propuestaMicros: propuestaRestoMicros,
+      diferenciaMicros,
+      diferenciaPct,
+    })
+    return top
+  }, [serie])
 
   return (
     <section className="tarjeta budget-chart-contenedor" aria-label="Objetivo vs. propuesta por sección">
       <div className="budget-chart-cabecera">
         <div>
-          <h3>Objetivo vs. propuesta por sección</h3>
-          <p className="suave">Por sección, en la moneda del reporte</p>
+          <h3>Objetivo vs. Propuesta</h3>
+          <p className="suave">Por departamento principal</p>
         </div>
-        <button type="button" className="boton boton-secundario" onClick={() => setComoTabla((v) => !v)}>
+        <button
+          type="button"
+          className="boton boton-secundario boton-chico"
+          onClick={() => setComoTabla((v) => !v)}
+        >
           {comoTabla ? 'Ver como gráfica' : 'Ver como tabla'}
         </button>
       </div>
+
       {!comoTabla && (
-        <ul className="budget-chart-leyenda">
-          <li>
-            <span className="budget-chart-punto" data-color="suave" /> Objetivo
-          </li>
-          <li>
-            <span className="budget-chart-punto" data-color="primario" /> Propuesta
-          </li>
-        </ul>
+        <div className="budget-chart-subcabecera">
+          <span className="suave budget-chart-subtexto">Comparativa por departamento (Millones)</span>
+        </div>
       )}
 
-      {comoTabla ? (
-        <table className="tabla-simple">
-          <caption className="solo-lectores">Objetivo y propuesta por sección, con su diferencia.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Sección</th>
-              <th scope="col">Objetivo</th>
-              <th scope="col">Propuesta</th>
-              <th scope="col">Diferencia</th>
-            </tr>
-          </thead>
-          <tbody>
-            {serie.map((s) => (
-              <tr key={s.seccion}>
-                <td>{s.seccion}</td>
-                <td className="num">{formatoMicros(s.objetivoMicros)}</td>
-                <td className="num">{formatoMicros(s.propuestaMicros)}</td>
-                <td className="num">{formatoMicros(s.diferenciaMicros)}</td>
+      {serie.length === 0 ? (
+        <div className="budget-chart-vacio">
+          <p className="suave">No hay datos de objetivo ni propuesta para mostrar.</p>
+        </div>
+      ) : comoTabla ? (
+        <div className="budget-tabla-scroll">
+          <table className="tabla-simple">
+            <caption className="solo-lectores">Objetivo y propuesta por sección, con su diferencia.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Sección</th>
+                <th scope="col">Objetivo</th>
+                <th scope="col">Propuesta</th>
+                <th scope="col">Diferencia</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {serie.map((s) => (
+                <tr key={s.seccion}>
+                  <td>{s.seccion}</td>
+                  <td className="num">{formatoMicros(s.objetivoMicros)}</td>
+                  <td className="num">{formatoMicros(s.propuestaMicros)}</td>
+                  <td className="num">{formatoMicros(s.diferenciaMicros)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <GraficoPlotly
           data={[
             {
               type: 'bar',
-              orientation: 'h',
               name: 'Objetivo',
-              x: serie.map((s) => s.objetivo),
-              y: secciones,
-              customdata: textoObjetivo,
-              marker: { color: colores.suave },
-              hovertemplate: '%{y}<br>Objetivo: %{customdata}<extra></extra>',
+              x: serieTop.map((s) => s.seccion.length > 15 ? `${s.seccion.slice(0, 13)}…` : s.seccion),
+              y: serieTop.map((s) => +(s.objetivo / 1_000_000).toFixed(2)),
+              text: serieTop.map((s) => formatoCompacto(s.objetivo)),
+              textposition: 'outside',
+              textfont: { size: 10, color: colores.texto },
+              cliponaxis: false,
+              customdata: serieTop.map((s) => [s.seccion, formatoMicros(s.objetivoMicros)]),
+              marker: {
+                color: '#2563eb',
+                opacity: 0.92,
+              },
+              hovertemplate: '<b>%{customdata[0]} (Objetivo)</b><br>Monto: %{customdata[1]}<extra></extra>',
             },
             {
               type: 'bar',
-              orientation: 'h',
               name: 'Propuesta',
-              x: serie.map((s) => s.propuesta),
-              y: secciones,
-              customdata: textoPropuesta,
-              marker: { color: colores.primario },
-              hovertemplate: '%{y}<br>Propuesta: %{customdata}<extra></extra>',
+              x: serieTop.map((s) => s.seccion.length > 15 ? `${s.seccion.slice(0, 13)}…` : s.seccion),
+              y: serieTop.map((s) => +(s.propuesta / 1_000_000).toFixed(2)),
+              text: serieTop.map((s) => formatoCompacto(s.propuesta)),
+              textposition: 'outside',
+              textfont: { size: 10, color: colores.texto },
+              cliponaxis: false,
+              customdata: serieTop.map((s) => [s.seccion, formatoMicros(s.propuestaMicros)]),
+              marker: {
+                color: '#10b981',
+                opacity: 0.92,
+              },
+              hovertemplate: '<b>%{customdata[0]} (Propuesta)</b><br>Monto: %{customdata[1]}<extra></extra>',
             },
           ]}
           layout={{
             barmode: 'group',
+            bargap: 0.26,
+            bargroupgap: 0.08,
             autosize: true,
-            height: Math.max(260, serie.length * 70),
-            margin: { l: 140, r: 16, t: 8, b: 32 },
-            font: { family: 'inherit' },
-            showlegend: false,
+            height: 250,
+            margin: { l: 44, r: 12, t: 28, b: 36 },
+            font: { family: 'inherit', color: colores.texto },
+            showlegend: true,
+            legend: {
+              orientation: 'h',
+              x: 0.98,
+              xanchor: 'right',
+              y: 1.18,
+              font: { size: 11, color: colores.texto },
+            },
             paper_bgcolor: 'transparent',
             plot_bgcolor: 'transparent',
+            yaxis: {
+              ticksuffix: 'M',
+              gridcolor: 'rgba(100, 116, 139, 0.12)',
+              zeroline: false,
+              tickfont: { color: colores.texto, size: 10 },
+            },
+            xaxis: {
+              tickangle: -10,
+              showgrid: false,
+              tickfont: { color: colores.texto, size: 10 },
+            },
           }}
           config={{ displayModeBar: false, responsive: true }}
           useResizeHandler
           className="budget-chart-plot"
           onClick={(e) => {
             const punto = e.points?.[0]
-            const seccion = typeof punto?.y === 'string' ? punto.y : null
-            if (seccion && onSeleccionarSeccion) onSeleccionarSeccion(seccion)
+            const seccion = Array.isArray(punto?.customdata)
+              ? (punto.customdata[0] as string)
+              : typeof punto?.x === 'string'
+                ? punto.x
+                : null
+            if (seccion && seccion !== 'Otras' && onSeleccionarSeccion) {
+              onSeleccionarSeccion(seccion)
+            }
           }}
         />
       )}

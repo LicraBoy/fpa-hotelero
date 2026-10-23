@@ -240,7 +240,7 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
     [hotelId, cicloId, versionCiclo],
   )
 
-  const [pestana, setPestana] = useState<PestanaBudget>('captura')
+  const [pestana, setPestana] = useState<PestanaBudget>('resumen')
 
   const [abriendoCiclo, setAbriendoCiclo] = useState(false)
   const [errorCiclo, setErrorCiclo] = useState<string | null>(null)
@@ -296,16 +296,24 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
     if (encontrada) setSeccion(String(encontrada.id))
   }
 
+  const periodos = vista.datos.periodos
+  const rangoFiscal =
+    periodos && periodos.length >= 12
+      ? `${etiquetaMes(periodos[0])} – ${etiquetaMes(periodos[periodos.length - 1])}`
+      : undefined
+
   return (
     <>
       <BudgetHeader
         anoFiscal={anoFiscal}
+        rangoFiscal={rangoFiscal}
         version={vista.datos.version}
         puedeAdministrarCiclo={puedeAdministrarCiclo}
         cicloAbierto={cicloAbierto !== null || anoFiscalPresupuestoId === null}
         abriendoCiclo={abriendoCiclo}
         errorCiclo={errorCiclo}
         onAbrirCiclo={() => void abrirCiclo()}
+        onVerVersiones={() => setPestana('versiones')}
       />
       {cicloId !== null && (
         <CicloPresupuesto
@@ -326,9 +334,11 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
           resumen={resumenCiclo.datos ?? null}
           resumenMensual={resumenMensualCiclo.datos ?? null}
           lineasCiclo={lineasCiclo.datos ?? []}
+          perfiles={perfiles.datos ?? []}
           cargando={resumenCiclo.cargando}
           error={resumenCiclo.error}
           onIrACaptura={irACaptura}
+          onNavegarTab={setPestana}
         />
       </div>
 

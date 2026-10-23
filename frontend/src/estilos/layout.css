@@ -275,6 +275,9 @@
 .contenido {
   padding: var(--e5) 20px var(--e6);
   max-width: 1680px;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .contenido-estrecho {

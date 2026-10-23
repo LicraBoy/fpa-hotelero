@@ -1,11 +1,12 @@
 import { useRef, type KeyboardEvent } from 'react'
+import { Icono, type NombreIcono } from '../../../componentes/Iconos'
 
 export type PestanaBudget = 'resumen' | 'captura' | 'versiones'
 
-const PESTANAS: { id: PestanaBudget; etiqueta: string }[] = [
-  { id: 'resumen', etiqueta: 'Resumen' },
-  { id: 'captura', etiqueta: 'Captura' },
-  { id: 'versiones', etiqueta: 'Versiones' },
+const PESTANAS: { id: PestanaBudget; etiqueta: string; icono: NombreIcono }[] = [
+  { id: 'resumen', etiqueta: 'Resumen', icono: 'informe' },
+  { id: 'captura', etiqueta: 'Captura', icono: 'presupuesto' },
+  { id: 'versiones', etiqueta: 'Versiones', icono: 'auditoria' },
 ]
 
 interface Props {
@@ -14,9 +15,7 @@ interface Props {
 }
 
 /**
- * Pestañas de Budget Studio. No hay mecanismo de tabs en el resto del repo: se construye a mano,
- * accesible (role="tablist"/"tab"/"tabpanel"), con activación manual (Enter/Espacio) para que
- * navegar con flechas no dispare de inmediato el render de las gráficas de Resumen.
+ * Pestañas de Budget Studio: Segmented control moderno estilo Linear/Ramp.
  */
 export function BudgetTabs({ activa, onCambiar }: Props) {
   const refs = useRef<Record<PestanaBudget, HTMLButtonElement | null>>({
@@ -50,7 +49,8 @@ export function BudgetTabs({ activa, onCambiar }: Props) {
           onClick={() => onCambiar(p.id)}
           onKeyDown={(e) => alTeclado(e, i)}
         >
-          {p.etiqueta}
+          <Icono nombre={p.icono} tamano={15} />
+          <span>{p.etiqueta}</span>
         </button>
       ))}
     </div>

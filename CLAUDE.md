@@ -11,26 +11,29 @@ Plataforma SaaS de FP&A para hoteles, independiente de PMS/ERP/POS. Primer hotel
 3. `docs/FASES_FUTURAS.md` — resumen de las fases que faltan (2 a 15), con sub-fases, pruebas y decisiones pendientes.
    `docs/CAMBIOS_FUTUROS_DE_TECNOLOGIA.md` — qué es provisional hoy y cómo cambiará (base de datos, Docker, autenticación, etc.).
 4. `docs/Blueprint_Funcional_FPA_Hotelero_Torres_Mazatlan.docx` — requisitos funcionales aprobados por Contraloría.
-5. `docs/contexto.md` — requerimientos originales. Decisiones técnicas en `docs/adr/`.
+5. `docs/Especificacion_Redisenio_Budget_Studio.md` y `docs/Correccion_Visual_Budget_Studio.md` — especificación y corrección visual del rediseño de Budget Studio (referencia SaaS de alta fidelidad).
+6. `docs/contexto.md` — requerimientos originales. Decisiones técnicas en `docs/adr/`.
 
 ## Cómo correrlo
 - Levantar todo: `iniciar_servidores.bat` (backend **8100**, frontend **5180**; no usar 8000/5173, son de otro sistema).
-- Pruebas: `cd backend` y `.venv\Scripts\python -m pytest`. Calidad: `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .` y `.venv\Scripts\mypy fpa` (deben quedar sin errores).
-- Pruebas de navegador: `cd frontend` y `npm run e2e` (Playwright; backend propio en 8101, base temporal; corre contra el **build de producción con su CSP**). Siempre correrlas al tocar pantallas; `npm run build`, `npm run lint` (incluye la verificación de seguridad) y `npm run test:unit` deben quedar sin errores. Si cambias la API: `npm run api:tipos` y commitea `src/api/openapi.json` y `schema.d.ts` (una prueba del backend lo exige).
+- Pruebas backend: `cd backend` y `.venv\Scripts\python -m pytest`. Calidad: `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .` y `.venv\Scripts\mypy fpa` (deben quedar sin errores).
+- Pruebas frontend: `cd frontend` y `npm.cmd run test:unit` (82 pruebas unitarias). Calidad y CSP: `npm.cmd run lint` (oxlint + `node scripts/verificar_seguridad.mjs`). Compilación: `npm.cmd run build` (tsc + vite).
+- Pruebas de navegador / E2E: `cd frontend` y `npm.cmd run e2e` (Playwright; corre contra el build de producción con su CSP estricta). Siempre correrlas al tocar pantallas. Si cambias la API: `npm run api:tipos` y commitea `src/api/openapi.json` y `schema.d.ts` (una prueba del backend lo exige).
 - Base de datos: `.venv\Scripts\alembic upgrade head` (migraciones) y `.venv\Scripts\python -m fpa.semilla` (datos de desarrollo). Si cambias un modelo, genera la migración con `alembic revision --autogenerate`.
 - Identidad de desarrollo: `FPA_ENTORNO=desarrollo` y cabecera `X-Usuario-Dev: analista@torres.local` (por defecto el entorno es `produccion` y nadie entra).
 - Primera vez: ver `README.md`.
 
 ## Reglas de trabajo
-- **Nada de `float` para dinero**: `Decimal` en Python y `NUMERIC(18,2)` en base de datos.
+- **Nada de `float` para dinero**: `Decimal` en Python y `NUMERIC(18,2)` en base de datos; en frontend `BigInt` (micros) vía `util/dinero.ts` y `calculo.ts`, nunca `number` para almacenar o calcular importes.
 - El cálculo financiero es **puro y determinístico**; la IA nunca calcula cifras.
-- Stack actual **mínimo**: Python + FastAPI + SQLite (pruebas) y React + TypeScript + Vite. Las tecnologías nuevas (PostgreSQL, Docker, CI, OIDC, Playwright…) se hablan con TI antes de adoptarlas; el plan está en `docs/CAMBIOS_FUTUROS_DE_TECNOLOGIA.md`.
+- **Cero estilos en línea**: Prohibido `style="..."` o `style={{...}}` en frontend (verificado automáticamente por `scripts/verificar_seguridad.mjs` bajo política CSP estricta).
+- Stack actual **mínimo**: Python + FastAPI + SQLite (pruebas) y React + TypeScript + Vite + Plotly (lazy load). Las tecnologías nuevas (PostgreSQL, Docker, CI, OIDC, Playwright…) se hablan con TI antes de adoptarlas; el plan está en `docs/CAMBIOS_FUTUROS_DE_TECNOLOGIA.md`.
 - No escribir SQL propio de un solo motor: todo acceso a datos pasa por SQLAlchemy.
 - Seguridad por defecto: deny by default, aislamiento por organización y hotel, sin secretos ni datos reales de Torres en el repositorio.
 - **No inventar procesos de Torres.** Marcar lo no confirmado como `[POR VALIDAR]`.
 - El trabajo se hace **por fases**; no se abre una fase sin cerrar la anterior.
 - **Una sub-fase no termina hasta actualizar `docs/ESTADO_DEL_PROYECTO.md`** y marcarla en la arquitectura.
-- Git: **un commit por sub-fase** terminada (el usuario lo autorizó para la Fase 1), con mensaje en español. No subir a ningún servidor sin pedirlo.
+- Git: **un commit por sub-fase** terminada, con mensaje en español. No subir a ningún servidor sin pedirlo.
 - Respuestas al usuario: cortas y claras, en español.
 - Este proyecto es independiente de `DataContabilidad\sistema-analisis-contable`; no usarlo como evidencia ni modificarlo.
 
@@ -41,10 +44,27 @@ Carpeta: `C:\Users\mzamora\Desktop\PLATAFORMA FP&A E INTELIGENCIA HOTELERA\`. No
 - `02. MZT August 2026 Variance (Envio).xlsx` (los Excel reales viven fuera del repo, en `FPA_DATOS_REALES` o `Desktop/PLATAFORMA FP&A E INTELIGENCIA HOTELERA`; ver `fpa/datos_reales.py`) — Variance de **Mazatlán** (julio y agosto 2026): **prueba dorada del MVP** desde la 4.9 (`.xlsx` no se versiona; recomendado moverlo fuera del repositorio).
 - `Prompt_Integracion_Variance.docx` — los 14 pasos manuales que la plataforma reemplaza.
 
-## Código existente
-- `backend/fpa/ingesta/novohit_con130.py` — lector del CON130 (máquina de estados; valida Débito = Crédito y total por cuenta).
-- `backend/fpa/main.py`, `config.py`, `db.py`, `api/health.py` — API con `/api/health` y `/api/ready`.
-- `backend/fpa/modelos/` (modelos y tipos `Dinero`/`Medida`), `backend/fpa/identidad/` (proveedor, permisos, dependencias), `backend/migraciones/` (Alembic, 0001 a 0005), `backend/fpa/semilla.py`.
-- `backend/fpa/ingesta/` (contrato común y lectores CON130, Variance y **CON020 = catálogo oficial** en `.xls`), `backend/fpa/calidad/` (controles), `backend/fpa/servicios/` (`cargar_archivo`, catálogo, saldos, auditoría), `backend/fpa/repositorios/` (siempre acotados por hotel), `backend/fpa/seguridad/archivos.py` (validación de subidas), `backend/fpa/api/v1/` (rutas; ver README).
-- Fase 1 terminada: cargar, validar y guardar movimientos con trazabilidad. Fase 2 (estructura del reporte, reglas de suma, mapeo y su API en `fpa/api/v1/mapeo.py`) con el código listo; falta la aprobación de Contraloría (ver `docs/ESTADO_DEL_PROYECTO.md`). Fase 3 (motor de Variance: `fpa/calculo/`, `GET /variance`; Mazatlán reproducido con excepciones documentadas en `tests/test_variance_dorada_mzt.py`, Vallarta como regresión) y Fase 4 (reporte: desglose por cursor, exportación a Excel, caché, pantallas de Variance y drill-down, CSP estricta; ver `docs/GUIA_PRUEBA_CONTRALORIA.md`) con el código listo; falta la sesión con Contraloría y su lista de hallazgos. Sub-fase **4.9**: la plataforma lee los dos formatos del Variance (`fpa/ingesta/formato_variance.py`: Mazatlán con `Jul-Ago`, Vallarta con `Ago` de tres bloques), con Budget mes a mes y valores capturados (migración `0012`). Para revisar agosto: `python -m fpa.demo_agosto --datos <carpeta>` (Mazatlán por omisión; `--archivo` para otro). Sub-fase **4.10**: la subida por pantalla es solo el CON130, en `.xlsx`, `.xls` o `.csv` (`leer_con130` ya deduce mes, fecha y cuenta como las fórmulas de Contraloría) y hay una pestaña **Budget** para editarlo con el Actual como referencia (`servicios/budget_edicion.py`, `src/pantallas/budget/`). Sub-fase **4.12**: septiembre con las fórmulas del Excel (convenciones Var/% por línea, líneas mixtas, Budget anual `Budget MZT 26-27.xlsx`, Actual capturado a mano, 6 cuentas omitidas a propósito, tabla del Variance más legible). Lo siguiente es la Fase 5.
-- `frontend/src/` — pantallas de la Fase 1 (Cargas, Catálogo, Saldos, Auditoría) en `componentes/`, cliente de la API en `api/`, importes exactos en `util/dinero.ts` (nunca `number`), permisos de interfaz en `permisos.ts` (solo para mostrar u ocultar; el servidor autoriza). Pruebas en `frontend/e2e/`.
+## Código existente y estado de módulos
+- `backend/fpa/ingesta/` — lectores de CON130, Variance y catálogo CON020 en `.xls`.
+- `backend/fpa/api/v1/` — rutas de salud, cargas, catálogo, saldos, variance y presupuestos (`presupuesto.py`, `presupuesto_captura.py`).
+- **Módulo Variance** (`frontend/src/pantallas/variance/`): Reporte con desglose por cursor, exportación a Excel, caché y drill-down contable.
+- **Módulo Budget Studio** (`frontend/src/pantallas/budget/` en rama `feat/budget-studio-redesign`):
+  - **Cabecera y Ciclo de Gobernanza**: `BudgetHeader.tsx` (año fiscal, versión oficial) y `CicloPresupuesto.tsx` (stepper Borrador → Enviado → Revisión → Aprobado, transiciones por rol, bitácora y donut de cobertura).
+  - **Pestaña Resumen (Dashboard Analítico)** (`BudgetResumen.tsx`):
+    - Franja de 5 KPIs con micro-sparklines vectoriales SVG y paleta cromática individualizada (`BudgetKpiStrip.tsx`).
+    - Gráfico agrupado Objetivo vs. Propuesta por departamento con escala en millones y etiquetas superiores (`BudgetObjetivoVsPropuestaChart.tsx`).
+    - Top 5 variaciones con píldoras de estado (`BudgetPrincipalesDiferencias.tsx`).
+    - Resumen del ciclo con checklist de próximas acciones (`BudgetResumenCiclo.tsx`).
+    - Distribución mensual multi-trazo en Plotly (barras por trimestre + curva spline de tendencia con marcadores y área sombreada; `BudgetDistribucionMensualChart.tsx`).
+    - Perfil de temporada interactivo Plotly (`BudgetPerfilTemporada.tsx`).
+    - Estructura del presupuesto (donut interactivo Plotly con pull effect, etiquetas externas y total central dinámico consolidado; `BudgetComposicionChart.tsx`).
+    - Tarjeta explicativa del flujo presupuestario (`BudgetComoFunciona.tsx`) y accesos directos (`BudgetAccionesRapidas.tsx`).
+    - Hook de paleta coordinada claro/oscuro (`useColoresTema.ts`).
+  - **Pestaña Captura**: Edición mensual celda a celda en 12 meses fiscales, cálculo en tiempo real de subtotales, prorrateo con perfiles estacionales, copia de Actual con ajuste %, vista tabla completa y vista split árbol/detalle (`ArbolLineas.tsx`, `DetalleCapturaLinea.tsx`).
+  - **Pestaña Versiones**: Historial cronológico inmutable (time machine) y comparador de versiones con diff porcentual (`BudgetVersionesTab.tsx`, `BudgetComparacionVersiones.tsx`).
+  - **Estilos y Layout**: `frontend/src/estilos/budget.css` y `layout.css`, completamente desacoplados de Variance, con grid responsive (5 cols desktop, 3 laptop, 2 tablet, 1 móvil) y soporte de tema oscuro.
+- **Progreso del rediseño de Budget Studio**:
+  - Etapa 1 (Fundamentos y layout): **Completada**.
+  - Etapa 2 (Cabecera y ciclo presupuestario): **Completada**.
+  - Etapa 3 (Dashboard analítico y gráficos avanzados): **Completada y auditada** (validada en 1440px, 1280px, 768px, 390px y tema oscuro; 82/82 tests unitarios pasando, 0 errores de linter/CSP, build exitoso).
+  - **Próxima etapa pendiente en el roadmap**: **Etapa 4 — Versiones, auditoría y pulido** (timeline en solo lectura, comparación entre versiones, auditoría de accesibilidad/skeletons y pruebas de regresión).
