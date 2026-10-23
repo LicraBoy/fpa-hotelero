@@ -279,7 +279,9 @@ def test_api_matriz_de_permisos_y_aislamiento(cliente: TestClient, mundo: Mundo)
     assert subir(cliente, mundo, usuario=RESPONSABLE).status_code == 403
     assert subir(cliente, mundo, usuario=CONTRALOR).status_code == 201
     base = f"/api/v1/hoteles/{mundo.hotel_a}/budget/versiones"
-    assert cliente.get(base, headers=como(RESPONSABLE)).status_code == 403
+    # Un responsable de departamento no puede importar, pero sí ver la grilla fusionada con el
+    # ciclo de Presupuesto (necesita leer qué versión de Budget existe para capturar su propuesta).
+    assert cliente.get(base, headers=como(RESPONSABLE)).status_code == 200
     assert cliente.get(base).status_code == 401
     assert cliente.get(base, headers=como(OTRA_ORG)).status_code == 404
     assert subir(cliente, mundo, usuario=OTRA_ORG).status_code == 404

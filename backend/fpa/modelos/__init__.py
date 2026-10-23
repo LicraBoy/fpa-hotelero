@@ -10,6 +10,15 @@ from fpa.modelos.identidad import Asignacion, AsignacionDepartamento, Rol, Sesio
 from fpa.modelos.mapeo import CuentaExcluidaMapeo, MapeoLineaCuenta, VersionMapeo
 from fpa.modelos.organizacion import Hotel, Organizacion
 from fpa.modelos.plan import LineaPlan, LineaPlanMensual, ValorCapturado, VersionPlan
+from fpa.modelos.presupuesto import (
+    AnoFiscal,
+    CicloPresupuesto,
+    CicloTransicion,
+    LineaPresupuestoCaptura,
+    LineaPresupuestoMensual,
+    PerfilDistribucion,
+    PeriodoFiscal,
+)
 from fpa.modelos.reporte import (
     ConvencionLinea,
     LineaReporte,
@@ -20,10 +29,13 @@ from fpa.modelos.saldos import SaldoMensualCuenta
 
 __all__ = [
     "AdjuntoComentario",
+    "AnoFiscal",
     "Asignacion",
     "AsignacionDepartamento",
     "Base",
     "CargaArchivo",
+    "CicloPresupuesto",
+    "CicloTransicion",
     "CierrePeriodo",
     "CierreTransicion",
     "ComentarioLinea",
@@ -36,10 +48,14 @@ __all__ = [
     "Hotel",
     "LineaPlan",
     "LineaPlanMensual",
+    "LineaPresupuestoCaptura",
+    "LineaPresupuestoMensual",
     "LineaReporte",
     "MapeoLineaCuenta",
     "Movimiento",
     "Organizacion",
+    "PerfilDistribucion",
+    "PeriodoFiscal",
     "ReglaSumaLinea",
     "Rol",
     "SaldoMensualCuenta",

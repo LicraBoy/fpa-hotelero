@@ -239,7 +239,9 @@ def test_api_rechaza_lo_no_valido_y_respeta_permisos(
     assert cliente.post(url, json=ok).status_code == 401
     assert cliente.post(url, json=ok, headers=como(OTRA_ORG)).status_code == 404
     edicion = f"/api/v1/hoteles/{mundo.hotel_a}/budget/edicion?ano_fiscal=2026/27"
-    assert cliente.get(edicion, headers=como(RESPONSABLE)).status_code == 403
+    # Un responsable de departamento no puede guardar una versión de Budget (arriba), pero sí ver
+    # la grilla fusionada con el ciclo de Presupuesto para capturar su propuesta.
+    assert cliente.get(edicion, headers=como(RESPONSABLE)).status_code == 200
     assert cliente.get(edicion).status_code == 401
     assert cliente.get(edicion.replace("2026/27", "xx"), headers=como(CONTRALOR)).status_code == 422
 

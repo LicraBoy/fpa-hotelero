@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import Path as RutaPath
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -20,8 +21,9 @@ from fpa.api.v1.tipos import ID_MAX, FechaHoraUtc, IdRuta
 from fpa.calculo.ano_fiscal import etiqueta_ano_fiscal
 from fpa.config import settings
 from fpa.db import get_db
-from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado
+from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado, principal_actual
 from fpa.identidad.permisos import Permiso
+from fpa.identidad.principal import Principal
 from fpa.ingesta.budget_anual_mzt import (
     alinear_con_lineas,
     es_budget_anual_mzt,
@@ -71,6 +73,28 @@ Lectura = Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.BUDGET_LEER)
 Importacion = Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.BUDGET_IMPORTAR))]
 
 
+def _leer_o_capturar(
+    hotel_id: Annotated[int, RutaPath(ge=1, le=2_147_483_647)],
+    principal: Principal = Depends(principal_actual),
+) -> ContextoHotel:
+    """Ver la grilla de Budget (pantalla fusionada con el ciclo de Presupuesto): no exige
+    `budget:importar` — basta con poder capturar, fijar el objetivo, revisarla o leerla."""
+    if not principal.tiene_acceso_a(hotel_id):
+        raise HTTPException(status_code=404, detail="Hotel no encontrado")
+    if not (
+        principal.puede(hotel_id, Permiso.BUDGET_LEER)
+        or principal.puede(hotel_id, Permiso.BUDGET_IMPORTAR)
+        or principal.puede(hotel_id, Permiso.BUDGET_CAPTURAR)
+        or principal.puede(hotel_id, Permiso.BUDGET_OBJETIVO)
+        or principal.puede(hotel_id, Permiso.BUDGET_REVISAR)
+    ):
+        raise HTTPException(status_code=403, detail="Sin permiso para esta acción")
+    return ContextoHotel(principal=principal, hotel_id=hotel_id)
+
+
+LecturaOCaptura = Annotated[ContextoHotel, Depends(_leer_o_capturar)]
+
+
 class VersionPlanSalida(BaseModel):
     id: int
     tipo: str
@@ -117,7 +141,9 @@ def _version(v: VersionPlan) -> VersionPlanSalida:
 
 
 @router.get("/hoteles/{hotel_id}/budget/versiones", response_model=list[VersionPlanSalida])
-def listar_versiones(contexto: Lectura, db: Session = Depends(get_db)) -> list[VersionPlanSalida]:
+def listar_versiones(
+    contexto: LecturaOCaptura, db: Session = Depends(get_db)
+) -> list[VersionPlanSalida]:
     return [_version(v) for v in RepositorioPlan(db, contexto.hotel_id).versiones()]
 
 
@@ -373,7 +399,7 @@ RESPUESTAS_EDICION: dict[int | str, dict[str, object]] = {
     responses=RESPUESTAS_EDICION,
 )
 def ver_edicion(
-    contexto: Importacion,
+    contexto: LecturaOCaptura,
     ano_fiscal: Annotated[str, Query(pattern=r"^20\d{2}(/\d{2})?$", description="Ej. 2026/27")],
     version_id: Annotated[int | None, Query(ge=1, le=ID_MAX)] = None,
     db: Session = Depends(get_db),

@@ -2,9 +2,10 @@ import type { ReactNode } from 'react'
 import { puede, type Permiso } from '../permisos'
 
 /**
- * Monta la pantalla solo si el rol tiene el permiso. Sin permiso muestra "Sin acceso" y **no se
- * monta nada**: ninguna consulta sale al servidor. (El servidor autoriza igual y siempre: esto
- * solo evita mostrar pantallas que de todos modos responderían 403.)
+ * Monta la pantalla solo si el rol tiene el permiso (o, con un arreglo, cualquiera de ellos). Sin
+ * permiso muestra "Sin acceso" y **no se monta nada**: ninguna consulta sale al servidor. (El
+ * servidor autoriza igual y siempre: esto solo evita mostrar pantallas que de todos modos
+ * responderían 403.)
  */
 export function RutaProtegida({
   rol,
@@ -12,10 +13,11 @@ export function RutaProtegida({
   children,
 }: {
   rol: string | undefined
-  permiso: Permiso
+  permiso: Permiso | Permiso[]
   children: ReactNode
 }) {
-  if (!puede(rol, permiso)) return <SinAcceso />
+  const tiene = Array.isArray(permiso) ? permiso.some((p) => puede(rol, p)) : puede(rol, permiso)
+  if (!tiene) return <SinAcceso />
   return <>{children}</>
 }
 

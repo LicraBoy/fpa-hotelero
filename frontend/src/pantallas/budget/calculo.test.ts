@@ -3,12 +3,37 @@ import { test } from 'node:test'
 import {
   aMicros,
   ajustarPorcentaje,
+  anosFiscalesConocidos,
   cambiosPendientes,
   claveCelda,
+  compararVersiones,
   completarConTotales,
+  diferenciaVsObjetivo,
+  estadoRelativo,
   formatoMicros,
+  principalesDiferencias,
+  repartirConPerfil,
+  seccionesIncompletas,
+  serieObjetivoVsPropuesta,
+  sumaCuadra,
+  sumaImportes,
+  sumarMicros,
   textoDeMicros,
 } from './calculo.ts'
+
+test('los años fiscales conocidos vienen de las cargas vigentes y las versiones de Budget', () => {
+  const cargas = [
+    { estado: 'vigente', periodo: '2026-08' },
+    { estado: 'vigente', periodo: '2025-05' },
+    { estado: 'reemplazada', periodo: '2024-01' }, // no vigente: no cuenta
+  ]
+  const versiones = [{ ano_fiscal: '2026/27' }, { ano_fiscal: '2023/24' }]
+  assert.deepEqual(anosFiscalesConocidos(cargas, versiones), ['2026/27', '2024/25', '2023/24'])
+})
+
+test('sin cargas ni versiones no hay años fiscales conocidos', () => {
+  assert.deepEqual(anosFiscalesConocidos([], []), [])
+})
 
 test('los importes se leen y se escriben en micros sin perder decimales', () => {
   assert.equal(aMicros('13091.0325'), 13_091_032_500n)
@@ -145,4 +170,168 @@ test('los Actuales capturados se cambian aparte del Budget y vaciarlos los borra
   const presupuesto = cambiosPendientes(ediciones, new Map([[claveCelda(9, '2026-09'), null]]))
   assert.deepEqual(presupuesto.cambios, [{ linea_id: 9, periodo: '2026-09', importe: '18' }])
   assert.deepEqual(presupuesto.invalidas, [])
+})
+
+test('la suma de los importes mensuales se compara exacta contra el anual', () => {
+  const doceIguales = Object.fromEntries(
+    Array.from({ length: 12 }, (_, i) => [`2026-${String(i + 1).padStart(2, '0')}`, '100.00']),
+  )
+  assert.equal(sumaCuadra(doceIguales, '1200.00'), true)
+  assert.equal(sumaCuadra(doceIguales, '1200.01'), false)
+})
+
+test('un importe vacío cuenta como cero', () => {
+  assert.equal(sumaCuadra({ '2026-07': '', '2026-08': '100.00' }, '100.00'), true)
+})
+
+test('un texto que no es un importe válido da null, no false', () => {
+  assert.equal(sumaCuadra({ '2026-07': 'abc' }, '100.00'), null)
+  assert.equal(sumaCuadra({ '2026-07': '100.00' }, 'abc'), null)
+})
+
+test('sumaImportes devuelve el total como texto decimal exacto', () => {
+  assert.equal(sumaImportes({ a: '100.50', b: '0.50' }), '101')
+  assert.equal(sumaImportes({}), '0')
+  assert.equal(sumaImportes({ a: 'abc' }), null)
+})
+
+test('diferenciaVsObjetivo: propuesta igual, por arriba o por abajo del objetivo', () => {
+  assert.deepEqual(diferenciaVsObjetivo('100.00', '100.00'), {
+    diferenciaMicros: 0n,
+    estado: 'en-rango',
+  })
+  assert.deepEqual(diferenciaVsObjetivo('0.00', '0.00'), { diferenciaMicros: 0n, estado: 'en-rango' })
+  assert.deepEqual(diferenciaVsObjetivo('100.00', '120.00'), {
+    diferenciaMicros: 20_000_000n,
+    estado: 'sobre',
+  })
+  assert.deepEqual(diferenciaVsObjetivo('100.00', '80.00'), {
+    diferenciaMicros: -20_000_000n,
+    estado: 'bajo',
+  })
+})
+
+test('diferenciaVsObjetivo con un importe inválido no inventa una diferencia', () => {
+  assert.deepEqual(diferenciaVsObjetivo('abc', '100.00'), { diferenciaMicros: null, estado: 'en-rango' })
+})
+
+test('serieObjetivoVsPropuesta trae el texto exacto en micros, y el número solo para graficar', () => {
+  const serie = serieObjetivoVsPropuesta([
+    { seccion: 'Habitaciones', suma_objetivo: '100.00', suma_propuesta: '120.00' },
+    { seccion: null, suma_objetivo: '0.00', suma_propuesta: '50.00' },
+  ])
+  assert.equal(serie[0].seccion, 'Habitaciones')
+  assert.equal(serie[0].objetivo, 100)
+  assert.equal(serie[0].propuesta, 120)
+  assert.equal(serie[0].diferenciaMicros, 20_000_000n)
+  assert.equal(serie[0].diferenciaPct, 20)
+  assert.equal(serie[1].seccion, 'Sin sección')
+  assert.equal(serie[1].diferenciaPct, null) // objetivo en 0: el porcentaje no tiene sentido
+})
+
+test('estadoRelativo: avance lineal marca completado/actual/pendiente', () => {
+  assert.equal(estadoRelativo('borrador', 'revision'), 'completado')
+  assert.equal(estadoRelativo('revision', 'revision'), 'actual')
+  assert.equal(estadoRelativo('aprobado', 'revision'), 'pendiente')
+  assert.equal(estadoRelativo('bloqueado', 'revision'), 'pendiente')
+})
+
+test('estadoRelativo: una reapertura no deja pasos futuros como completados', () => {
+  // aprobado -> borrador (reapertura): solo "borrador" es el actual, el resto vuelve a pendiente
+  assert.equal(estadoRelativo('borrador', 'borrador'), 'actual')
+  assert.equal(estadoRelativo('aprobado', 'borrador'), 'pendiente')
+  assert.equal(estadoRelativo('bloqueado', 'borrador'), 'pendiente')
+})
+
+const PESOS_UNIFORME = [...Array(11).fill('0.083333'), '0.083337']
+
+test('repartirConPerfil: el perfil Uniforme cuadra exacto con el anual (caso del backend)', () => {
+  const anual = aMicros('1200000.00')
+  const importes = repartirConPerfil(anual as bigint, PESOS_UNIFORME)
+  assert.ok(importes)
+  assert.equal(importes!.length, 12)
+  assert.deepEqual(
+    importes!.reduce((a, b) => a + b, 0n),
+    anual,
+  )
+  assert.equal(importes![0], aMicros('99999.60'))
+  assert.equal(importes![11], aMicros('100004.40'))
+})
+
+test('repartirConPerfil: también cuadra exacto cuando el anual tiene micros difíciles de repartir', () => {
+  const anual = aMicros('100.000001')
+  const importes = repartirConPerfil(anual as bigint, PESOS_UNIFORME)
+  assert.ok(importes)
+  assert.equal(
+    importes!.reduce((a, b) => a + b, 0n),
+    anual,
+  )
+})
+
+test('repartirConPerfil: el residuo se suma al último mes con peso distinto de cero (empate a la par)', () => {
+  const pesos = ['0.5', '0.5', ...Array(10).fill('0')]
+  const importes = repartirConPerfil(1n, pesos) // 0.000001: un residuo de un micro
+  // 0.5 exacto es un empate: redondea al par (0), así que ambos meses "caen" en 0 antes del ajuste
+  assert.deepEqual(importes, [0n, 1n, ...Array(10).fill(0n)])
+})
+
+test('repartirConPerfil: pesos inválidos (no son 12, o no son un número) dan null', () => {
+  assert.equal(repartirConPerfil(1_000_000n, ['1', '0']), null)
+  assert.equal(repartirConPerfil(1_000_000n, [...Array(11).fill('0.1'), 'abc']), null)
+})
+
+test('sumarMicros: sin ningún dato es null, no cero; los ausentes no cuentan como cero', () => {
+  assert.equal(sumarMicros([]), null)
+  assert.equal(sumarMicros([null, null]), null)
+  assert.equal(sumarMicros([1_000_000n, null, 2_000_000n]), 3_000_000n)
+})
+
+test('compararVersiones: en ambas, solo en A, solo en B, e importe inválido', () => {
+  const a = [
+    { linea_id: 1, anual: '100.00' }, // en ambas, cambia
+    { linea_id: 2, anual: '50.00' }, // solo en A
+    { linea_id: 3, anual: 'abc' }, // inválido en A
+  ]
+  const b = [
+    { linea_id: 1, anual: '120.00' },
+    { linea_id: 3, anual: '10.00' },
+    { linea_id: 4, anual: '5.00' }, // solo en B
+  ]
+  const r = compararVersiones(a, b)
+  assert.deepEqual(
+    r.map((d) => d.linea_id),
+    [1, 2, 3, 4],
+  )
+  assert.deepEqual(r[0], { linea_id: 1, anualA: 100_000_000n, anualB: 120_000_000n, diferenciaMicros: 20_000_000n })
+  assert.deepEqual(r[1], { linea_id: 2, anualA: 50_000_000n, anualB: null, diferenciaMicros: null })
+  assert.deepEqual(r[2], { linea_id: 3, anualA: null, anualB: 10_000_000n, diferenciaMicros: null })
+  assert.deepEqual(r[3], { linea_id: 4, anualA: null, anualB: 5_000_000n, diferenciaMicros: null })
+})
+
+test('seccionesIncompletas cuenta solo las secciones con alguna línea sin capturar', () => {
+  assert.equal(
+    seccionesIncompletas([
+      { total_lineas: 3, lineas_capturadas: 3 },
+      { total_lineas: 4, lineas_capturadas: 1 },
+      { total_lineas: 2, lineas_capturadas: 0 },
+    ]),
+    2,
+  )
+  assert.equal(seccionesIncompletas([]), 0)
+})
+
+test('principalesDiferencias: ordena por desviación absoluta y excluye líneas sin objetivo/propuesta', () => {
+  const lineas = [
+    { linea_id: 1, descripcion: 'A', seccion: 'Rooms', objetivo: '100.00', propuesta_anual: '120.00' }, // +20
+    { linea_id: 2, descripcion: 'B', seccion: 'Rooms', objetivo: '100.00', propuesta_anual: '40.00' }, // -60
+    { linea_id: 3, descripcion: 'C', seccion: null, objetivo: null, propuesta_anual: '50.00' }, // sin objetivo
+    { linea_id: 4, descripcion: 'D', seccion: null, objetivo: '10.00', propuesta_anual: null }, // sin propuesta
+    { linea_id: 5, descripcion: 'E', seccion: null, objetivo: '100.00', propuesta_anual: '105.00' }, // +5
+  ]
+  const r = principalesDiferencias(lineas, 2)
+  assert.deepEqual(
+    r.map((d) => d.linea_id),
+    [2, 1],
+  )
+  assert.equal(r[0].diferenciaMicros, -60_000_000n)
 })

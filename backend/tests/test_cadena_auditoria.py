@@ -188,6 +188,30 @@ DELEGAN_EN_SERVICIO = {
     "/hoteles/{hotel_id}/mapeo/versiones/{version_id}/descartar": "servicios.versionado_mapeo",
     "/hoteles/{hotel_id}/mapeo/versiones/{version_id}/aprobar": "servicios.versionado_mapeo",
     "/hoteles/{hotel_id}/reporte/convenciones": "servicios.estructura_reporte (convenciones.*)",
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}": (
+        "servicios.presupuesto_captura (presupuesto.linea_capturada)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/prorrateo": (
+        "servicios.presupuesto_distribucion (presupuesto.linea_prorrateada)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/importes-mensuales": (
+        "servicios.presupuesto_distribucion (presupuesto.linea_mensualizada_manual)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/objetivo": (
+        "servicios.presupuesto_captura (presupuesto.linea_objetivo)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/anos-fiscales": (
+        "calendario fiscal, sin bitácora (no mueve dinero)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/anos-fiscales/{ano_fiscal_id}/periodos/generar": (
+        "calendario fiscal, sin bitácora (no mueve dinero)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos": (
+        "servicios.presupuesto_ciclo (presupuesto.ciclo_creado)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/transiciones": (
+        "servicios.presupuesto_ciclo (presupuesto.*)"
+    ),
 }
 
 

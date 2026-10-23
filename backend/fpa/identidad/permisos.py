@@ -17,6 +17,11 @@ class Permiso(StrEnum):
     MAPEO_APROBAR = "mapeo:aprobar"
     BUDGET_LEER = "budget:leer"
     BUDGET_IMPORTAR = "budget:importar"
+    BUDGET_CAPTURAR = "budget:capturar"
+    BUDGET_OBJETIVO = "budget:objetivo"
+    BUDGET_REVISAR = "budget:revisar"
+    BUDGET_APROBAR = "budget:aprobar"
+    BUDGET_BLOQUEAR = "budget:bloquear"
     VARIANCE_LEER = "variance:leer"
     DRILLDOWN_LEER = "drilldown:leer"
     USUARIOS_ADMINISTRAR = "usuarios:administrar"
@@ -68,9 +73,11 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.COMENTARIO_RESOLVER,
             Permiso.CIERRE_LEER,
             Permiso.CIERRE_REVISAR,
+            Permiso.BUDGET_REVISAR,
         }
     ),
-    # Ve y comenta solo las secciones del Variance que tiene asignadas (`AsignacionDepartamento`)
+    # Ve y comenta solo las secciones del Variance que tiene asignadas (`AsignacionDepartamento`);
+    # BUDGET_CAPTURAR lo restringe igual, por sección, cuando la Fase 7.2 añada esa resolución.
     RolCodigo.RESPONSABLE_AREA: frozenset(
         {
             Permiso.HOTEL_LEER,
@@ -80,6 +87,7 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.DRILLDOWN_LEER,
             Permiso.COMENTARIO_LEER,
             Permiso.COMENTARIO_CREAR,
+            Permiso.BUDGET_CAPTURAR,
         }
     ),
     RolCodigo.DIRECCION: frozenset(
@@ -94,6 +102,7 @@ PERMISOS_POR_ROL: dict[str, frozenset[Permiso]] = {
             Permiso.VARIANCE_LEER,
             Permiso.COMENTARIO_LEER,
             Permiso.CIERRE_LEER,
+            Permiso.BUDGET_OBJETIVO,
         }
     ),
     RolCodigo.AUDITORIA: frozenset(

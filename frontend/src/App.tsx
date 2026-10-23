@@ -261,7 +261,7 @@ export default function App({
                   />
                 </RutaProtegida>
               )}
-              {activa === 'budget' && <PanelBudget hotelId={hotel.id} />}
+              {activa === 'budget' && <PanelBudget hotelId={hotel.id} rol={rol} />}
               {activa === 'departamentos' && (
                 <PanelDepartamentos
                   hotelId={hotel.id}

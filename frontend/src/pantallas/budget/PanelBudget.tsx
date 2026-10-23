@@ -1,32 +1,52 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ErrorApi,
+  enviarJson,
   guardarActualesCapturados,
   guardarVersionBudget,
   importarBudgetExcel,
   obtenerTipado,
 } from '../../api/cliente'
+import type { components } from '../../api/schema'
 import { useDatos } from '../../api/useDatos'
 import type { LineaEdicionBudget, RespuestaBudget, VistaEdicionBudget } from '../../api/tipos'
-import { EncabezadoPagina } from '../../componentes/EncabezadoPagina'
 import { Icono } from '../../componentes/Iconos'
-import { Cargando, Insignia, MensajeError } from '../../componentes/Insignia'
+import { Cargando, EstadoVacio, MensajeError } from '../../componentes/Insignia'
+import { puede } from '../../permisos'
+import { ArbolLineas } from './componentes/ArbolLineas'
+import { BudgetHeader } from './componentes/BudgetHeader'
+import { BudgetResumen } from './componentes/BudgetResumen'
+import { BudgetTabs, type PestanaBudget } from './componentes/BudgetTabs'
+import { BudgetVersionesTab } from './componentes/BudgetVersionesTab'
+import { DetalleCapturaLinea } from './componentes/DetalleCapturaLinea'
+import { SelectorPerfilDistribucion } from './componentes/SelectorPerfilDistribucion'
+import { CicloPresupuesto } from './CicloPresupuesto'
 import {
   agruparPorSeccionId,
   ajustarPorcentaje,
   aMicros,
+  anosFiscalesConocidos,
   cambiosActualPendientes,
   cambiosPendientes,
   claveActual,
   claveCelda,
   completarConTotales,
-  etiquetaAnoFiscal,
   formatoMicros,
+  sumaImportes,
+  sumarMicros,
   textoDeMicros,
 } from './calculo'
 
+type AnoFiscal = components['schemas']['AnoFiscalSalida']
+type Ciclo = components['schemas']['CicloSalida']
+type LineaCaptura = components['schemas']['LineaCapturaSalida']
+type Perfil = components['schemas']['PerfilSalida']
+type LineaMensual = components['schemas']['LineaMensualSalida']
+type VersionBudget = components['schemas']['VersionPlanSalida']
+
 interface Props {
   hotelId: number
+  rol: string | undefined
 }
 
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
@@ -38,24 +58,33 @@ const etiquetaMes = (periodo: string) => `${MESES[Number(periodo.slice(5, 7)) - 
 
 type Mensaje = { tono: 'ok' | 'aviso' | 'error'; texto: string }
 
-/** Pantalla de Budget: editar el Budget mes a mes con el Actual al lado como referencia. */
-export function PanelBudget({ hotelId }: Props) {
+/**
+ * Pantalla de Budget: la grilla mes a mes con el Actual al lado como referencia (como siempre), con
+ * el ciclo de Presupuesto (estado, objetivo, captura por departamento) fusionado encima — no hay una
+ * pantalla "Presupuesto" separada. Según el permiso y si hay un ciclo abierto, "Guardar" crea una
+ * versión de Budget nueva de una vez, o alimenta el ciclo de captura (línea por línea).
+ */
+export function PanelBudget({ hotelId, rol }: Props) {
   // El año fiscal por omisión sale del último mes cargado; el Budget vigente puede ser de otro.
+  // Un responsable de departamento no tiene por qué poder leer Cargas: sin ese permiso no se
+  // consulta (no es un dato que necesite para capturar su presupuesto).
+  const puedeVerCargas = puede(rol, 'carga:leer')
   const cargas = useDatos(
-    () => obtenerTipado('/api/v1/hoteles/{hotel_id}/cargas', { path: { hotel_id: hotelId } }),
-    [hotelId],
+    () =>
+      puedeVerCargas
+        ? obtenerTipado('/api/v1/hoteles/{hotel_id}/cargas', { path: { hotel_id: hotelId } })
+        : Promise.resolve([]),
+    [hotelId, puedeVerCargas],
   )
   const versiones = useDatos(
     () => obtenerTipado('/api/v1/hoteles/{hotel_id}/budget/versiones', { path: { hotel_id: hotelId } }),
     [hotelId],
   )
   const [elegido, setElegido] = useState<string | null>(null)
-  const anos = useMemo(() => {
-    const salida = new Set<string>()
-    for (const v of versiones.datos ?? []) salida.add(v.ano_fiscal)
-    for (const c of cargas.datos ?? []) if (c.estado === 'vigente') salida.add(etiquetaAnoFiscal(c.periodo))
-    return [...salida].sort().reverse()
-  }, [versiones.datos, cargas.datos])
+  const anos = useMemo(
+    () => anosFiscalesConocidos(cargas.datos ?? [], versiones.datos ?? []),
+    [versiones.datos, cargas.datos],
+  )
   const anoFiscal = elegido && anos.includes(elegido) ? elegido : (anos[0] ?? null)
 
   // Al recargar la lista de versiones (tras guardar) no se desmonta el editor: perdería su mensaje
@@ -77,6 +106,8 @@ export function PanelBudget({ hotelId }: Props) {
       hotelId={hotelId}
       anoFiscal={anoFiscal}
       anos={anos}
+      rol={rol}
+      versiones={versiones.datos ?? []}
       alElegirAno={setElegido}
       alCambiarVersiones={versiones.recargar}
     />
@@ -87,11 +118,13 @@ interface PropsEditor {
   hotelId: number
   anoFiscal: string
   anos: string[]
+  rol: string | undefined
+  versiones: VersionBudget[]
   alElegirAno: (ano: string) => void
   alCambiarVersiones: () => void
 }
 
-function EditorBudget({ hotelId, anoFiscal, anos, alElegirAno, alCambiarVersiones }: PropsEditor) {
+function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, alCambiarVersiones }: PropsEditor) {
   const vista = useDatos(
     () =>
       obtenerTipado('/api/v1/hoteles/{hotel_id}/budget/edicion', {
@@ -100,6 +133,134 @@ function EditorBudget({ hotelId, anoFiscal, anos, alElegirAno, alCambiarVersione
       }),
     [hotelId, anoFiscal],
   )
+
+  // Ciclo de Presupuesto para este año fiscal: se resuelve solo (nunca se le pide a Contraloría
+  // llenar un formulario de calendario). Sin permiso de administrar el calendario, si todavía no
+  // existe, el Budget se ve igual que siempre, sin la barra de ciclo.
+  const puedeAdministrarCiclo = puede(rol, 'budget:aprobar')
+  const anosPresupuesto = useDatos(
+    () => obtenerTipado('/api/v1/hoteles/{hotel_id}/presupuesto/anos-fiscales', { path: { hotel_id: hotelId } }),
+    [hotelId],
+  )
+  const existente = (anosPresupuesto.datos ?? []).find((a) => a.etiqueta === anoFiscal) ?? null
+  const [anoCreado, setAnoCreado] = useState<AnoFiscal | null>(null)
+  const [creandoAno, setCreandoAno] = useState(false)
+
+  useEffect(() => {
+    if (existente || anoCreado || creandoAno || !puedeAdministrarCiclo) return
+    let vigente = true
+    setCreandoAno(true)
+    void (async () => {
+      try {
+        const ano = await enviarJson<AnoFiscal>(
+          'POST',
+          `/api/v1/hoteles/${hotelId}/presupuesto/anos-fiscales`,
+          { etiqueta: anoFiscal, mes_inicio: 7, mes_fin: 6 },
+        )
+        if (ano) {
+          await enviarJson('POST', `/api/v1/hoteles/${hotelId}/presupuesto/anos-fiscales/${ano.id}/periodos/generar`)
+          if (vigente) {
+            setAnoCreado(ano)
+            anosPresupuesto.recargar()
+          }
+        }
+      } catch {
+        // Sin año fiscal de Presupuesto el Budget sigue funcionando: solo no habrá ciclo.
+      } finally {
+        if (vigente) setCreandoAno(false)
+      }
+    })()
+    return () => {
+      vigente = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existente, anoCreado, creandoAno, puedeAdministrarCiclo, hotelId, anoFiscal])
+
+  const anoFiscalPresupuestoId = existente?.id ?? anoCreado?.id ?? null
+
+  const [versionCiclo, setVersionCiclo] = useState(0)
+  const recargarCiclo = () => setVersionCiclo((v) => v + 1)
+
+  const ciclos = useDatos(
+    () =>
+      anoFiscalPresupuestoId === null
+        ? Promise.resolve([])
+        : obtenerTipado('/api/v1/hoteles/{hotel_id}/presupuesto/ciclos', {
+            path: { hotel_id: hotelId },
+            query: { ano_fiscal_id: anoFiscalPresupuestoId },
+          }),
+    [hotelId, anoFiscalPresupuestoId, versionCiclo],
+  )
+  const cicloAbierto = (ciclos.datos ?? []).find((c) => c.estado !== 'bloqueado') ?? null
+  const cicloId = cicloAbierto?.id ?? null
+
+  const cicloDetalle = useDatos(
+    () =>
+      cicloId === null
+        ? Promise.resolve(null)
+        : obtenerTipado('/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}', {
+            path: { hotel_id: hotelId, ciclo_id: cicloId },
+          }),
+    [hotelId, cicloId, versionCiclo],
+  )
+  const lineasCiclo = useDatos(
+    () =>
+      cicloId === null
+        ? Promise.resolve([])
+        : obtenerTipado('/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas', {
+            path: { hotel_id: hotelId, ciclo_id: cicloId },
+          }),
+    [hotelId, cicloId, versionCiclo],
+  )
+  const perfiles = useDatos(
+    () =>
+      cicloId === null
+        ? Promise.resolve([])
+        : obtenerTipado('/api/v1/hoteles/{hotel_id}/presupuesto/perfiles', { path: { hotel_id: hotelId } }),
+    [hotelId, cicloId],
+  )
+  // Mismo `versionCiclo` que el resto del ciclo: Resumen y Captura nunca muestran datos de
+  // versiones distintas entre sí.
+  const resumenCiclo = useDatos(
+    () =>
+      cicloId === null
+        ? Promise.resolve(null)
+        : obtenerTipado('/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/resumen', {
+            path: { hotel_id: hotelId, ciclo_id: cicloId },
+          }),
+    [hotelId, cicloId, versionCiclo],
+  )
+  const resumenMensualCiclo = useDatos(
+    () =>
+      cicloId === null
+        ? Promise.resolve(null)
+        : obtenerTipado('/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/resumen-mensual', {
+            path: { hotel_id: hotelId, ciclo_id: cicloId },
+          }),
+    [hotelId, cicloId, versionCiclo],
+  )
+
+  const [pestana, setPestana] = useState<PestanaBudget>('captura')
+
+  const [abriendoCiclo, setAbriendoCiclo] = useState(false)
+  const [errorCiclo, setErrorCiclo] = useState<string | null>(null)
+
+  async function abrirCiclo() {
+    if (anoFiscalPresupuestoId === null) return
+    setAbriendoCiclo(true)
+    setErrorCiclo(null)
+    try {
+      await enviarJson<Ciclo>('POST', `/api/v1/hoteles/${hotelId}/presupuesto/ciclos`, {
+        ano_fiscal_id: anoFiscalPresupuestoId,
+      })
+      ciclos.recargar()
+    } catch (e) {
+      setErrorCiclo(e instanceof ErrorApi ? e.detalle : 'No se pudo abrir el ciclo')
+    } finally {
+      setAbriendoCiclo(false)
+    }
+  }
+
   const [ediciones, setEdiciones] = useState<ReadonlyMap<string, string>>(new Map())
   const [seccion, setSeccion] = useState<string>('')
   const [texto, setTexto] = useState('')
@@ -109,6 +270,10 @@ function EditorBudget({ hotelId, anoFiscal, anos, alElegirAno, alCambiarVersione
   const [confirmando, setConfirmando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState<Mensaje | null>(null)
+  const descripcionPorLinea = useMemo(
+    () => new Map((vista.datos?.lineas ?? []).map((l) => [l.linea_id, l.descripcion])),
+    [vista.datos],
+  )
 
   if (vista.cargando) return <Cargando />
   if (vista.error || !vista.datos) {
@@ -122,38 +287,95 @@ function EditorBudget({ hotelId, anoFiscal, anos, alElegirAno, alCambiarVersione
       </section>
     )
   }
+  // Desde Resumen, "Ver en Captura"/clic en una barra lleva a la sección correspondiente (si se
+  // reconoce por nombre): el filtro de sección en Captura ya vive aquí, no se duplica.
+  function irACaptura(nombreSeccion?: string) {
+    setPestana('captura')
+    if (!nombreSeccion) return
+    const encontrada = vista.datos?.secciones.find((s) => s.descripcion === nombreSeccion)
+    if (encontrada) setSeccion(String(encontrada.id))
+  }
+
   return (
-    <VistaEditor
-      datos={vista.datos}
-      hotelId={hotelId}
-      anoFiscal={anoFiscal}
-      anos={anos}
-      alElegirAno={alElegirAno}
-      ediciones={ediciones}
-      setEdiciones={setEdiciones}
-      seccion={seccion}
-      setSeccion={setSeccion}
-      texto={texto}
-      setTexto={setTexto}
-      soloEditables={soloEditables}
-      setSoloEditables={setSoloEditables}
-      porcentaje={porcentaje}
-      setPorcentaje={setPorcentaje}
-      soloVacios={soloVacios}
-      setSoloVacios={setSoloVacios}
-      confirmando={confirmando}
-      setConfirmando={setConfirmando}
-      guardando={guardando}
-      setGuardando={setGuardando}
-      mensaje={mensaje}
-      setMensaje={setMensaje}
-      recargar={() => {
-        setEdiciones(new Map())
-        setConfirmando(false)
-        vista.recargar()
-        alCambiarVersiones()
-      }}
-    />
+    <>
+      <BudgetHeader
+        anoFiscal={anoFiscal}
+        version={vista.datos.version}
+        puedeAdministrarCiclo={puedeAdministrarCiclo}
+        cicloAbierto={cicloAbierto !== null || anoFiscalPresupuestoId === null}
+        abriendoCiclo={abriendoCiclo}
+        errorCiclo={errorCiclo}
+        onAbrirCiclo={() => void abrirCiclo()}
+      />
+      {cicloId !== null && (
+        <CicloPresupuesto
+          hotelId={hotelId}
+          cicloId={cicloId}
+          alCambiar={() => {
+            recargarCiclo()
+            alCambiarVersiones()
+            vista.recargar()
+          }}
+        />
+      )}
+      <BudgetTabs activa={pestana} onCambiar={setPestana} />
+
+      <div role="tabpanel" id="budget-panel-resumen" aria-labelledby="budget-tab-resumen" hidden={pestana !== 'resumen'}>
+        <BudgetResumen
+          ciclo={cicloDetalle.datos ?? null}
+          resumen={resumenCiclo.datos ?? null}
+          resumenMensual={resumenMensualCiclo.datos ?? null}
+          lineasCiclo={lineasCiclo.datos ?? []}
+          cargando={resumenCiclo.cargando}
+          error={resumenCiclo.error}
+          onIrACaptura={irACaptura}
+        />
+      </div>
+
+      <div role="tabpanel" id="budget-panel-captura" aria-labelledby="budget-tab-captura" hidden={pestana !== 'captura'}>
+        <VistaEditor
+        datos={vista.datos}
+        hotelId={hotelId}
+        anoFiscal={anoFiscal}
+        anos={anos}
+        rol={rol}
+        cicloId={cicloId}
+        estadoCiclo={cicloDetalle.datos?.estado ?? null}
+        lineasCiclo={lineasCiclo.datos ?? []}
+        perfiles={perfiles.datos ?? []}
+        alElegirAno={alElegirAno}
+        ediciones={ediciones}
+        setEdiciones={setEdiciones}
+        seccion={seccion}
+        setSeccion={setSeccion}
+        texto={texto}
+        setTexto={setTexto}
+        soloEditables={soloEditables}
+        setSoloEditables={setSoloEditables}
+        porcentaje={porcentaje}
+        setPorcentaje={setPorcentaje}
+        soloVacios={soloVacios}
+        setSoloVacios={setSoloVacios}
+        confirmando={confirmando}
+        setConfirmando={setConfirmando}
+        guardando={guardando}
+        setGuardando={setGuardando}
+        mensaje={mensaje}
+        setMensaje={setMensaje}
+        recargar={() => {
+          setEdiciones(new Map())
+          setConfirmando(false)
+          vista.recargar()
+          alCambiarVersiones()
+        }}
+        recargarCiclo={recargarCiclo}
+        />
+      </div>
+
+      <div role="tabpanel" id="budget-panel-versiones" aria-labelledby="budget-tab-versiones" hidden={pestana !== 'versiones'}>
+        <BudgetVersionesTab hotelId={hotelId} versiones={versiones} descripcionPorLinea={descripcionPorLinea} />
+      </div>
+    </>
   )
 }
 
@@ -162,6 +384,11 @@ interface PropsVista {
   hotelId: number
   anoFiscal: string
   anos: string[]
+  rol: string | undefined
+  cicloId: number | null
+  estadoCiclo: string | null
+  lineasCiclo: LineaCaptura[]
+  perfiles: Perfil[]
   alElegirAno: (ano: string) => void
   ediciones: ReadonlyMap<string, string>
   setEdiciones: (e: ReadonlyMap<string, string>) => void
@@ -182,12 +409,22 @@ interface PropsVista {
   mensaje: Mensaje | null
   setMensaje: (m: Mensaje | null) => void
   recargar: () => void
+  recargarCiclo: () => void
 }
 
 function VistaEditor(p: PropsVista) {
   const { datos, ediciones } = p
   const periodos = datos.periodos
   const secciones = datos.secciones
+
+  const puedeImportar = puede(p.rol, 'budget:importar')
+  const puedeCapturar = puede(p.rol, 'budget:capturar')
+  const puedeObjetivo = puede(p.rol, 'budget:objetivo')
+  const cicloBorrador = p.cicloId !== null && p.estadoCiclo === 'borrador'
+  const lineasPermitidas = useMemo(() => new Set(p.lineasCiclo.map((l) => l.linea_id)), [p.lineasCiclo])
+  const objetivoPorLinea = useMemo(() => new Map(p.lineasCiclo.map((l) => [l.linea_id, l])), [p.lineasCiclo])
+  // Cuándo "Guardar" alimenta el ciclo de captura en vez de crear una versión de Budget de una vez.
+  const usaCaptura = cicloBorrador && puedeCapturar
 
   // Budget vigente por celda (lo que dice la versión guardada), para saber qué cambió
   const actuales = useMemo(() => {
@@ -220,6 +457,14 @@ function VistaEditor(p: PropsVista) {
     }
     return salida
   }, [datos, ediciones, actuales, periodos])
+
+  // ¿Puede este usuario escribir el Budget de esta línea? Con captura por ciclo, solo las líneas que
+  // el ciclo le deja ver (su sección); con acceso completo (budget:importar), todas como siempre.
+  function puedeEditarBudget(linea: LineaEdicionBudget): boolean {
+    if (!linea.editable) return false
+    if (puedeImportar) return true
+    return usaCaptura && lineasPermitidas.has(linea.linea_id)
+  }
 
   const { cambios, invalidas: invalidasBudget } = useMemo(
     () => cambiosPendientes(ediciones, actuales),
@@ -262,12 +507,25 @@ function VistaEditor(p: PropsVista) {
   )
   const nombreSeccion = new Map(secciones.map((s) => [s.id, s.descripcion]))
 
+  const [vistaCaptura, setVistaCaptura] = useState<'tabla' | 'arbol'>('tabla')
+  const [lineaSeleccionada, setLineaSeleccionada] = useState<number | null>(null)
+  const lineaDetalle = datos.lineas.find((l) => l.linea_id === lineaSeleccionada) ?? null
+
   function editar(linea: number, periodo: string, valor: string) {
     const siguiente = new Map(ediciones)
     siguiente.set(claveCelda(linea, periodo), valor)
     p.setEdiciones(siguiente)
     p.setMensaje(null)
     p.setConfirmando(false)
+  }
+
+  function rellenarMeses(linea: number, valores: LineaMensual[]) {
+    const siguiente = new Map(ediciones)
+    for (const v of valores) siguiente.set(claveCelda(linea, v.periodo), v.importe)
+    p.setEdiciones(siguiente)
+    p.setMensaje(null)
+    p.setConfirmando(false)
+    p.recargarCiclo()
   }
 
   function editarActual(linea: number, periodo: string, valor: string) {
@@ -288,7 +546,7 @@ function VistaEditor(p: PropsVista) {
     let copiadas = 0
     for (const l of lineasMostradas) {
       // el tipo de cambio (informativa) tiene su propio Budget: no se copia de su Actual
-      if (!l.editable || l.tipo === 'informativa') continue
+      if (!puedeEditarBudget(l) || l.tipo === 'informativa') continue
       for (const c of l.meses) {
         if (c.actual === null) continue
         const clave = claveCelda(l.linea_id, c.periodo)
@@ -312,6 +570,48 @@ function VistaEditor(p: PropsVista) {
     })
   }
 
+  async function guardarEnCiclo() {
+    if (p.cicloId === null) return { capturadas: 0, mensualizadas: 0 }
+    const lineasAfectadas = [...new Set(cambios.map((c) => c.linea_id))]
+    let capturadas = 0
+    let mensualizadas = 0
+    for (const lineaId of lineasAfectadas) {
+      const linea = datos.lineas.find((l) => l.linea_id === lineaId)
+      if (!linea) continue
+      const importes: Record<string, string> = {}
+      let completo = true
+      for (const c of linea.meses) {
+        const valor = budgetEnPantalla.get(claveCelda(lineaId, c.periodo)) ?? null
+        if (valor === null) {
+          completo = false
+          continue
+        }
+        importes[c.periodo] = textoDeMicros(valor)
+      }
+      const anual = sumaImportes(importes)
+      if (anual === null) continue
+      await enviarJson('PUT', `/api/v1/hoteles/${p.hotelId}/presupuesto/ciclos/${p.cicloId}/lineas/${lineaId}`, {
+        propuesta_anual: anual,
+        nota: null,
+      })
+      capturadas += 1
+      if (completo && Object.keys(importes).length === periodos.length) {
+        try {
+          await enviarJson(
+            'POST',
+            `/api/v1/hoteles/${p.hotelId}/presupuesto/ciclos/${p.cicloId}/lineas/${lineaId}/importes-mensuales`,
+            { importes },
+          )
+          mensualizadas += 1
+        } catch {
+          // El reparto mensual no cuadró: la propuesta anual ya quedó capturada, se puede
+          // prorratear después (con un perfil, o editando los meses otra vez).
+        }
+      }
+    }
+    return { capturadas, mensualizadas }
+  }
+
   async function guardar() {
     p.setGuardando(true)
     try {
@@ -320,7 +620,16 @@ function VistaEditor(p: PropsVista) {
         const n = await guardarActualesCapturados(p.hotelId, cambiosActual)
         partes.push(`${plural(n, 'Actual capturado', 'Actuales capturados')}`)
       }
-      if (cambios.length > 0) {
+      if (usaCaptura) {
+        if (cambios.length > 0) {
+          const { capturadas, mensualizadas } = await guardarEnCiclo()
+          partes.push(
+            `${plural(capturadas, 'línea capturada', 'líneas capturadas')} en el ciclo de presupuesto` +
+              (mensualizadas > 0 ? ` (${mensualizadas} con su reparto mensual)` : ''),
+          )
+          p.recargarCiclo()
+        }
+      } else if (cambios.length > 0) {
         const r = await guardarVersionBudget(p.hotelId, {
           ano_fiscal: p.anoFiscal,
           base_version_id: datos.version?.id ?? null,
@@ -356,26 +665,23 @@ function VistaEditor(p: PropsVista) {
 
   return (
     <section aria-labelledby="titulo-budget">
-      <EncabezadoPagina
-        id="titulo-budget"
-        titulo={`Budget ${p.anoFiscal}`}
-        subtitulo={
-          datos.version ? (
-            <p className="suave meta-version">
-              Versión {datos.version.numero} · {datos.version.nombre_archivo}
-            </p>
-          ) : (
-            <Insignia tono="aviso">Todavía no hay Budget para este año</Insignia>
-          )
-        }
-      />
       <details className="notas-reporte" open={!datos.version}>
         <summary>Cómo funciona</summary>
         <p className="suave nota-pie">
           Escribe el Budget de cada mes; el <strong>Actual</strong> aparece al lado como referencia.
-          Los totales se calculan solos. Guardar crea una <strong>versión nueva</strong>: la anterior
-          se conserva. Las líneas sin cuentas (como el <strong>Exchange Rate</strong>) también dejan
-          escribir su Actual de cada mes.
+          Los totales se calculan solos.{' '}
+          {usaCaptura ? (
+            <>
+              Hay un <strong>ciclo de presupuesto abierto</strong>: Guardar manda tu propuesta a ese
+              ciclo (por línea); el Budget oficial se crea cuando el ciclo se aprueba.
+            </>
+          ) : (
+            <>
+              Guardar crea una <strong>versión nueva</strong>: la anterior se conserva.
+            </>
+          )}{' '}
+          Las líneas sin cuentas (como el <strong>Exchange Rate</strong>) también dejan escribir su
+          Actual de cada mes.
         </p>
       </details>
       {datos.advertencias.map((a) => (
@@ -384,7 +690,7 @@ function VistaEditor(p: PropsVista) {
         </p>
       ))}
 
-      <ImportarExcel hotelId={p.hotelId} alImportar={p.recargar} hayCambios={totalCambios > 0} />
+      {puedeImportar && <ImportarExcel hotelId={p.hotelId} alImportar={p.recargar} hayCambios={totalCambios > 0} />}
 
       <form className="barra-filtros" role="search" onSubmit={(e) => e.preventDefault()}>
         <div className="filtro-campo">
@@ -433,33 +739,54 @@ function VistaEditor(p: PropsVista) {
         </div>
       </form>
 
-      <div className="barra-filtros herramienta-copiar" role="group" aria-label="Copiar el Actual">
-        <div className="filtro-campo">
-          <span className="filtro-etiqueta">Ajuste sobre el Actual (%)</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            aria-label="Ajuste sobre el Actual (%)"
-            placeholder="0"
-            value={p.porcentaje}
-            onChange={(e) => p.setPorcentaje(e.target.value)}
-          />
-        </div>
-        <div className="filtro-interruptores">
-          <label className="interruptor">
-            <input
-              type="checkbox"
-              checked={p.soloVacios}
-              onChange={(e) => p.setSoloVacios(e.target.checked)}
-            />
-            <span className="interruptor-pista" aria-hidden="true" />
-            Solo meses sin Budget
-          </label>
-        </div>
-        <button type="button" className="boton boton-secundario" onClick={copiarActual}>
-          Copiar el Actual a las líneas que se ven
+      <div className="selector-bloque" role="group" aria-label="Vista de Captura">
+        <button
+          type="button"
+          className={vistaCaptura === 'tabla' ? 'chip chip-activo' : 'chip'}
+          aria-pressed={vistaCaptura === 'tabla'}
+          onClick={() => setVistaCaptura('tabla')}
+        >
+          Tabla
+        </button>
+        <button
+          type="button"
+          className={vistaCaptura === 'arbol' ? 'chip chip-activo' : 'chip'}
+          aria-pressed={vistaCaptura === 'arbol'}
+          onClick={() => setVistaCaptura('arbol')}
+        >
+          Árbol
         </button>
       </div>
+
+      {puedeImportar && (
+        <div className="barra-filtros herramienta-copiar" role="group" aria-label="Copiar el Actual">
+          <div className="filtro-campo">
+            <span className="filtro-etiqueta">Ajuste sobre el Actual (%)</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              aria-label="Ajuste sobre el Actual (%)"
+              placeholder="0"
+              value={p.porcentaje}
+              onChange={(e) => p.setPorcentaje(e.target.value)}
+            />
+          </div>
+          <div className="filtro-interruptores">
+            <label className="interruptor">
+              <input
+                type="checkbox"
+                checked={p.soloVacios}
+                onChange={(e) => p.setSoloVacios(e.target.checked)}
+              />
+              <span className="interruptor-pista" aria-hidden="true" />
+              Solo meses sin Budget
+            </label>
+          </div>
+          <button type="button" className="boton boton-secundario" onClick={copiarActual}>
+            Copiar el Actual a las líneas que se ven
+          </button>
+        </div>
+      )}
 
       {p.mensaje && (
         <p
@@ -470,6 +797,10 @@ function VistaEditor(p: PropsVista) {
         </p>
       )}
 
+      {lineasMostradas.length === 0 && visibles.length === 0 && datos.lineas.length === 0 && (
+        <EstadoVacio>No hay líneas que mostrar.</EstadoVacio>
+      )}
+      {vistaCaptura === 'tabla' ? (
       <div className="tabla-variance-contenedor" role="region" aria-label="Tabla de Budget" tabIndex={0}>
         <table className="tabla-variance tabla-budget">
           <caption className="solo-lectores">
@@ -489,6 +820,11 @@ function VistaEditor(p: PropsVista) {
               <th scope="colgroup" colSpan={2} className="grupo-bloque">
                 Año
               </th>
+              {puedeObjetivo || objetivoPorLinea.size > 0 ? (
+                <th scope="col" rowSpan={2}>
+                  Objetivo
+                </th>
+              ) : null}
             </tr>
             <tr>
               {[...periodos, 'año'].flatMap((per) => [
@@ -512,9 +848,21 @@ function VistaEditor(p: PropsVista) {
                 budget={budgetEnPantalla}
                 alEditar={editar}
                 alEditarActual={editarActual}
+                puedeEditarBudget={puedeEditarBudget}
+                puedeEditarActual={(l) => l.actual_editable && puedeImportar}
+                mostrarObjetivo={puedeObjetivo || objetivoPorLinea.size > 0}
+                objetivoPorLinea={objetivoPorLinea}
+                puedeObjetivo={puedeObjetivo && cicloBorrador}
+                hotelId={p.hotelId}
+                cicloId={p.cicloId}
+                perfiles={p.perfiles}
+                puedeRellenarConPerfil={usaCaptura}
+                lineasPermitidas={lineasPermitidas}
+                alRellenarMeses={rellenarMeses}
+                alCambiarCiclo={p.recargarCiclo}
               />
             ))}
-            {lineasMostradas.length === 0 && (
+            {lineasMostradas.length === 0 && datos.lineas.length > 0 && (
               <tr>
                 <td colSpan={periodos.length * 2 + 3}>Ninguna línea coincide con el filtro.</td>
               </tr>
@@ -522,6 +870,41 @@ function VistaEditor(p: PropsVista) {
           </tbody>
         </table>
       </div>
+      ) : (
+      <div className="captura-split">
+        <ArbolLineas
+          grupos={grupos}
+          nombreSeccion={nombreSeccion}
+          periodos={periodos}
+          budget={budgetEnPantalla}
+          objetivoPorLinea={objetivoPorLinea}
+          seleccionada={lineaSeleccionada}
+          onSeleccionar={setLineaSeleccionada}
+        />
+        {lineaDetalle ? (
+          <DetalleCapturaLinea
+            linea={lineaDetalle}
+            periodos={periodos}
+            ediciones={ediciones}
+            budget={budgetEnPantalla}
+            alEditar={editar}
+            alEditarActual={editarActual}
+            puedeEditarBudget={puedeEditarBudget(lineaDetalle)}
+            puedeEditarActual={lineaDetalle.actual_editable && puedeImportar}
+            captura={objetivoPorLinea.get(lineaDetalle.linea_id)}
+            puedeObjetivo={puedeObjetivo && cicloBorrador && lineasPermitidas.has(lineaDetalle.linea_id)}
+            hotelId={p.hotelId}
+            cicloId={p.cicloId}
+            perfiles={p.perfiles}
+            puedeRellenarConPerfil={usaCaptura && lineasPermitidas.has(lineaDetalle.linea_id)}
+            alRellenarMeses={rellenarMeses}
+            alCambiarCiclo={p.recargarCiclo}
+          />
+        ) : (
+          <EstadoVacio>Elige una línea del árbol para capturarla.</EstadoVacio>
+        )}
+      </div>
+      )}
 
       {p.confirmando && (
         <div className="mensaje mensaje-aviso" role="status">
@@ -530,7 +913,10 @@ function VistaEditor(p: PropsVista) {
               Vas a guardar {plural(totalCambios, 'cambio', 'cambios')} en{' '}
               {plural(lineasConCambio, 'línea', 'líneas')}.
             </strong>{' '}
-            {cambios.length > 0 && (
+            {usaCaptura && cambios.length > 0 && (
+              <>Se manda tu propuesta al ciclo de presupuesto, línea por línea. </>
+            )}
+            {!usaCaptura && cambios.length > 0 && (
               <>
                 Se crea la versión {(datos.version?.numero ?? 0) + 1} del Budget {p.anoFiscal}; la
                 anterior queda en el historial.{' '}
@@ -539,7 +925,7 @@ function VistaEditor(p: PropsVista) {
             {cambiosActual.length > 0 && (
               <>Los Actuales capturados se guardan con tu nombre y quedan en la bitácora. </>
             )}
-            El Variance los usará de inmediato.
+            {!usaCaptura && 'El Variance los usará de inmediato.'}
           </p>
           <button type="button" className="boton" disabled={p.guardando} onClick={() => void guardar()}>
             {p.guardando ? 'Guardando…' : 'Confirmar y guardar'}
@@ -574,7 +960,7 @@ function VistaEditor(p: PropsVista) {
           disabled={totalCambios === 0 || invalidas.length > 0 || p.guardando}
           onClick={() => p.setConfirmando(true)}
         >
-          Guardar como versión nueva
+          {usaCaptura ? 'Guardar en el ciclo de presupuesto' : 'Guardar como versión nueva'}
         </button>
       </div>
 
@@ -590,35 +976,32 @@ interface PropsGrupo {
   budget: ReadonlyMap<string, bigint | null>
   alEditar: (linea: number, periodo: string, valor: string) => void
   alEditarActual: (linea: number, periodo: string, valor: string) => void
+  puedeEditarBudget: (linea: LineaEdicionBudget) => boolean
+  puedeEditarActual: (linea: LineaEdicionBudget) => boolean
+  mostrarObjetivo: boolean
+  objetivoPorLinea: ReadonlyMap<number, LineaCaptura>
+  puedeObjetivo: boolean
+  hotelId: number
+  cicloId: number | null
+  perfiles: Perfil[]
+  puedeRellenarConPerfil: boolean
+  lineasPermitidas: ReadonlySet<number>
+  alRellenarMeses: (linea: number, valores: LineaMensual[]) => void
+  alCambiarCiclo: () => void
 }
 
-function GrupoFilas({
-  titulo,
-  lineas,
-  periodos,
-  ediciones,
-  budget,
-  alEditar,
-  alEditarActual,
-}: PropsGrupo) {
+function GrupoFilas({ titulo, lineas, periodos, ...resto }: PropsGrupo) {
   return (
     <>
       {titulo !== null && (
         <tr className="fila-seccion">
-          <th scope="rowgroup" colSpan={periodos.length * 2 + 3} className="col-linea">
+          <th scope="rowgroup" colSpan={periodos.length * 2 + (resto.mostrarObjetivo ? 4 : 3)} className="col-linea">
             {titulo}
           </th>
         </tr>
       )}
       {lineas.map((l) => (
-        <FilaBudget
-          key={l.linea_id}
-          linea={l}
-          ediciones={ediciones}
-          budget={budget}
-          alEditar={alEditar}
-          alEditarActual={alEditarActual}
-        />
+        <FilaBudget key={l.linea_id} linea={l} {...resto} />
       ))}
     </>
   )
@@ -630,19 +1013,50 @@ function FilaBudget({
   budget,
   alEditar,
   alEditarActual,
+  puedeEditarBudget,
+  puedeEditarActual,
+  mostrarObjetivo,
+  objetivoPorLinea,
+  puedeObjetivo,
+  hotelId,
+  cicloId,
+  perfiles,
+  puedeRellenarConPerfil,
+  lineasPermitidas,
+  alRellenarMeses,
+  alCambiarCiclo,
 }: Omit<PropsGrupo, 'titulo' | 'lineas' | 'periodos'> & { linea: LineaEdicionBudget }) {
   const informativa = linea.tipo === 'informativa'
   const calculados = linea.meses.map((c) => budget.get(claveCelda(linea.linea_id, c.periodo)) ?? null)
   const actuales = linea.meses.map((c) => (c.actual === null ? null : aMicros(c.actual)))
-  const sumar = (valores: (bigint | null)[]) => {
-    const con = valores.filter((v): v is bigint => v !== null)
-    return con.length === 0 ? null : con.reduce((a, v) => a + v, 0n)
-  }
+  const editableBudget = puedeEditarBudget(linea)
+  const editableActual = puedeEditarActual(linea)
+  const anualActual = sumarMicros(calculados)
+  const puedeRellenar =
+    puedeRellenarConPerfil &&
+    linea.tipo === 'detalle' &&
+    cicloId !== null &&
+    lineasPermitidas.has(linea.linea_id) &&
+    perfiles.length > 0 &&
+    anualActual !== null
+  const captura = objetivoPorLinea.get(linea.linea_id)
+
   return (
     <tr className={`fila-${linea.tipo}`}>
       <th scope="row" className="col-linea">
         <span className="descripcion">{linea.descripcion}</span>
         {linea.codigo_corporativo && <span className="codigo suave"> {linea.codigo_corporativo}</span>}
+        {puedeRellenar && cicloId !== null && anualActual !== null && (
+          <SelectorPerfilDistribucion
+            hotelId={hotelId}
+            cicloId={cicloId}
+            linea={linea.linea_id}
+            anual={textoDeMicros(anualActual)}
+            perfiles={perfiles}
+            periodos={linea.meses.map((c) => c.periodo)}
+            alAplicar={(valores) => alRellenarMeses(linea.linea_id, valores)}
+          />
+        )}
       </th>
       {linea.meses.flatMap((c, i) => {
         const clave = claveCelda(linea.linea_id, c.periodo)
@@ -650,7 +1064,7 @@ function FilaBudget({
         const editado = ediciones.get(clave)
         const invalido = editado !== undefined && editado.trim() !== '' && aMicros(editado) === null
         const inicio = i === 0 ? '' : ' inicio-mes'
-        const celdaBudget = linea.editable ? (
+        const celdaBudget = editableBudget ? (
           <td key={`${c.periodo}-b`} className={`num${inicio}${editado !== undefined ? ' editada' : ''}`}>
             <input
               type="text"
@@ -671,7 +1085,7 @@ function FilaBudget({
         const claveA = claveActual(linea.linea_id, c.periodo)
         const editadoA = ediciones.get(claveA)
         const invalidoA = editadoA !== undefined && editadoA.trim() !== '' && aMicros(editadoA) === null
-        const celdaActual = linea.actual_editable ? (
+        const celdaActual = editableActual ? (
           <td
             key={`${c.periodo}-a`}
             className={`num${editadoA !== undefined ? ' editada' : ''}`}
@@ -702,9 +1116,89 @@ function FilaBudget({
         return [celdaBudget, celdaActual]
       })}
       {/* un tipo de cambio no se suma: su "año" queda en blanco */}
-      <td className="num inicio-mes">{informativa ? '—' : formatoMicros(sumar(calculados))}</td>
-      <td className="num suave">{informativa ? '—' : formatoMicros(sumar(actuales))}</td>
+      <td className="num inicio-mes">{informativa ? '—' : formatoMicros(sumarMicros(calculados))}</td>
+      <td className="num suave">{informativa ? '—' : formatoMicros(sumarMicros(actuales))}</td>
+      {mostrarObjetivo && (
+        <td>
+          {cicloId !== null && captura ? (
+            <ObjetivoCelda
+              hotelId={hotelId}
+              cicloId={cicloId}
+              linea={linea.linea_id}
+              descripcion={linea.descripcion}
+              objetivoInicial={captura.objetivo}
+              puedeEditar={puedeObjetivo && lineasPermitidas.has(linea.linea_id)}
+              alGuardar={alCambiarCiclo}
+            />
+          ) : (
+            <span className="suave">—</span>
+          )}
+        </td>
+      )}
     </tr>
+  )
+}
+
+export function ObjetivoCelda({
+  hotelId,
+  cicloId,
+  linea,
+  descripcion,
+  objetivoInicial,
+  puedeEditar,
+  alGuardar,
+}: {
+  hotelId: number
+  cicloId: number
+  linea: number
+  descripcion: string
+  objetivoInicial: string | null
+  puedeEditar: boolean
+  alGuardar: () => void
+}) {
+  const [valor, setValor] = useState(objetivoInicial ?? '')
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const cambio = valor !== (objetivoInicial ?? '')
+
+  if (!puedeEditar) return <span>{objetivoInicial ?? '—'}</span>
+
+  async function guardar() {
+    setGuardando(true)
+    setError(null)
+    try {
+      await enviarJson(
+        'PUT',
+        `/api/v1/hoteles/${hotelId}/presupuesto/ciclos/${cicloId}/lineas/${linea}/objetivo`,
+        { objetivo: valor.trim() === '' ? null : valor },
+      )
+      alGuardar()
+    } catch (e) {
+      setError(e instanceof ErrorApi ? e.detalle : 'No se pudo guardar el objetivo')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  return (
+    <div className="campo-con-boton">
+      <input
+        type="text"
+        inputMode="decimal"
+        aria-label={`Objetivo de ${descripcion}`}
+        value={valor}
+        onChange={(e) => setValor(e.target.value)}
+      />
+      <button
+        type="button"
+        className="boton boton-secundario"
+        disabled={!cambio || guardando}
+        onClick={() => void guardar()}
+      >
+        Guardar
+      </button>
+      {error && <MensajeError texto={error} />}
+    </div>
   )
 }
 

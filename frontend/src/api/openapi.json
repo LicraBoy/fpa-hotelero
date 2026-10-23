@@ -34,6 +34,68 @@
         "title": "AdjuntoSalida",
         "type": "object"
       },
+      "AnoFiscalEntrada": {
+        "properties": {
+          "etiqueta": {
+            "maxLength": 9,
+            "minLength": 1,
+            "title": "Etiqueta",
+            "type": "string"
+          },
+          "mes_fin": {
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Mes Fin",
+            "type": "integer"
+          },
+          "mes_inicio": {
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Mes Inicio",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "etiqueta",
+          "mes_inicio",
+          "mes_fin"
+        ],
+        "title": "AnoFiscalEntrada",
+        "type": "object"
+      },
+      "AnoFiscalSalida": {
+        "properties": {
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "etiqueta": {
+            "title": "Etiqueta",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mes_fin": {
+            "title": "Mes Fin",
+            "type": "integer"
+          },
+          "mes_inicio": {
+            "title": "Mes Inicio",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "etiqueta",
+          "mes_inicio",
+          "mes_fin",
+          "estado"
+        ],
+        "title": "AnoFiscalSalida",
+        "type": "object"
+      },
       "AprobacionEntrada": {
         "properties": {
           "notas": {
@@ -332,6 +394,33 @@
           "hacia"
         ],
         "title": "CambioEstado",
+        "type": "object"
+      },
+      "CambioEstadoCiclo": {
+        "properties": {
+          "hacia": {
+            "maxLength": 12,
+            "minLength": 1,
+            "title": "Hacia",
+            "type": "string"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          }
+        },
+        "required": [
+          "hacia"
+        ],
+        "title": "CambioEstadoCiclo",
         "type": "object"
       },
       "CambioEstatus": {
@@ -737,6 +826,108 @@
           "actual_origen"
         ],
         "title": "CeldaEdicion",
+        "type": "object"
+      },
+      "CicloEntrada": {
+        "properties": {
+          "ano_fiscal_id": {
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Ano Fiscal Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ano_fiscal_id"
+        ],
+        "title": "CicloEntrada",
+        "type": "object"
+      },
+      "CicloSalida": {
+        "properties": {
+          "ano_fiscal_id": {
+            "title": "Ano Fiscal Id",
+            "type": "integer"
+          },
+          "aprobado_en": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aprobado En"
+          },
+          "creado_en": {
+            "format": "date-time",
+            "title": "Creado En",
+            "type": "string"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "historial": {
+            "items": {
+              "$ref": "#/components/schemas/TransicionCicloSalida"
+            },
+            "title": "Historial",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "numero": {
+            "title": "Numero",
+            "type": "integer"
+          },
+          "transiciones_posibles": {
+            "items": {
+              "$ref": "#/components/schemas/TransicionPosibleCicloSalida"
+            },
+            "title": "Transiciones Posibles",
+            "type": "array"
+          },
+          "version_estructura_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Estructura Id"
+          },
+          "version_plan_resultante_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Plan Resultante Id"
+          }
+        },
+        "required": [
+          "id",
+          "ano_fiscal_id",
+          "numero",
+          "estado",
+          "version_estructura_id",
+          "version_plan_resultante_id",
+          "creado_en",
+          "aprobado_en",
+          "transiciones_posibles",
+          "historial"
+        ],
+        "title": "CicloSalida",
         "type": "object"
       },
       "CierreSalida": {
@@ -2003,6 +2194,30 @@
         "title": "HotelSalida",
         "type": "object"
       },
+      "ImportesMensualesEntrada": {
+        "properties": {
+          "importes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,14}|(?=[\\d.]{1,21}0*$)\\d{0,14}\\.\\d{0,6}0*$)",
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Importes",
+            "type": "object"
+          }
+        },
+        "required": [
+          "importes"
+        ],
+        "title": "ImportesMensualesEntrada",
+        "type": "object"
+      },
       "ImportesSalida": {
         "properties": {
           "mes": {
@@ -2068,6 +2283,108 @@
           "motivo"
         ],
         "title": "IntegridadSalida",
+        "type": "object"
+      },
+      "LineaCapturaSalida": {
+        "properties": {
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "objetivo": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objetivo"
+          },
+          "perfil_distribucion_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Perfil Distribucion Id"
+          },
+          "propuesta_anual": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propuesta Anual"
+          },
+          "responsable_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsable Id"
+          },
+          "seccion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seccion"
+          }
+        },
+        "required": [
+          "id",
+          "linea_id",
+          "descripcion",
+          "seccion",
+          "responsable_id",
+          "objetivo",
+          "propuesta_anual",
+          "perfil_distribucion_id",
+          "estado",
+          "nota"
+        ],
+        "title": "LineaCapturaSalida",
         "type": "object"
       },
       "LineaEdicionSalida": {
@@ -2143,6 +2460,25 @@
           "meses"
         ],
         "title": "LineaEdicionSalida",
+        "type": "object"
+      },
+      "LineaMensualSalida": {
+        "properties": {
+          "importe": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Importe",
+            "type": "string"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "periodo",
+          "importe"
+        ],
+        "title": "LineaMensualSalida",
         "type": "object"
       },
       "LineaPlanSalida": {
@@ -2717,6 +3053,27 @@
         "title": "NodoSalida",
         "type": "object"
       },
+      "ObjetivoEntrada": {
+        "properties": {
+          "objetivo": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,14}|(?=[\\d.]{1,21}0*$)\\d{0,14}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objetivo"
+          }
+        },
+        "title": "ObjetivoEntrada",
+        "type": "object"
+      },
       "PaginaSalida": {
         "properties": {
           "bloque": {
@@ -2795,6 +3152,127 @@
           "password_temporal"
         ],
         "title": "PasswordTemporal",
+        "type": "object"
+      },
+      "PerfilSalida": {
+        "properties": {
+          "es_sistema": {
+            "title": "Es Sistema",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "pesos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Pesos",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "pesos",
+          "es_sistema"
+        ],
+        "title": "PerfilSalida",
+        "type": "object"
+      },
+      "PeriodoFiscalSalida": {
+        "properties": {
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "periodo",
+          "estado"
+        ],
+        "title": "PeriodoFiscalSalida",
+        "type": "object"
+      },
+      "PropuestaEntrada": {
+        "properties": {
+          "nota": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "propuesta_anual": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,14}|(?=[\\d.]{1,21}0*$)\\d{0,14}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propuesta Anual"
+          }
+        },
+        "title": "PropuestaEntrada",
+        "type": "object"
+      },
+      "ProrrateoPerfilEntrada": {
+        "properties": {
+          "perfil_distribucion_id": {
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Perfil Distribucion Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "perfil_distribucion_id"
+        ],
+        "title": "ProrrateoPerfilEntrada",
+        "type": "object"
+      },
+      "PuntoMensualCicloSalida": {
+        "properties": {
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          },
+          "propuesta": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Propuesta",
+            "type": "string"
+          }
+        },
+        "required": [
+          "periodo",
+          "propuesta"
+        ],
+        "title": "PuntoMensualCicloSalida",
         "type": "object"
       },
       "ReglaEdicion": {
@@ -3043,6 +3521,34 @@
         "title": "RespuestaSalida",
         "type": "object"
       },
+      "ResumenCicloSalida": {
+        "properties": {
+          "ano_fiscal_id": {
+            "title": "Ano Fiscal Id",
+            "type": "integer"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "numero": {
+            "title": "Numero",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "ano_fiscal_id",
+          "numero",
+          "estado"
+        ],
+        "title": "ResumenCicloSalida",
+        "type": "object"
+      },
       "ResumenCierre": {
         "properties": {
           "estado": {
@@ -3059,6 +3565,71 @@
           "estado"
         ],
         "title": "ResumenCierre",
+        "type": "object"
+      },
+      "ResumenMensualCicloSalida": {
+        "properties": {
+          "lineas_sin_mensualizar": {
+            "title": "Lineas Sin Mensualizar",
+            "type": "integer"
+          },
+          "por_periodo": {
+            "items": {
+              "$ref": "#/components/schemas/PuntoMensualCicloSalida"
+            },
+            "title": "Por Periodo",
+            "type": "array"
+          }
+        },
+        "required": [
+          "por_periodo",
+          "lineas_sin_mensualizar"
+        ],
+        "title": "ResumenMensualCicloSalida",
+        "type": "object"
+      },
+      "ResumenPresupuestoSalida": {
+        "properties": {
+          "cobertura_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cobertura Pct",
+            "type": "string"
+          },
+          "lineas_capturadas": {
+            "title": "Lineas Capturadas",
+            "type": "integer"
+          },
+          "por_seccion": {
+            "items": {
+              "$ref": "#/components/schemas/ResumenSeccionPresupuestoSalida"
+            },
+            "title": "Por Seccion",
+            "type": "array"
+          },
+          "suma_objetivo": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Suma Objetivo",
+            "type": "string"
+          },
+          "suma_propuesta": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Suma Propuesta",
+            "type": "string"
+          },
+          "total_lineas": {
+            "title": "Total Lineas",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_lineas",
+          "lineas_capturadas",
+          "cobertura_pct",
+          "suma_objetivo",
+          "suma_propuesta",
+          "por_seccion"
+        ],
+        "title": "ResumenPresupuestoSalida",
         "type": "object"
       },
       "ResumenSalida": {
@@ -3090,6 +3661,54 @@
           "neto"
         ],
         "title": "ResumenSalida",
+        "type": "object"
+      },
+      "ResumenSeccionPresupuestoSalida": {
+        "properties": {
+          "cobertura_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cobertura Pct",
+            "type": "string"
+          },
+          "lineas_capturadas": {
+            "title": "Lineas Capturadas",
+            "type": "integer"
+          },
+          "seccion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seccion"
+          },
+          "suma_objetivo": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Suma Objetivo",
+            "type": "string"
+          },
+          "suma_propuesta": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Suma Propuesta",
+            "type": "string"
+          },
+          "total_lineas": {
+            "title": "Total Lineas",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seccion",
+          "total_lineas",
+          "lineas_capturadas",
+          "cobertura_pct",
+          "suma_objetivo",
+          "suma_propuesta"
+        ],
+        "title": "ResumenSeccionPresupuestoSalida",
         "type": "object"
       },
       "SaldoSalida": {
@@ -3189,6 +3808,47 @@
         "title": "TextoNuevo",
         "type": "object"
       },
+      "TransicionCicloSalida": {
+        "properties": {
+          "creado_en": {
+            "format": "date-time",
+            "title": "Creado En",
+            "type": "string"
+          },
+          "desde": {
+            "title": "Desde",
+            "type": "string"
+          },
+          "hacia": {
+            "title": "Hacia",
+            "type": "string"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "usuario": {
+            "title": "Usuario",
+            "type": "string"
+          }
+        },
+        "required": [
+          "desde",
+          "hacia",
+          "usuario",
+          "nota",
+          "creado_en"
+        ],
+        "title": "TransicionCicloSalida",
+        "type": "object"
+      },
       "TransicionPosible": {
         "properties": {
           "etiqueta": {
@@ -3210,6 +3870,29 @@
           "pide_nota"
         ],
         "title": "TransicionPosible",
+        "type": "object"
+      },
+      "TransicionPosibleCicloSalida": {
+        "properties": {
+          "etiqueta": {
+            "title": "Etiqueta",
+            "type": "string"
+          },
+          "hacia": {
+            "title": "Hacia",
+            "type": "string"
+          },
+          "pide_nota": {
+            "title": "Pide Nota",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hacia",
+          "etiqueta",
+          "pide_nota"
+        ],
+        "title": "TransicionPosibleCicloSalida",
         "type": "object"
       },
       "TransicionSalida": {
@@ -7023,6 +7706,1131 @@
         "summary": "Poner Vinculo",
         "tags": [
           "mapeo"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/anos-fiscales": {
+      "get": {
+        "operationId": "listar_anos_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AnoFiscalSalida"
+                  },
+                  "title": "Response Listar Anos Api V1 Hoteles  Hotel Id  Presupuesto Anos Fiscales Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar Anos",
+        "tags": [
+          "presupuesto"
+        ]
+      },
+      "post": {
+        "operationId": "crear_ano_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnoFiscalEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnoFiscalSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Crear Ano",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/anos-fiscales/{ano_fiscal_id}/periodos": {
+      "get": {
+        "operationId": "listar_periodos_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales__ano_fiscal_id__periodos_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ano_fiscal_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ano Fiscal Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PeriodoFiscalSalida"
+                  },
+                  "title": "Response Listar Periodos Api V1 Hoteles  Hotel Id  Presupuesto Anos Fiscales  Ano Fiscal Id  Periodos Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar Periodos",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/anos-fiscales/{ano_fiscal_id}/periodos/generar": {
+      "post": {
+        "operationId": "generar_periodos_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales__ano_fiscal_id__periodos_generar_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ano_fiscal_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ano Fiscal Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PeriodoFiscalSalida"
+                  },
+                  "title": "Response Generar Periodos Api V1 Hoteles  Hotel Id  Presupuesto Anos Fiscales  Ano Fiscal Id  Periodos Generar Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generar Periodos",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos": {
+      "get": {
+        "operationId": "listar_ciclos_api_v1_hoteles__hotel_id__presupuesto_ciclos_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ano_fiscal_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ano Fiscal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResumenCicloSalida"
+                  },
+                  "title": "Response Listar Ciclos Api V1 Hoteles  Hotel Id  Presupuesto Ciclos Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar Ciclos",
+        "tags": [
+          "presupuesto"
+        ]
+      },
+      "post": {
+        "operationId": "crear_ciclo_presupuesto_api_v1_hoteles__hotel_id__presupuesto_ciclos_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CicloEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CicloSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Crear Ciclo Presupuesto",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}": {
+      "get": {
+        "operationId": "detalle_ciclo_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CicloSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detalle Ciclo",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas": {
+      "get": {
+        "operationId": "listar_lineas_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LineaCapturaSalida"
+                  },
+                  "title": "Response Listar Lineas Api V1 Hoteles  Hotel Id  Presupuesto Ciclos  Ciclo Id  Lineas Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar Lineas",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}": {
+      "put": {
+        "operationId": "capturar_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropuestaEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineaCapturaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Capturar",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/importes-mensuales": {
+      "post": {
+        "operationId": "fijar_importes_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__importes_mensuales_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportesMensualesEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LineaMensualSalida"
+                  },
+                  "title": "Response Fijar Importes Api V1 Hoteles  Hotel Id  Presupuesto Ciclos  Ciclo Id  Lineas  Linea Id  Importes Mensuales Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fijar Importes",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/objetivo": {
+      "put": {
+        "operationId": "fijar_objetivo_linea_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__objetivo_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjetivoEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineaCapturaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fijar Objetivo Linea",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/prorrateo": {
+      "post": {
+        "operationId": "prorratear_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__prorrateo_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProrrateoPerfilEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LineaMensualSalida"
+                  },
+                  "title": "Response Prorratear Api V1 Hoteles  Hotel Id  Presupuesto Ciclos  Ciclo Id  Lineas  Linea Id  Prorrateo Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Prorratear",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/resumen": {
+      "get": {
+        "operationId": "resumen_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__resumen_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenPresupuestoSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resumen",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/resumen-mensual": {
+      "get": {
+        "operationId": "resumen_mensual_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__resumen_mensual_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenMensualCicloSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resumen Mensual",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/transiciones": {
+      "post": {
+        "operationId": "cambiar_estado_ciclo_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__transiciones_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioEstadoCiclo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CicloSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "409": {
+            "description": "La transición no existe desde el estado actual, o faltan líneas"
+          },
+          "422": {
+            "description": "Falta la nota que ese cambio exige"
+          }
+        },
+        "summary": "Cambiar Estado Ciclo",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/perfiles": {
+      "get": {
+        "operationId": "listar_perfiles_api_v1_hoteles__hotel_id__presupuesto_perfiles_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PerfilSalida"
+                  },
+                  "title": "Response Listar Perfiles Api V1 Hoteles  Hotel Id  Presupuesto Perfiles Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listar Perfiles",
+        "tags": [
+          "presupuesto"
         ]
       }
     },

@@ -14,6 +14,11 @@ export type Permiso =
   | 'mapeo:aprobar'
   | 'budget:leer'
   | 'budget:importar'
+  | 'budget:capturar'
+  | 'budget:objetivo'
+  | 'budget:revisar'
+  | 'budget:aprobar'
+  | 'budget:bloquear'
   | 'variance:leer'
   | 'drilldown:leer'
   | 'usuarios:administrar'
@@ -39,6 +44,11 @@ const POR_ROL: Record<string, Permiso[]> = {
     'mapeo:aprobar',
     'budget:leer',
     'budget:importar',
+    'budget:capturar',
+    'budget:objetivo',
+    'budget:revisar',
+    'budget:aprobar',
+    'budget:bloquear',
     'variance:leer',
     'drilldown:leer',
     'usuarios:administrar',
@@ -61,6 +71,7 @@ const POR_ROL: Record<string, Permiso[]> = {
     'mapeo:editar',
     'budget:leer',
     'budget:importar',
+    'budget:revisar',
     'variance:leer',
     'drilldown:leer',
     'comentario:leer',
@@ -72,6 +83,7 @@ const POR_ROL: Record<string, Permiso[]> = {
   responsable_area: [
     'catalogo:leer',
     'reporte:leer',
+    'budget:capturar',
     'variance:leer',
     'drilldown:leer',
     'comentario:leer',
@@ -84,6 +96,7 @@ const POR_ROL: Record<string, Permiso[]> = {
     'reporte:leer',
     'mapeo:leer',
     'budget:leer',
+    'budget:objetivo',
     'variance:leer',
     'comentario:leer',
     'cierre:leer',

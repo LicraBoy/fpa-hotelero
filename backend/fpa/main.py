@@ -18,6 +18,7 @@ from fpa.api.v1 import (
     identidad,
     integridad,
     mapeo,
+    presupuesto,
     saldos,
     usuarios,
     variance,
@@ -71,6 +72,7 @@ def crear_app() -> FastAPI:
     app.include_router(cargas.router, prefix="/api/v1")
     app.include_router(mapeo.router, prefix="/api/v1")
     app.include_router(budget.router, prefix="/api/v1")
+    app.include_router(presupuesto.router, prefix="/api/v1")
     app.include_router(variance.router, prefix="/api/v1")
     app.include_router(drilldown.router, prefix="/api/v1")
     return app

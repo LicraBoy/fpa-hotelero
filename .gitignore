@@ -17,16 +17,23 @@ backend/backups/
 .venv/
 __pycache__/
 *.pyc
+*.pyo
 .pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
 
 # Node
 node_modules/
 dist/
 
+# Logs (servidor y herramientas)
+*.log
+logs/
+
 # Sistema
 .DS_Store
 Thumbs.db
-*.log
 
 # Pruebas e2e: backend temporal
 .e2e/

@@ -34,7 +34,20 @@ export interface Pantalla {
 
 export const PANTALLAS: readonly Pantalla[] = [
   { id: 'variance', nombre: 'Variance', grupo: 'Finanzas', icono: 'informe', permisos: ['variance:leer'] },
-  { id: 'budget', nombre: 'Budget', grupo: 'Finanzas', icono: 'presupuesto', permisos: ['budget:importar'] },
+  {
+    id: 'budget',
+    nombre: 'Budget',
+    grupo: 'Finanzas',
+    icono: 'presupuesto',
+    permisos: [
+      'budget:importar',
+      'budget:capturar',
+      'budget:objetivo',
+      'budget:aprobar',
+      'budget:revisar',
+      'budget:bloquear',
+    ],
+  },
   {
     id: 'departamentos',
     nombre: 'Por departamento',

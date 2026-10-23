@@ -173,6 +173,55 @@ export function etiquetaAnoFiscal(periodo: string): string {
   return `${inicio}/${String((inicio + 1) % 100).padStart(2, '0')}`
 }
 
+/**
+ * Años fiscales que ya existen en el sistema (por las cargas vigentes y las versiones de Budget
+ * guardadas), más reciente primero. Otras pantallas (p. ej. Presupuesto) los reusan: el año fiscal
+ * no se vuelve a pedir a mano donde ya se conoce.
+ */
+export function anosFiscalesConocidos(
+  cargas: readonly { estado: string; periodo: string }[],
+  versiones: readonly { ano_fiscal: string }[],
+): string[] {
+  const salida = new Set<string>()
+  for (const v of versiones) salida.add(v.ano_fiscal)
+  for (const c of cargas) if (c.estado === 'vigente') salida.add(etiquetaAnoFiscal(c.periodo))
+  return [...salida].sort().reverse()
+}
+
+/**
+ * ¿La suma de los importes mensuales cuadra exactamente con el anual? `null` si el anual o algún
+ * importe no es un número válido (se avisa aparte, no como "no cuadra").
+ */
+export function sumaCuadra(importes: Record<string, string>, anual: string): boolean | null {
+  const anualMicros = aMicros(anual)
+  if (anualMicros === null) return null
+  let total = 0n
+  for (const texto of Object.values(importes)) {
+    const m = aMicros(texto === '' ? '0' : texto)
+    if (m === null) return null
+    total += m
+  }
+  return total === anualMicros
+}
+
+/** Suma de los importes mensuales como texto (para mostrarla junto al anual). `null` si alguno no es válido. */
+export function sumaImportes(importes: Record<string, string>): string | null {
+  let total = 0n
+  for (const texto of Object.values(importes)) {
+    const m = aMicros(texto === '' ? '0' : texto)
+    if (m === null) return null
+    total += m
+  }
+  return textoDeMicros(total)
+}
+
+/** Suma de valores en micros que puedan ser `null` (sin dato): si ninguno tiene dato, `null` (no un
+ * cero inventado); los que sí tienen dato se suman, el resto cuenta como ausente, no como cero. */
+export function sumarMicros(valores: readonly (bigint | null)[]): bigint | null {
+  const con = valores.filter((v): v is bigint => v !== null)
+  return con.length === 0 ? null : con.reduce((a, v) => a + v, 0n)
+}
+
 /** Agrupa líneas consecutivas por sección, conservando el orden del reporte. */
 export function agruparPorSeccionId<T extends { seccion_id: number | null }>(
   lineas: readonly T[],
@@ -184,4 +233,206 @@ export function agruparPorSeccionId<T extends { seccion_id: number | null }>(
     else grupos.push({ seccionId: linea.seccion_id, lineas: [linea] })
   }
   return grupos
+}
+
+// --- Budget Studio: Resumen (etapa 1) ---------------------------------------
+
+export interface DiferenciaObjetivo {
+  diferenciaMicros: bigint | null
+  estado: 'sobre' | 'bajo' | 'en-rango'
+}
+
+/**
+ * Propuesta menos objetivo del ciclo, y su sentido neutral (sin favorable/desfavorable: no hay
+ * regla de negocio que lo defina). `null` si alguna suma no es un importe válido.
+ */
+export function diferenciaVsObjetivo(sumaObjetivo: string, sumaPropuesta: string): DiferenciaObjetivo {
+  const objetivo = aMicros(sumaObjetivo)
+  const propuesta = aMicros(sumaPropuesta)
+  if (objetivo === null || propuesta === null) return { diferenciaMicros: null, estado: 'en-rango' }
+  const diferencia = propuesta - objetivo
+  const estado = diferencia > 0n ? 'sobre' : diferencia < 0n ? 'bajo' : 'en-rango'
+  return { diferenciaMicros: diferencia, estado }
+}
+
+export interface SerieSeccionChart {
+  seccion: string
+  /** Para graficar (Plotly no acepta BigInt): nunca usar esto para texto exacto, solo posición. */
+  objetivo: number
+  propuesta: number
+  objetivoMicros: bigint
+  propuestaMicros: bigint
+  diferenciaMicros: bigint
+  diferenciaPct: number | null
+}
+
+/**
+ * Serie objetivo vs. propuesta por sección, a partir de `resumen.por_seccion` tal cual lo entrega
+ * la API. El texto exacto (tooltip, tabla alterna) debe salir de los campos `*Micros` vía
+ * `formatoMicros`, nunca de `objetivo`/`propuesta` (son `number`, solo para la posición del trazo).
+ */
+export function serieObjetivoVsPropuesta(
+  porSeccion: readonly { seccion: string | null; suma_objetivo: string; suma_propuesta: string }[],
+): SerieSeccionChart[] {
+  return porSeccion.map((s) => {
+    const objetivoMicros = aMicros(s.suma_objetivo) ?? 0n
+    const propuestaMicros = aMicros(s.suma_propuesta) ?? 0n
+    const diferenciaMicros = propuestaMicros - objetivoMicros
+    const diferenciaPct =
+      objetivoMicros !== 0n ? Number((diferenciaMicros * 10_000n) / objetivoMicros) / 100 : null
+    return {
+      seccion: s.seccion ?? 'Sin sección',
+      objetivo: Number(objetivoMicros) / 1_000_000,
+      propuesta: Number(propuestaMicros) / 1_000_000,
+      objetivoMicros,
+      propuestaMicros,
+      diferenciaMicros,
+      diferenciaPct,
+    }
+  })
+}
+
+export const ESTADOS_CICLO = ['borrador', 'enviado', 'revision', 'aprobado', 'bloqueado'] as const
+export type EstadoCiclo = (typeof ESTADOS_CICLO)[number]
+export type EstadoPaso = 'completado' | 'actual' | 'pendiente'
+
+/**
+ * Estado de un paso del stepper del ciclo respecto al estado real (`actual`). No asume un flujo
+ * estrictamente lineal: si `actual` es una reapertura (p. ej. `aprobado` -> `borrador`), los pasos
+ * posteriores a `actual` quedan `pendiente` aunque ya se hayan completado antes.
+ */
+export function estadoRelativo(paso: EstadoCiclo, actual: string): EstadoPaso {
+  if (paso === actual) return 'actual'
+  const iPaso = ESTADOS_CICLO.indexOf(paso)
+  const iActual = ESTADOS_CICLO.indexOf(actual as EstadoCiclo)
+  if (iActual === -1) return 'pendiente'
+  return iPaso < iActual ? 'completado' : 'pendiente'
+}
+
+/** Cuántas secciones de `resumen.por_seccion` todavía tienen alguna línea sin capturar. */
+export function seccionesIncompletas(
+  porSeccion: readonly { total_lineas: number; lineas_capturadas: number }[],
+): number {
+  return porSeccion.filter((s) => s.lineas_capturadas < s.total_lineas).length
+}
+
+export interface DiferenciaLinea {
+  linea_id: number
+  descripcion: string
+  seccion: string | null
+  diferenciaMicros: bigint
+}
+
+/**
+ * Las líneas con mayor desviación absoluta entre propuesta y objetivo (de las que tienen ambos
+ * capturados), de mayor a menor — para el panel de "principales diferencias" del Resumen. Una
+ * línea sin objetivo o sin propuesta no tiene una diferencia que mostrar: se excluye, no cuenta 0.
+ */
+export function principalesDiferencias(
+  lineas: readonly {
+    linea_id: number
+    descripcion: string
+    seccion: string | null
+    objetivo: string | null
+    propuesta_anual: string | null
+  }[],
+  limite = 5,
+): DiferenciaLinea[] {
+  const conDiferencia: DiferenciaLinea[] = []
+  for (const l of lineas) {
+    if (l.objetivo === null || l.propuesta_anual === null) continue
+    const objetivo = aMicros(l.objetivo)
+    const propuesta = aMicros(l.propuesta_anual)
+    if (objetivo === null || propuesta === null) continue
+    conDiferencia.push({
+      linea_id: l.linea_id,
+      descripcion: l.descripcion,
+      seccion: l.seccion,
+      diferenciaMicros: propuesta - objetivo,
+    })
+  }
+  conDiferencia.sort((a, b) => {
+    const absA = a.diferenciaMicros < 0n ? -a.diferenciaMicros : a.diferenciaMicros
+    const absB = b.diferenciaMicros < 0n ? -b.diferenciaMicros : b.diferenciaMicros
+    return absB > absA ? 1 : absB < absA ? -1 : 0
+  })
+  return conDiferencia.slice(0, limite)
+}
+
+/** num/den redondeado al entero más cercano, mitad al par (igual que `Decimal.quantize` de Python
+ * sin un `rounding` explícito: es lo que usa el backend en `repartir()`). `den` > 0. */
+function divisionMitadAlPar(num: bigint, den: bigint): bigint {
+  const cociente = num / den // trunca hacia 0 (semántica de BigInt)
+  const resto = num % den // mismo signo que `num`, |resto| < den
+  const dosResto = (resto < 0n ? -resto : resto) * 2n
+  if (dosResto < den) return cociente
+  const signo = num < 0n ? -1n : 1n
+  if (dosResto > den) return cociente + signo
+  return cociente % 2n === 0n ? cociente : cociente + signo
+}
+
+/**
+ * Reparte `anual` (en micros) según `pesos` (12 textos que deben sumar 1.000000, como los trae
+ * `PerfilSalida`): calca `repartir()` del backend (`presupuesto_distribucion.py`) al micro, para que
+ * la vista previa del perfil nunca difiera de lo que de verdad se va a guardar. El residuo de
+ * redondeo se suma al último mes con peso distinto de cero. `null` si los pesos no son 12 textos
+ * válidos (no se valida aquí que sumen 1: eso ya lo garantiza el backend al crear el perfil).
+ */
+export function repartirConPerfil(anual: bigint, pesos: readonly string[]): bigint[] | null {
+  if (pesos.length !== 12) return null
+  const pesosMicros = pesos.map((p) => aMicros(p))
+  if (pesosMicros.some((p) => p === null)) return null
+  const pesosValidos = pesosMicros as bigint[]
+  const importes = pesosValidos.map((peso) => divisionMitadAlPar(anual * peso, MICROS))
+  const suma = importes.reduce((a, b) => a + b, 0n)
+  const diferencia = anual - suma
+  if (diferencia !== 0n) {
+    let indice = pesosValidos.length - 1
+    while (indice >= 0 && pesosValidos[indice] === 0n) indice -= 1
+    if (indice < 0) indice = pesosValidos.length - 1
+    importes[indice] += diferencia
+  }
+  return importes
+}
+
+export interface DiferenciaVersion {
+  linea_id: number
+  anualA: bigint | null
+  anualB: bigint | null
+  diferenciaMicros: bigint | null
+}
+
+/**
+ * Compara el anual de cada línea entre dos versiones de Budget (spec §7, "Time Machine"). Une las
+ * líneas de ambas versiones (una línea que solo aparece en una de las dos trae `null` del otro
+ * lado, nunca un cero inventado); la diferencia solo se calcula cuando ambos lados tienen dato.
+ */
+export function compararVersiones(
+  base: readonly { linea_id: number; anual: string | null }[],
+  comparar: readonly { linea_id: number; anual: string | null }[],
+): DiferenciaVersion[] {
+  const porLineaB = new Map(comparar.map((l) => [l.linea_id, l.anual]))
+  const vistos = new Set<number>()
+  const salida: DiferenciaVersion[] = []
+
+  function fila(linea_id: number, anualATexto: string | null, anualBTexto: string | null): DiferenciaVersion {
+    const anualA = anualATexto === null ? null : aMicros(anualATexto)
+    const anualB = anualBTexto === null ? null : aMicros(anualBTexto)
+    return {
+      linea_id,
+      anualA,
+      anualB,
+      diferenciaMicros: anualA !== null && anualB !== null ? anualB - anualA : null,
+    }
+  }
+
+  for (const l of base) {
+    vistos.add(l.linea_id)
+    salida.push(fila(l.linea_id, l.anual, porLineaB.get(l.linea_id) ?? null))
+  }
+  for (const l of comparar) {
+    if (vistos.has(l.linea_id)) continue
+    salida.push(fila(l.linea_id, null, l.anual))
+  }
+  return salida
 }

@@ -784,6 +784,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/anos-fiscales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Anos */
+        get: operations["listar_anos_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales_get"];
+        put?: never;
+        /** Crear Ano */
+        post: operations["crear_ano_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/anos-fiscales/{ano_fiscal_id}/periodos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Periodos */
+        get: operations["listar_periodos_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales__ano_fiscal_id__periodos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/anos-fiscales/{ano_fiscal_id}/periodos/generar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generar Periodos */
+        post: operations["generar_periodos_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales__ano_fiscal_id__periodos_generar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Ciclos */
+        get: operations["listar_ciclos_api_v1_hoteles__hotel_id__presupuesto_ciclos_get"];
+        put?: never;
+        /** Crear Ciclo Presupuesto */
+        post: operations["crear_ciclo_presupuesto_api_v1_hoteles__hotel_id__presupuesto_ciclos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detalle Ciclo */
+        get: operations["detalle_ciclo_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Lineas */
+        get: operations["listar_lineas_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Capturar */
+        put: operations["capturar_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/importes-mensuales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fijar Importes */
+        post: operations["fijar_importes_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__importes_mensuales_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/objetivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Fijar Objetivo Linea */
+        put: operations["fijar_objetivo_linea_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__objetivo_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/prorrateo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prorratear */
+        post: operations["prorratear_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__prorrateo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resumen */
+        get: operations["resumen_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__resumen_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/resumen-mensual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resumen Mensual */
+        get: operations["resumen_mensual_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__resumen_mensual_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/transiciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cambiar Estado Ciclo */
+        post: operations["cambiar_estado_ciclo_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__transiciones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/perfiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Perfiles */
+        get: operations["listar_perfiles_api_v1_hoteles__hotel_id__presupuesto_perfiles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/reporte/convenciones": {
         parameters: {
             query?: never;
@@ -1089,6 +1329,28 @@ export interface components {
             /** Tamano */
             tamano: number;
         };
+        /** AnoFiscalEntrada */
+        AnoFiscalEntrada: {
+            /** Etiqueta */
+            etiqueta: string;
+            /** Mes Fin */
+            mes_fin: number;
+            /** Mes Inicio */
+            mes_inicio: number;
+        };
+        /** AnoFiscalSalida */
+        AnoFiscalSalida: {
+            /** Estado */
+            estado: string;
+            /** Etiqueta */
+            etiqueta: string;
+            /** Id */
+            id: number;
+            /** Mes Fin */
+            mes_fin: number;
+            /** Mes Inicio */
+            mes_inicio: number;
+        };
         /** AprobacionEntrada */
         AprobacionEntrada: {
             /** Notas */
@@ -1209,6 +1471,13 @@ export interface components {
         };
         /** CambioEstado */
         CambioEstado: {
+            /** Hacia */
+            hacia: string;
+            /** Nota */
+            nota?: string | null;
+        };
+        /** CambioEstadoCiclo */
+        CambioEstadoCiclo: {
             /** Hacia */
             hacia: string;
             /** Nota */
@@ -1346,6 +1615,37 @@ export interface components {
             budget: string | null;
             /** Periodo */
             periodo: string;
+        };
+        /** CicloEntrada */
+        CicloEntrada: {
+            /** Ano Fiscal Id */
+            ano_fiscal_id: number;
+        };
+        /** CicloSalida */
+        CicloSalida: {
+            /** Ano Fiscal Id */
+            ano_fiscal_id: number;
+            /** Aprobado En */
+            aprobado_en: string | null;
+            /**
+             * Creado En
+             * Format: date-time
+             */
+            creado_en: string;
+            /** Estado */
+            estado: string;
+            /** Historial */
+            historial: components["schemas"]["TransicionCicloSalida"][];
+            /** Id */
+            id: number;
+            /** Numero */
+            numero: number;
+            /** Transiciones Posibles */
+            transiciones_posibles: components["schemas"]["TransicionPosibleCicloSalida"][];
+            /** Version Estructura Id */
+            version_estructura_id: number | null;
+            /** Version Plan Resultante Id */
+            version_plan_resultante_id: number | null;
         };
         /** CierreSalida */
         CierreSalida: {
@@ -1760,6 +2060,13 @@ export interface components {
             /** Rol */
             rol: string;
         };
+        /** ImportesMensualesEntrada */
+        ImportesMensualesEntrada: {
+            /** Importes */
+            importes: {
+                [key: string]: number | string;
+            };
+        };
         /** ImportesSalida */
         ImportesSalida: {
             /** Mes */
@@ -1779,6 +2086,29 @@ export interface components {
             primer_alterado_id: number | null;
             /** Ultimo Hash */
             ultimo_hash: string;
+        };
+        /** LineaCapturaSalida */
+        LineaCapturaSalida: {
+            /** Descripcion */
+            descripcion: string;
+            /** Estado */
+            estado: string;
+            /** Id */
+            id: number;
+            /** Linea Id */
+            linea_id: number;
+            /** Nota */
+            nota: string | null;
+            /** Objetivo */
+            objetivo: string | null;
+            /** Perfil Distribucion Id */
+            perfil_distribucion_id: number | null;
+            /** Propuesta Anual */
+            propuesta_anual: string | null;
+            /** Responsable Id */
+            responsable_id: number | null;
+            /** Seccion */
+            seccion: string | null;
         };
         /** LineaEdicionSalida */
         LineaEdicionSalida: {
@@ -1802,6 +2132,13 @@ export interface components {
             seccion_id: number | null;
             /** Tipo */
             tipo: string;
+        };
+        /** LineaMensualSalida */
+        LineaMensualSalida: {
+            /** Importe */
+            importe: string;
+            /** Periodo */
+            periodo: string;
         };
         /** LineaPlanSalida */
         LineaPlanSalida: {
@@ -1971,6 +2308,11 @@ export interface components {
             /** Tipo */
             tipo: string | null;
         };
+        /** ObjetivoEntrada */
+        ObjetivoEntrada: {
+            /** Objetivo */
+            objetivo?: number | string | null;
+        };
         /** PaginaSalida */
         PaginaSalida: {
             /** Bloque */
@@ -1993,6 +2335,45 @@ export interface components {
         PasswordTemporal: {
             /** Password Temporal */
             password_temporal: string;
+        };
+        /** PerfilSalida */
+        PerfilSalida: {
+            /** Es Sistema */
+            es_sistema: boolean;
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+            /** Pesos */
+            pesos: string[];
+        };
+        /** PeriodoFiscalSalida */
+        PeriodoFiscalSalida: {
+            /** Estado */
+            estado: string;
+            /** Id */
+            id: number;
+            /** Periodo */
+            periodo: string;
+        };
+        /** PropuestaEntrada */
+        PropuestaEntrada: {
+            /** Nota */
+            nota?: string | null;
+            /** Propuesta Anual */
+            propuesta_anual?: number | string | null;
+        };
+        /** ProrrateoPerfilEntrada */
+        ProrrateoPerfilEntrada: {
+            /** Perfil Distribucion Id */
+            perfil_distribucion_id: number;
+        };
+        /** PuntoMensualCicloSalida */
+        PuntoMensualCicloSalida: {
+            /** Periodo */
+            periodo: string;
+            /** Propuesta */
+            propuesta: string;
         };
         /** ReglaEdicion */
         ReglaEdicion: {
@@ -2071,12 +2452,45 @@ export interface components {
             /** Texto */
             texto: string;
         };
+        /** ResumenCicloSalida */
+        ResumenCicloSalida: {
+            /** Ano Fiscal Id */
+            ano_fiscal_id: number;
+            /** Estado */
+            estado: string;
+            /** Id */
+            id: number;
+            /** Numero */
+            numero: number;
+        };
         /** ResumenCierre */
         ResumenCierre: {
             /** Estado */
             estado: string;
             /** Periodo */
             periodo: string;
+        };
+        /** ResumenMensualCicloSalida */
+        ResumenMensualCicloSalida: {
+            /** Lineas Sin Mensualizar */
+            lineas_sin_mensualizar: number;
+            /** Por Periodo */
+            por_periodo: components["schemas"]["PuntoMensualCicloSalida"][];
+        };
+        /** ResumenPresupuestoSalida */
+        ResumenPresupuestoSalida: {
+            /** Cobertura Pct */
+            cobertura_pct: string;
+            /** Lineas Capturadas */
+            lineas_capturadas: number;
+            /** Por Seccion */
+            por_seccion: components["schemas"]["ResumenSeccionPresupuestoSalida"][];
+            /** Suma Objetivo */
+            suma_objetivo: string;
+            /** Suma Propuesta */
+            suma_propuesta: string;
+            /** Total Lineas */
+            total_lineas: number;
         };
         /** ResumenSalida */
         ResumenSalida: {
@@ -2088,6 +2502,21 @@ export interface components {
             n_movimientos: number;
             /** Neto */
             neto: string;
+        };
+        /** ResumenSeccionPresupuestoSalida */
+        ResumenSeccionPresupuestoSalida: {
+            /** Cobertura Pct */
+            cobertura_pct: string;
+            /** Lineas Capturadas */
+            lineas_capturadas: number;
+            /** Seccion */
+            seccion: string | null;
+            /** Suma Objetivo */
+            suma_objetivo: string;
+            /** Suma Propuesta */
+            suma_propuesta: string;
+            /** Total Lineas */
+            total_lineas: number;
         };
         /** SaldoSalida */
         SaldoSalida: {
@@ -2123,8 +2552,33 @@ export interface components {
             /** Texto */
             texto: string;
         };
+        /** TransicionCicloSalida */
+        TransicionCicloSalida: {
+            /**
+             * Creado En
+             * Format: date-time
+             */
+            creado_en: string;
+            /** Desde */
+            desde: string;
+            /** Hacia */
+            hacia: string;
+            /** Nota */
+            nota: string | null;
+            /** Usuario */
+            usuario: string;
+        };
         /** TransicionPosible */
         TransicionPosible: {
+            /** Etiqueta */
+            etiqueta: string;
+            /** Hacia */
+            hacia: string;
+            /** Pide Nota */
+            pide_nota: boolean;
+        };
+        /** TransicionPosibleCicloSalida */
+        TransicionPosibleCicloSalida: {
             /** Etiqueta */
             etiqueta: string;
             /** Hacia */
@@ -4858,6 +5312,888 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_anos_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnoFiscalSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_ano_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnoFiscalEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnoFiscalSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_periodos_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales__ano_fiscal_id__periodos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ano_fiscal_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeriodoFiscalSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generar_periodos_api_v1_hoteles__hotel_id__presupuesto_anos_fiscales__ano_fiscal_id__periodos_generar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ano_fiscal_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeriodoFiscalSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_ciclos_api_v1_hoteles__hotel_id__presupuesto_ciclos_get: {
+        parameters: {
+            query?: {
+                ano_fiscal_id?: number | null;
+            };
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumenCicloSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_ciclo_presupuesto_api_v1_hoteles__hotel_id__presupuesto_ciclos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CicloEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CicloSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detalle_ciclo_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CicloSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_lineas_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineaCapturaSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    capturar_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PropuestaEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineaCapturaSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fijar_importes_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__importes_mensuales_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportesMensualesEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineaMensualSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fijar_objetivo_linea_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__objetivo_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ObjetivoEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineaCapturaSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prorratear_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__prorrateo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProrrateoPerfilEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineaMensualSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resumen_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__resumen_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumenPresupuestoSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resumen_mensual_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__resumen_mensual_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumenMensualCicloSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cambiar_estado_ciclo_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__transiciones_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioEstadoCiclo"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CicloSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La transición no existe desde el estado actual, o faltan líneas */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Falta la nota que ese cambio exige */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listar_perfiles_api_v1_hoteles__hotel_id__presupuesto_perfiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PerfilSalida"][];
+                };
             };
             /** @description No autenticado */
             401: {

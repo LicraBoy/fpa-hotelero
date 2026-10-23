@@ -67,6 +67,22 @@
   text-align: right;
 }
 
+/* ---------- Budget: columna Objetivo y "Rellenar con perfil" (ciclo de Presupuesto fusionado) --- */
+.campo-con-boton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.campo-con-boton input {
+  width: 9rem;
+}
+
+.col-linea .campo-con-boton {
+  margin-top: 0.3rem;
+}
+
 .tabla-budget .entrada-budget:hover {
   border-color: var(--acento-borde);
 }
@@ -104,5 +120,459 @@
 
 .acciones-fijas .suave {
   font-size: 0.88rem;
+}
+
+/* ---------- Budget Studio: pestañas ---------- */
+.budget-tabs {
+  display: flex;
+  gap: var(--e2);
+  border-bottom: 1px solid var(--borde);
+  margin: var(--e3) 0;
+}
+
+.budget-tab {
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--suave);
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.budget-tab:hover {
+  color: var(--texto);
+}
+
+.budget-tab[aria-selected='true'] {
+  color: var(--primario);
+  border-bottom-color: var(--primario);
+}
+
+.budget-tab:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Budget Studio: stepper del ciclo (círculos numerados) ---------- */
+.budget-stepper-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2);
+}
+
+.budget-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.budget-stepper li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-right: var(--e3);
+  position: relative;
+}
+
+.budget-stepper li:not(:last-child)::after {
+  content: '';
+  width: 2.25rem;
+  height: 2px;
+  background: var(--borde);
+  margin: 0 var(--e2);
+  align-self: center;
+}
+
+.budget-stepper li[data-estado='completado']:not(:last-child)::after {
+  background: var(--acento);
+}
+
+.budget-stepper-circulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--neutro-fondo);
+  color: var(--suave);
+  font-size: 0.82rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 2px solid var(--borde);
+}
+
+.budget-stepper-etiqueta {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.86rem;
+  color: var(--suave);
+  line-height: 1.2;
+}
+
+.budget-stepper-etiqueta small {
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.budget-stepper li[data-estado='completado'] .budget-stepper-circulo {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: var(--primario-texto);
+}
+
+.budget-stepper li[data-estado='completado'] .budget-stepper-etiqueta {
+  color: var(--texto);
+}
+
+.budget-stepper li[data-estado='actual'] .budget-stepper-circulo {
+  background: var(--primario);
+  border-color: var(--primario);
+  color: var(--primario-texto);
+  box-shadow: 0 0 0 4px var(--acento-suave);
+}
+
+.budget-stepper li[data-estado='actual'] .budget-stepper-etiqueta {
+  color: var(--primario);
+  font-weight: 600;
+}
+
+/* ---------- Budget Studio: resumen (KPIs, gráfica, alertas) ---------- */
+.budget-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e4);
+}
+
+/* Fila principal del dashboard: la gráfica a la izquierda, alertas + resumen del ciclo a la
+   derecha en una columna angosta — como el mockup, en vez de bloques apilados a ancho completo. */
+.budget-resumen-fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(14rem, 1fr) minmax(14rem, 1fr);
+  gap: var(--e4);
+  align-items: start;
+}
+
+@media (max-width: 1280px) {
+  .budget-resumen-fila {
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+  }
+  .budget-resumen-fila > .budget-diferencias {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 960px) {
+  .budget-resumen-fila {
+    grid-template-columns: 1fr;
+  }
+}
+
+.budget-resumen-lateral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+}
+
+.budget-resumen-ciclo {
+  padding: var(--e3) var(--e4);
+}
+
+.budget-resumen-ciclo h3 {
+  margin: 0 0 var(--e2);
+  font-size: 1rem;
+}
+
+.budget-resumen-ciclo p {
+  margin: 0 0 var(--e1);
+}
+
+.budget-diferencias-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.budget-diferencia-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e2);
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  border-radius: var(--radio);
+  background: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.budget-diferencia-item:hover {
+  background: var(--acento-suave);
+}
+
+.budget-diferencia-nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.budget-diferencia-monto {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Sombra más visible que la discreta de `.tarjeta` (que en tema oscuro es "none" en el resto de
+   la app): solo dentro de Budget, para que las tarjetas "floten" como en la referencia visual. */
+.budget-chart-contenedor,
+.budget-kpis .kpi,
+.budget-resumen-lateral .avisos,
+.budget-resumen-lateral .budget-resumen-ciclo {
+  box-shadow:
+    0 1px 3px rgba(23, 43, 77, 0.08),
+    0 10px 24px rgba(20, 43, 67, 0.08);
+  border-color: transparent;
+}
+
+:root[data-tema='oscuro'] .budget-chart-contenedor,
+:root[data-tema='oscuro'] .budget-kpis .kpi,
+:root[data-tema='oscuro'] .budget-resumen-lateral .avisos,
+:root[data-tema='oscuro'] .budget-resumen-lateral .budget-resumen-ciclo {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.35),
+    0 10px 24px rgba(0, 0, 0, 0.3);
+  border-color: var(--borde);
+}
+
+.budget-resumen-lateral .avisos {
+  margin: 0;
+  border-radius: var(--radio-grande);
+}
+
+.budget-chart-contenedor {
+  min-height: 22rem;
+}
+
+.budget-kpis {
+  margin-bottom: 0;
+}
+
+.budget-kpis .kpi-tendencia {
+  width: 100%;
+  height: 1.5rem;
+  margin-top: var(--e1);
+}
+
+.budget-kpis .kpi-tendencia polyline {
+  stroke: var(--acento);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.budget-chart-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e2);
+  margin-bottom: var(--e1);
+}
+
+.budget-chart-cabecera h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.budget-chart-cabecera p {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+}
+
+.budget-chart-leyenda {
+  display: flex;
+  gap: var(--e3);
+  margin: 0 0 var(--e2);
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: var(--suave);
+}
+
+.budget-chart-leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.budget-chart-punto {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.budget-chart-punto[data-color='suave'] {
+  background: var(--suave);
+}
+
+.budget-chart-punto[data-color='primario'] {
+  background: var(--primario);
+}
+
+.budget-chart-alt-tabla {
+  margin-top: var(--e2);
+}
+
+.budget-chart-plot {
+  width: 100%;
+}
+
+/* ---------- Budget Studio: vista previa del perfil de distribución ---------- */
+.vista-previa-perfil {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e1);
+  margin-top: var(--e2);
+  padding: var(--e2);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  max-width: 28rem;
+}
+
+.mini-perfil {
+  width: 100%;
+  height: 2.5rem;
+}
+
+.mini-perfil-barra {
+  fill: var(--primario);
+}
+
+.tabla-previa-perfil {
+  font-size: 0.78rem;
+}
+
+.tabla-previa-perfil th,
+.tabla-previa-perfil td {
+  padding: 2px 4px;
+  text-align: right;
+}
+
+/* ---------- Budget Studio: árbol de líneas + detalle enfocado (Captura) ---------- */
+.captura-split {
+  display: grid;
+  grid-template-columns: minmax(16rem, 22rem) 1fr;
+  gap: var(--e4);
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .captura-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.arbol-lineas {
+  max-height: max(360px, calc(100vh - 370px));
+  overflow-y: auto;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: var(--e2);
+}
+
+.arbol-lineas-lista {
+  list-style: none;
+  margin: 0 0 var(--e2);
+  padding: 0;
+}
+
+.arbol-linea-boton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: var(--radio);
+  background: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.arbol-linea-boton:hover {
+  background: var(--acento-suave);
+}
+
+.arbol-linea-activa {
+  background: var(--acento-suave);
+  box-shadow: inset 3px 0 0 var(--primario);
+}
+
+.arbol-linea-nombre {
+  font-weight: 500;
+}
+
+.arbol-linea-cifras {
+  font-size: 0.78rem;
+}
+
+.detalle-captura-linea {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+}
+
+.detalle-captura-resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--e3);
+  margin: 0;
+}
+
+.detalle-captura-resumen dt {
+  font-size: 0.78rem;
+  color: var(--suave);
+}
+
+.detalle-captura-resumen dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.cuadricula-meses {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: var(--e2);
+}
+
+.mes-captura {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--e1);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.mes-captura-etiqueta {
+  font-size: 0.78rem;
+  color: var(--suave);
 }
 
