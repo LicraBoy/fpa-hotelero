@@ -2476,6 +2476,8 @@ export interface components {
             lineas_sin_mensualizar: number;
             /** Por Periodo */
             por_periodo: components["schemas"]["PuntoMensualCicloSalida"][];
+            /** Por Seccion */
+            por_seccion: components["schemas"]["SeccionMensualCicloSalida"][];
         };
         /** ResumenPresupuestoSalida */
         ResumenPresupuestoSalida: {
@@ -2537,6 +2539,13 @@ export interface components {
             descripcion: string;
             /** Id */
             id: number;
+        };
+        /** SeccionMensualCicloSalida */
+        SeccionMensualCicloSalida: {
+            /** Por Periodo */
+            por_periodo: components["schemas"]["PuntoMensualCicloSalida"][];
+            /** Seccion */
+            seccion: string | null;
         };
         /** SeccionSalida */
         SeccionSalida: {

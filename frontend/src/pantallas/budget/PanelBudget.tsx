@@ -383,7 +383,12 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
       </div>
 
       <div role="tabpanel" id="budget-panel-versiones" aria-labelledby="budget-tab-versiones" hidden={pestana !== 'versiones'}>
-        <BudgetVersionesTab hotelId={hotelId} versiones={versiones} descripcionPorLinea={descripcionPorLinea} />
+        <BudgetVersionesTab
+          hotelId={hotelId}
+          versiones={versiones}
+          descripcionPorLinea={descripcionPorLinea}
+          cargando={false}
+        />
       </div>
     </>
   )

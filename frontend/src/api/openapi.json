@@ -3579,11 +3579,19 @@
             },
             "title": "Por Periodo",
             "type": "array"
+          },
+          "por_seccion": {
+            "items": {
+              "$ref": "#/components/schemas/SeccionMensualCicloSalida"
+            },
+            "title": "Por Seccion",
+            "type": "array"
           }
         },
         "required": [
           "por_periodo",
-          "lineas_sin_mensualizar"
+          "lineas_sin_mensualizar",
+          "por_seccion"
         ],
         "title": "ResumenMensualCicloSalida",
         "type": "object"
@@ -3763,6 +3771,34 @@
           "descripcion"
         ],
         "title": "SeccionEdicion",
+        "type": "object"
+      },
+      "SeccionMensualCicloSalida": {
+        "properties": {
+          "por_periodo": {
+            "items": {
+              "$ref": "#/components/schemas/PuntoMensualCicloSalida"
+            },
+            "title": "Por Periodo",
+            "type": "array"
+          },
+          "seccion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seccion"
+          }
+        },
+        "required": [
+          "seccion",
+          "por_periodo"
+        ],
+        "title": "SeccionMensualCicloSalida",
         "type": "object"
       },
       "SeccionSalida": {

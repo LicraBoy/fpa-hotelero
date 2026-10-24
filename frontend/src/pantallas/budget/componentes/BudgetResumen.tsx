@@ -1,5 +1,5 @@
 import type { components } from '../../../api/schema'
-import { Cargando, EstadoVacio, MensajeError } from '../../../componentes/Insignia'
+import { EstadoVacio, MensajeError } from '../../../componentes/Insignia'
 import { BudgetAccionesRapidas } from './BudgetAccionesRapidas'
 import { BudgetComoFunciona } from './BudgetComoFunciona'
 import { BudgetComposicionChart } from './BudgetComposicionChart'
@@ -9,6 +9,7 @@ import { BudgetObjetivoVsPropuestaChart } from './BudgetObjetivoVsPropuestaChart
 import { BudgetPerfilTemporada } from './BudgetPerfilTemporada'
 import { BudgetPrincipalesDiferencias } from './BudgetPrincipalesDiferencias'
 import { BudgetResumenCiclo } from './BudgetResumenCiclo'
+import { BudgetKpiSkeleton, BudgetTablaSkeleton } from './BudgetSkeletons'
 import type { PestanaBudget } from './BudgetTabs'
 
 type ResumenCiclo = components['schemas']['ResumenPresupuestoSalida']
@@ -55,7 +56,14 @@ export function BudgetResumen({
       </EstadoVacio>
     )
   }
-  if (cargando && !resumen) return <Cargando />
+  if (cargando && !resumen) {
+    return (
+      <div className="budget-resumen" aria-label="Cargando resumen del presupuesto">
+        <BudgetKpiSkeleton />
+        <BudgetTablaSkeleton filas={5} ariaLabel="Cargando métricas del ciclo…" />
+      </div>
+    )
+  }
   if (error) return <MensajeError texto={error} />
   if (!resumen || resumen.total_lineas === 0) {
     return <EstadoVacio>El ciclo todavía no tiene líneas de captura.</EstadoVacio>
@@ -92,7 +100,7 @@ export function BudgetResumen({
       {/* 3. Tercera fila: distribución mensual y perfil estacional (~75% / ~25%) */}
       <div className="budget-trend-grid">
         <BudgetDistribucionMensualChart
-          resumenMensual={resumenMensual ?? { por_periodo: [], lineas_sin_mensualizar: 0 }}
+          resumenMensual={resumenMensual ?? { por_periodo: [], por_seccion: [], lineas_sin_mensualizar: 0 }}
         />
         <BudgetPerfilTemporada
           perfiles={perfiles}
