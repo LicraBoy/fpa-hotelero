@@ -47,33 +47,6 @@ function MiniTendencia({ puntos }: { puntos: readonly PuntoMensual[] }) {
   )
 }
 
-/** Mini sparkline decorativa para dar el acabado financiero de la referencia */
-function SparklineKpi({ color = '#10b981', puntos = [20, 24, 22, 28, 25, 32, 29, 35, 33, 40] }: { color?: string; puntos?: number[] }) {
-  const max = Math.max(...puntos)
-  const min = Math.min(...puntos)
-  const rango = max - min || 1
-  const coords = puntos.map((p, i) => {
-    const x = (i / (puntos.length - 1)) * 100
-    const y = 22 - ((p - min) / rango) * 16 - 2
-    return `${x.toFixed(1)},${y.toFixed(1)}`
-  })
-  const dArea = `M 0,22 L 0,${coords[0]?.split(',')[1]} ${coords.map(c => `L ${c}`).join(' ')} L 100,22 Z`
-  const dLinea = `M ${coords[0]} ${coords.slice(1).map(c => `L ${c}`).join(' ')}`
-
-  return (
-    <svg
-      className="kpi-sparkline-svg"
-      viewBox="0 0 100 24"
-      preserveAspectRatio="none"
-      role="presentation"
-      aria-hidden="true"
-    >
-      <path d={dArea} fill={color} fillOpacity="0.08" />
-      <path d={dLinea} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
 /**
  * KPIs del ciclo en curso, a partir de `GET .../ciclos/{id}/resumen` (cobertura, sumas de objetivo
  * y propuesta). Desacoplados de estilos de Variance y con paleta cromática diferenciada e iconografía
@@ -95,7 +68,6 @@ export function BudgetKpiStrip({ resumen, tendenciaMensual, onVerLineasSinCaptur
         }
         detalle={`${resumen.cobertura_pct}% capturado`}
         icono="objetivo"
-        extra={<SparklineKpi color="#10b981" puntos={[10, 15, 14, 20, 22, 28, 26, 32, 35, 37]} />}
       />
       <TarjetaKpi
         titulo="Propuesta anual"
@@ -105,9 +77,7 @@ export function BudgetKpiStrip({ resumen, tendenciaMensual, onVerLineasSinCaptur
         extra={
           tendenciaMensual && tendenciaMensual.length >= 2 ? (
             <MiniTendencia puntos={tendenciaMensual} />
-          ) : (
-            <SparklineKpi color="#2563eb" puntos={[18, 22, 20, 25, 23, 29, 27, 34, 32, 38]} />
-          )
+          ) : undefined
         }
       />
       <TarjetaKpi
@@ -116,7 +86,6 @@ export function BudgetKpiStrip({ resumen, tendenciaMensual, onVerLineasSinCaptur
         detalle={ETIQUETA_DIFERENCIA[diferencia.estado]}
         tono="neutro"
         icono={ICONO_DIFERENCIA[diferencia.estado]}
-        extra={<SparklineKpi color="#f97316" puntos={[25, 22, 26, 23, 27, 24, 28, 26, 29, 27]} />}
       />
       <TarjetaKpi
         titulo="Líneas sin capturar"
@@ -127,9 +96,7 @@ export function BudgetKpiStrip({ resumen, tendenciaMensual, onVerLineasSinCaptur
             <button type="button" className="boton boton-secundario" onClick={onVerLineasSinCapturar}>
               Ver en Captura
             </button>
-          ) : (
-            <SparklineKpi color="#0284c7" puntos={[35, 30, 28, 24, 20, 18, 14, 10, 8, 5]} />
-          )
+          ) : undefined
         }
         tono="neutro"
         icono={sinCapturar > 0 ? 'alerta' : 'check'}
@@ -144,7 +111,6 @@ export function BudgetKpiStrip({ resumen, tendenciaMensual, onVerLineasSinCaptur
         detalle={incompletas > 0 ? 'Con alguna línea sin capturar' : 'Todas las secciones completas'}
         tono="neutro"
         icono={incompletas > 0 ? 'alerta' : 'check'}
-        extra={<SparklineKpi color="#8b5cf6" puntos={[28, 25, 27, 23, 24, 20, 19, 16, 14, 12]} />}
       />
     </section>
   )

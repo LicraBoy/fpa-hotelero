@@ -22,7 +22,10 @@ export function BudgetPrincipalesDiferencias({ lineas, onSeleccionarSeccion }: P
       <div className="budget-chart-cabecera">
         <div>
           <h3>Desviaciones vs. Objetivo</h3>
-          <p className="suave">Top 5 líneas con mayor variación</p>
+          <p className="suave">
+            Top 5 líneas con mayor variación · sentido favorable/desfavorable pendiente de
+            confirmar con Contraloría según el tipo de cuenta
+          </p>
         </div>
       </div>
 
@@ -47,7 +50,6 @@ export function BudgetPrincipalesDiferencias({ lineas, onSeleccionarSeccion }: P
                   : null
               const pctTexto = pct !== null ? `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%` : '—'
               const esPositiva = d.diferenciaMicros > 0n
-              const esNegativa = d.diferenciaMicros < 0n
 
               return (
                 <li key={d.linea_id}>
@@ -60,18 +62,8 @@ export function BudgetPrincipalesDiferencias({ lineas, onSeleccionarSeccion }: P
                     <span className="budget-diferencia-nombre" title={d.descripcion}>
                       {d.descripcion}
                     </span>
-                    <span
-                      className={`budget-diferencia-pill ${
-                        esNegativa ? 'negativo' : esPositiva ? 'positivo' : 'neutral'
-                      }`}
-                    >
-                      {pctTexto}
-                    </span>
-                    <span
-                      className={`budget-diferencia-monto ${
-                        esPositiva ? 'budget-diferencia-sobre' : esNegativa ? 'budget-diferencia-bajo' : ''
-                      }`}
-                    >
+                    <span className="budget-diferencia-pill neutral">{pctTexto}</span>
+                    <span className="budget-diferencia-monto">
                       {esPositiva ? '+' : ''}
                       {formatoMicros(d.diferenciaMicros)}
                     </span>

@@ -21,6 +21,7 @@ from fpa.identidad.dependencias import ContextoHotel
 from fpa.modelos.identidad import AsignacionDepartamento
 from fpa.modelos.presupuesto import (
     CicloPresupuesto,
+    DetalleLineaPresupuesto,
     LineaPresupuestoCaptura,
     LineaPresupuestoMensual,
 )
@@ -185,6 +186,11 @@ def capturar_propuesta(
                 LineaPresupuestoMensual.linea_captura_id == captura.id
             )
         )
+        db.execute(
+            delete(DetalleLineaPresupuesto).where(
+                DetalleLineaPresupuesto.linea_captura_id == captura.id
+            )
+        )
         captura.perfil_distribucion_id = None
     db.flush()
     auditar(
@@ -323,7 +329,8 @@ def resumen_mensual_ciclo(db: Session, *, ciclo: CicloPresupuesto) -> ResumenMen
     nombres_seccion: dict[int, str | None] = {}
     if ciclo.version_estructura_id is not None:
         lineas = {
-            x.id: x for x in RepositorioReporte(db, ciclo.hotel_id).lineas(ciclo.version_estructura_id)
+            x.id: x
+            for x in RepositorioReporte(db, ciclo.hotel_id).lineas(ciclo.version_estructura_id)
         }
         secciones = {x.id: x.descripcion for x in lineas.values() if x.tipo == "seccion"}
         for c in capturas:

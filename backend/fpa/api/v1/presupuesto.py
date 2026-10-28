@@ -5,31 +5,48 @@ departamento solo ve y captura las líneas de las secciones que tiene asignadas
 (`AsignacionDepartamento`) — lo que queda fuera responde 404, igual que en Comentarios.
 """
 
+import logging
 import re
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Annotated
+from pathlib import Path as RutaArchivo
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, Request, UploadFile
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from fpa.api.v1.respuestas import RESPUESTAS_HOTEL
 from fpa.api.v1.tipos import ID_MAX, FechaHoraUtc, IdConsulta, IdRuta
+from fpa.config import settings
 from fpa.db import get_db
 from fpa.identidad.dependencias import ContextoHotel, hotel_autorizado, principal_actual
 from fpa.identidad.permisos import Permiso
 from fpa.identidad.principal import Principal
+from fpa.ingesta.budget_other_income import leer_other_income, normalizar
+from fpa.ingesta.budget_seccion import leer_seccion
 from fpa.modelos.identidad import Usuario
 from fpa.modelos.presupuesto import (
     AnoFiscal,
     CicloPresupuesto,
+    DetalleLineaPresupuesto,
+    LineaPlanDetalle,
     LineaPresupuestoCaptura,
     PerfilDistribucion,
     PeriodoFiscal,
 )
 from fpa.modelos.reporte import LineaReporte
 from fpa.repositorios.reporte import RepositorioReporte
+from fpa.seguridad.archivos import (
+    ArchivoRechazado,
+    LimitesArchivo,
+    guardar_en_temporal,
+    inspeccionar_xlsx,
+    limpiar_temporales,
+    nombre_seguro,
+    verificar_nombre,
+)
 from fpa.servicios.presupuesto_captura import (
     CapturaInvalida,
     capturar_propuesta,
@@ -48,14 +65,37 @@ from fpa.servicios.presupuesto_ciclo import (
     historial,
     transicionar,
 )
+from fpa.servicios.presupuesto_partidas import (
+    PartidaEntrada,
+    activar_partidas,
+    guardar_inflacion_cuenta,
+    guardar_partidas,
+    leer_hoja_de_cuenta,
+    quitar_partidas,
+)
+from fpa.servicios.presupuesto_detalle import (
+    CeldaDetalle,
+    DetalleInvalido,
+    guardar_detalle,
+    SECCION_MGMT_CHECKIN,
+    importar_seccion,
+    leer_detalle,
+    leer_detalle_de_version,
+)
 from fpa.servicios.presupuesto_distribucion import (
     DistribucionInvalida,
     fijar_importes_mensuales,
     prorratear_con_perfil,
     sembrar_perfiles_sistema,
 )
+from fpa.servicios.presupuesto_hoja import (
+    HojaInvalida,
+    guardar_inflacion,
+    leer_hoja,
+)
 
 router = APIRouter(tags=["presupuesto"], responses=RESPUESTAS_HOTEL)
+log = logging.getLogger(__name__)
 
 
 def _leer_o_capturar(
@@ -77,6 +117,7 @@ def _leer_o_capturar(
 
 Leer = Annotated[ContextoHotel, Depends(_leer_o_capturar)]
 Capturar = Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.BUDGET_CAPTURAR))]
+LeerBudget = Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.BUDGET_LEER))]
 Objetivo = Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.BUDGET_OBJETIVO))]
 # Administra el calendario fiscal y abre ciclos: hoy solo lo tiene el Contralor (BUDGET_APROBAR).
 Administrar = Annotated[ContextoHotel, Depends(hotel_autorizado(Permiso.BUDGET_APROBAR))]
@@ -95,6 +136,7 @@ class LineaCapturaSalida(BaseModel):
     perfil_distribucion_id: int | None
     estado: str
     nota: str | None
+    usa_partidas: bool = False
 
 
 class PropuestaEntrada(BaseModel):
@@ -128,6 +170,27 @@ class PerfilSalida(BaseModel):
     nombre: str
     pesos: list[str]
     es_sistema: bool
+
+
+class CeldaDetalleEntrada(BaseModel):
+    periodo: str = Field(pattern=PATRON_PERIODO)
+    metodo: str = Field(pattern=r"^(factor|fijo)$")
+    base: _Monto | None = None
+    factor: _Monto | None = None
+    monto_fijo: _Monto | None = None
+
+
+class DetalleEntrada(BaseModel):
+    celdas: list[CeldaDetalleEntrada] = Field(min_length=12, max_length=12)
+
+
+class CeldaDetalleSalida(BaseModel):
+    periodo: str
+    metodo: str
+    base: Decimal | None
+    factor: Decimal | None
+    monto_fijo: Decimal | None
+    importe: Decimal
 
 
 class ObjetivoEntrada(BaseModel):
@@ -280,6 +343,7 @@ def _a_salida(db: Session, captura: LineaPresupuestoCaptura) -> LineaCapturaSali
         perfil_distribucion_id=captura.perfil_distribucion_id,
         estado=captura.estado,
         nota=captura.nota,
+        usa_partidas=captura.usa_partidas,
     )
 
 
@@ -400,9 +464,7 @@ def listar_periodos(
     return [PeriodoFiscalSalida(id=p.id, periodo=p.periodo, estado=p.estado) for p in periodos]
 
 
-@router.post(
-    "/hoteles/{hotel_id}/presupuesto/ciclos", response_model=CicloSalida, status_code=201
-)
+@router.post("/hoteles/{hotel_id}/presupuesto/ciclos", response_model=CicloSalida, status_code=201)
 def crear_ciclo_presupuesto(
     contexto: Administrar, entrada: CicloEntrada, db: Session = Depends(get_db)
 ) -> CicloSalida:
@@ -439,9 +501,7 @@ def listar_ciclos(
 
 
 @router.get("/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}", response_model=CicloSalida)
-def detalle_ciclo(
-    contexto: Leer, ciclo_id: IdRuta, db: Session = Depends(get_db)
-) -> CicloSalida:
+def detalle_ciclo(contexto: Leer, ciclo_id: IdRuta, db: Session = Depends(get_db)) -> CicloSalida:
     ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
     return _ciclo_salida(db, contexto, ciclo)
 
@@ -518,6 +578,7 @@ def listar_lineas(
                 perfil_distribucion_id=c.perfil_distribucion_id,
                 estado=c.estado,
                 nota=c.nota,
+                usa_partidas=c.usa_partidas,
             )
         )
     return salida
@@ -733,3 +794,601 @@ def fijar_importes(
         raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
     db.commit()
     return [LineaMensualSalida(periodo=f.periodo, importe=f.importe) for f in filas]
+
+
+def _detalle_salida(
+    filas: Sequence[DetalleLineaPresupuesto | LineaPlanDetalle],
+) -> list[CeldaDetalleSalida]:
+    return [
+        CeldaDetalleSalida(
+            periodo=f.periodo,
+            metodo=f.metodo,
+            base=f.base,
+            factor=f.factor,
+            monto_fijo=f.monto_fijo,
+            importe=f.importe,
+        )
+        for f in filas
+    ]
+
+
+@router.get(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/detalle",
+    response_model=list[CeldaDetalleSalida],
+)
+def ver_detalle(
+    contexto: Leer, ciclo_id: IdRuta, linea_id: IdRuta, db: Session = Depends(get_db)
+) -> list[CeldaDetalleSalida]:
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    try:
+        filas = leer_detalle(
+            db,
+            hotel_id=contexto.hotel_id,
+            ciclo_id=ciclo_id,
+            linea_id=linea_id,
+            visibles=visibles,
+        )
+    except LookupError as e:
+        raise HTTPException(
+            status_code=404, detail=str(e.args[0]) if e.args else "No encontrado"
+        ) from None
+    return _detalle_salida(filas)
+
+
+@router.put(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/detalle",
+    response_model=list[CeldaDetalleSalida],
+)
+def guardar_detalle_linea(
+    contexto: Capturar,
+    ciclo_id: IdRuta,
+    linea_id: IdRuta,
+    entrada: DetalleEntrada,
+    db: Session = Depends(get_db),
+) -> list[CeldaDetalleSalida]:
+    """Reemplaza **completo** el detalle de la línea (no es parcial): 12 celdas, una por periodo."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    _exigir_en_captura(ciclo)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    try:
+        filas = guardar_detalle(
+            db,
+            organizacion_id=contexto.organizacion_id,
+            hotel_id=contexto.hotel_id,
+            usuario_id=contexto.principal.usuario_id,
+            ciclo_id=ciclo_id,
+            linea_id=linea_id,
+            celdas=[
+                CeldaDetalle(
+                    periodo=c.periodo,
+                    metodo=c.metodo,
+                    base=c.base,
+                    factor=c.factor,
+                    monto_fijo=c.monto_fijo,
+                )
+                for c in entrada.celdas
+            ],
+            visibles=visibles,
+        )
+    except LookupError as e:
+        raise HTTPException(
+            status_code=404, detail=str(e.args[0]) if e.args else "No encontrado"
+        ) from None
+    except (DetalleInvalido, DistribucionInvalida) as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
+    db.commit()
+    return _detalle_salida(filas)
+
+
+@router.get(
+    "/hoteles/{hotel_id}/presupuesto/versiones/{version_plan_id}/lineas/{linea_id}/detalle",
+    response_model=list[CeldaDetalleSalida],
+)
+def ver_detalle_de_version(
+    contexto: LeerBudget,
+    version_plan_id: IdRuta,
+    linea_id: IdRuta,
+    db: Session = Depends(get_db),
+) -> list[CeldaDetalleSalida]:
+    """El detalle congelado de una línea en una versión de Budget ya emitida (solo lectura)."""
+    try:
+        filas = leer_detalle_de_version(
+            db, hotel_id=contexto.hotel_id, version_plan_id=version_plan_id, linea_id=linea_id
+        )
+    except LookupError as e:
+        raise HTTPException(
+            status_code=404, detail=str(e.args[0]) if e.args else "No encontrado"
+        ) from None
+    return _detalle_salida(filas)
+
+
+class ImportacionDetalleSalida(BaseModel):
+    importadas: int
+    avisos: list[str]
+
+
+_SECCIONES_IMPORTABLES = {"otherincome", SECCION_MGMT_CHECKIN}
+
+
+def _seccion_importable(db: Session, ciclo: CicloPresupuesto, seccion_id: int | None) -> str:
+    """Nombre normalizado de la sección que se va a importar (Other Income si no se indica)."""
+    if seccion_id is None:
+        return "otherincome"
+    if ciclo.version_estructura_id is None:
+        raise HTTPException(status_code=409, detail="El ciclo no tiene estructura de reporte")
+    lineas = RepositorioReporte(db, ciclo.hotel_id).lineas(ciclo.version_estructura_id)
+    linea = next((x for x in lineas if x.id == seccion_id and x.tipo == "seccion"), None)
+    if linea is None:
+        raise HTTPException(status_code=404, detail="Sección no encontrada")
+    nombre = normalizar(linea.descripcion)
+    if nombre not in _SECCIONES_IMPORTABLES:
+        raise HTTPException(status_code=422, detail="Esa sección no se importa desde el Excel")
+    return nombre
+
+
+@router.post(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/detalle/importar-other-income",
+    response_model=ImportacionDetalleSalida,
+)
+def importar_detalle_other_income(
+    request: Request,
+    contexto: Capturar,
+    ciclo_id: IdRuta,
+    archivo: Annotated[
+        UploadFile, File(description="Excel del Budget (.xlsx): hoja `Other Income` o la sección")
+    ],
+    seccion_id: Annotated[
+        int | None,
+        Query(description="Sección que se importa; sin ella, *Other Income* (compatibilidad)"),
+    ] = None,
+    linea_id: Annotated[
+        int | None,
+        Query(description="Solo trae las partidas de esta cuenta (su hoja de detalle del Excel)"),
+    ] = None,
+    db: Session = Depends(get_db),
+) -> ImportacionDetalleSalida:
+    """Llena la tabla interna de una sección del ciclo (*Other Income* o *Mgmt & Check In*)."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    _exigir_en_captura(ciclo)
+    seccion = _seccion_importable(db, ciclo, seccion_id)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    limites = LimitesArchivo.desde_settings()
+    declarado = request.headers.get("content-length")
+    if declarado and declarado.isdigit() and int(declarado) > limites.max_bytes + 64 * 1024:
+        raise HTTPException(status_code=413, detail="El archivo supera el tamaño máximo")
+    carpeta = RutaArchivo(settings.storage_dir) / "tmp"
+    limpiar_temporales(carpeta)
+    temporal: RutaArchivo | None = None
+    try:
+        try:
+            verificar_nombre(nombre_seguro(archivo.filename))
+            temporal, _sha, _tamano = guardar_en_temporal(archivo.file, carpeta, limites)
+            inspeccionar_xlsx(temporal, limites)
+        except ArchivoRechazado as e:
+            raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
+        try:
+            leido = (
+                leer_other_income(temporal)
+                if seccion == "otherincome"
+                else leer_seccion(temporal, seccion, "Mgmt & Check In")
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e)) from None
+        except Exception:
+            log.exception("No se pudo leer Other Income del libro")
+            raise HTTPException(status_code=422, detail="No se pudo leer el libro") from None
+        try:
+            resultado = importar_seccion(
+                db,
+                organizacion_id=contexto.organizacion_id,
+                hotel_id=contexto.hotel_id,
+                usuario_id=contexto.principal.usuario_id,
+                ciclo_id=ciclo_id,
+                leido=leido,
+                visibles=visibles,
+                seccion=seccion,
+                linea_id=linea_id,
+            )
+        except LookupError as e:
+            raise HTTPException(
+                status_code=404, detail=str(e.args[0]) if e.args else "No encontrado"
+            ) from None
+        except (DetalleInvalido, DistribucionInvalida) as e:
+            raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
+        db.commit()
+        return ImportacionDetalleSalida(importadas=resultado.importadas, avisos=resultado.avisos)
+    finally:
+        if temporal is not None:
+            try:
+                temporal.unlink(missing_ok=True)
+            except OSError:
+                log.warning("No se pudo borrar el temporal %s; se limpiará después", temporal.name)
+
+
+class CuentaHojaSalida(BaseModel):
+    linea_id: int
+    descripcion: str
+    codigo: str | None
+    estado: str
+    meses: list[Decimal | None]
+
+
+class HojaSalida(BaseModel):
+    seccion_id: int
+    seccion: str
+    periodos: list[str]
+    cuentas: list[CuentaHojaSalida]
+    totales: list[Decimal]
+    inflacion: list[Decimal | None]
+    acumulada: list[Decimal]
+    total_con_inflacion: list[Decimal]
+    est_act: list[Decimal | None]
+    budget_previo: list[Decimal | None]
+    variacion: list[Decimal | None]
+    variacion_pct: list[Decimal | None]
+    origen: str | None
+
+
+class InflacionEntrada(BaseModel):
+    inflacion: dict[
+        str, Annotated[Decimal, Field(allow_inf_nan=False, max_digits=10, decimal_places=6)]
+    ]
+
+    @field_validator("inflacion")
+    @classmethod
+    def _periodos_validos(cls, v: dict[str, Decimal]) -> dict[str, Decimal]:
+        for periodo in v:
+            if not re.match(PATRON_PERIODO, periodo):
+                raise ValueError(f"«{periodo}» no tiene el formato AAAA-MM")
+        return v
+
+
+def _hoja_a_salida(h) -> HojaSalida:  # type: ignore[no-untyped-def]
+    return HojaSalida(
+        seccion_id=h.seccion_id,
+        seccion=h.seccion,
+        periodos=h.periodos,
+        cuentas=[
+            CuentaHojaSalida(
+                linea_id=c.linea_id,
+                descripcion=c.descripcion,
+                codigo=c.codigo,
+                estado=c.estado,
+                meses=c.meses,
+            )
+            for c in h.cuentas
+        ],
+        totales=h.totales,
+        inflacion=h.inflacion,
+        acumulada=h.bloque.acumulada,
+        total_con_inflacion=h.bloque.total_con_inflacion,
+        est_act=h.est_act,
+        budget_previo=h.budget_previo,
+        variacion=h.bloque.variacion,
+        variacion_pct=h.bloque.variacion_pct,
+        origen=h.origen,
+    )
+
+
+@router.get(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/hojas/{seccion_id}",
+    response_model=HojaSalida,
+)
+def ver_hoja(
+    contexto: Leer, ciclo_id: IdRuta, seccion_id: IdRuta, db: Session = Depends(get_db)
+) -> HojaSalida:
+    """La hoja completa de una sección: sus cuentas por mes y el bloque inferior (inflación,
+    total con inflación, Est Act y Budget del año previo, variación)."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    try:
+        hoja = leer_hoja(
+            db,
+            hotel_id=contexto.hotel_id,
+            ciclo_id=ciclo_id,
+            seccion_id=seccion_id,
+            visibles=visibles,
+        )
+    except LookupError as e:
+        raise HTTPException(
+            status_code=404, detail=str(e.args[0]) if e.args else "No encontrado"
+        ) from None
+    except (HojaInvalida, DistribucionInvalida) as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
+    return _hoja_a_salida(hoja)
+
+
+@router.put(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/hojas/{seccion_id}/inflacion",
+    response_model=HojaSalida,
+)
+def guardar_inflacion_hoja(
+    contexto: Capturar,
+    ciclo_id: IdRuta,
+    seccion_id: IdRuta,
+    entrada: InflacionEntrada,
+    db: Session = Depends(get_db),
+) -> HojaSalida:
+    """Reemplaza **completa** la inflación mensual (12 periodos; no es parcial). Informativa: no
+    cambia el Budget de las cuentas."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    _exigir_en_captura(ciclo)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    try:
+        guardar_inflacion(
+            db,
+            organizacion_id=contexto.organizacion_id,
+            hotel_id=contexto.hotel_id,
+            usuario_id=contexto.principal.usuario_id,
+            ciclo_id=ciclo_id,
+            seccion_id=seccion_id,
+            inflacion=entrada.inflacion,
+            visibles=visibles,
+        )
+        hoja = leer_hoja(
+            db,
+            hotel_id=contexto.hotel_id,
+            ciclo_id=ciclo_id,
+            seccion_id=seccion_id,
+            visibles=visibles,
+        )
+    except LookupError as e:
+        raise HTTPException(
+            status_code=404, detail=str(e.args[0]) if e.args else "No encontrado"
+        ) from None
+    except (HojaInvalida, DistribucionInvalida) as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detalle) from None
+    db.commit()
+    return _hoja_a_salida(hoja)
+
+
+# --- Hoja de cuenta: cuentas que se capturan por PARTIDAS (Cant. × Costo + reparto + inflación) ---
+
+
+class PartidaEntradaApi(BaseModel):
+    concepto: str = Field(min_length=1, max_length=120)
+    cantidad: Annotated[Decimal, Field(allow_inf_nan=False, ge=0, max_digits=18, decimal_places=6)]
+    unidad: str | None = Field(default=None, max_length=20)
+    costo: Annotated[Decimal, Field(allow_inf_nan=False, ge=0, max_digits=18, decimal_places=6)]
+    metodo: Literal["mensual", "estacional", "importada"]
+    meses: (
+        list[Annotated[Decimal, Field(allow_inf_nan=False, max_digits=18, decimal_places=6)]] | None
+    ) = None
+
+
+class PartidasEntrada(BaseModel):
+    partidas: list[PartidaEntradaApi] = Field(min_length=1, max_length=200)
+    inflacion: dict[
+        str, Annotated[Decimal, Field(allow_inf_nan=False, max_digits=10, decimal_places=6)]
+    ]
+
+    @field_validator("inflacion")
+    @classmethod
+    def _periodos_validos(cls, v: dict[str, Decimal]) -> dict[str, Decimal]:
+        for periodo in v:
+            if not re.match(PATRON_PERIODO, periodo):
+                raise ValueError(f"«{periodo}» no tiene el formato AAAA-MM")
+        return v
+
+
+class PartidaSalida(BaseModel):
+    id: int | None
+    orden: int
+    concepto: str
+    cantidad: Decimal
+    unidad: str | None
+    costo: Decimal
+    metodo: str
+    extendido: Decimal
+    meses: list[Decimal]
+    suma: Decimal
+    diferencia: Decimal
+
+
+class HojaCuentaSalida(HojaSalida):
+    """La hoja de una cuenta por partidas. Misma forma que la hoja de sección (`cuentas` = las
+    partidas con sus 12 meses, `totales` = la distribución) más los datos de cada partida.
+    `seccion_id`/`seccion` son los de la CUENTA; `padre_id`/`padre` los de su sección."""
+
+    linea_id: int
+    padre_id: int | None
+    padre: str
+    codigo_cuenta: str | None
+    partidas: list[PartidaSalida]
+
+
+def _hoja_cuenta_a_salida(h) -> HojaCuentaSalida:  # type: ignore[no-untyped-def]
+    return HojaCuentaSalida(
+        seccion_id=h.linea_id,
+        seccion=h.cuenta,
+        periodos=h.periodos,
+        cuentas=[
+            CuentaHojaSalida(
+                linea_id=p.id or 0,
+                descripcion=p.concepto,
+                codigo=f"{p.cantidad.normalize():f} {p.unidad or ''} × {p.costo.normalize():f}".replace("  ", " "),
+                estado=p.metodo,
+                meses=list(p.meses),
+            )
+            for p in h.partidas
+        ],
+        totales=h.totales,
+        inflacion=h.inflacion,
+        acumulada=h.bloque.acumulada,
+        total_con_inflacion=h.bloque.total_con_inflacion,
+        est_act=h.est_act,
+        budget_previo=h.budget_previo,
+        variacion=h.bloque.variacion,
+        variacion_pct=h.bloque.variacion_pct,
+        origen=h.origen,
+        linea_id=h.linea_id,
+        padre_id=h.seccion_id,
+        padre=h.seccion,
+        codigo_cuenta=h.codigo,
+        partidas=[
+            PartidaSalida(
+                id=p.id, orden=p.orden, concepto=p.concepto, cantidad=p.cantidad, unidad=p.unidad,
+                costo=p.costo, metodo=p.metodo, extendido=p.extendido, meses=list(p.meses),
+                suma=p.suma, diferencia=p.diferencia,
+            )  # fmt: skip
+            for p in h.partidas
+        ],
+    )
+
+
+def _hoja_de_cuenta(db: Session, contexto: ContextoHotel, ciclo_id: int, linea_id: int, ciclo):  # type: ignore[no-untyped-def]
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    return leer_hoja_de_cuenta(
+        db, hotel_id=contexto.hotel_id, ciclo_id=ciclo_id, linea_id=linea_id, visibles=visibles
+    )
+
+
+def _errores_partidas(e: Exception) -> HTTPException:
+    if isinstance(e, LookupError):
+        return HTTPException(status_code=404, detail=str(e.args[0]) if e.args else "No encontrado")
+    return HTTPException(status_code=e.status_code, detail=e.detalle)  # type: ignore[attr-defined]
+
+
+@router.get(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/hoja",
+    response_model=HojaCuentaSalida,
+)
+def ver_hoja_de_cuenta(
+    contexto: Leer, ciclo_id: IdRuta, linea_id: IdRuta, db: Session = Depends(get_db)
+) -> HojaCuentaSalida:
+    """La hoja de una cuenta por partidas: partidas × 12 meses y el bloque inferior (inflación, total
+    con inflación —que ES el Budget—, Est Act y Budget del año previo, variación)."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    try:
+        return _hoja_cuenta_a_salida(_hoja_de_cuenta(db, contexto, ciclo_id, linea_id, ciclo))
+    except (LookupError, DetalleInvalido, DistribucionInvalida) as e:
+        raise _errores_partidas(e) from None
+
+
+@router.put(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas",
+    response_model=HojaCuentaSalida,
+)
+def guardar_partidas_de_cuenta(
+    contexto: Capturar,
+    ciclo_id: IdRuta,
+    linea_id: IdRuta,
+    entrada: PartidasEntrada,
+    db: Session = Depends(get_db),
+) -> HojaCuentaSalida:
+    """Reemplaza **completas** las partidas y la inflación de la cuenta (no es parcial) y deja la
+    cuenta mensualizada: Budget del mes = distribución × (1 + inflación)."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    _exigir_en_captura(ciclo)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    try:
+        guardar_partidas(
+            db,
+            organizacion_id=contexto.organizacion_id,
+            hotel_id=contexto.hotel_id,
+            usuario_id=contexto.principal.usuario_id,
+            ciclo_id=ciclo_id,
+            linea_id=linea_id,
+            partidas=[
+                PartidaEntrada(
+                    concepto=p.concepto, cantidad=p.cantidad, unidad=p.unidad, costo=p.costo,
+                    metodo=p.metodo, meses=p.meses,
+                )  # fmt: skip
+                for p in entrada.partidas
+            ],
+            inflacion=entrada.inflacion,
+            visibles=visibles,
+        )
+        hoja = _hoja_de_cuenta(db, contexto, ciclo_id, linea_id, ciclo)
+    except (LookupError, DetalleInvalido, DistribucionInvalida) as e:
+        raise _errores_partidas(e) from None
+    db.commit()
+    return _hoja_cuenta_a_salida(hoja)
+
+
+@router.put(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/hoja/inflacion",
+    response_model=HojaCuentaSalida,
+)
+def guardar_inflacion_de_cuenta(
+    contexto: Capturar,
+    ciclo_id: IdRuta,
+    linea_id: IdRuta,
+    entrada: InflacionEntrada,
+    db: Session = Depends(get_db),
+) -> HojaCuentaSalida:
+    """Cambia la inflación mensual (12 periodos) conservando las partidas; el Budget se recalcula."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    _exigir_en_captura(ciclo)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    try:
+        guardar_inflacion_cuenta(
+            db,
+            organizacion_id=contexto.organizacion_id,
+            hotel_id=contexto.hotel_id,
+            usuario_id=contexto.principal.usuario_id,
+            ciclo_id=ciclo_id,
+            linea_id=linea_id,
+            inflacion=entrada.inflacion,
+            visibles=visibles,
+        )
+        hoja = _hoja_de_cuenta(db, contexto, ciclo_id, linea_id, ciclo)
+    except (LookupError, DetalleInvalido, DistribucionInvalida) as e:
+        raise _errores_partidas(e) from None
+    db.commit()
+    return _hoja_cuenta_a_salida(hoja)
+
+
+@router.post(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas/activar",
+    response_model=HojaCuentaSalida,
+)
+def activar_partidas_de_cuenta(
+    contexto: Capturar, ciclo_id: IdRuta, linea_id: IdRuta, db: Session = Depends(get_db)
+) -> HojaCuentaSalida:
+    """Pasa la cuenta a partidas (conserva sus importes actuales como la partida «Importe actual»)."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    _exigir_en_captura(ciclo)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    try:
+        activar_partidas(
+            db,
+            organizacion_id=contexto.organizacion_id,
+            hotel_id=contexto.hotel_id,
+            usuario_id=contexto.principal.usuario_id,
+            ciclo_id=ciclo_id,
+            linea_id=linea_id,
+            visibles=visibles,
+        )
+        hoja = _hoja_de_cuenta(db, contexto, ciclo_id, linea_id, ciclo)
+    except (LookupError, DetalleInvalido, DistribucionInvalida) as e:
+        raise _errores_partidas(e) from None
+    db.commit()
+    return _hoja_cuenta_a_salida(hoja)
+
+
+@router.delete(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas",
+    status_code=204,
+)
+def quitar_partidas_de_cuenta(
+    contexto: Capturar, ciclo_id: IdRuta, linea_id: IdRuta, db: Session = Depends(get_db)
+) -> None:
+    """Vuelve la cuenta al Editor mensual; el Budget que ya tenía queda como detalle fijo."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    _exigir_en_captura(ciclo)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    try:
+        quitar_partidas(
+            db,
+            organizacion_id=contexto.organizacion_id,
+            hotel_id=contexto.hotel_id,
+            usuario_id=contexto.principal.usuario_id,
+            ciclo_id=ciclo_id,
+            linea_id=linea_id,
+            visibles=visibles,
+        )
+    except (LookupError, DetalleInvalido, DistribucionInvalida) as e:
+        raise _errores_partidas(e) from None
+    db.commit()

@@ -2,28 +2,24 @@ import type { components } from '../../../api/schema'
 import { EstadoVacio, MensajeError } from '../../../componentes/Insignia'
 import { BudgetAccionesRapidas } from './BudgetAccionesRapidas'
 import { BudgetComoFunciona } from './BudgetComoFunciona'
-import { BudgetComposicionChart } from './BudgetComposicionChart'
 import { BudgetDistribucionMensualChart } from './BudgetDistribucionMensualChart'
 import { BudgetKpiStrip } from './BudgetKpiStrip'
-import { BudgetObjetivoVsPropuestaChart } from './BudgetObjetivoVsPropuestaChart'
-import { BudgetPerfilTemporada } from './BudgetPerfilTemporada'
 import { BudgetPrincipalesDiferencias } from './BudgetPrincipalesDiferencias'
 import { BudgetResumenCiclo } from './BudgetResumenCiclo'
 import { BudgetKpiSkeleton, BudgetTablaSkeleton } from './BudgetSkeletons'
 import type { PestanaBudget } from './BudgetTabs'
+import { BudgetVariacionSeccionChart } from './BudgetVariacionSeccionChart'
 
 type ResumenCiclo = components['schemas']['ResumenPresupuestoSalida']
 type ResumenMensual = components['schemas']['ResumenMensualCicloSalida']
 type Ciclo = components['schemas']['CicloSalida']
 type LineaCaptura = components['schemas']['LineaCapturaSalida']
-type Perfil = components['schemas']['PerfilSalida']
 
 interface Props {
   ciclo: Ciclo | null
   resumen: ResumenCiclo | null
   resumenMensual: ResumenMensual | null
   lineasCiclo: readonly LineaCaptura[]
-  perfiles?: readonly Perfil[]
   cargando: boolean
   error: string | null
   onIrACaptura: (seccion?: string) => void
@@ -31,18 +27,19 @@ interface Props {
 }
 
 /**
- * Dashboard analítico de Budget Studio (spec §3 y referencia visual):
+ * Dashboard analítico de Budget Studio (spec §3 y referencia visual, simplificado tras
+ * revisión de diseño — ver docs/TRASPASO u opinión de contralor de oct-2026):
  * 1. Fila de cinco KPIs clave
- * 2. Fila de análisis en 3 columnas (Objetivo vs. propuesta, Principales diferencias, Resumen del ciclo)
- * 3. Fila de tendencia en 2 columnas (Distribución mensual julio-junio y Perfil de temporada)
- * 4. Fila inferior en 3 columnas (Composición del presupuesto, Cómo funciona Budget, Acciones rápidas)
+ * 2. Fila de análisis en 3 columnas (Variación por sección, Principales diferencias, Resumen del ciclo)
+ * 3. Distribución mensual (ancho completo; "Perfil de temporada" se movió a Captura, es una
+ *    herramienta de configuración, no un resultado del ciclo)
+ * 4. Fila inferior en 2 columnas (Cómo funciona Budget, Acciones rápidas)
  */
 export function BudgetResumen({
   ciclo,
   resumen,
   resumenMensual,
   lineasCiclo,
-  perfiles = [],
   cargando,
   error,
   onIrACaptura,
@@ -82,7 +79,7 @@ export function BudgetResumen({
 
       {/* 2. Segunda fila: análisis en tres columnas (~48% / ~28% / ~24%) */}
       <div className="budget-analysis-grid">
-        <BudgetObjetivoVsPropuestaChart
+        <BudgetVariacionSeccionChart
           porSeccion={resumen.por_seccion}
           onSeleccionarSeccion={onIrACaptura}
         />
@@ -97,23 +94,15 @@ export function BudgetResumen({
         />
       </div>
 
-      {/* 3. Tercera fila: distribución mensual y perfil estacional (~75% / ~25%) */}
-      <div className="budget-trend-grid">
+      {/* 3. Tercera fila: distribución mensual, ancho completo */}
+      <div className="budget-trend-grid budget-trend-grid-unica">
         <BudgetDistribucionMensualChart
           resumenMensual={resumenMensual ?? { por_periodo: [], por_seccion: [], lineas_sin_mensualizar: 0 }}
         />
-        <BudgetPerfilTemporada
-          perfiles={perfiles}
-          onIrACaptura={() => onIrACaptura()}
-        />
       </div>
 
-      {/* 4. Cuarta fila: composición, cómo funciona y acciones rápidas */}
+      {/* 4. Cuarta fila: cómo funciona y acciones rápidas */}
       <div className="budget-bottom-grid">
-        <BudgetComposicionChart
-          porSeccion={resumen.por_seccion}
-          onIrACaptura={() => onIrACaptura()}
-        />
         <BudgetComoFunciona onIrACaptura={() => onIrACaptura()} />
         <BudgetAccionesRapidas
           lineasSinCapturar={sinCapturar}

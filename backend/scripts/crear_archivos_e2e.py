@@ -286,6 +286,126 @@ def golden_real(destino: Path) -> None:
     salida.write_text(json.dumps(filas, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+def reporte_other_income() -> bytes:
+    """Reporte mínimo con la sección *Other Income* (hoja `Ago`): 3 cuentas de detalle y su total.
+
+    Sirve para probar la tabla interna de cada cuenta (Budget por cuenta, parte 1). Reemplaza la
+    estructura del reporte: las demás pruebas cargan la suya con `prepararReporteSintetico`.
+    """
+    wb = Workbook()
+    ago = wb.active
+    assert ago is not None
+    ago.title = "Ago"
+
+    def poner(n: int, b=None, c=None, d=None, e=None, s=None):  # type: ignore[no-untyped-def]
+        for col, valor in ((2, b), (3, c), (4, d), (5, e), (19, s)):
+            if valor is not None:
+                ago.cell(row=n, column=col, value=valor)
+
+    poner(2, "Account #", "Account Description", "AUGUST")
+    poner(3, None, None, "Actual")
+    poner(4, "O t h e r   I n c o m e")
+    poner(5, "028-0000-43080-000", "Rental Income", 100.0, 90.0, "=-'4001002.001'!L5")
+    poner(6, "028-0101-45010-000", "Laundry Coins", 20.0, 25.0, "=-'4001005.001'!L5")
+    poner(7, "028-0101-45010-000", "Beauty Services", 30.0, 30.0, "=-'4001006.001'!L5")
+    poner(8, None, "T o t a l   O t h e r   I n c o m e", 150.0, 145.0, "=SUM(S5:S7)")
+    # Mgmt & Check In (cuentas por partidas): Other Fringe y Telephone con hoja de detalle; Insurance sin ella
+    poner(10, "M g m t   &   C h e c k   I n")
+    poner(11, "028-0111-60055-000", "Other Fringe", 10.0, 10.0, "=-'6009010.004'!L5")
+    poner(12, "028-0111-61560-000", "Telephone", 5.0, 5.0, "=-'6009015.001'!L5")
+    poner(13, "028-0111-60655-000", "Insurance", 2.0, 2.0, "=-'6009030.001'!L5")
+    poner(14, None, "T o t a l   M g m t   &   C h e c k   I n", 17.0, 17.0, "=SUM(S11:S13)")
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+def budget_other_income() -> bytes:
+    """Excel de Budget mínimo: solo la hoja `Other Income`, con montos fijos (el lector real también
+    entiende `=EstAct!D12*1.05`, pero openpyxl no guarda valores calculados de fórmulas)."""
+    meses = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+    wb = Workbook()
+    ws = wb.active
+    assert ws is not None
+    ws.title = "Other Income"
+    ws.append([None, "Item"] + [None] * 10 + meses)
+    ws.append([None, "Rental Income"] + [None] * 10 + [1000.0] * 12)
+    ws.append([None, "Laundry Coins"] + [None] * 10 + [200.0] * 12)
+    ws.append([None, "Beauty Services"] + [None] * 10 + [300.0] * 12)
+    ws.append([None, "Total Expense"])
+    # Bloque inferior de la hoja: inflación mensual, Est Act y Budget del año previo
+    ws.append([None] * 9 + ["Mthly", None, None] + [0.01] * 12)
+    ws.append([None] * 9 + ["Est Act 26-27", None, None] + [2000.0] * 12)
+    ws.append([None] * 9 + ["Budget 26-27", None, None] + [1500.0] * 12)
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+def budget_mgmt() -> bytes:
+    """Excel de Budget mínimo de *Mgmt & Check In*: la hoja `Budget 26-27 MZT` (sección con importes),
+    las hojas del año previo y dos hojas de detalle por cuenta (`0111-60055 Other Fringe`, partidas
+    mensual y estacional con 5 % de inflación; `0111-61560 Telephone`, sin inflación)."""
+    wb = Workbook()
+    ws = wb.active
+    assert ws is not None
+    ws.title = "Budget 26-27 MZT"
+    ws.append([None, "Account #", "Account Description"])
+    ws.append([None, "M g m t   &   C h e c k   I n"])
+    ws.append([None, "028-0111-60055-000", "Other Fringe", *([1050.0] * 12)])
+    ws.append([None, "028-0111-61560-000", "Telephone", *([4515.0] * 12)])
+    ws.append([None, "028-0111-60655-000", "Insurance", *([500.0] * 12)])
+    ws.append([None, None, "T o t a l   M g m t   &   C h e c k   I n", *(["#REF!"] * 12)])
+    for titulo, base in (("EstAct 25-26 MZT", 1200.0), ("MZT Budget 25-26", 1100.0)):
+        hoja = wb.create_sheet(titulo)
+        hoja.append([None, "M g m t   &   C h e c k   I n"])
+        hoja.append([None, "028-0111-60055-000", "Other Fringe", *([base] * 12)])
+        hoja.append([None, "028-0111-61560-000", "Telephone", *([base * 4] * 12)])
+        hoja.append([None, None, "T o t a l   M g m t   &   C h e c k   I n", *([base * 5] * 12)])
+
+    def detalle(titulo: str, partidas: list[tuple], inflacion: float) -> None:  # type: ignore[type-arg]
+        hoja = wb.create_sheet(titulo)
+        for _ in range(7):
+            hoja.append([None])
+        encabezado = [None] * 26
+        encabezado[1], encabezado[3], encabezado[4], encabezado[5], encabezado[6] = (
+            "Item", "Qty of Items", "Unit of Measure", "Cost", "Extended Cost",
+        )  # fmt: skip
+        hoja.append(encabezado)
+        total = 0.0
+        for item, qty, unidad, costo, marca, meses in partidas:
+            fila: list = [None] * 26
+            fila[1], fila[3], fila[4], fila[5], fila[6] = item, qty, unidad, costo, qty * costo
+            fila[7 if marca == "mensual" else 11] = "X"
+            for i, m in enumerate(meses):
+                fila[12 + i] = m
+            total += qty * costo
+            hoja.append(fila)
+        fin: list = [None] * 26
+        fin[1], fin[6] = "Total Expense", total
+        hoja.append(fin)
+        infl: list = [None] * 26
+        infl[9] = "Mthly"
+        for i in range(12):
+            infl[12 + i] = inflacion
+        hoja.append(infl)
+
+    estacional = [0.0] * 12
+    estacional[5] = 12000.0  # diciembre
+    detalle(
+        "0111-60055 Other Fringe",
+        [
+            ("PARTY ROOM", 1, "SVC", 12000.0, "estacional", estacional),
+            ("EMPLOYEE OF THE MONTH PRIZE", 12, "mos", 100.0, "mensual", [100.0] * 12),
+        ],
+        0.05,
+    )
+    detalle("0111-61560 Telephone", [("LOCAL CALLS", 12, "ANNUAL", 4515.0, "mensual", [4515.0] * 12)], 0.0)
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
 def main(destino: Path) -> None:
     destino.mkdir(parents=True, exist_ok=True)
     agosto = [
@@ -297,6 +417,9 @@ def main(destino: Path) -> None:
         fila("Agosto", datetime(2026, 8, 6), "6009001.001", "SUELDOS", 40.25, None),
     ]
     (destino / "variance_reporte.xlsx").write_bytes(reporte_variance())
+    (destino / "reporte_other_income.xlsx").write_bytes(reporte_other_income())
+    (destino / "budget_other_income.xlsx").write_bytes(budget_other_income())
+    (destino / "budget_mgmt.xlsx").write_bytes(budget_mgmt())
     (destino / "variance_agosto.xlsx").write_bytes(variance(agosto))
     (destino / "variance_agosto_corregido.xlsx").write_bytes(variance(corregido))
 

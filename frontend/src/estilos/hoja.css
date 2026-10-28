@@ -1,0 +1,659 @@
+/* =====================================================================================================
+   HOJA DE SECCIÓN, COMPARACIÓN ANUAL y EDITOR MENSUAL (rediseño según «diseño 1.png»)
+   Colores solo con tokens --ref-* (budget.css, claro y oscuro). Se importa después de captura.css.
+   ===================================================================================================== */
+.hoja-seccion {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  gap: 14px;
+  color: var(--ref-texto);
+}
+
+.hoja-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+.hoja-cabecera-izq { flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.hoja-cabecera-der { position: relative; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hoja-migas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 0.8rem; color: var(--ref-texto-suave); }
+.hoja-migas .enlace-boton { font-size: 0.8rem; }
+.hoja-migas .ec-flecha { width: 28px; height: 28px; border-radius: 8px; }
+.hoja-migas .ec-flecha svg { transform: none; }
+.hoja-identidad { display: flex; align-items: flex-start; gap: 14px; }
+.hoja-icono-seccion,
+.ec-icono {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--ref-azul-fondo);
+  color: var(--ref-azul);
+}
+.hoja-titulos h2 { margin: 0 0 4px; font-size: 1.6rem; line-height: 1.15; }
+.hoja-seccion .hoja-explicacion { font-size: 0.85rem; color: var(--ref-texto-suave); max-width: 78ch; }
+.hoja-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--ref-borde);
+  border-radius: 8px;
+  background: var(--ref-tarjeta);
+  font-size: 0.82rem;
+}
+.hoja-pill-rango { color: var(--ref-texto-suave); }
+.hoja-vista { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--ref-texto-suave); }
+.hoja-vista select,
+.hoja-filtros select {
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--ref-borde);
+  border-radius: 8px;
+  background: var(--ref-tarjeta);
+  color: var(--ref-texto);
+  font: inherit;
+  font-size: 0.85rem;
+}
+.hoja-seccion .boton-icono { width: 34px; height: 34px; border-radius: 8px; background: var(--ref-tarjeta); border-color: var(--ref-borde); }
+
+/* Menú «⋯» */
+.menu-mas { position: relative; }
+.menu-mas-lista {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 4px;
+  background: var(--ref-tarjeta);
+  border: 1px solid var(--ref-borde);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 32, 54, 0.16);
+}
+.menu-mas-lista button {
+  text-align: left;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ref-texto);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.menu-mas-lista button:hover,
+.menu-mas-lista button:focus-visible { background: var(--ref-azul-suave); }
+
+/* Tooltip ⓘ (foco y hover) */
+.ayuda-tooltip { position: relative; display: inline-flex; margin-left: 6px; vertical-align: middle; }
+.ayuda-tooltip-boton {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ref-azul);
+  cursor: help;
+}
+.ayuda-tooltip-texto {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 15;
+  width: 320px;
+  max-width: 80vw;
+  padding: 10px 12px;
+  border: 1px solid var(--ref-borde);
+  border-radius: 10px;
+  background: var(--ref-tarjeta);
+  box-shadow: 0 8px 24px rgba(15, 32, 54, 0.16);
+  color: var(--ref-texto);
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.4;
+  visibility: hidden;
+  opacity: 0;
+}
+.ayuda-tooltip:hover .ayuda-tooltip-texto,
+.ayuda-tooltip:focus-within .ayuda-tooltip-texto { visibility: visible; opacity: 1; }
+
+/* Indicadores: tarjetas con icono en círculo tintado (hoja y editor) */
+.hoja-indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.hi-tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--hi-borde, var(--ref-borde));
+  border-radius: 12px;
+  background: var(--ref-tarjeta);
+  box-shadow: var(--ref-sombra);
+}
+.hi-icono {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--hi-tinte, var(--ref-azul-fondo));
+  color: var(--hi-color, var(--ref-azul));
+}
+.hi-azul { --hi-color: var(--ref-azul); --hi-tinte: var(--ref-azul-fondo); --hi-borde: var(--ref-azul-borde); }
+.hi-verde { --hi-color: var(--ref-verde); --hi-tinte: var(--ref-verde-fondo); --hi-borde: var(--ref-verde-fondo); }
+.hi-morado { --hi-color: var(--ref-morado); --hi-tinte: var(--ref-morado-fondo); --hi-borde: var(--ref-morado-borde); }
+.hi-naranja { --hi-color: var(--ref-naranja); --hi-tinte: var(--ref-naranja-fondo); --hi-borde: var(--ref-naranja-borde); }
+.hi-celeste { --hi-color: var(--ref-celeste); --hi-tinte: var(--ref-celeste-fondo); --hi-borde: var(--ref-celeste-borde); }
+.hi-rojo { --hi-color: var(--ref-rojo); --hi-tinte: var(--ref-rojo-fondo); --hi-borde: var(--ref-rojo-borde); }
+.hi-textos { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hi-etiqueta { font-size: 0.78rem; color: var(--ref-texto-suave); }
+.hi-valor { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.hi-pct { font-size: 0.85rem; font-weight: 600; }
+.hi-nota { font-size: 0.74rem; color: var(--ref-texto-tenue); }
+
+/* Tarjetas de contenido */
+.hoja-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--ref-borde);
+  border-radius: 12px;
+  background: var(--ref-tarjeta);
+  box-shadow: var(--ref-sombra);
+  min-width: 0;
+}
+.hoja-barra { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--ref-borde-suave); padding-bottom: 8px; }
+.hoja-tabs { display: flex; gap: 18px; }
+.hoja-tab {
+  padding: 8px 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--ref-texto-suave);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hoja-tab-activa { color: var(--ref-azul); border-bottom-color: var(--ref-azul); }
+.hoja-filtros { display: flex; align-items: center; gap: 8px; flex: 1 1 320px; flex-wrap: wrap; }
+.hoja-buscador {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 200px;
+  max-width: 320px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--ref-borde);
+  border-radius: 8px;
+  color: var(--ref-texto-tenue);
+}
+.hoja-buscador input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ref-texto); font: inherit; font-size: 0.85rem; outline: 0; }
+.hoja-buscador:focus-within { border-color: var(--ref-azul); }
+.hoja-seccion .hoja-embudo-activo { background: var(--ref-azul); border-color: var(--ref-azul); color: var(--ref-sobre-azul); }
+.hoja-vacio { margin: 8px 0; color: var(--ref-texto-suave); font-size: 0.85rem; }
+.hoja-nota-filtro { margin: 0; color: var(--ref-texto-suave); font-size: 0.78rem; }
+
+/* Tablas de la hoja: scroll horizontal interno; vertical limitado en la de cuentas */
+.hoja-seccion .hoja-cuentas-contenedor { max-height: 340px; overflow: auto; }
+.hoja-seccion .hoja-bloque-contenedor { overflow-x: auto; overflow-y: hidden; }
+.hoja-seccion .tabla-variance { font-size: 0.85rem; }
+.hoja-cuentas-tarjeta .fila-linea-boton { display: flex; align-items: center; gap: 8px; text-align: left; }
+.hoja-cuentas-tarjeta .fila-linea-boton .icono { color: var(--ref-texto-tenue); flex: none; }
+.hoja-seccion .hoja-ampliada {
+  position: fixed;
+  inset: 12px;
+  z-index: 60;
+  overflow: auto;
+  box-shadow: 0 20px 60px rgba(15, 32, 54, 0.35);
+}
+.hoja-seccion .hoja-ampliada .hoja-cuentas-contenedor { max-height: none; flex: 1; }
+
+/* Hoja de cuenta: las columnas de la tabla «Account Detail» del Excel (cant., unidad, costo, extendido, método) */
+.hoja-tabla.hoja-tabla-partidas { min-width: 98rem; }
+/* una cuenta tiene pocas partidas (hasta unas 20): se ven todas, con scroll solo si no caben en la pantalla */
+.hoja-seccion .hoja-cuentas-contenedor.hoja-cuentas-partidas { max-height: min(80vh, 52rem); }
+/* el total (= Total Expense del Excel) queda a la vista aunque la tabla haga scroll */
+.hoja-tabla-partidas tfoot th,
+.hoja-tabla-partidas tfoot td { position: sticky; bottom: 0; z-index: 2; background: var(--ref-tarjeta); }
+.hoja-tabla-partidas .col-dato-partida { white-space: nowrap; color: var(--ref-texto-suave); }
+.hoja-tabla-partidas thead .col-dato-partida { color: inherit; }
+.hoja-tabla-partidas td.col-dato-partida.num:nth-of-type(4) { color: var(--ref-texto); font-weight: 600; }
+
+/* Bloque de inflación y comparativos */
+.hoja-inflacion-cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.hoja-inflacion-tarjeta .hoja-subtitulo { margin: 0 0 8px; font-size: 1.05rem; }
+.hoja-subtabs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hoja-subtab {
+  height: 30px;
+  padding: 0 14px;
+  border: 1px solid var(--ref-borde);
+  border-radius: 999px;
+  background: var(--ref-tarjeta);
+  color: var(--ref-texto-suave);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.hoja-subtab-activa { background: var(--ref-azul); border-color: var(--ref-azul); color: var(--ref-sobre-azul); }
+.hoja-subtab:disabled { opacity: 0.6; cursor: not-allowed; }
+.hoja-nodisp { font-size: 0.74rem; color: var(--ref-texto-tenue); }
+.hoja-acciones-inflacion { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.concepto { display: flex; align-items: flex-start; gap: 6px; }
+.concepto-textos { flex: 1; min-width: 0; }
+.concepto-chevron {
+  order: -1;
+  display: inline-flex;
+  padding: 2px;
+  border: 0;
+  background: transparent;
+  color: var(--ref-texto-tenue);
+  cursor: pointer;
+}
+.concepto-chevron[aria-expanded='true'] .icono { transform: rotate(90deg); }
+
+/* =====================================================================================================
+   Comparación anual e inflación v2 (panel de análisis): franja de indicadores, gráfico a todo el ancho
+   con banda de variación y tabla compacta. Color con función: azul = Budget, gris oscuro sólido = real
+   (Est-Act), gris azulado punteado = plan previo, verde azulado / bermellón = variación (siempre con
+   signo y flecha). Bordes en lugar de sombras; la única elevación es el tooltip del gráfico.
+   ===================================================================================================== */
+.hoja-comparacion { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+/* Encabezado compacto */
+.hoja-cabecera-compacta { gap: 8px 24px; }
+.hoja-cabecera-compacta .hoja-cabecera-izq { gap: 6px; }
+.hoja-cabecera-compacta .hoja-identidad { align-items: center; gap: 12px; }
+.hoja-cabecera-compacta .hoja-icono-seccion { width: 40px; height: 40px; }
+.hoja-cabecera-compacta .hoja-titulos h2 { margin: 0 0 2px; font-size: 24px; font-weight: 600; line-height: 1.15; }
+.hoja-cabecera-compacta .hoja-explicacion { max-width: 900px; font-size: 12.5px; line-height: 1.35; }
+
+/* Franja de 5 indicadores (≈72 px) */
+.hoja-franja { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.hi-compacto {
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio-grande);
+  background: var(--ref-tarjeta);
+  box-shadow: none;
+}
+.hi-compacto .hi-icono { width: 28px; height: 28px; border-radius: var(--radio); background: transparent; color: var(--ref-texto-tenue); }
+.hi-compacto .hi-etiqueta { font-size: 12px; }
+.hi-compacto .hi-valor { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; white-space: nowrap; }
+.hi-compacto .hi-nota { font-size: 11.5px; color: var(--ref-texto-suave); }
+.hi-compacto.hi-azul { background: var(--ref-azul-fondo); border-color: var(--ref-azul-borde); }
+.hi-compacto.hi-azul .hi-icono { color: var(--ref-azul-texto); }
+.hi-compacto.hi-positivo { background: var(--ref-var-pos-fondo); border-color: var(--ref-var-pos-borde); }
+.hi-compacto.hi-positivo .hi-icono,
+.hi-compacto.hi-positivo .hi-valor { color: var(--ref-var-pos-texto); }
+.hi-compacto.hi-negativo { background: var(--ref-var-neg-fondo); border-color: var(--ref-var-neg-borde); }
+.hi-compacto.hi-negativo .hi-icono,
+.hi-compacto.hi-negativo .hi-valor { color: var(--ref-var-neg-texto); }
+.hi-compacto.hi-neutro { background: var(--ref-tarjeta); border-color: var(--ref-borde); }
+
+/* Tarjeta del gráfico */
+.hoja-grafico-tarjeta,
+.hoja-inflacion-tarjeta { padding: 12px 16px; gap: 8px; }
+.hoja-inflacion-tarjeta .hoja-subtitulo { margin: 0; font-size: 1rem; }
+.graf-cabecera { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.graf-cabecera .hoja-subtitulo { margin: 0; font-size: 1rem; }
+.graf-leyenda { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 auto 0 8px; padding: 0; list-style: none; }
+.graf-leyenda-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--ref-borde);
+  border-radius: 999px;
+  background: var(--ref-tarjeta);
+  color: var(--ref-texto);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.graf-leyenda-boton[aria-pressed='false'] { color: var(--ref-texto-tenue); background: var(--ref-encabezado-tabla); }
+.graf-leyenda-boton[aria-pressed='false'] .graf-marca { opacity: 0.4; }
+.graf-marca { display: inline-block; width: 16px; height: 0; border-top: 2.5px solid currentColor; }
+.graf-leyenda-boton.graf-budget .graf-marca { color: var(--ref-serie-budget); }
+.graf-leyenda-boton.graf-estAct .graf-marca { color: var(--ref-serie-estact); border-top-width: 2px; }
+.graf-leyenda-boton.graf-previo .graf-marca { color: var(--ref-serie-previo); border-top-width: 2px; border-top-style: dashed; }
+.graf-segmentado { display: inline-flex; border: 1px solid var(--ref-borde); border-radius: var(--radio); overflow: hidden; }
+.graf-segmentado button {
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  background: var(--ref-tarjeta);
+  color: var(--ref-texto-suave);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.graf-segmentado button[aria-pressed='true'] { background: var(--ref-azul); color: var(--ref-sobre-azul); }
+.hoja-comparacion button:focus-visible,
+.hoja-comparacion th:focus-visible,
+.graf-caja:focus-visible { outline: 2px solid var(--ref-azul-texto); outline-offset: 1px; }
+
+/* Gráfico y banda de variación */
+.graf-caja { min-width: 0; border-radius: var(--radio); }
+.grafico-comparativo,
+.grafico-banda { display: block; max-width: 100%; color: var(--ref-borde); }
+.grafico-banda { margin-top: 6px; }
+.grafico-comparativo .graf-eje,
+.grafico-banda .graf-eje { fill: var(--ref-texto-suave); font-size: 11px; }
+.grafico-comparativo .graf-rejilla { stroke: var(--ref-borde-suave); }
+.grafico-comparativo .graf-guia { color: var(--ref-texto-tenue); stroke-dasharray: 3 3; }
+.grafico-comparativo .graf-serie.graf-budget { color: var(--ref-serie-budget); }
+.grafico-comparativo .graf-serie.graf-estAct { color: var(--ref-serie-estact); }
+.grafico-comparativo .graf-serie.graf-previo { color: var(--ref-serie-previo); }
+.grafico-comparativo .graf-etiqueta { fill: var(--ref-texto); font-size: 11px; font-weight: 600; }
+.graf-tooltip-sombra { fill: var(--ref-sombra-tooltip); }
+.graf-tooltip-fondo { fill: var(--ref-tarjeta); stroke: var(--ref-borde); }
+.graf-tooltip-titulo { fill: var(--ref-texto); font-size: 12px; font-weight: 600; }
+.graf-tooltip-linea { fill: var(--ref-texto-suave); font-size: 11.5px; }
+.grafico-banda .graf-cero { color: var(--ref-texto-tenue); }
+.grafico-banda .graf-banda-activa { fill: var(--ref-azul-suave); opacity: 0.7; }
+.var-pos { fill: var(--ref-var-pos); }
+.var-neg { fill: var(--ref-var-neg); }
+.var-cero { fill: var(--ref-texto-tenue); }
+
+/* =====================================================================================================
+   Tabla «Inflación y comparativos» por mes (meses en filas). Color con función: cada columna de cifras
+   lleva el color de su serie en el gráfico (azul Budget, gris oscuro Est-Act, gris azulado Budget previo);
+   la Variación es un mapa de calor verde azulado / bermellón de 4 niveles (siempre con signo y flecha).
+   Las mini-barras son SVG con atributos; los tintes salen de color-mix() sobre tokens --ref-*.
+   ===================================================================================================== */
+.tm-contenedor {
+  overflow-x: auto;
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio-grande);
+  background: var(--ref-tarjeta);
+}
+.tm-tabla {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.tm-tabla th,
+.tm-tabla td { padding: 0 16px; border-bottom: 1px solid var(--ref-borde-suave); text-align: left; }
+.tm-num { text-align: right; }
+
+/* Bloques de color por grupo */
+.tm-g-supuestos { --tm-fondo: var(--ref-azul-suave); --tm-texto: var(--ref-azul-texto); --tm-borde: var(--ref-azul-borde); }
+.tm-g-resultado { --tm-fondo: var(--ref-azul-fondo); --tm-texto: var(--ref-azul-texto); --tm-borde: var(--ref-azul-borde); }
+.tm-g-previo { --tm-fondo: var(--ref-encabezado-tabla); --tm-texto: var(--ref-serie-estact); --tm-borde: var(--ref-borde); }
+.tm-g-variacion { --tm-fondo: var(--ref-fila-seccion); --tm-texto: var(--ref-texto); --tm-borde: var(--ref-borde); }
+.tm-grupos th,
+.tm-grupos td { height: 30px; font-size: 12px; font-weight: 700; text-align: center; border-bottom: 0; }
+.tm-grupo { background: var(--tm-fondo); color: var(--tm-texto); border-top: 3px solid var(--tm-borde); border-left: 1px solid var(--ref-borde); }
+.tm-cols th {
+  height: 44px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--tm-texto, var(--ref-texto-suave));
+  background: color-mix(in srgb, var(--tm-fondo, var(--ref-encabezado-tabla)) 70%, var(--ref-tarjeta));
+  border-bottom: 1px solid var(--ref-borde);
+}
+.tm-cols th.tm-num { border-left: 1px solid var(--ref-borde); }
+.tm-cols .tm-mes { background: var(--ref-encabezado-tabla); color: var(--ref-texto-suave); }
+.tm-cols .ayuda-tooltip-texto { left: auto; right: 0; text-align: left; font-weight: 400; }
+
+/* Filas de mes */
+.tm-fila > * { height: 44px; }
+.tm-mes {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 96px;
+  background: var(--ref-tarjeta);
+  font-weight: 600;
+  border-left: 3px solid transparent;
+}
+.tm-tabla tbody td:nth-child(2),
+.tm-tabla tbody td:nth-child(3) { background: color-mix(in srgb, var(--ref-azul-suave) 45%, var(--ref-tarjeta)); }
+.tm-tabla tbody td:nth-child(4) { background: color-mix(in srgb, var(--ref-azul-fondo) 55%, var(--ref-tarjeta)); }
+.tm-tabla tbody td:nth-child(5),
+.tm-tabla tbody td:nth-child(6) { background: color-mix(in srgb, var(--ref-encabezado-tabla) 60%, var(--ref-tarjeta)); }
+.tm-tabla tbody td:nth-child(2),
+.tm-tabla tbody td:nth-child(4),
+.tm-tabla tbody td:nth-child(5),
+.tm-tabla tbody td:nth-child(7) { border-left: 1px solid var(--ref-borde); }
+.tm-suave { color: var(--ref-texto-suave); }
+.tm-vacia { color: var(--ref-texto-tenue); }
+.tm-fila-activa > * {
+  background-image: linear-gradient(color-mix(in srgb, var(--ref-azul) 10%, transparent), color-mix(in srgb, var(--ref-azul) 10%, transparent));
+}
+.tm-fila-activa .tm-mes { border-left-color: var(--ref-azul); }
+.tm-mes:focus-visible,
+.tm-contenedor:focus-visible { outline: 2px solid var(--ref-azul-texto); outline-offset: -2px; }
+
+/* Cifras con mini-barra */
+.tm-valor { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-weight: 500; }
+.tm-barra { display: block; width: 100%; height: 4px; margin-top: 5px; }
+.tm-barra-fondo { fill: var(--ref-borde-suave); }
+.tm-barra-budget .tm-barra-valor { fill: var(--ref-serie-budget); }
+.tm-barra-estAct .tm-barra-valor { fill: var(--ref-serie-estact); }
+.tm-barra-previo .tm-barra-valor { fill: var(--ref-serie-previo); }
+.tm-pico {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--ref-borde);
+  border-radius: 999px;
+  background: var(--ref-encabezado-tabla);
+  color: var(--ref-texto-suave);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.tm-pico-max { background: var(--ref-azul-suave); border-color: var(--ref-azul-borde); color: var(--ref-azul-texto); }
+
+/* Mapa de calor de la variación: 4 niveles por signo, el número siempre en color de texto normal */
+.tm-calor { font-weight: 600; color: var(--ref-texto); }
+.tm-calor-pos-1 { background: color-mix(in srgb, var(--ref-var-pos) 10%, var(--ref-tarjeta)); }
+.tm-calor-pos-2 { background: color-mix(in srgb, var(--ref-var-pos) 20%, var(--ref-tarjeta)); }
+.tm-calor-pos-3 { background: color-mix(in srgb, var(--ref-var-pos) 32%, var(--ref-tarjeta)); }
+.tm-calor-pos-4 { background: color-mix(in srgb, var(--ref-var-pos) 44%, var(--ref-tarjeta)); }
+.tm-calor-neg-1 { background: color-mix(in srgb, var(--ref-var-neg) 10%, var(--ref-tarjeta)); }
+.tm-calor-neg-2 { background: color-mix(in srgb, var(--ref-var-neg) 20%, var(--ref-tarjeta)); }
+.tm-calor-neg-3 { background: color-mix(in srgb, var(--ref-var-neg) 32%, var(--ref-tarjeta)); }
+.tm-calor-neg-4 { background: color-mix(in srgb, var(--ref-var-neg) 44%, var(--ref-tarjeta)); }
+.tm-calor-cero-0 { color: var(--ref-texto-suave); font-weight: 500; }
+.tm-flecha-pos { color: var(--ref-var-pos-texto); }
+.tm-flecha-neg { color: var(--ref-var-neg-texto); }
+.tm-signo-pos { color: var(--ref-var-pos-texto); font-weight: 600; }
+.tm-signo-neg { color: var(--ref-var-neg-texto); font-weight: 600; }
+.tm-signo-cero { color: var(--ref-texto-suave); }
+.tm-bandera {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 6px;
+  border: 1px solid var(--ref-var-neg-borde);
+  border-radius: 999px;
+  background: var(--ref-var-neg-fondo);
+  color: var(--ref-var-neg-texto);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* Zona editable: el input de % */
+.tm-contenedor .entrada-sufijo {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  border: 1px solid var(--ref-azul-borde);
+  border-radius: var(--radio);
+  background: var(--ref-tarjeta);
+  overflow: hidden;
+}
+.tm-contenedor .entrada-sufijo:focus-within { border-color: var(--ref-azul-texto); }
+.tm-contenedor .entrada-sufijo .entrada-budget { box-sizing: border-box; width: 56px; height: 100%; padding: 0 8px; border: 0; background: transparent; color: var(--ref-texto); font-size: 14px; text-align: right; }
+.tm-contenedor .entrada-sufijo > span { padding: 0 8px; background: var(--ref-azul-suave); color: var(--ref-azul-texto); font-size: 12px; }
+.tm-contenedor .entrada-sufijo:has(.entrada-invalida) { border-color: var(--ref-rojo); }
+
+/* Fila Total */
+.tm-total > * {
+  height: 48px;
+  background: var(--ref-fila-seccion);
+  border-top: 2px solid var(--ref-azul-borde);
+  border-bottom: 0;
+  font-weight: 700;
+}
+.tm-total .tm-mes { background: var(--ref-fila-seccion); }
+
+.tm-nota { margin: 0; font-size: 12px; line-height: 1.6; color: var(--ref-texto-suave); }
+/* Barra de acciones de la inflación (estado a la izquierda, Descartar y Guardar a la derecha) */
+.acciones-inflacion {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio-grande);
+  background: var(--ref-encabezado-tabla);
+}
+.acciones-inflacion-fija { position: sticky; bottom: 8px; z-index: 3; }
+.acciones-inflacion-pendiente {
+  border-color: var(--ref-naranja-borde);
+  background: color-mix(in srgb, var(--ref-naranja-fondo) 70%, var(--ref-tarjeta));
+}
+.acciones-inflacion-estado { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ref-texto-suave); }
+.acciones-inflacion-pendiente .acciones-inflacion-estado { color: var(--ref-texto); }
+.acciones-inflacion-estado .icono { flex: none; color: var(--ref-azul-texto); }
+.acciones-inflacion-punto { width: 9px; height: 9px; border-radius: 50%; background: var(--ref-naranja); }
+.acciones-inflacion-botones { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.acciones-descartar,
+.acciones-guardar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.acciones-descartar { border: 1px solid transparent; background: transparent; color: var(--ref-texto-suave); }
+.acciones-descartar:hover:not(:disabled) { background: var(--ref-borde-suave); color: var(--ref-texto); }
+.acciones-guardar { border: 1px solid var(--ref-azul); background: var(--ref-azul); color: var(--ref-sobre-azul); }
+.acciones-guardar:hover:not(:disabled) { background: var(--ref-azul-hover); }
+.acciones-descartar:disabled,
+.acciones-guardar:disabled { opacity: 0.45; cursor: not-allowed; }
+.acciones-descartar:focus-visible,
+.acciones-guardar:focus-visible { outline: 2px solid var(--ref-azul-texto); outline-offset: 2px; }
+
+/* Botón de regreso con texto («‹ Hoja de sección») */
+.hoja-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px 0 8px;
+  border: 1px solid var(--ref-azul-borde);
+  border-radius: 999px;
+  background: var(--ref-tarjeta);
+  color: var(--ref-azul-texto);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hoja-volver:hover { background: var(--ref-azul-suave); }
+.hoja-volver:focus-visible { outline: 2px solid var(--ref-azul-texto); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .tm-tabla td,
+  .tm-tabla th { transition: background-color 120ms, border-color 120ms; }
+}
+@media (max-width: 760px) {
+  .tm-tabla { font-size: 13px; }
+  .tm-tabla th,
+  .tm-tabla td { padding: 0 10px; }
+}
+
+
+@media (prefers-reduced-motion: no-preference) {
+  .graf-leyenda-boton,
+  .graf-segmentado button { transition: background-color 120ms, color 120ms, opacity 120ms; }
+}
+
+@media (max-width: 1400px) {
+  .hi-compacto .hi-icono { display: none; }
+  .hi-compacto .hi-valor { font-size: 18px; }
+}
+@media (max-width: 1100px) {
+  .hoja-franja { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 699px) {
+  .hoja-franja { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* El Editor mensual tiene sus estilos en captura.css */
+
+@media (max-width: 760px) {
+  .hoja-cabecera-der { width: 100%; }
+  .hoja-titulos h2 { font-size: 1.3rem; }
+  .ayuda-tooltip-texto { left: auto; right: 0; }
+}
+
+/* Botones con icono: icono y texto en la misma línea */
+.hoja-seccion .boton-chico { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+/* Editor de partida: campos de la partida (cantidad, unidad, costo, distribución) */
+.ep-campos {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(110px, 1fr)) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--ref-tarjeta);
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio-grande);
+}
+.ep-campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 12.5px; color: var(--ref-texto-suave); }
+.ep-campo input {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio);
+  background: var(--ref-tarjeta);
+  color: var(--ref-texto);
+  font: inherit;
+  font-size: 13px;
+}
+.ep-campo input:disabled { background: var(--ref-encabezado-tabla); color: var(--ref-texto-tenue); }
+.ep-campo input[aria-invalid='true'] { border-color: var(--ref-rojo); background: var(--ref-rojo-fondo); }
+.ep-campo input:focus-visible { outline: 2px solid var(--ref-azul-texto); outline-offset: 1px; }
+.ep-ayuda { margin: 0; font-size: 12.5px; color: var(--ref-texto-suave); }
+.editor-partida .ep-tabla { min-width: 0; table-layout: auto; }
+.editor-partida .ep-tabla .ec-col-mes { width: 120px; }
+.editor-partida .ep-tabla .ec-entrada { width: 160px; }
+@media (max-width: 1100px) {
+  .ep-campos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ep-concepto { grid-column: 1 / -1; }
+}

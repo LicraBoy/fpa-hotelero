@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from fpa.modelos.presupuesto import (
     CicloPresupuesto,
+    DetalleLineaPresupuesto,
     LineaPresupuestoCaptura,
     LineaPresupuestoMensual,
     PerfilDistribucion,
@@ -129,8 +130,24 @@ def _captura_y_ciclo(
 
 
 def _reemplazar_lineas_mensuales(
-    db: Session, *, linea_captura_id: int, periodos: Sequence[str], importes: Sequence[Decimal]
+    db: Session,
+    *,
+    linea_captura_id: int,
+    periodos: Sequence[str],
+    importes: Sequence[Decimal],
+    desde_partidas: bool = False,
 ) -> list[LineaPresupuestoMensual]:
+    captura = db.get(LineaPresupuestoCaptura, linea_captura_id)
+    if captura is not None and captura.usa_partidas and not desde_partidas:
+        raise DistribucionInvalida(
+            409, "La cuenta se captura por partidas: edítala desde su hoja de cuenta"
+        )
+    # Si la línea tenía tabla interna (`DetalleLineaPresupuesto`), deja de sustentar los importes.
+    db.execute(
+        delete(DetalleLineaPresupuesto).where(
+            DetalleLineaPresupuesto.linea_captura_id == linea_captura_id
+        )
+    )
     db.execute(
         delete(LineaPresupuestoMensual).where(
             LineaPresupuestoMensual.linea_captura_id == linea_captura_id

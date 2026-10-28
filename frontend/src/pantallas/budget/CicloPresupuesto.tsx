@@ -3,7 +3,7 @@ import { ErrorApi, enviarJson, obtenerTipado } from '../../api/cliente'
 import type { components } from '../../api/schema'
 import { useDatos } from '../../api/useDatos'
 import { Icono } from '../../componentes/Iconos'
-import { Insignia, MensajeError } from '../../componentes/Insignia'
+import { MensajeError } from '../../componentes/Insignia'
 import { ESTADOS_CICLO, estadoRelativo } from './calculo'
 
 type Ciclo = components['schemas']['CicloSalida']
@@ -25,13 +25,15 @@ interface Props {
   cicloId: number
   /** Avisa que el ciclo cambió de estado (la captura puede dejar de ser editable). */
   alCambiar: () => void
+  /** Lleva a la pestaña Versiones (chip «Budget vN»). */
+  onVerVersiones: () => void
 }
 
 /**
  * Panel horizontal compacto del ciclo presupuestario (spec §3.3 y referencia visual):
  * Stepper horizontal numerado de 5 etapas, transiciones autorizadas, anillo circular de cobertura y modales contextuales.
  */
-export function CicloPresupuesto({ hotelId, cicloId, alCambiar }: Props) {
+export function CicloPresupuesto({ hotelId, cicloId, alCambiar, onVerVersiones }: Props) {
   const [version, setVersion] = useState(0)
   const ciclo = useDatos(
     () =>
@@ -75,11 +77,21 @@ export function CicloPresupuesto({ hotelId, cicloId, alCambiar }: Props) {
   if (ciclo.error) return <MensajeError texto={ciclo.error} />
   if (!c) return null
   const r = resumen.datos
+  const principal = c.transiciones_posibles.find((t) => t.hacia !== 'borrador') ?? c.transiciones_posibles[0] ?? null
+  const secundarias = c.transiciones_posibles.filter((t) => t !== principal)
+  function abrirPaso(t: { hacia: string; etiqueta: string; pide_nota: boolean }) {
+    setError(null)
+    setNota('')
+    setPaso(t)
+  }
 
 
   return (
     <>
-      <section className="budget-ciclo-card" aria-label={`Ciclo de presupuesto #${c.numero}: etapa ${ETIQUETA[c.estado] ?? c.estado}`}>
+      <section
+        className="budget-ciclo-card budget-ciclo-compacto budget-ciclo-mini"
+        aria-label={`Ciclo de presupuesto #${c.numero}: etapa ${ETIQUETA[c.estado] ?? c.estado}`}
+      >
         <div className="budget-ciclo-stepper-wrap">
           <ol className="budget-ciclo-stepper" aria-label="Etapas del ciclo de presupuesto">
             {ESTADOS_CICLO.map((pasoItem, i) => {
@@ -103,40 +115,56 @@ export function CicloPresupuesto({ hotelId, cicloId, alCambiar }: Props) {
           </ol>
         </div>
 
-        <div className="budget-ciclo-acciones">
+        <div className="ciclo-caja-acciones">
           {c.version_plan_resultante_id !== null && (
-            <span title="Plan oficial resultante">
-              <Insignia tono="ok">
-                Budget v{c.version_plan_resultante_id}
-              </Insignia>
-            </span>
+            <button
+              type="button"
+              className="ciclo-chip-version"
+              onClick={onVerVersiones}
+              title="Plan oficial resultante: ver versiones"
+            >
+              <Icono nombre="presupuesto" tamano={16} />
+              <span>Budget v{c.version_plan_resultante_id}</span>
+              <Icono nombre="chevron" tamano={13} />
+            </button>
           )}
 
-          {c.transiciones_posibles.map((t) => (
+          {principal && (
             <button
-              key={t.hacia}
               type="button"
-              className={t.hacia === 'borrador' ? 'boton boton-secundario' : 'boton boton-primario'}
-              onClick={() => {
-                setError(null)
-                setNota('')
-                setPaso(t)
-              }}
+              className="boton boton-primario ciclo-boton-primario"
+              onClick={() => abrirPaso(principal)}
             >
-              {t.etiqueta}
+              <Icono nombre="exportar" tamano={16} />
+              {principal.etiqueta}
             </button>
-          ))}
+          )}
 
           {c.historial.length > 0 && (
             <button
               type="button"
-              className="boton boton-secundario"
+              className="boton boton-secundario budget-btn-actividad"
               onClick={() => setMostrarHistorial(true)}
-              title="Consultar historial de transiciones del ciclo"
+              title="Consultar quién movió el ciclo, cuándo y por qué"
             >
               <Icono nombre="auditoria" tamano={15} />
-              <span>Historial ({c.historial.length})</span>
+              <span>Actividad del ciclo</span>
             </button>
+          )}
+
+          {secundarias.length > 0 && (
+            <details className="menu-flotante ciclo-menu-mas">
+              <summary className="boton-icono" aria-label="Más acciones del ciclo" title="Más acciones">
+                <span aria-hidden="true">⋮</span>
+              </summary>
+              <div className="menu-flotante-panel ciclo-menu-panel">
+                {secundarias.map((t) => (
+                  <button key={t.hacia} type="button" className="boton boton-secundario" onClick={() => abrirPaso(t)}>
+                    {t.etiqueta}
+                  </button>
+                ))}
+              </div>
+            </details>
           )}
         </div>
       </section>
@@ -191,7 +219,7 @@ export function CicloPresupuesto({ hotelId, cicloId, alCambiar }: Props) {
         <div className="budget-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-historial-titulo">
           <div className="budget-modal budget-modal-ancho">
             <div className="budget-modal-cabecera">
-              <h3 id="modal-historial-titulo">Historial del ciclo #{c.numero}</h3>
+              <h3 id="modal-historial-titulo">Actividad del ciclo #{c.numero}</h3>
               <button
                 type="button"
                 className="boton-icono"

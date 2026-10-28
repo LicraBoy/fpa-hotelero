@@ -204,6 +204,34 @@ export async function importarBudgetExcel(
   return comoRespuestaBudget(await leerJson(r), r.status)
 }
 
+/**
+ * Llena las tablas internas de una sección del ciclo desde el Excel del Budget: *Other Income* (hoja
+ * `Other Income`) o, con `seccionId`, otra sección importable (p. ej. *Mgmt & Check In*).
+ */
+export async function importarOtherIncomeExcel(
+  hotelId: number,
+  cicloId: number,
+  archivo: File,
+  seccionId?: number,
+  /** Solo las partidas de esta cuenta (su hoja de detalle); el resto de la sección no se toca. */
+  lineaId?: number,
+): Promise<{ importadas: number; avisos: string[] }> {
+  const formulario = new FormData()
+  formulario.append('archivo', archivo)
+  const consulta = new URLSearchParams()
+  if (seccionId !== undefined) consulta.set('seccion_id', String(seccionId))
+  if (lineaId !== undefined) consulta.set('linea_id', String(lineaId))
+  const r = await fetch(
+    `/api/v1/hoteles/${hotelId}/presupuesto/ciclos/${cicloId}/detalle/importar-other-income${
+      consulta.size > 0 ? `?${consulta.toString()}` : ''
+    }`,
+    { method: 'POST', body: formulario, headers: cabeceras() },
+  )
+  const cuerpo = await leerJson(r)
+  if (!r.ok) throw new ErrorApi(r.status, mensajeDeError(cuerpo, r.status))
+  return cuerpo as { importadas: number; avisos: string[] }
+}
+
 /** Guarda (o borra, con `importe: null`) el Actual capturado a mano de líneas sin cuentas. */
 export async function guardarActualesCapturados(
   hotelId: number,
@@ -223,7 +251,7 @@ export async function guardarActualesCapturados(
 
 /** Petición con cuerpo JSON (POST/PATCH/PUT); devuelve el cuerpo de la respuesta (o null si no hay). */
 export async function enviarJson<T>(
-  metodo: 'POST' | 'PATCH' | 'PUT',
+  metodo: 'POST' | 'PATCH' | 'PUT' | 'DELETE',
   ruta: string,
   cuerpo?: object,
 ): Promise<T | null> {

@@ -266,6 +266,21 @@
         "title": "Body_importar_convenciones_reporte_api_v1_hoteles__hotel_id__reporte_convenciones_post",
         "type": "object"
       },
+      "Body_importar_detalle_other_income_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__detalle_importar_other_income_post": {
+        "properties": {
+          "archivo": {
+            "contentMediaType": "application/octet-stream",
+            "description": "Excel del Budget (.xlsx): hoja `Other Income` o la sección",
+            "title": "Archivo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_importar_detalle_other_income_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__detalle_importar_other_income_post",
+        "type": "object"
+      },
       "Body_importar_reporte_api_v1_hoteles__hotel_id__reporte_importar_post": {
         "properties": {
           "archivo": {
@@ -775,6 +790,134 @@
           "reemplazada_por_id"
         ],
         "title": "CargaSalida",
+        "type": "object"
+      },
+      "CeldaDetalleEntrada": {
+        "properties": {
+          "base": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,14}|(?=[\\d.]{1,21}0*$)\\d{0,14}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base"
+          },
+          "factor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,14}|(?=[\\d.]{1,21}0*$)\\d{0,14}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factor"
+          },
+          "metodo": {
+            "pattern": "^(factor|fijo)$",
+            "title": "Metodo",
+            "type": "string"
+          },
+          "monto_fijo": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,14}|(?=[\\d.]{1,21}0*$)\\d{0,14}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monto Fijo"
+          },
+          "periodo": {
+            "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+            "title": "Periodo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "periodo",
+          "metodo"
+        ],
+        "title": "CeldaDetalleEntrada",
+        "type": "object"
+      },
+      "CeldaDetalleSalida": {
+        "properties": {
+          "base": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base"
+          },
+          "factor": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factor"
+          },
+          "importe": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Importe",
+            "type": "string"
+          },
+          "metodo": {
+            "title": "Metodo",
+            "type": "string"
+          },
+          "monto_fijo": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monto Fijo"
+          },
+          "periodo": {
+            "title": "Periodo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "periodo",
+          "metodo",
+          "base",
+          "factor",
+          "monto_fijo",
+          "importe"
+        ],
+        "title": "CeldaDetalleSalida",
         "type": "object"
       },
       "CeldaEdicion": {
@@ -1584,6 +1727,57 @@
         "title": "CuentaDesgloseSalida",
         "type": "object"
       },
+      "CuentaHojaSalida": {
+        "properties": {
+          "codigo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo"
+          },
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "meses": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Meses",
+            "type": "array"
+          }
+        },
+        "required": [
+          "linea_id",
+          "descripcion",
+          "codigo",
+          "estado",
+          "meses"
+        ],
+        "title": "CuentaHojaSalida",
+        "type": "object"
+      },
       "CuentaSalida": {
         "properties": {
           "codigo": {
@@ -1850,6 +2044,24 @@
           "motivos_cero"
         ],
         "title": "DesgloseSalida",
+        "type": "object"
+      },
+      "DetalleEntrada": {
+        "properties": {
+          "celdas": {
+            "items": {
+              "$ref": "#/components/schemas/CeldaDetalleEntrada"
+            },
+            "maxItems": 12,
+            "minItems": 12,
+            "title": "Celdas",
+            "type": "array"
+          }
+        },
+        "required": [
+          "celdas"
+        ],
+        "title": "DetalleEntrada",
         "type": "object"
       },
       "EstadoAuth": {
@@ -2166,6 +2378,355 @@
         "title": "HistorialSalida",
         "type": "object"
       },
+      "HojaCuentaSalida": {
+        "description": "La hoja de una cuenta por partidas. Misma forma que la hoja de sección (`cuentas` = las\npartidas con sus 12 meses, `totales` = la distribución) más los datos de cada partida.\n`seccion_id`/`seccion` son los de la CUENTA; `padre_id`/`padre` los de su sección.",
+        "properties": {
+          "acumulada": {
+            "items": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Acumulada",
+            "type": "array"
+          },
+          "budget_previo": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Budget Previo",
+            "type": "array"
+          },
+          "codigo_cuenta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo Cuenta"
+          },
+          "cuentas": {
+            "items": {
+              "$ref": "#/components/schemas/CuentaHojaSalida"
+            },
+            "title": "Cuentas",
+            "type": "array"
+          },
+          "est_act": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Est Act",
+            "type": "array"
+          },
+          "inflacion": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Inflacion",
+            "type": "array"
+          },
+          "linea_id": {
+            "title": "Linea Id",
+            "type": "integer"
+          },
+          "origen": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origen"
+          },
+          "padre": {
+            "title": "Padre",
+            "type": "string"
+          },
+          "padre_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Padre Id"
+          },
+          "partidas": {
+            "items": {
+              "$ref": "#/components/schemas/PartidaSalida"
+            },
+            "title": "Partidas",
+            "type": "array"
+          },
+          "periodos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Periodos",
+            "type": "array"
+          },
+          "seccion": {
+            "title": "Seccion",
+            "type": "string"
+          },
+          "seccion_id": {
+            "title": "Seccion Id",
+            "type": "integer"
+          },
+          "total_con_inflacion": {
+            "items": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Total Con Inflacion",
+            "type": "array"
+          },
+          "totales": {
+            "items": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Totales",
+            "type": "array"
+          },
+          "variacion": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Variacion",
+            "type": "array"
+          },
+          "variacion_pct": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Variacion Pct",
+            "type": "array"
+          }
+        },
+        "required": [
+          "seccion_id",
+          "seccion",
+          "periodos",
+          "cuentas",
+          "totales",
+          "inflacion",
+          "acumulada",
+          "total_con_inflacion",
+          "est_act",
+          "budget_previo",
+          "variacion",
+          "variacion_pct",
+          "origen",
+          "linea_id",
+          "padre_id",
+          "padre",
+          "codigo_cuenta",
+          "partidas"
+        ],
+        "title": "HojaCuentaSalida",
+        "type": "object"
+      },
+      "HojaSalida": {
+        "properties": {
+          "acumulada": {
+            "items": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Acumulada",
+            "type": "array"
+          },
+          "budget_previo": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Budget Previo",
+            "type": "array"
+          },
+          "cuentas": {
+            "items": {
+              "$ref": "#/components/schemas/CuentaHojaSalida"
+            },
+            "title": "Cuentas",
+            "type": "array"
+          },
+          "est_act": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Est Act",
+            "type": "array"
+          },
+          "inflacion": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Inflacion",
+            "type": "array"
+          },
+          "origen": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origen"
+          },
+          "periodos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Periodos",
+            "type": "array"
+          },
+          "seccion": {
+            "title": "Seccion",
+            "type": "string"
+          },
+          "seccion_id": {
+            "title": "Seccion Id",
+            "type": "integer"
+          },
+          "total_con_inflacion": {
+            "items": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Total Con Inflacion",
+            "type": "array"
+          },
+          "totales": {
+            "items": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Totales",
+            "type": "array"
+          },
+          "variacion": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Variacion",
+            "type": "array"
+          },
+          "variacion_pct": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Variacion Pct",
+            "type": "array"
+          }
+        },
+        "required": [
+          "seccion_id",
+          "seccion",
+          "periodos",
+          "cuentas",
+          "totales",
+          "inflacion",
+          "acumulada",
+          "total_con_inflacion",
+          "est_act",
+          "budget_previo",
+          "variacion",
+          "variacion_pct",
+          "origen"
+        ],
+        "title": "HojaSalida",
+        "type": "object"
+      },
       "HotelSalida": {
         "properties": {
           "codigo": {
@@ -2192,6 +2753,27 @@
           "rol"
         ],
         "title": "HotelSalida",
+        "type": "object"
+      },
+      "ImportacionDetalleSalida": {
+        "properties": {
+          "avisos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Avisos",
+            "type": "array"
+          },
+          "importadas": {
+            "title": "Importadas",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "importadas",
+          "avisos"
+        ],
+        "title": "ImportacionDetalleSalida",
         "type": "object"
       },
       "ImportesMensualesEntrada": {
@@ -2236,6 +2818,30 @@
           "ytd"
         ],
         "title": "ImportesSalida",
+        "type": "object"
+      },
+      "InflacionEntrada": {
+        "properties": {
+          "inflacion": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,4}|(?=[\\d.]{1,11}0*$)\\d{0,4}\\.\\d{0,6}0*$)",
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Inflacion",
+            "type": "object"
+          }
+        },
+        "required": [
+          "inflacion"
+        ],
+        "title": "InflacionEntrada",
         "type": "object"
       },
       "IntegridadSalida": {
@@ -2370,6 +2976,11 @@
               }
             ],
             "title": "Seccion"
+          },
+          "usa_partidas": {
+            "default": false,
+            "title": "Usa Partidas",
+            "type": "boolean"
           }
         },
         "required": [
@@ -3139,6 +3750,213 @@
           "siguiente_cursor"
         ],
         "title": "PaginaSalida",
+        "type": "object"
+      },
+      "PartidaEntradaApi": {
+        "properties": {
+          "cantidad": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Cantidad"
+          },
+          "concepto": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Concepto",
+            "type": "string"
+          },
+          "costo": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Costo"
+          },
+          "meses": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meses"
+          },
+          "metodo": {
+            "enum": [
+              "mensual",
+              "estacional",
+              "importada"
+            ],
+            "title": "Metodo",
+            "type": "string"
+          },
+          "unidad": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unidad"
+          }
+        },
+        "required": [
+          "concepto",
+          "cantidad",
+          "costo",
+          "metodo"
+        ],
+        "title": "PartidaEntradaApi",
+        "type": "object"
+      },
+      "PartidaSalida": {
+        "properties": {
+          "cantidad": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cantidad",
+            "type": "string"
+          },
+          "concepto": {
+            "title": "Concepto",
+            "type": "string"
+          },
+          "costo": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Costo",
+            "type": "string"
+          },
+          "diferencia": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Diferencia",
+            "type": "string"
+          },
+          "extendido": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Extendido",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "meses": {
+            "items": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Meses",
+            "type": "array"
+          },
+          "metodo": {
+            "title": "Metodo",
+            "type": "string"
+          },
+          "orden": {
+            "title": "Orden",
+            "type": "integer"
+          },
+          "suma": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Suma",
+            "type": "string"
+          },
+          "unidad": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unidad"
+          }
+        },
+        "required": [
+          "id",
+          "orden",
+          "concepto",
+          "cantidad",
+          "unidad",
+          "costo",
+          "metodo",
+          "extendido",
+          "meses",
+          "suma",
+          "diferencia"
+        ],
+        "title": "PartidaSalida",
+        "type": "object"
+      },
+      "PartidasEntrada": {
+        "properties": {
+          "inflacion": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,4}|(?=[\\d.]{1,11}0*$)\\d{0,4}\\.\\d{0,6}0*$)",
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Inflacion",
+            "type": "object"
+          },
+          "partidas": {
+            "items": {
+              "$ref": "#/components/schemas/PartidaEntradaApi"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Partidas",
+            "type": "array"
+          }
+        },
+        "required": [
+          "partidas",
+          "inflacion"
+        ],
+        "title": "PartidasEntrada",
         "type": "object"
       },
       "PasswordTemporal": {
@@ -8199,6 +9017,279 @@
         ]
       }
     },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/detalle/importar-other-income": {
+      "post": {
+        "description": "Llena la tabla interna de una sección del ciclo (*Other Income* o *Mgmt & Check In*).",
+        "operationId": "importar_detalle_other_income_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__detalle_importar_other_income_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Sección que se importa; sin ella, *Other Income* (compatibilidad)",
+            "in": "query",
+            "name": "seccion_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sección que se importa; sin ella, *Other Income* (compatibilidad)",
+              "title": "Seccion Id"
+            }
+          },
+          {
+            "description": "Solo trae las partidas de esta cuenta (su hoja de detalle del Excel)",
+            "in": "query",
+            "name": "linea_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Solo trae las partidas de esta cuenta (su hoja de detalle del Excel)",
+              "title": "Linea Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_importar_detalle_other_income_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__detalle_importar_other_income_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportacionDetalleSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Importar Detalle Other Income",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/hojas/{seccion_id}": {
+      "get": {
+        "description": "La hoja completa de una sección: sus cuentas por mes y el bloque inferior (inflación,\ntotal con inflación, Est Act y Budget del año previo, variación).",
+        "operationId": "ver_hoja_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__hojas__seccion_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "seccion_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Seccion Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HojaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ver Hoja",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/hojas/{seccion_id}/inflacion": {
+      "put": {
+        "description": "Reemplaza **completa** la inflación mensual (12 periodos; no es parcial). Informativa: no\ncambia el Budget de las cuentas.",
+        "operationId": "guardar_inflacion_hoja_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__hojas__seccion_id__inflacion_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "seccion_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Seccion Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InflacionEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HojaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Guardar Inflacion Hoja",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
     "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas": {
       "get": {
         "operationId": "listar_lineas_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas_get",
@@ -8347,6 +9438,335 @@
           }
         },
         "summary": "Capturar",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/detalle": {
+      "get": {
+        "operationId": "ver_detalle_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__detalle_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CeldaDetalleSalida"
+                  },
+                  "title": "Response Ver Detalle Api V1 Hoteles  Hotel Id  Presupuesto Ciclos  Ciclo Id  Lineas  Linea Id  Detalle Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ver Detalle",
+        "tags": [
+          "presupuesto"
+        ]
+      },
+      "put": {
+        "description": "Reemplaza **completo** el detalle de la línea (no es parcial): 12 celdas, una por periodo.",
+        "operationId": "guardar_detalle_linea_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__detalle_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DetalleEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CeldaDetalleSalida"
+                  },
+                  "title": "Response Guardar Detalle Linea Api V1 Hoteles  Hotel Id  Presupuesto Ciclos  Ciclo Id  Lineas  Linea Id  Detalle Put",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Guardar Detalle Linea",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/hoja": {
+      "get": {
+        "description": "La hoja de una cuenta por partidas: partidas × 12 meses y el bloque inferior (inflación, total\ncon inflación —que ES el Budget—, Est Act y Budget del año previo, variación).",
+        "operationId": "ver_hoja_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__hoja_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HojaCuentaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ver Hoja De Cuenta",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/hoja/inflacion": {
+      "put": {
+        "description": "Cambia la inflación mensual (12 periodos) conservando las partidas; el Budget se recalcula.",
+        "operationId": "guardar_inflacion_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__hoja_inflacion_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InflacionEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HojaCuentaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Guardar Inflacion De Cuenta",
         "tags": [
           "presupuesto"
         ]
@@ -8521,6 +9941,235 @@
           }
         },
         "summary": "Fijar Objetivo Linea",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas": {
+      "delete": {
+        "description": "Vuelve la cuenta al Editor mensual; el Budget que ya tenía queda como detalle fijo.",
+        "operationId": "quitar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Quitar Partidas De Cuenta",
+        "tags": [
+          "presupuesto"
+        ]
+      },
+      "put": {
+        "description": "Reemplaza **completas** las partidas y la inflación de la cuenta (no es parcial) y deja la\ncuenta mensualizada: Budget del mes = distribución × (1 + inflación).",
+        "operationId": "guardar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartidasEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HojaCuentaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Guardar Partidas De Cuenta",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas/activar": {
+      "post": {
+        "description": "Pasa la cuenta a partidas (conserva sus importes actuales como la partida «Importe actual»).",
+        "operationId": "activar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_activar_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HojaCuentaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activar Partidas De Cuenta",
         "tags": [
           "presupuesto"
         ]
@@ -8865,6 +10514,86 @@
           }
         },
         "summary": "Listar Perfiles",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/versiones/{version_plan_id}/lineas/{linea_id}/detalle": {
+      "get": {
+        "description": "El detalle congelado de una línea en una versión de Budget ya emitida (solo lectura).",
+        "operationId": "ver_detalle_de_version_api_v1_hoteles__hotel_id__presupuesto_versiones__version_plan_id__lineas__linea_id__detalle_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_plan_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Version Plan Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CeldaDetalleSalida"
+                  },
+                  "title": "Response Ver Detalle De Version Api V1 Hoteles  Hotel Id  Presupuesto Versiones  Version Plan Id  Lineas  Linea Id  Detalle Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ver Detalle De Version",
         "tags": [
           "presupuesto"
         ]

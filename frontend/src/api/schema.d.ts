@@ -871,6 +871,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/detalle/importar-other-income": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Importar Detalle Other Income
+         * @description Llena la tabla interna de una sección del ciclo (*Other Income* o *Mgmt & Check In*).
+         */
+        post: operations["importar_detalle_other_income_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__detalle_importar_other_income_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/hojas/{seccion_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver Hoja
+         * @description La hoja completa de una sección: sus cuentas por mes y el bloque inferior (inflación,
+         *     total con inflación, Est Act y Budget del año previo, variación).
+         */
+        get: operations["ver_hoja_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__hojas__seccion_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/hojas/{seccion_id}/inflacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Guardar Inflacion Hoja
+         * @description Reemplaza **completa** la inflación mensual (12 periodos; no es parcial). Informativa: no
+         *     cambia el Budget de las cuentas.
+         */
+        put: operations["guardar_inflacion_hoja_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__hojas__seccion_id__inflacion_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas": {
         parameters: {
             query?: never;
@@ -898,6 +960,68 @@ export interface paths {
         get?: never;
         /** Capturar */
         put: operations["capturar_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/detalle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ver Detalle */
+        get: operations["ver_detalle_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__detalle_get"];
+        /**
+         * Guardar Detalle Linea
+         * @description Reemplaza **completo** el detalle de la línea (no es parcial): 12 celdas, una por periodo.
+         */
+        put: operations["guardar_detalle_linea_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__detalle_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/hoja": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver Hoja De Cuenta
+         * @description La hoja de una cuenta por partidas: partidas × 12 meses y el bloque inferior (inflación, total
+         *     con inflación —que ES el Budget—, Est Act y Budget del año previo, variación).
+         */
+        get: operations["ver_hoja_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__hoja_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/hoja/inflacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Guardar Inflacion De Cuenta
+         * @description Cambia la inflación mensual (12 periodos) conservando las partidas; el Budget se recalcula.
+         */
+        put: operations["guardar_inflacion_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__hoja_inflacion_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -933,6 +1057,51 @@ export interface paths {
         /** Fijar Objetivo Linea */
         put: operations["fijar_objetivo_linea_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__objetivo_put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Guardar Partidas De Cuenta
+         * @description Reemplaza **completas** las partidas y la inflación de la cuenta (no es parcial) y deja la
+         *     cuenta mensualizada: Budget del mes = distribución × (1 + inflación).
+         */
+        put: operations["guardar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_put"];
+        post?: never;
+        /**
+         * Quitar Partidas De Cuenta
+         * @description Vuelve la cuenta al Editor mensual; el Budget que ya tenía queda como detalle fijo.
+         */
+        delete: operations["quitar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas/activar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activar Partidas De Cuenta
+         * @description Pasa la cuenta a partidas (conserva sus importes actuales como la partida «Importe actual»).
+         */
+        post: operations["activar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_activar_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1016,6 +1185,26 @@ export interface paths {
         };
         /** Listar Perfiles */
         get: operations["listar_perfiles_api_v1_hoteles__hotel_id__presupuesto_perfiles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/versiones/{version_plan_id}/lineas/{linea_id}/detalle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver Detalle De Version
+         * @description El detalle congelado de una línea en una versión de Budget ya emitida (solo lectura).
+         */
+        get: operations["ver_detalle_de_version_api_v1_hoteles__hotel_id__presupuesto_versiones__version_plan_id__lineas__linea_id__detalle_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1422,6 +1611,14 @@ export interface components {
              */
             archivo: string;
         };
+        /** Body_importar_detalle_other_income_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__detalle_importar_other_income_post */
+        Body_importar_detalle_other_income_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__detalle_importar_other_income_post: {
+            /**
+             * Archivo
+             * @description Excel del Budget (.xlsx): hoja `Other Income` o la sección
+             */
+            archivo: string;
+        };
         /** Body_importar_reporte_api_v1_hoteles__hotel_id__reporte_importar_post */
         Body_importar_reporte_api_v1_hoteles__hotel_id__reporte_importar_post: {
             /**
@@ -1604,6 +1801,34 @@ export interface components {
             total_debito: string;
             /** Usuario Id */
             usuario_id: number | null;
+        };
+        /** CeldaDetalleEntrada */
+        CeldaDetalleEntrada: {
+            /** Base */
+            base?: number | string | null;
+            /** Factor */
+            factor?: number | string | null;
+            /** Metodo */
+            metodo: string;
+            /** Monto Fijo */
+            monto_fijo?: number | string | null;
+            /** Periodo */
+            periodo: string;
+        };
+        /** CeldaDetalleSalida */
+        CeldaDetalleSalida: {
+            /** Base */
+            base: string | null;
+            /** Factor */
+            factor: string | null;
+            /** Importe */
+            importe: string;
+            /** Metodo */
+            metodo: string;
+            /** Monto Fijo */
+            monto_fijo: string | null;
+            /** Periodo */
+            periodo: string;
         };
         /** CeldaEdicion */
         CeldaEdicion: {
@@ -1857,6 +2082,19 @@ export interface components {
             /** Signo */
             signo: number;
         };
+        /** CuentaHojaSalida */
+        CuentaHojaSalida: {
+            /** Codigo */
+            codigo: string | null;
+            /** Descripcion */
+            descripcion: string;
+            /** Estado */
+            estado: string;
+            /** Linea Id */
+            linea_id: number;
+            /** Meses */
+            meses: (string | null)[];
+        };
         /** CuentaSalida */
         CuentaSalida: {
             /** Codigo */
@@ -1940,6 +2178,11 @@ export interface components {
             suma: string;
             /** Tipo */
             tipo: string;
+        };
+        /** DetalleEntrada */
+        DetalleEntrada: {
+            /** Celdas */
+            celdas: components["schemas"]["CeldaDetalleEntrada"][];
         };
         /** EstadoAuth */
         EstadoAuth: {
@@ -2049,6 +2292,79 @@ export interface components {
             /** Periodo */
             periodo: string;
         };
+        /**
+         * HojaCuentaSalida
+         * @description La hoja de una cuenta por partidas. Misma forma que la hoja de sección (`cuentas` = las
+         *     partidas con sus 12 meses, `totales` = la distribución) más los datos de cada partida.
+         *     `seccion_id`/`seccion` son los de la CUENTA; `padre_id`/`padre` los de su sección.
+         */
+        HojaCuentaSalida: {
+            /** Acumulada */
+            acumulada: string[];
+            /** Budget Previo */
+            budget_previo: (string | null)[];
+            /** Codigo Cuenta */
+            codigo_cuenta: string | null;
+            /** Cuentas */
+            cuentas: components["schemas"]["CuentaHojaSalida"][];
+            /** Est Act */
+            est_act: (string | null)[];
+            /** Inflacion */
+            inflacion: (string | null)[];
+            /** Linea Id */
+            linea_id: number;
+            /** Origen */
+            origen: string | null;
+            /** Padre */
+            padre: string;
+            /** Padre Id */
+            padre_id: number | null;
+            /** Partidas */
+            partidas: components["schemas"]["PartidaSalida"][];
+            /** Periodos */
+            periodos: string[];
+            /** Seccion */
+            seccion: string;
+            /** Seccion Id */
+            seccion_id: number;
+            /** Total Con Inflacion */
+            total_con_inflacion: string[];
+            /** Totales */
+            totales: string[];
+            /** Variacion */
+            variacion: (string | null)[];
+            /** Variacion Pct */
+            variacion_pct: (string | null)[];
+        };
+        /** HojaSalida */
+        HojaSalida: {
+            /** Acumulada */
+            acumulada: string[];
+            /** Budget Previo */
+            budget_previo: (string | null)[];
+            /** Cuentas */
+            cuentas: components["schemas"]["CuentaHojaSalida"][];
+            /** Est Act */
+            est_act: (string | null)[];
+            /** Inflacion */
+            inflacion: (string | null)[];
+            /** Origen */
+            origen: string | null;
+            /** Periodos */
+            periodos: string[];
+            /** Seccion */
+            seccion: string;
+            /** Seccion Id */
+            seccion_id: number;
+            /** Total Con Inflacion */
+            total_con_inflacion: string[];
+            /** Totales */
+            totales: string[];
+            /** Variacion */
+            variacion: (string | null)[];
+            /** Variacion Pct */
+            variacion_pct: (string | null)[];
+        };
         /** HotelSalida */
         HotelSalida: {
             /** Codigo */
@@ -2059,6 +2375,13 @@ export interface components {
             nombre: string;
             /** Rol */
             rol: string;
+        };
+        /** ImportacionDetalleSalida */
+        ImportacionDetalleSalida: {
+            /** Avisos */
+            avisos: string[];
+            /** Importadas */
+            importadas: number;
         };
         /** ImportesMensualesEntrada */
         ImportesMensualesEntrada: {
@@ -2073,6 +2396,13 @@ export interface components {
             mes: string;
             /** Ytd */
             ytd: string;
+        };
+        /** InflacionEntrada */
+        InflacionEntrada: {
+            /** Inflacion */
+            inflacion: {
+                [key: string]: number | string;
+            };
         };
         /** IntegridadSalida */
         IntegridadSalida: {
@@ -2109,6 +2439,11 @@ export interface components {
             responsable_id: number | null;
             /** Seccion */
             seccion: string | null;
+            /**
+             * Usa Partidas
+             * @default false
+             */
+            usa_partidas: boolean;
         };
         /** LineaEdicionSalida */
         LineaEdicionSalida: {
@@ -2330,6 +2665,58 @@ export interface components {
             resumen: components["schemas"]["ResumenSalida"];
             /** Siguiente Cursor */
             siguiente_cursor: string | null;
+        };
+        /** PartidaEntradaApi */
+        PartidaEntradaApi: {
+            /** Cantidad */
+            cantidad: number | string;
+            /** Concepto */
+            concepto: string;
+            /** Costo */
+            costo: number | string;
+            /** Meses */
+            meses?: (number | string)[] | null;
+            /**
+             * Metodo
+             * @enum {string}
+             */
+            metodo: "mensual" | "estacional" | "importada";
+            /** Unidad */
+            unidad?: string | null;
+        };
+        /** PartidaSalida */
+        PartidaSalida: {
+            /** Cantidad */
+            cantidad: string;
+            /** Concepto */
+            concepto: string;
+            /** Costo */
+            costo: string;
+            /** Diferencia */
+            diferencia: string;
+            /** Extendido */
+            extendido: string;
+            /** Id */
+            id: number | null;
+            /** Meses */
+            meses: string[];
+            /** Metodo */
+            metodo: string;
+            /** Orden */
+            orden: number;
+            /** Suma */
+            suma: string;
+            /** Unidad */
+            unidad: string | null;
+        };
+        /** PartidasEntrada */
+        PartidasEntrada: {
+            /** Inflacion */
+            inflacion: {
+                [key: string]: number | string;
+            };
+            /** Partidas */
+            partidas: components["schemas"]["PartidaEntradaApi"][];
         };
         /** PasswordTemporal */
         PasswordTemporal: {
@@ -5731,6 +6118,180 @@ export interface operations {
             };
         };
     };
+    importar_detalle_other_income_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__detalle_importar_other_income_post: {
+        parameters: {
+            query?: {
+                /** @description Sección que se importa; sin ella, *Other Income* (compatibilidad) */
+                seccion_id?: number | null;
+                /** @description Solo trae las partidas de esta cuenta (su hoja de detalle del Excel) */
+                linea_id?: number | null;
+            };
+            header?: never;
+            path: {
+                ciclo_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_importar_detalle_other_income_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__detalle_importar_other_income_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportacionDetalleSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ver_hoja_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__hojas__seccion_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                seccion_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HojaSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guardar_inflacion_hoja_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__hojas__seccion_id__inflacion_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                seccion_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InflacionEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HojaSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listar_lineas_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas_get: {
         parameters: {
             query?: never;
@@ -5808,6 +6369,230 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LineaCapturaSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ver_detalle_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__detalle_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CeldaDetalleSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guardar_detalle_linea_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__detalle_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DetalleEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CeldaDetalleSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ver_hoja_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__hoja_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HojaCuentaSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guardar_inflacion_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__hoja_inflacion_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InflacionEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HojaCuentaSalida"];
                 };
             };
             /** @description No autenticado */
@@ -5924,6 +6709,170 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LineaCapturaSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guardar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartidasEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HojaCuentaSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    quitar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_activar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HojaCuentaSalida"];
                 };
             };
             /** @description No autenticado */
@@ -6202,6 +7151,60 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PerfilSalida"][];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ver_detalle_de_version_api_v1_hoteles__hotel_id__presupuesto_versiones__version_plan_id__lineas__linea_id__detalle_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_plan_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CeldaDetalleSalida"][];
                 };
             };
             /** @description No autenticado */

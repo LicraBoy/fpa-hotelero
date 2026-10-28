@@ -13,9 +13,10 @@ import { PanelUsuarios } from './pantallas/usuarios/PanelUsuarios'
 import { PanelCuenta } from './pantallas/cuenta/PanelCuenta'
 import { PanelDepartamentos } from './pantallas/departamentos/PanelDepartamentos'
 import { PanelBudget } from './pantallas/budget/PanelBudget'
+import { PESTANAS_BUDGET, type PestanaBudget } from './pantallas/budget/componentes/BudgetTabs'
 import { PanelVariance } from './pantallas/variance/PanelVariance'
 import { MenuUsuario } from './componentes/MenuUsuario'
-import { GRUPOS, PANTALLAS, pantallaDe, puedeAbrir, rutaDe, type IdPantalla } from './ruta/navegacion'
+import { PANTALLAS, pantallaDe, puedeAbrir, rutaDe, type IdPantalla } from './ruta/navegacion'
 import { RutaProtegida, SinAcceso } from './ruta/RutaProtegida'
 import { permisoDeRuta } from './ruta/ruta'
 import { useRuta } from './ruta/useRuta'
@@ -35,6 +36,20 @@ function usuarioInicial(): string {
   return USUARIOS_DESARROLLO[0].email
 }
 
+const IDS_FINANCIERO: IdPantalla[] = ['variance', 'departamentos', 'saldos']
+const IDS_OTROS: IdPantalla[] = ['cargas', 'catalogo', 'auditoria', 'usuarios']
+
+function inicialesDe(nombre: string): string {
+  return (
+    nombre
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p.replace(/[^\p{L}\p{N}]/gu, '')[0]?.toUpperCase() ?? '')
+      .join('') || '?'
+  )
+}
+
 export default function App({
   sesion,
   alProbarLogin,
@@ -52,7 +67,10 @@ export default function App({
   const [hotelId, setHotelId] = useState<number | null>(null)
   const [version, setVersion] = useState(0)
   // Barra lateral plegada (solo iconos): deja todo el ancho a las tablas anchas
-  const [lateralPlegado, setLateralPlegado] = useState(leerLateralPlegado)
+  const [lateralPlegado, setLateralPlegado] = useState(() => leerLateralPlegado() || window.innerWidth < 1024)
+  // Sub-navegación de Budget Studio (Resumen/Captura/Versiones): vive aquí, no en PanelBudget, para
+  // que el sidebar la controle igual que cualquier otra sección — sin inventar rutas nuevas.
+  const [pestanaBudget, setPestanaBudget] = useState<PestanaBudget>('resumen')
 
   const hoteles = useDatos(() => obtenerTipado('/api/v1/hoteles', {}), [usuario])
 
@@ -97,11 +115,15 @@ export default function App({
 
   const actual = activa ? pantallaDe(activa) : undefined
   const detalle: Record<string, string> = { desglose: 'Desglose', cuenta: 'Movimientos', asiento: 'Asiento' }
-  const ubicacion = [
-    ...(actual?.grupo ? [actual.grupo] : []),
-    ...(actual ? [actual.nombre] : []),
-    ...(activa === 'variance' && detalle[ruta.tipo] ? [detalle[ruta.tipo]] : []),
-  ]
+  const etiquetaPestanaBudget = PESTANAS_BUDGET.find((p) => p.id === pestanaBudget)?.etiqueta ?? ''
+  const ubicacion =
+    activa === 'budget'
+      ? ['Budget Studio', etiquetaPestanaBudget]
+      : [
+          ...(activa && IDS_FINANCIERO.includes(activa) ? ['Financiero'] : actual?.grupo ? [actual.grupo] : []),
+          ...(actual ? [actual.nombre] : []),
+          ...(activa === 'variance' && detalle[ruta.tipo] ? [detalle[ruta.tipo]] : []),
+        ]
   const nombreUsuario = sesion
     ? sesion.usuario.nombre
     : (USUARIOS_DESARROLLO.find((u) => u.email === usuarioDev)?.nombre ?? usuarioDev)
@@ -112,43 +134,101 @@ export default function App({
         <div className="marca">
           <Logo />
           <div>
-            <h1>Plataforma FP&amp;A Hotelera</h1>
-            <p className="suave">{hotel?.nombre ?? 'Torres Mazatlán'}</p>
+            <h1>FPA Hotelero</h1>
+            <p>Planificación Financiera Avanzada</p>
           </div>
         </div>
 
         {hotel && activa && (
           <nav className="navegacion" aria-label="Secciones">
-            {GRUPOS.map((grupo) => {
-              const items = abribles.filter((p) => p.grupo === grupo)
-              if (items.length === 0) return null
-              return (
-                <div key={grupo} className="nav-grupo" role="group" aria-label={grupo}>
-                  <p className="nav-titulo" aria-hidden="true">
-                    {grupo}
-                  </p>
-                  {items.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      className={p.id === activa ? 'pestana activa' : 'pestana'}
-                      aria-current={p.id === activa ? 'page' : undefined}
-                      onClick={() => {
-                        window.location.hash = rutaDe(p.id)
-                      }}
-                    >
-                      <Icono nombre={p.icono} />
-                      <span>{p.nombre}</span>
-                    </button>
-                  ))}
+            <div className="nav-grupo" role="group" aria-label="Financiero">
+              {abribles
+                .filter((p) => IDS_FINANCIERO.includes(p.id))
+                .map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={p.id === activa ? 'pestana activa' : 'pestana'}
+                    aria-current={p.id === activa ? 'page' : undefined}
+                    onClick={() => {
+                      window.location.hash = rutaDe(p.id)
+                    }}
+                  >
+                    <Icono nombre={p.icono} />
+                    <span>{p.nombre}</span>
+                  </button>
+                ))}
+            </div>
+
+            {abribles.some((p) => p.id === 'budget') && (
+              <div className="nav-grupo" role="group" aria-label="Budget Studio">
+                <button
+                  type="button"
+                  className={activa === 'budget' ? 'pestana pestana-grupo activa' : 'pestana pestana-grupo'}
+                  aria-current={activa === 'budget' ? 'page' : undefined}
+                  aria-expanded={activa === 'budget'}
+                  onClick={() => {
+                    window.location.hash = rutaDe('budget')
+                  }}
+                >
+                  <Icono nombre={pantallaDe('budget').icono} />
+                  <span>Budget Studio</span>
+                  <Icono nombre="chevron" tamano={13} />
+                </button>
+                {activa === 'budget' && (
+                  <div className="nav-subgrupo" role="tablist" aria-label="Secciones de Budget Studio">
+                    {PESTANAS_BUDGET.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        role="tab"
+                        id={`budget-tab-${p.id}`}
+                        aria-selected={pestanaBudget === p.id}
+                        aria-controls={`budget-panel-${p.id}`}
+                        className={pestanaBudget === p.id ? 'pestana pestana-sub activa' : 'pestana pestana-sub'}
+                        onClick={() => setPestanaBudget(p.id)}
+                      >
+                        <Icono nombre={p.icono} tamano={16} />
+                        <span>{p.etiqueta}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {abribles.some((p) => IDS_OTROS.includes(p.id)) && (
+              <details className="nav-grupo nav-desplegable" open>
+                <summary className="pestana pestana-grupo">
+                  <Icono nombre="catalogo" />
+                  <span>Administración</span>
+                  <Icono nombre="chevron" tamano={13} />
+                </summary>
+                <div className="nav-subgrupo" role="group" aria-label="Administración">
+                  {abribles
+                    .filter((p) => IDS_OTROS.includes(p.id))
+                    .map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={p.id === activa ? 'pestana pestana-sub activa' : 'pestana pestana-sub'}
+                        aria-current={p.id === activa ? 'page' : undefined}
+                        onClick={() => {
+                          window.location.hash = rutaDe(p.id)
+                        }}
+                      >
+                        <Icono nombre={p.icono} tamano={16} />
+                        <span>{p.nombre}</span>
+                      </button>
+                    ))}
                 </div>
-              )
-            })}
+              </details>
+            )}
           </nav>
         )}
 
-        {sesion ? (
-          <div className="lateral-pie">
+        <div className="lateral-pie">
+          {sesion ? (
             <MenuUsuario
               nombre={sesion.usuario.nombre}
               correo={sesion.usuario.email}
@@ -157,30 +237,58 @@ export default function App({
               }}
               alCerrarSesion={sesion.cerrar}
             />
-          </div>
-        ) : (
-          <div className="lateral-pie">
-            <label>
-              Usuario (desarrollo)
-              <select value={usuarioDev} onChange={(e) => cambiarUsuario(e.target.value)}>
-                {USUARIOS_DESARROLLO.map((u) => (
-                  <option key={u.email} value={u.email}>
-                    {u.nombre}
+          ) : (
+            <div className="usuario-lateral">
+              <span className="avatar avatar-lateral" aria-hidden="true">
+                {inicialesDe(nombreUsuario)}
+              </span>
+              <label>
+                <span className="solo-lectores">Usuario (desarrollo)</span>
+                <select
+                  aria-label="Usuario (desarrollo)"
+                  value={usuarioDev}
+                  title="Modo desarrollo: el usuario se elige a mano. En producción se entra con usuario y contraseña."
+                  onChange={(e) => cambiarUsuario(e.target.value)}
+                >
+                  {USUARIOS_DESARROLLO.map((u) => (
+                    <option key={u.email} value={u.email}>
+                      {u.nombre}
+                    </option>
+                  ))}
+                </select>
+                <span className="usuario-lateral-rol">{rol ? (NOMBRE_ROL[rol] ?? rol) : 'Modo desarrollo'}</span>
+              </label>
+              {alProbarLogin && (
+                <button
+                  type="button"
+                  className="boton-icono boton-engranaje"
+                  onClick={alProbarLogin}
+                  aria-label="Probar inicio de sesión real"
+                  title="Probar inicio de sesión real"
+                >
+                  <Icono nombre="usuario" tamano={16} />
+                </button>
+              )}
+            </div>
+          )}
+          {hoteles.datos && hoteles.datos.length > 0 && (
+            <label className="selector-hotel-lateral">
+              <span className="avatar avatar-hotel" aria-hidden="true">
+                <Icono nombre="hotel" tamano={18} />
+              </span>
+              <span className="solo-lectores">Hotel</span>
+              <select aria-label="Hotel" value={hotel?.id ?? ''} onChange={(e) => setHotelId(Number(e.target.value))}>
+                {hoteles.datos.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.nombre}
                   </option>
                 ))}
               </select>
+              <span className="selector-hotel-rol">{rol ? (NOMBRE_ROL[rol] ?? rol) : ''}</span>
+              <Icono nombre="chevron" tamano={14} />
             </label>
-            <p className="aviso-desarrollo" role="note">
-              Modo desarrollo: el usuario se elige a mano. En producción se entra con usuario y
-              contraseña.
-            </p>
-            {alProbarLogin && (
-              <button type="button" className="boton boton-secundario" onClick={alProbarLogin}>
-                Probar inicio de sesión real
-              </button>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </aside>
 
       <div className="principal">
@@ -191,25 +299,28 @@ export default function App({
             setLateralPlegado(!lateralPlegado)
           }}
           ubicacion={ubicacion.length > 0 ? ubicacion : ['Inicio']}
-          nombreUsuario={nombreUsuario}
-          rol={rol ? (NOMBRE_ROL[rol] ?? rol) : undefined}
-          hotel={
-            hoteles.datos && hoteles.datos.length > 0 ? (
-              <label className="selector-hotel">
-                <Icono nombre="hotel" />
-                <span className="solo-lectores">Hotel</span>
-                <select value={hotel?.id ?? ''} onChange={(e) => setHotelId(Number(e.target.value))}>
-                  {hoteles.datos.map((h) => (
-                    <option key={h.id} value={h.id}>
-                      {h.nombre}
-                    </option>
-                  ))}
-                </select>
-              </label>
+          ayuda={
+            activa === 'budget' && pestanaBudget === 'captura' ? (
+              <>
+                <strong>¿Cómo funciona Captura?</strong>
+                <p>
+                  Haz clic en una celda para escribir el Budget de ese mes. Los totales se calculan
+                  solos y el Actual se ve al pasar el cursor. Si hay un ciclo abierto, Guardar manda
+                  tu propuesta al ciclo; si no, crea una versión nueva del Budget.
+                </p>
+              </>
             ) : undefined
           }
         />
-        <main className={activa === 'variance' || activa === 'budget' ? 'contenido' : 'contenido contenido-estrecho'}>
+        <main
+          className={
+            activa === 'budget' && pestanaBudget === 'captura'
+              ? 'contenido contenido-captura'
+              : activa === 'variance' || activa === 'budget'
+                ? 'contenido'
+                : 'contenido contenido-estrecho'
+          }
+        >
           {hoteles.cargando && <Cargando />}
           {hoteles.error && (
             <MensajeError
@@ -261,7 +372,14 @@ export default function App({
                   />
                 </RutaProtegida>
               )}
-              {activa === 'budget' && <PanelBudget hotelId={hotel.id} rol={rol} />}
+              {activa === 'budget' && (
+                <PanelBudget
+                  hotelId={hotel.id}
+                  rol={rol}
+                  pestana={pestanaBudget}
+                  onCambiarPestana={setPestanaBudget}
+                />
+              )}
               {activa === 'departamentos' && (
                 <PanelDepartamentos
                   hotelId={hotel.id}

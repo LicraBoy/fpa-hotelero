@@ -91,37 +91,11 @@ export function BudgetDistribucionMensualChart({ resumenMensual }: Props) {
                   y: valoresMillones,
                   customdata: textoImporte,
                   marker: {
-                    color: periodos.map((_, i) => {
-                      const quarterColors = ['#2563eb', '#3b82f6', '#0284c7', '#0ea5e9']
-                      return quarterColors[Math.floor(i / 3) % quarterColors.length]
-                    }),
+                    color: '#2563eb',
                     opacity: 0.88,
                     line: { width: 0 },
                   },
                   hovertemplate: '<b>%{x}</b><br>Propuesta: %{customdata}<extra></extra>',
-                },
-                {
-                  type: 'scatter',
-                  mode: 'lines+markers',
-                  name: 'Tendencia',
-                  x: periodos,
-                  y: valoresMillones,
-                  customdata: textoImporte,
-                  line: {
-                    shape: 'spline',
-                    color: '#10b981',
-                    width: 2.5,
-                    smoothing: 1.2,
-                  },
-                  fill: 'tozeroy',
-                  fillcolor: 'rgba(16, 185, 129, 0.06)',
-                  marker: {
-                    size: 7,
-                    color: '#10b981',
-                    symbol: 'circle',
-                    line: { width: 2, color: '#ffffff' },
-                  },
-                  hovertemplate: '<b>%{x} (Tendencia)</b>: %{customdata}<extra></extra>',
                 },
               ]}
               layout={{
@@ -129,14 +103,7 @@ export function BudgetDistribucionMensualChart({ resumenMensual }: Props) {
                 height: 260,
                 margin: { l: 48, r: 16, t: 12, b: 32 },
                 font: { family: 'inherit', color: colores.texto },
-                showlegend: true,
-                legend: {
-                  orientation: 'h',
-                  x: 0.5,
-                  xanchor: 'center',
-                  y: -0.2,
-                  font: { size: 11, color: colores.texto },
-                },
+                showlegend: false,
                 paper_bgcolor: 'transparent',
                 plot_bgcolor: 'transparent',
                 yaxis: {

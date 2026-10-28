@@ -15,22 +15,32 @@ interface Props {
   errorCiclo: string | null
   onAbrirCiclo: () => void
   rangoFiscal?: string
-  onVerVersiones?: () => void
+  /** Estado real del ciclo (borrador, enviado…) y su cobertura de captura, si hay ciclo. */
+  estadoCiclo?: string | null
+  cobertura?: { capturadas: number; total: number } | null
 }
 
-function calcularRangoPorDefecto(anoFiscal: string): string {
+const ETIQUETA_ESTADO: Record<string, string> = {
+  borrador: 'Borrador',
+  enviado: 'Enviado',
+  revision: 'Revisión',
+  aprobado: 'Aprobado',
+  bloqueado: 'Bloqueado',
+}
+
+/** «2026/27» -> «Jul 2026 – Jun 2027» (el ejercicio fiscal va de julio a junio). */
+function rangoLargo(anoFiscal: string): string {
   const partes = anoFiscal.split('/')
   if (partes.length === 2 && partes[0].length === 4) {
-    const inicio = partes[0]
     const fin = partes[1].length === 2 ? `20${partes[1]}` : partes[1]
-    return `Jul ${inicio} – Jun ${fin}`
+    return `Jul ${partes[0]} – Jun ${fin}`
   }
   return anoFiscal
 }
 
 /**
- * Encabezado profesional de Budget Studio (spec §3 y referencia visual):
- * Título de ejercicio fiscal, badge de fechas, versión oficial vigente, acceso a versiones y acción del ciclo.
+ * Cabecera de Captura según la referencia (oct-2026): título grande, insignias de estado y
+ * cobertura, subtítulo con el ejercicio y, a la derecha, la versión oficial vigente.
  */
 export function BudgetHeader({
   anoFiscal,
@@ -40,69 +50,48 @@ export function BudgetHeader({
   abriendoCiclo,
   errorCiclo,
   onAbrirCiclo,
-  rangoFiscal,
-  onVerVersiones,
+  estadoCiclo,
+  cobertura,
 }: Props) {
-  const fechas = rangoFiscal || calcularRangoPorDefecto(anoFiscal)
-
   return (
-    <header className="budget-header" aria-labelledby="titulo-budget">
-      <div className="budget-header-principal">
-        <div className="budget-header-izq">
-          <div className="budget-header-identificador">
-            <Icono nombre="presupuesto" tamano={15} />
-            <span>Budget Studio</span>
-          </div>
-          <div className="budget-header-titulo-fila">
-            <h1 id="titulo-budget">Presupuesto {anoFiscal}</h1>
-            <span className="budget-rango-badge" title="Rango del ejercicio fiscal">
-              <Icono nombre="calendario" tamano={14} />
-              <span>{fechas}</span>
+    <header className="captura-cabecera" aria-labelledby="titulo-budget">
+      <div className="captura-cabecera-izq">
+        <div className="captura-cabecera-titulo">
+          <h1 id="titulo-budget">Captura presupuestaria</h1>
+          {estadoCiclo && (
+            <span className="insignia-pill" title="Estado del ciclo de presupuesto">
+              <Icono nombre="presupuesto" tamano={14} />
+              {ETIQUETA_ESTADO[estadoCiclo] ?? estadoCiclo}
             </span>
-          </div>
-          <p className="budget-header-subtitulo">
-            Planifica, analiza y controla el desempeño financiero de tu hotel en un solo lugar.
-          </p>
-        </div>
-
-        <div className="budget-header-der">
-          {version ? (
-            <div className="budget-version-pill" title={`Archivo de origen: ${version.nombre_archivo}`}>
-              <span className="budget-version-pill-punto" aria-hidden="true" />
-              <span className="budget-version-pill-texto">
-                Versión oficial <strong>v{version.numero}</strong>
-              </span>
-            </div>
-          ) : (
-            <Insignia tono="aviso">Sin versión oficial</Insignia>
           )}
-
-          <div className="budget-header-acciones">
-            {onVerVersiones && (
-              <button
-                type="button"
-                className="boton boton-secundario budget-btn-historial"
-                onClick={onVerVersiones}
-                title="Consultar historial de versiones del plan"
-              >
-                <Icono nombre="auditoria" tamano={15} />
-                <span>Historial</span>
-              </button>
-            )}
-
-            {!cicloAbierto && puedeAdministrarCiclo && (
-              <button
-                type="button"
-                className="boton boton-abrir-ciclo"
-                disabled={abriendoCiclo}
-                onClick={onAbrirCiclo}
-              >
-                <Icono nombre="objetivo" tamano={16} />
-                <span>{abriendoCiclo ? 'Abriendo…' : 'Abrir ciclo de presupuesto'}</span>
-              </button>
-            )}
-          </div>
+          {cobertura && (
+            <span className="insignia-pill" title="Líneas con propuesta capturada">
+              <span className="punto-verde" aria-hidden="true" />
+              <strong>{cobertura.capturadas}</strong> / {cobertura.total} líneas
+            </span>
+          )}
         </div>
+        <p className="captura-cabecera-sub">
+          Ejercicio fiscal {anoFiscal} <span aria-hidden="true">·</span> {rangoLargo(anoFiscal)}
+        </p>
+      </div>
+
+      <div className="captura-cabecera-der">
+        {version ? (
+          <span className="version-oficial" title={`Archivo de origen: ${version.nombre_archivo}`}>
+            <Icono nombre="objetivo" tamano={16} />
+            Versión oficial <strong>v{version.numero}</strong>
+            <Icono nombre="check" tamano={14} />
+          </span>
+        ) : (
+          <Insignia tono="aviso">Sin versión oficial</Insignia>
+        )}
+        {!cicloAbierto && puedeAdministrarCiclo && (
+          <button type="button" className="boton boton-abrir-ciclo" disabled={abriendoCiclo} onClick={onAbrirCiclo}>
+            <Icono nombre="objetivo" tamano={16} />
+            <span>{abriendoCiclo ? 'Abriendo…' : 'Abrir ciclo de presupuesto'}</span>
+          </button>
+        )}
       </div>
       {errorCiclo && <MensajeError texto={errorCiclo} />}
     </header>
