@@ -140,3 +140,130 @@ def test_lineas_y_secciones_inexistentes_se_rechazan(esc: Escenario) -> None:
     with pytest.raises(LookupError, match="sección"):
         _vincular(esc, PEDIDOS, seccion="Otra Seccion")
     assert RepositorioMapeo(esc.db, esc.mundo.hotel_a).aprobada().numero == 1  # type: ignore[union-attr]
+
+
+def test_los_pedidos_de_accounting_son_dos_lineas_con_su_cuenta() -> None:
+    from fpa.mapeo_accounting import PEDIDOS as ACCOUNTING
+
+    assert [(p.linea, p.cuenta) for p in ACCOUNTING] == [
+        ("Seniority Premium", "6011001.010"),
+        ("Education Bonus", "6011001.011"),
+    ]
+    assert all(p.signo == 1 and p.nota is None for p in ACCOUNTING)
+
+
+def test_los_pedidos_de_maid_linen_son_dos_lineas_con_su_cuenta() -> None:
+    from fpa.mapeo_maid_linen import PEDIDOS as MAID_LINEN
+
+    assert [(p.linea, p.cuenta) for p in MAID_LINEN] == [
+        ("Seniority Premium", "6010001.010"),
+        ("Education Bonus", "6010001.011"),
+    ]
+    assert all(p.signo == 1 and p.nota is None for p in MAID_LINEN)
+
+
+def test_mover_una_cuenta_la_quita_de_una_linea_y_la_pone_en_otra(esc: Escenario) -> None:
+    _vincular(esc, PEDIDOS)  # v2: 6009020 está en Equipment
+    r = vincular_cuentas(
+        esc.db,
+        organizacion_id=esc.mundo.org1,
+        hotel_id=esc.mundo.hotel_a,
+        editor_id=None,
+        aprobador_id=None,
+        seccion="Mgmt & Check In",
+        pedidos=[VinculoPedido("Postage", "6009020")],
+        quitar=[VinculoPedido("Equipment", "6009020")],
+    )
+    esc.db.commit()
+    assert r.version_numero == 3 and r.vinculos_quitados == ["6009020 ← Equipment"]
+    repo = RepositorioMapeo(esc.db, esc.mundo.hotel_a)
+    nueva = repo.aprobada()
+    assert nueva is not None
+    lineas_de_6009020 = [v.linea_id for v in repo.vinculos(nueva.id) if v.cuenta_codigo == "6009020"]
+    assert lineas_de_6009020 == [esc.linea("Postage")]  # ya no está en Equipment
+    # repetirlo no hace nada (la cuenta ya se movió)
+    otra = vincular_cuentas(
+        esc.db,
+        organizacion_id=esc.mundo.org1,
+        hotel_id=esc.mundo.hotel_a,
+        editor_id=None,
+        aprobador_id=None,
+        seccion="Mgmt & Check In",
+        pedidos=[VinculoPedido("Postage", "6009020")],
+        quitar=[VinculoPedido("Equipment", "6009020")],
+    )
+    assert otra.version_numero is None
+
+
+def test_los_pedidos_de_apartment_interior_mueven_6012106() -> None:
+    from fpa.mapeo_apartment_interior import PEDIDOS as AI, QUITAR
+
+    assert [(p.linea, p.cuenta) for p in AI] == [
+        ("Education Bonus", "6012001.011"),
+        ("Equipment/Supplies", "6012106"),
+    ]
+    assert [(p.linea, p.cuenta) for p in QUITAR] == [("Equip/Supplies PH", "6012106")]
+
+
+def test_los_pedidos_de_common_area_son_dos_lineas_con_su_cuenta() -> None:
+    from fpa.mapeo_common_area import PEDIDOS as COMMON_AREA
+
+    assert [(p.linea, p.cuenta) for p in COMMON_AREA] == [
+        ("Seniority Premium", "6006001.010"),
+        ("Education Bonus", "6006001.011"),
+    ]
+
+
+def test_los_pedidos_de_owner_activities_son_dos_lineas_con_su_cuenta() -> None:
+    from fpa.mapeo_owner_activities import PEDIDOS as OWNER_ACTIVITIES
+
+    assert [(p.linea, p.cuenta) for p in OWNER_ACTIVITIES] == [
+        ("Seniority Premium", "6003001.010"),
+        ("Education Bonus", "6003001.011"),
+    ]
+
+
+def test_los_pedidos_de_owner_services_son_dos_lineas_con_su_cuenta() -> None:
+    from fpa.mapeo_owner_services import PEDIDOS as OWNER_SERVICES
+
+    assert [(p.linea, p.cuenta) for p in OWNER_SERVICES] == [
+        ("Seniority Premium", "6007001.010"),
+        ("Education Bonus", "6007001.011"),
+    ]
+
+
+def test_los_pedidos_de_purchasing_son_dos_lineas_con_su_cuenta() -> None:
+    from fpa.mapeo_purchasing import PEDIDOS as PURCHASING
+
+    assert [(p.linea, p.cuenta) for p in PURCHASING] == [
+        ("Seniority Premium", "6013001.010"),
+        ("Education Bonus", "6013001.011"),
+    ]
+
+
+def test_los_pedidos_de_los_negocios_comerciales_van_a_la_segunda_seccion() -> None:
+    from fpa.mapeo_comerciales import NEGOCIOS, pedidos_de
+
+    assert [s for s, _ in NEGOCIOS] == ["Travel Agency#2", "Store#2", "Cafeteria#2", "Bar#2", "Restaurant#2"]
+    assert [(p.linea, p.cuenta) for p in pedidos_de("6016001")] == [
+        ("Seniority Premium", "6016001.010"),
+        ("Education Bonus", "6016001.011"),
+    ]
+
+
+def test_una_seccion_repetida_se_elige_por_su_ordinal(esc: Escenario) -> None:
+    # «Mgmt & Check In» existe una sola vez: con ordinal 1 se resuelve igual; con 2 no existe
+    r = _vincular(esc, [VinculoPedido("Postage", "6009028", NO_SE_UTILIZA)], seccion="Mgmt & Check In#1")
+    assert r.version_numero is not None
+    with pytest.raises(LookupError):
+        _vincular(esc, [VinculoPedido("Postage", "6009028")], seccion="Mgmt & Check In#2")
+
+
+def test_los_pedidos_de_legal_e_it_systems_son_dos_lineas_con_su_cuenta() -> None:
+    from fpa.mapeo_legal_it import SECCIONES, pedidos_de
+
+    assert SECCIONES == (("Legal", "6001001"), ("IT Systems", "6021001"))
+    assert [(p.linea, p.cuenta) for p in pedidos_de("6021001")] == [
+        ("Seniority Premium", "6021001.010"),
+        ("Education Bonus", "6021001.011"),
+    ]

@@ -294,7 +294,9 @@ def test_importar_mgmt_trae_las_partidas_y_las_referencias_por_cuenta(
     assert h["origen"] == "excel"
     # avisa que las partidas no dan lo mismo que la hoja principal del Budget (se importan las partidas)
     assert any("Telephone" in a and "hoja Budget" in a for a in cuerpo["avisos"])
-    ins = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/detalle"), headers=como(CONTRALOR)).json()
+    # una cuenta importada por partidas no se avisa como «sin línea» aunque su fila del Budget exista
+    assert not any("«Telephone»" in a and "no tiene línea" in a for a in cuerpo["avisos"])
+    ins =cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/detalle"), headers=como(CONTRALOR)).json()
     assert [D(c["monto_fijo"]) for c in ins] == [D(200)] * 12
 
 

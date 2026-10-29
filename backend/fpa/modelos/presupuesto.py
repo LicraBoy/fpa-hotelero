@@ -155,6 +155,10 @@ class LineaPresupuestoCaptura(Base):
     # La cuenta se captura por PARTIDAS (Cant. × Costo + reparto mensual + inflación): su Budget sale
     # de `PartidaLinea` (`fpa.servicios.presupuesto_partidas`) y no se edita mes a mes.
     usa_partidas: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    # La cuenta es de CONSUMO (Diesel, Gas, Electricity, Water): su Budget sale de unidades × costo
+    # unitario por mes (`ConsumoLineaMes`, `fpa.servicios.presupuesto_consumo`); `unidad_consumo` es Lts/Kwh/M3.
+    usa_consumo: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    unidad_consumo: Mapped[str | None] = mapped_column(String(10), nullable=True)
 
 
 class LineaPresupuestoMensual(Base):
@@ -285,6 +289,30 @@ class InflacionLineaMes(Base):
     )
     periodo: Mapped[str] = mapped_column(String(7))
     tasa: Mapped[Decimal] = mapped_column(Medida)
+
+
+BLOQUES_CONSUMO = ("real_prev", "budget_prev", "est_act", "budget")
+
+
+class ConsumoLineaMes(Base):
+    """Consumo mensual de una cuenta de consumo (Diesel, Gas, Electricity, Water), en 4 bloques como la
+    hoja del Excel: Real del año previo, Budget previo, Est-Act y **Budget** (el único editable). Cada
+    mes trae unidades (Lts/Kwh/M3), costo unitario y total. El `total` se guarda tal cual del Excel y solo
+    se recalcula (unidades × costo) en los meses que se editan. El Budget del mes = total (sin inflación:
+    el costo unitario ya es la tarifa del año)."""
+
+    __tablename__ = "linea_presupuesto_consumo_mes"
+    __table_args__ = (UniqueConstraint("linea_captura_id", "periodo", "bloque"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    linea_captura_id: Mapped[int] = mapped_column(
+        ForeignKey("linea_presupuesto_captura.id"), index=True
+    )
+    periodo: Mapped[str] = mapped_column(String(7))
+    bloque: Mapped[str] = mapped_column(String(12))
+    unidades: Mapped[Decimal | None] = mapped_column(Medida, nullable=True)
+    costo_unitario: Mapped[Decimal | None] = mapped_column(Medida, nullable=True)
+    total: Mapped[Decimal | None] = mapped_column(Medida, nullable=True)
 
 
 class ReferenciaLineaMes(Base):

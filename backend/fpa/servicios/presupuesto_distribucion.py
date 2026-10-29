@@ -138,9 +138,9 @@ def _reemplazar_lineas_mensuales(
     desde_partidas: bool = False,
 ) -> list[LineaPresupuestoMensual]:
     captura = db.get(LineaPresupuestoCaptura, linea_captura_id)
-    if captura is not None and captura.usa_partidas and not desde_partidas:
+    if captura is not None and (captura.usa_partidas or captura.usa_consumo) and not desde_partidas:
         raise DistribucionInvalida(
-            409, "La cuenta se captura por partidas: edítala desde su hoja de cuenta"
+            409, "La cuenta se captura por partidas o por consumo: edítala desde su hoja de cuenta"
         )
     # Si la línea tenía tabla interna (`DetalleLineaPresupuesto`), deja de sustentar los importes.
     db.execute(

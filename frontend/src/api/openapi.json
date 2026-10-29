@@ -1533,6 +1533,159 @@
         "title": "ConflictoSalida",
         "type": "object"
       },
+      "ConsumoCambio": {
+        "properties": {
+          "costo_unitario": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Costo Unitario"
+          },
+          "periodo": {
+            "pattern": "^20\\d{2}-(0[1-9]|1[0-2])$",
+            "title": "Periodo",
+            "type": "string"
+          },
+          "unidades": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Unidades"
+          }
+        },
+        "required": [
+          "periodo",
+          "unidades",
+          "costo_unitario"
+        ],
+        "title": "ConsumoCambio",
+        "type": "object"
+      },
+      "ConsumoEntrada": {
+        "properties": {
+          "meses": {
+            "items": {
+              "$ref": "#/components/schemas/ConsumoCambio"
+            },
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Meses",
+            "type": "array"
+          }
+        },
+        "required": [
+          "meses"
+        ],
+        "title": "ConsumoEntrada",
+        "type": "object"
+      },
+      "ConsumoMesSalida": {
+        "properties": {
+          "costo_unitario": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Costo Unitario"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "unidades": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unidades"
+          }
+        },
+        "required": [
+          "unidades",
+          "costo_unitario",
+          "total"
+        ],
+        "title": "ConsumoMesSalida",
+        "type": "object"
+      },
+      "ConsumoSalida": {
+        "description": "Consumo mensual de una cuenta de consumo: 4 bloques × 12 meses de (unidades, costo, total).",
+        "properties": {
+          "budget": {
+            "items": {
+              "$ref": "#/components/schemas/ConsumoMesSalida"
+            },
+            "title": "Budget",
+            "type": "array"
+          },
+          "budget_prev": {
+            "items": {
+              "$ref": "#/components/schemas/ConsumoMesSalida"
+            },
+            "title": "Budget Prev",
+            "type": "array"
+          },
+          "est_act": {
+            "items": {
+              "$ref": "#/components/schemas/ConsumoMesSalida"
+            },
+            "title": "Est Act",
+            "type": "array"
+          },
+          "real_prev": {
+            "items": {
+              "$ref": "#/components/schemas/ConsumoMesSalida"
+            },
+            "title": "Real Prev",
+            "type": "array"
+          },
+          "unidad": {
+            "title": "Unidad",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unidad",
+          "real_prev",
+          "budget_prev",
+          "est_act",
+          "budget"
+        ],
+        "title": "ConsumoSalida",
+        "type": "object"
+      },
       "ConteoLinea": {
         "properties": {
           "pendientes": {
@@ -2415,6 +2568,16 @@
             ],
             "title": "Codigo Cuenta"
           },
+          "consumo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConsumoSalida"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "cuentas": {
             "items": {
               "$ref": "#/components/schemas/CuentaHojaSalida"
@@ -2976,6 +3139,11 @@
               }
             ],
             "title": "Seccion"
+          },
+          "usa_consumo": {
+            "default": false,
+            "title": "Usa Consumo",
+            "type": "boolean"
           },
           "usa_partidas": {
             "default": false,
@@ -9438,6 +9606,159 @@
           }
         },
         "summary": "Capturar",
+        "tags": [
+          "presupuesto"
+        ]
+      }
+    },
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/consumo": {
+      "delete": {
+        "description": "Vuelve la cuenta de consumo al Editor mensual; el Budget que tenía queda como detalle fijo.",
+        "operationId": "quitar_consumo_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__consumo_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Quitar Consumo De Cuenta",
+        "tags": [
+          "presupuesto"
+        ]
+      },
+      "put": {
+        "description": "Cambia unidades y costo unitario de los meses indicados del Budget de una cuenta de consumo\n(Diesel, Gas, Electricity, Water); el total del mes es unidades × costo y el Budget se recalcula.",
+        "operationId": "guardar_consumo_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__consumo_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ciclo_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Ciclo Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linea_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Linea Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hotel_id",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Hotel Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsumoEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HojaCuentaSalida"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permiso para esta acción en el hotel"
+          },
+          "404": {
+            "description": "Hotel o recurso no encontrado (o sin acceso)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Guardar Consumo De Cuenta",
         "tags": [
           "presupuesto"
         ]

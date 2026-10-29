@@ -10,6 +10,7 @@ edita).
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -267,7 +268,150 @@ ALIAS_MGMT_CHECKIN: dict[str, str] = {
     "miscellaneousexp": "miscellaneous",
     "materialssupplies": "materialssupplies",
 }
-ESTRICTAS = {SECCION_MGMT_CHECKIN: ALIAS_MGMT_CHECKIN}
+SECCION_ACCOUNTING = "accounting"
+
+# Accounting (depto 0115): el Excel escribe «Non Deductable» y el reporte «Non-Deductible» (misma cuenta
+# 61790); las hojas de detalle traen «Contrac Serv Other» (cuenta 60455, que comparte con «Computer
+# Services», por eso no se empareja solo por código). Alias confirmados por nombre, no por parecido.
+ALIAS_ACCOUNTING: dict[str, str] = {
+    "nondeductable": "nondeductible",
+    "contracservother": "contractservother",
+}
+SECCION_MAID_LINEN = "maidlinen"
+
+# Maid & Linen (depto 0114): el Excel escribe en plural / con «Exp» algunas cuentas de nómina y
+# «Non Deductable» (cuenta 61790, también en su hoja de detalle) donde el reporte dice «Non-Deductible».
+ALIAS_MAID_LINEN: dict[str, str] = {
+    "compensations": "compensation",
+    "incentives": "incentive",
+    "mealallowances": "mealallowance",
+    "miscellaneousexp": "miscellaneous",
+    "nondeductable": "nondeductible",
+}
+SECCION_APARTMENT_INTERIOR = "apartmentinterior"
+
+# Apartment Interior (depto 0118). Las líneas «PH» son cuentas aparte de las normales. La línea sin PH
+# del reporte se llama «Equipment/Supplies» (el Excel la escribe «Equip/Supplies» y su hoja
+# «Equip-Supplies»); la hoja del Kit PH trae el nombre cortado («Kit Item-Rplcm PH»).
+ALIAS_APARTMENT_INTERIOR: dict[str, str] = {
+    "mealallowances": "mealallowance",
+    "nondeductable": "nondeductible",
+    "equipsupplies": "equipmentsupplies",
+    "kititemrplcmph": "kititemsrplcmntph",
+}
+SECCION_COMMON_AREA = "commonarea"
+SECCION_UTILITIES = "utilities"
+SECCION_OWNER_ACTIVITIES = "owneractivities"
+SECCION_OTHER_TAXES = "othertaxesfeesandinsurance"
+SECCION_OWNER_SERVICES = "ownerservices"
+SECCION_PURCHASING = "purchasing"
+
+# Commercial Services. Cada negocio tiene dos secciones con el mismo nombre (`store`, `store#2`); los alias son
+# por negocio y valen para sus dos secciones. Alias confirmados nombre a nombre, nunca por parecido.
+ALIAS_TRAVEL_AGENCY: dict[str, str] = {
+    "bankcommisions": "bankcommissions",  # el Excel y su hoja escriben mal «Commissions»
+    "miscellaneousnoded": "miscellaneousnondeductibles",  # título de su hoja de detalle
+}
+ALIAS_STORE: dict[str, str] = {"nondeductable": "nondeductible"}
+ALIAS_RESTAURANT: dict[str, str] = {"nondeductable": "nondeductible"}
+# Departamentos que comparten hojas con otras secciones (una hoja de otra sección se omite en silencio)
+DEPARTAMENTOS_COMPARTIDOS = {"0000", "0120", "0128", "0103", "0124", "0109", "5036"}
+# Hojas cuya cuenta (o departamento) no es el de su línea en el reporte: la de Promotion de Restaurant trae la
+# 60160 y el reporte la 60170; la de Telephone de IT Systems se llama `0000-60560` y su línea es `1136-61560`
+CUENTA_DE_HOJA_EQUIVALENTE: dict[tuple[str, str], str | tuple[str, str]] = {
+    ("0124", "60160"): "60170",
+    ("0000", "60560"): ("1136", "61560"),
+}
+
+# Legal (depto 0130) e IT Systems (depto 1136; sus hojas vienen abreviadas y cortadas a 31 letras)
+ALIAS_LEGAL: dict[str, str] = {
+    "vacations": "vacation",
+    "compensations": "compensation",
+    "miscellaneousexp": "miscellaneous",
+    "nondeductexp": "nondeductible",
+}
+ALIAS_IT_SYSTEMS: dict[str, str] = {
+    "vacations": "vacation",
+    "compensations": "compensation",
+    "mealsenterntnear": "mealsentertain",
+    "mealsenterntn": "mealsentertain",  # título de la hoja, cortado
+    "nondeductexpenses": "nondeductible",
+    "repmaintequip": "repairsmaintenanceequipment",
+    "repmaintdsof": "repairsmaintdesktopsoftware",
+    "repmaintdha": "repairsmaintdesktophardware",
+    "repmaintnsof": "repairsmaintnetworksoftware",
+    "repmaintnhar": "repairsmaintnetworkhardware",
+    "repmaintphone": "repairsmaintphonesystem",
+}
+
+# Purchasing (depto 0122): Airfare, Lodging y Meals comparten la cuenta 61630 (se distinguen por nombre); el
+# Excel y la hoja escriben distinto «Meals», «Mileage Parking», «Non Deductable» y (sin importes) «Compensations».
+ALIAS_PURCHASING: dict[str, str] = {
+    "compensations": "compensation",
+    "meals": "mealsentertain",
+    "mileageparking": "mileagetaxiparking",
+    "nondeductable": "nondeductible",
+}
+# VDS Allocation Collections: dos líneas (cobranza en pesos negativa y su IVA) que el Excel trae en la hoja
+# principal; su hoja de detalle (USD × tipo de cambio − IVA) no es de partidas y no se lee.
+SECCION_VDS = "vdsallocationcollections"
+
+# Owner Services (depto 0108): el Excel y sus hojas de detalle escriben distinto (plurales, faltas de ortografía,
+# títulos cortados a 31 letras) varias cuentas del reporte. Alias confirmados nombre a nombre, nunca por parecido.
+ALIAS_OWNER_SERVICES: dict[str, str] = {
+    "vacations": "vacation",
+    "vacationsbonus": "vacationbonus",
+    "incentives": "incentive",
+    "telephonefax": "telephone",
+    "mealsentern": "mealsentertain",
+    "milleagetaxisparking": "mileagetaxiparking",
+    "milleagetaxispar": "mileagetaxiparking",  # título de la hoja de detalle, cortado
+    "localcomsumos": "localconsumes",
+    "localconsumos": "localconsumes",  # título de la hoja de detalle
+    "miscexpense": "miscellaneous",
+    "nondeductexp": "nondeductible",
+}
+
+# Other Taxes, Fees and Insurance (depto 0000, compartido): el Excel escribe distinto tres cuentas sin
+# importes («Non- Deductble», «Seniority Premium Acrued» y «Adm Fee 4%» donde el reporte dice «Adm Fee 6%»).
+ALIAS_OTHER_TAXES: dict[str, str] = {
+    "nondeductble": "nondeductible",
+    "senioritypremiumacrued": "senioritypremium",
+    "admfee4": "admfee6",
+}
+
+# Owner Activities (depto 0101): el Excel escribe «Compensations» donde el reporte dice «Compensation»
+# (nómina sin importes); sus cinco hojas de detalle emparejan por nombre.
+ALIAS_OWNER_ACTIVITIES: dict[str, str] = {"compensations": "compensation"}
+
+# Common Area (depto 0106): solo difieren dos cuentas de nómina sin importes («Savings Bonus» y
+# «Meal Allowances») y las hojas de detalle emparejan por nombre (títulos cortados a 31 letras).
+ALIAS_COMMON_AREA: dict[str, str] = {
+    "savingsbonus": "savingsfund",
+    "mealallowances": "mealallowance",
+}
+ESTRICTAS = {
+    SECCION_MGMT_CHECKIN: ALIAS_MGMT_CHECKIN,
+    SECCION_ACCOUNTING: ALIAS_ACCOUNTING,
+    SECCION_MAID_LINEN: ALIAS_MAID_LINEN,
+    SECCION_APARTMENT_INTERIOR: ALIAS_APARTMENT_INTERIOR,
+    SECCION_COMMON_AREA: ALIAS_COMMON_AREA,
+    SECCION_OWNER_ACTIVITIES: ALIAS_OWNER_ACTIVITIES,
+    SECCION_OTHER_TAXES: ALIAS_OTHER_TAXES,
+    SECCION_OWNER_SERVICES: ALIAS_OWNER_SERVICES,
+    SECCION_PURCHASING: ALIAS_PURCHASING,
+    "telephones": {},
+    "travelagency": ALIAS_TRAVEL_AGENCY,
+    "store": ALIAS_STORE,
+    "cafeteria": {},
+    "bar": {},
+    "moneyexchange": {"incentives": "incentive"},  # el Excel escribe «Incentives»
+    "restaurant": ALIAS_RESTAURANT,
+    "legal": ALIAS_LEGAL,
+    "itsystems": ALIAS_IT_SYSTEMS,
+    SECCION_VDS: {},  # sus dos líneas se llaman igual en el Excel y en el reporte
+    SECCION_UTILITIES: {},  # sus cuentas se llaman igual en el Excel y en el reporte
+}
 
 
 @dataclass
@@ -328,18 +472,24 @@ def importar_seccion(
     if ciclo.version_estructura_id is None:
         raise DetalleInvalido(409, "El ciclo no tiene una estructura de reporte asociada")
     lineas = RepositorioReporte(db, hotel_id).lineas(ciclo.version_estructura_id)
-    seccion_linea = next(
-        (x for x in lineas if x.tipo == "seccion" and normalizar(x.descripcion) == seccion),
-        None,
+    clave, ordinal = seccion, 1
+    if "#" in seccion:
+        clave, _, n = seccion.partition("#")
+        ordinal = int(n) if n.isdigit() else 1
+    mismas = sorted(
+        (x for x in lineas if x.tipo == "seccion" and normalizar(x.descripcion) == clave),
+        key=lambda x: x.orden,
     )
+    seccion_linea = mismas[ordinal - 1] if len(mismas) >= ordinal else None
     if seccion_linea is None:
         raise DetalleInvalido(
-            409, f"La estructura del ciclo no tiene la sección «{_nombre_seccion(seccion)}»"
+            409, f"La estructura del ciclo no tiene la sección «{_nombre_seccion(clave)}»"
         )
+    seccion = clave
     nombre = seccion_linea.descripcion
     candidatas = [x for x in lineas if x.tipo == "detalle" and x.seccion_id == seccion_linea.id]
     periodos = periodos_de_ano_fiscal(db, ciclo.ano_fiscal_id)
-    res = ResultadoImportacionDetalle(avisos=list(leido.avisos))
+    res = ResultadoImportacionDetalle(avisos=_avisos_de_la_seccion(leido.avisos, candidatas))
     libres = {x.id: x for x in candidatas}
     alias = ESTRICTAS.get(seccion)
     if linea_id is not None:
@@ -359,6 +509,7 @@ def importar_seccion(
         periodos=periodos,
         res=res,
         solo_linea=linea_id,
+        alias=alias,
     )
     res.importadas += importadas_partidas
     if linea_id is not None:
@@ -370,6 +521,7 @@ def importar_seccion(
         else:
             _importar_referencias(db, ciclo_id, [destino], leido, alias, periodos)
         return res
+    por_partidas = [x for con_id in con_partidas if (x := libres.get(con_id)) is not None]
     for con_id in con_partidas:
         libres.pop(con_id, None)
     _importar_referencias(db, ciclo_id, candidatas, leido, alias, periodos)
@@ -395,6 +547,12 @@ def importar_seccion(
                 ),
                 None,
             )
+            if mejor is None and any(
+                normalizar(x.descripcion) in objetivos for x in por_partidas
+            ):
+                # La cuenta ya se importó por sus partidas (su Budget sale de ellas × inflación):
+                # la fila del Budget resumido no se importa ni se avisa como si faltara la línea.
+                continue
         if mejor is None:
             res.avisos.append(f"«{fila.concepto}» no tiene línea en {nombre}; se ignora")
             continue
@@ -448,28 +606,81 @@ def _usa_partidas(db: Session, ciclo_id: int, linea_id: int) -> bool:
             LineaPresupuestoCaptura.linea_id == linea_id,
         )
     )
-    return bool(captura is not None and captura.usa_partidas)
+    return bool(captura is not None and (captura.usa_partidas or captura.usa_consumo))
 
 
-def _linea_de_hoja(candidatas: Sequence[LineaReporte], dep: str, cuenta: str, nombre: str):  # type: ignore[no-untyped-def]
+def _cuadra_con_su_total(hoja) -> tuple[bool, Decimal, Decimal | None]:  # type: ignore[no-untyped-def]
+    """¿Las partidas de la hoja suman su Total Expense? Se revisan la suma de cantidad × costo y la de los
+    meses (tolerancia: 1 peso o 1 %). Una hoja de cálculo (IVA, Income Tax) o un calendario (Depreciation)
+    no cuadra y no debe importarse por partidas. Sin Total Expense no hay con qué comparar."""
+    suma_extendida = sum((p.cantidad * p.costo for p in hoja.partidas), Decimal(0))
+    suma_meses = sum((m for p in hoja.partidas for m in p.meses), Decimal(0))
+    total = hoja.total_expense
+    if total is None:
+        return True, suma_extendida, None
+    margen = max(Decimal(1), abs(total) * Decimal("0.01"))
+    return abs(suma_extendida - total) <= margen and abs(suma_meses - total) <= margen, suma_extendida, total
+
+
+def _destino_de_hoja(dep: str, cuenta: str) -> tuple[str, str]:
+    """(departamento, cuenta) de la línea a la que pertenece una hoja (casi siempre los suyos)."""
+    destino = CUENTA_DE_HOJA_EQUIVALENTE.get((dep, cuenta))
+    if destino is None:
+        return dep, cuenta
+    return destino if isinstance(destino, tuple) else (dep, destino)
+
+
+def _avisos_de_la_seccion(avisos: Sequence[str], candidatas: Sequence[LineaReporte]) -> list[str]:
+    """Los avisos de la lectura, sin los de hojas del departamento compartido `0000` que son de otra
+    sección (p. ej. «0000-60515 Depreciation» al importar Utilities)."""
+    salida: list[str] = []
+    for a in avisos:
+        m = re.match(r"^«\s*0000-(\d{5})", a)
+        if m and not any(f"-0000-{m.group(1)}-" in (x.codigo_corporativo or "") for x in candidatas):
+            continue
+        salida.append(a)
+    return salida
+
+
+def _linea_de_hoja(  # type: ignore[no-untyped-def]
+    candidatas: Sequence[LineaReporte],
+    dep: str,
+    cuenta: str,
+    nombre: str,
+    alias: dict[str, str] | None = None,
+):
     """La línea de una hoja de detalle: mismo número de cuenta y nombre (el título de la hoja viene
-    cortado a 31 letras, así que también vale que el nombre de la línea empiece igual)."""
-    objetivo = normalizar(nombre)
-    mismas = [
-        x for x in candidatas if f"-{dep}-{cuenta}-" in (x.codigo_corporativo or "")
-    ]
-    exacta = next((x for x in mismas if normalizar(x.descripcion) == objetivo), None)
-    if exacta is not None:
-        return exacta
-    return next(
-        (
-            x
-            for x in mismas
-            if normalizar(x.descripcion).startswith(objetivo)
-            or objetivo.startswith(normalizar(x.descripcion))
-        ),
-        None,
-    )
+    cortado a 31 letras, así que también vale que el nombre de la línea empiece igual). `alias`: los
+    de la sección, para las hojas con el nombre escrito distinto."""
+    dep, cuenta = _destino_de_hoja(dep, cuenta)
+    propio = normalizar(nombre)
+    # primero el nombre tal cual (un alias de la sección puede apuntar a otra versión del reporte);
+    # el alias solo se usa si el nombre propio no encuentra línea
+    objetivos = [propio] + ([alias[propio]] if alias and propio in alias else [])
+    # hojas sin número de cuenta (Cafeteria): se emparejan por nombre entre las líneas de su departamento
+    patron = f"-{dep}-{cuenta}-" if cuenta else f"-{dep}-"
+    mismas = [x for x in candidatas if patron in (x.codigo_corporativo or "")]
+    for objetivo in objetivos:
+        exacta = next((x for x in mismas if normalizar(x.descripcion) == objetivo), None)
+        if exacta is not None:
+            return exacta
+    for objetivo in objetivos:
+        parcial = next(
+            (
+                x
+                for x in mismas
+                # una línea «PH» es otra cuenta: solo empareja con una hoja que también es «PH»
+                if normalizar(x.descripcion).endswith("ph") == objetivo.endswith("ph")
+                and (
+                    normalizar(x.descripcion).startswith(objetivo)
+                    or objetivo.startswith(normalizar(x.descripcion))
+                )
+            ),
+            None,
+        )
+        if parcial is not None:
+            return parcial
+    return None
 
 
 def _importar_partidas(
@@ -485,6 +696,7 @@ def _importar_partidas(
     periodos: Sequence[str],
     res: ResultadoImportacionDetalle,
     solo_linea: int | None = None,
+    alias: dict[str, str] | None = None,
 ) -> tuple[set[int], int]:
     """Importa las hojas de detalle (partidas) como cuentas por partidas; devuelve (líneas
     atendidas, cuántas se importaron). El Budget de esas cuentas sale de las partidas × inflación.
@@ -495,21 +707,101 @@ def _importar_partidas(
         calcular_partida,
         distribucion_de,
         guardar_partidas,
+        quitar_partidas,
+        TOLERANCIA_SUMA,
+    )
+    from fpa.servicios.presupuesto_consumo import (  # noqa: PLC0415 (evita el ciclo de imports)
+        consumo_budget,
+        guardar_consumo_importado,
     )
 
     atendidas: set[int] = set()
     importadas = 0
+    # líneas que también traen una hoja de partidas en este libro (Water & Sewer: consumo + partidas)
+    con_hoja_de_partidas = {
+        linea_h.id
+        for h in leido.partidas
+        if h.partidas
+        and (linea_h := _linea_de_hoja(candidatas, h.departamento, h.cuenta, h.nombre, alias)) is not None
+    }
     for hoja in leido.partidas:
+        if (
+            hoja.departamento in DEPARTAMENTOS_COMPARTIDOS
+            and hoja.cuenta
+            and not any(
+                "-{}-{}-".format(*_destino_de_hoja(hoja.departamento, hoja.cuenta)) in (x.codigo_corporativo or "")
+                for x in candidatas
+            )
+        ):
+            continue  # el departamento es compartido: esta hoja es de otra sección
+        if hoja.departamento in DEPARTAMENTOS_COMPARTIDOS and not hoja.cuenta and (
+            _linea_de_hoja(candidatas, hoja.departamento, hoja.cuenta, hoja.nombre, alias) is None
+        ):
+            continue  # hoja sin número de cuenta (Cafeteria) que no es de esta sección
         if solo_linea is not None:
-            de_esta = _linea_de_hoja(candidatas, hoja.departamento, hoja.cuenta, hoja.nombre)
+            de_esta = _linea_de_hoja(candidatas, hoja.departamento, hoja.cuenta, hoja.nombre, alias)
             if de_esta is None or de_esta.id != solo_linea:
                 continue
-        res.avisos.extend(hoja.avisos)
+        # Una hoja de partidas que no cuadra con su Total Expense (Depreciation, IVA, Income Tax) no se
+        # importa: sus avisos de lectura no aportan, solo el motivo por el que se descarta.
+        descartada = hoja.consumo is None and bool(hoja.partidas) and not _cuadra_con_su_total(hoja)[0]
+        if not descartada:
+            res.avisos.extend(hoja.avisos)
+        if hoja.consumo is not None:
+            linea = _linea_de_hoja(candidatas, hoja.departamento, hoja.cuenta, hoja.nombre, alias)
+            if linea is None:
+                res.avisos.append(f"«{hoja.hoja}» no tiene línea en el reporte; se ignora")
+                continue
+            atendidas.add(linea.id)
+            if visibles is not None and linea.id not in visibles:
+                res.avisos.append(f"«{linea.descripcion}» está fuera de tu alcance; se omite")
+                continue
+            captura_previa = db.scalar(
+                select(LineaPresupuestoCaptura).where(
+                    LineaPresupuestoCaptura.ciclo_id == ciclo.id,
+                    LineaPresupuestoCaptura.linea_id == linea.id,
+                )
+            )
+            if (
+                linea.id not in con_hoja_de_partidas
+                and captura_previa is not None
+                and captura_previa.usa_partidas
+            ):
+                # la cuenta ya no es por partidas (p. ej. Diesel, que se había importado como una partida)
+                quitar_partidas(
+                    db,
+                    organizacion_id=organizacion_id,
+                    hotel_id=hotel_id,
+                    usuario_id=usuario_id,
+                    ciclo_id=ciclo.id,
+                    linea_id=linea.id,
+                    visibles=visibles,
+                )
+            guardar_consumo_importado(
+                db,
+                organizacion_id=organizacion_id,
+                hotel_id=hotel_id,
+                usuario_id=usuario_id,
+                ciclo_id=ciclo.id,
+                linea_id=linea.id,
+                unidad=hoja.consumo.unidad,
+                bloques=hoja.consumo.bloques,
+                visibles=visibles,
+            )
+            importadas += 1
+            continue
         if not hoja.partidas:
             continue
-        linea = _linea_de_hoja(candidatas, hoja.departamento, hoja.cuenta, hoja.nombre)
+        linea = _linea_de_hoja(candidatas, hoja.departamento, hoja.cuenta, hoja.nombre, alias)
         if linea is None:
             res.avisos.append(f"«{hoja.hoja}» no tiene línea en el reporte; se ignora")
+            continue
+        cuadra, suma_hoja, total_hoja = _cuadra_con_su_total(hoja)
+        if not cuadra:
+            res.avisos.append(
+                f"«{hoja.hoja.strip()}»: no se importa por partidas porque sus partidas suman {suma_hoja:,.2f} y "
+                f"su Total Expense dice {total_hoja:,.2f}; el Budget de «{linea.descripcion}» se toma del Excel"
+            )
             continue
         atendidas.add(linea.id)
         if visibles is not None and linea.id not in visibles:
@@ -538,6 +830,14 @@ def _importar_partidas(
         # ¿cuadra con lo que dice la hoja principal del Budget?
         calculadas = [calcular_partida(e, i) for i, e in enumerate(entradas, start=1)]
         mio = budget_mensual(distribucion_de(calculadas), hoja.inflacion)
+        captura_mixta = db.scalar(
+            select(LineaPresupuestoCaptura).where(
+                LineaPresupuestoCaptura.ciclo_id == ciclo.id,
+                LineaPresupuestoCaptura.linea_id == linea.id,
+            )
+        )
+        if captura_mixta is not None and captura_mixta.usa_consumo:  # Water: consumo + partidas
+            mio = [a + b for a, b in zip(mio, consumo_budget(db, captura_mixta.id, periodos), strict=True)]
         fila = next(
             (f for f in leido.filas if normalizar(f.concepto) == normalizar(linea.descripcion)), None
         )
@@ -549,7 +849,7 @@ def _importar_partidas(
                 f"{fila.total:,.2f}; se importan las partidas"
             )
         for c in calculadas:
-            if c.diferencia != 0:
+            if abs(c.diferencia) >= TOLERANCIA_SUMA:
                 res.avisos.append(
                     f"«{linea.descripcion}» «{c.concepto[:30]}»: sus meses suman {c.suma:,.2f} y su "
                     f"costo extendido es {c.extendido:,.2f}"

@@ -182,6 +182,9 @@ DELEGAN_EN_SERVICIO = {
     "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas": (
         "servicios.presupuesto_partidas (guardar_partidas / quitar_partidas)"
     ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/consumo": (
+        "servicios.presupuesto_consumo (editar_consumo_budget / quitar_consumo)"
+    ),
     "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas/activar": (
         "servicios.presupuesto_partidas (activar_partidas)"
     ),

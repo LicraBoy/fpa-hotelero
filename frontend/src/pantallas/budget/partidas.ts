@@ -33,9 +33,11 @@ export interface PartidaApi {
 
 const MESES = 12
 
-/** Secciones cuyas cuentas pueden capturarse por partidas (hoy, *Mgmt & Check In*). */
+const SECCIONES_CON_PARTIDAS = new Set(['mgmtcheckin', 'accounting', 'maidlinen', 'apartmentinterior', 'commonarea', 'utilities', 'owneractivities', 'othertaxesfeesandinsurance', 'ownerservices', 'purchasing', 'telephones', 'travelagency', 'store', 'cafeteria', 'bar', 'moneyexchange', 'restaurant', 'legal', 'itsystems'])
+
+/** Secciones cuyas cuentas pueden capturarse por partidas (Mgmt & Check In, Accounting, Maid & Linen, Apartment Interior y Common Area). */
 export const seccionAdmitePartidas = (descripcion: string | null | undefined): boolean =>
-  descripcion != null && descripcion.toLowerCase().replace(/[^a-z0-9]/g, '') === 'mgmtcheckin'
+  descripcion != null && SECCIONES_CON_PARTIDAS.has(descripcion.toLowerCase().replace(/[^a-z0-9]/g, ''))
 const MAX_PARTIDAS = 200
 
 /** `cantidad × costo` en micros; `null` si falta o no es un número. */
@@ -62,6 +64,13 @@ export function mesesDe(p: PartidaEditable): bigint[] | null {
   const meses = p.meses.map((m) => (m.trim() === '' ? 0n : aMicros(m)))
   return meses.length === MESES && meses.every((m) => m !== null) ? (meses as bigint[]) : null
 }
+
+/** Un centavo en micros: el Excel guarda sus meses con ruido de coma flotante y costos con más decimales; por debajo, la suma cuadra. */
+export const TOLERANCIA_SUMA_MICROS = 10_000n
+
+/** `true` si la diferencia de `controlSuma` cabe en la tolerancia (se muestra como «Cuadra»). */
+export const sumaCuadra = (control: bigint): boolean =>
+  control > -TOLERANCIA_SUMA_MICROS && control < TOLERANCIA_SUMA_MICROS
 
 /** Suma de los meses menos el extendido: 0 = cuadra, <0 = falta distribuir, >0 = excede. `null` si no se puede calcular. */
 export function controlSuma(p: PartidaEditable): bigint | null {

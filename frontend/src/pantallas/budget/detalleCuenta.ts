@@ -37,7 +37,7 @@ export interface CeldaEnvio {
 }
 
 /** Las secciones del reporte cuyas cuentas tienen tabla interna: *Other Income* y *Mgmt & Check In*. */
-const SECCIONES_CON_TABLA = new Set(['otherincome', 'mgmtcheckin'])
+const SECCIONES_CON_TABLA = new Set(['otherincome', 'mgmtcheckin', 'accounting', 'maidlinen', 'apartmentinterior', 'commonarea', 'utilities', 'owneractivities', 'othertaxesfeesandinsurance', 'ownerservices', 'vdsallocationcollections', 'purchasing', 'telephones', 'travelagency', 'store', 'cafeteria', 'bar', 'moneyexchange', 'restaurant', 'legal', 'itsystems'])
 
 const normalizar = (texto: string) => texto.toLowerCase().replace(/[^a-z0-9]/g, '')
 

@@ -35,11 +35,16 @@ from fpa.modelos.presupuesto import (
 from fpa.modelos.tipos import MICRO
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.servicios.auditoria import auditar
+from fpa.servicios.presupuesto_consumo import ConsumoHoja, consumo_budget, leer_consumo
 from fpa.servicios.presupuesto_detalle import CeldaDetalle, DetalleInvalido, _captura_de, guardar_detalle
 from fpa.servicios.presupuesto_distribucion import periodos_de_ano_fiscal
 from fpa.servicios.presupuesto_hoja import BloqueInferior, calcular_bloque
 
 _CERO = Decimal(0)
+# El Excel guarda sus meses con ruido de coma flotante y costos unitarios con más decimales de los que
+# guarda el sistema (Diesel: 56,700 litros × 24.98329984 → 0.009 de diferencia): por debajo de un centavo
+# la suma «cuadra» con el costo extendido y no se avisa.
+TOLERANCIA_SUMA = Decimal("0.01")
 MAX_PARTIDAS = 200
 MAX_IMPORTE = Decimal("1000000000000")  # 1 billón: tope de cordura, no de negocio
 
@@ -169,6 +174,8 @@ def guardar_partidas(
     tasas = _tasas_en_orden(periodos, inflacion)
     calculadas = [calcular_partida(e, i) for i, e in enumerate(partidas, start=1)]
     budget = budget_mensual(distribucion_de(calculadas), tasas)
+    if captura.usa_consumo:  # Water & Sewer: consumo + partidas (el consumo no lleva inflación)
+        budget = [a + b for a, b in zip(budget, consumo_budget(db, captura.id, periodos), strict=True)]
     # El Budget calculado mensualiza la línea (y revisa que no haya otro camino que la edite)
     guardar_detalle(
         db,
@@ -227,7 +234,7 @@ def guardar_partidas(
             "linea_id": linea_id,
             "partidas": len(guardadas),
             "propuesta_anual": str(captura.propuesta_anual),
-            "sin_cuadrar": [g.concepto for g in guardadas if g.diferencia != 0],
+            "sin_cuadrar": [g.concepto for g in guardadas if abs(g.diferencia) >= TOLERANCIA_SUMA],
         },
     )
     return guardadas
@@ -259,6 +266,8 @@ class HojaCuenta:
     budget_previo: list[Decimal | None]
     origen: str | None
     bloque: BloqueInferior = field(default=None)  # type: ignore[assignment]
+    consumo: ConsumoHoja | None = None  # cuentas de consumo (Diesel, Gas, Electricity, Water)
+    unidad_consumo: str | None = None
 
 
 def _partidas_guardadas(
@@ -295,10 +304,11 @@ def leer_hoja_de_cuenta(
     captura, ciclo = _captura_de(
         db, hotel_id=hotel_id, ciclo_id=ciclo_id, linea_id=linea_id, visibles=visibles
     )
-    if not captura.usa_partidas:
-        raise DetalleInvalido(409, "La cuenta no se captura por partidas")
+    if not captura.usa_partidas and not captura.usa_consumo:
+        raise DetalleInvalido(409, "La cuenta no se captura por partidas ni por consumo")
     periodos = periodos_de_ano_fiscal(db, ciclo.ano_fiscal_id)
     partidas = _partidas_guardadas(db, captura.id, periodos)
+    consumo = leer_consumo(db, captura, periodos)
     tasas = {
         t.periodo: t.tasa
         for t in db.scalars(
@@ -315,6 +325,20 @@ def leer_hoja_de_cuenta(
     est_act = [refs[p].est_act if p in refs else None for p in periodos]
     previo = [refs[p].budget_previo if p in refs else None for p in periodos]
     totales = distribucion_de(partidas)
+    bloque = calcular_bloque(totales, inflacion, est_act, previo)
+    if consumo is not None:
+        # el consumo es parte del Budget de la cuenta (sin inflación); sin partidas, es toda la distribución
+        extra = consumo_budget(db, captura.id, periodos)
+        if not partidas:
+            totales = extra
+            bloque = calcular_bloque(totales, inflacion, est_act, previo)
+        else:
+            bloque = BloqueInferior(
+                [a + b for a, b in zip(bloque.total_con_inflacion, extra, strict=True)],
+                bloque.acumulada,
+                bloque.variacion,
+                bloque.variacion_pct,
+            )
     lineas = RepositorioReporte(db, hotel_id).lineas(ciclo.version_estructura_id or 0)
     linea = next((x for x in lineas if x.id == linea_id), None)
     seccion = next((x for x in lineas if linea and x.id == linea.seccion_id), None)
@@ -331,7 +355,9 @@ def leer_hoja_de_cuenta(
         est_act=est_act,
         budget_previo=previo,
         origen=next((r.origen for r in refs.values()), None),
-        bloque=calcular_bloque(totales, inflacion, est_act, previo),
+        bloque=bloque,
+        consumo=consumo,
+        unidad_consumo=captura.unidad_consumo,
     )
 
 
@@ -451,6 +477,25 @@ def quitar_partidas(
     _borrar_partidas(db, captura.id)
     captura.usa_partidas = False
     db.flush()
+    if captura.usa_consumo:  # Water & Sewer: el Budget queda solo con el consumo
+        guardar_detalle(
+            db,
+            organizacion_id=organizacion_id,
+            hotel_id=hotel_id,
+            usuario_id=usuario_id,
+            ciclo_id=ciclo_id,
+            linea_id=linea_id,
+            celdas=[
+                CeldaDetalle(periodo=p, metodo="fijo", monto_fijo=m)
+                for p, m in zip(
+                    periodos_de_ano_fiscal(db, ciclo.ano_fiscal_id),
+                    consumo_budget(db, captura.id, periodos_de_ano_fiscal(db, ciclo.ano_fiscal_id)),
+                    strict=True,
+                )
+            ],
+            visibles=visibles,
+            desde_partidas=True,
+        )
     auditar(
         db,
         organizacion_id=organizacion_id,

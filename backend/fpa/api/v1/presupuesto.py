@@ -65,6 +65,10 @@ from fpa.servicios.presupuesto_ciclo import (
     historial,
     transicionar,
 )
+from fpa.servicios.presupuesto_consumo import (
+    editar_consumo_budget,
+    quitar_consumo,
+)
 from fpa.servicios.presupuesto_partidas import (
     PartidaEntrada,
     activar_partidas,
@@ -77,7 +81,17 @@ from fpa.servicios.presupuesto_detalle import (
     CeldaDetalle,
     DetalleInvalido,
     guardar_detalle,
+    SECCION_ACCOUNTING,
+    SECCION_APARTMENT_INTERIOR,
+    SECCION_COMMON_AREA,
+    SECCION_MAID_LINEN,
     SECCION_MGMT_CHECKIN,
+    SECCION_OTHER_TAXES,
+    SECCION_OWNER_ACTIVITIES,
+    SECCION_OWNER_SERVICES,
+    SECCION_PURCHASING,
+    SECCION_UTILITIES,
+    SECCION_VDS,
     importar_seccion,
     leer_detalle,
     leer_detalle_de_version,
@@ -137,6 +151,7 @@ class LineaCapturaSalida(BaseModel):
     estado: str
     nota: str | None
     usa_partidas: bool = False
+    usa_consumo: bool = False
 
 
 class PropuestaEntrada(BaseModel):
@@ -344,6 +359,7 @@ def _a_salida(db: Session, captura: LineaPresupuestoCaptura) -> LineaCapturaSali
         estado=captura.estado,
         nota=captura.nota,
         usa_partidas=captura.usa_partidas,
+        usa_consumo=captura.usa_consumo,
     )
 
 
@@ -579,6 +595,7 @@ def listar_lineas(
                 estado=c.estado,
                 nota=c.nota,
                 usa_partidas=c.usa_partidas,
+                usa_consumo=c.usa_consumo,
             )
         )
     return salida
@@ -908,7 +925,51 @@ class ImportacionDetalleSalida(BaseModel):
     avisos: list[str]
 
 
-_SECCIONES_IMPORTABLES = {"otherincome", SECCION_MGMT_CHECKIN}
+_SECCIONES_IMPORTABLES = {
+    "otherincome",
+    SECCION_MGMT_CHECKIN,
+    SECCION_ACCOUNTING,
+    SECCION_MAID_LINEN,
+    SECCION_APARTMENT_INTERIOR,
+    SECCION_COMMON_AREA,
+    SECCION_UTILITIES,
+    SECCION_OWNER_ACTIVITIES,
+    SECCION_OTHER_TAXES,
+    SECCION_OWNER_SERVICES,
+    SECCION_VDS,
+    SECCION_PURCHASING,
+    "telephones",
+    "travelagency",
+    "store",
+    "cafeteria",
+    "bar",
+    "moneyexchange",
+    "restaurant",
+    "legal",
+    "itsystems",
+}
+_NOMBRE_SECCION = {
+    "legal": "Legal",
+    "itsystems": "IT Systems",
+    "telephones": "Telephones",
+    "travelagency": "Travel Agency",
+    "store": "Store",
+    "cafeteria": "Cafeteria",
+    "bar": "Bar",
+    "moneyexchange": "Money Exchange",
+    "restaurant": "Restaurant",
+    SECCION_PURCHASING: "Purchasing",
+    SECCION_VDS: "VDS Allocation Collections",
+    SECCION_OWNER_SERVICES: "Owner Services",
+    SECCION_OTHER_TAXES: "Other Taxes,Fees and Insurance",
+    SECCION_OWNER_ACTIVITIES: "Owner Activities",
+    SECCION_UTILITIES: "Utilities",
+    SECCION_COMMON_AREA: "Common Area",
+    SECCION_APARTMENT_INTERIOR: "Apartment Interior",
+    SECCION_MGMT_CHECKIN: "Mgmt & Check In",
+    SECCION_ACCOUNTING: "Accounting",
+    SECCION_MAID_LINEN: "Maid & Linen",
+}
 
 
 def _seccion_importable(db: Session, ciclo: CicloPresupuesto, seccion_id: int | None) -> str:
@@ -924,7 +985,12 @@ def _seccion_importable(db: Session, ciclo: CicloPresupuesto, seccion_id: int | 
     nombre = normalizar(linea.descripcion)
     if nombre not in _SECCIONES_IMPORTABLES:
         raise HTTPException(status_code=422, detail="Esa sección no se importa desde el Excel")
-    return nombre
+    # secciones repetidas (Store ventas / Store gastos): la clave lleva su ordinal en el reporte
+    anteriores = [
+        x for x in lineas
+        if x.tipo == "seccion" and normalizar(x.descripcion) == nombre and x.orden < linea.orden
+    ]  # fmt: skip
+    return f"{nombre}#{len(anteriores) + 1}" if anteriores else nombre
 
 
 @router.post(
@@ -971,7 +1037,7 @@ def importar_detalle_other_income(
             leido = (
                 leer_other_income(temporal)
                 if seccion == "otherincome"
-                else leer_seccion(temporal, seccion, "Mgmt & Check In")
+                else leer_seccion(temporal, seccion, _NOMBRE_SECCION[seccion.partition("#")[0]])
             )
         except ValueError as e:
             raise HTTPException(status_code=422, detail=str(e)) from None
@@ -1186,6 +1252,22 @@ class PartidaSalida(BaseModel):
     diferencia: Decimal
 
 
+class ConsumoMesSalida(BaseModel):
+    unidades: Decimal | None
+    costo_unitario: Decimal | None
+    total: Decimal | None
+
+
+class ConsumoSalida(BaseModel):
+    """Consumo mensual de una cuenta de consumo: 4 bloques × 12 meses de (unidades, costo, total)."""
+
+    unidad: str
+    real_prev: list[ConsumoMesSalida]
+    budget_prev: list[ConsumoMesSalida]
+    est_act: list[ConsumoMesSalida]
+    budget: list[ConsumoMesSalida]
+
+
 class HojaCuentaSalida(HojaSalida):
     """La hoja de una cuenta por partidas. Misma forma que la hoja de sección (`cuentas` = las
     partidas con sus 12 meses, `totales` = la distribución) más los datos de cada partida.
@@ -1196,6 +1278,7 @@ class HojaCuentaSalida(HojaSalida):
     padre: str
     codigo_cuenta: str | None
     partidas: list[PartidaSalida]
+    consumo: ConsumoSalida | None = None
 
 
 def _hoja_cuenta_a_salida(h) -> HojaCuentaSalida:  # type: ignore[no-untyped-def]
@@ -1234,6 +1317,17 @@ def _hoja_cuenta_a_salida(h) -> HojaCuentaSalida:  # type: ignore[no-untyped-def
             )  # fmt: skip
             for p in h.partidas
         ],
+        consumo=(
+            ConsumoSalida(
+                unidad=h.consumo.unidad,
+                **{
+                    b: [ConsumoMesSalida(unidades=m[0], costo_unitario=m[1], total=m[2]) for m in meses]
+                    for b, meses in h.consumo.bloques.items()
+                },
+            )
+            if h.consumo is not None
+            else None
+        ),
     )
 
 
@@ -1338,6 +1432,76 @@ def guardar_inflacion_de_cuenta(
         raise _errores_partidas(e) from None
     db.commit()
     return _hoja_cuenta_a_salida(hoja)
+
+
+class ConsumoCambio(BaseModel):
+    periodo: Annotated[str, Field(pattern=PATRON_PERIODO)]
+    unidades: Annotated[Decimal, Field(allow_inf_nan=False, ge=0, max_digits=18, decimal_places=6)]
+    costo_unitario: Annotated[Decimal, Field(allow_inf_nan=False, ge=0, max_digits=18, decimal_places=6)]
+
+
+class ConsumoEntrada(BaseModel):
+    meses: list[ConsumoCambio] = Field(min_length=1, max_length=12)
+
+
+@router.put(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/consumo",
+    response_model=HojaCuentaSalida,
+)
+def guardar_consumo_de_cuenta(
+    contexto: Capturar,
+    ciclo_id: IdRuta,
+    linea_id: IdRuta,
+    entrada: ConsumoEntrada,
+    db: Session = Depends(get_db),
+) -> HojaCuentaSalida:
+    """Cambia unidades y costo unitario de los meses indicados del Budget de una cuenta de consumo
+    (Diesel, Gas, Electricity, Water); el total del mes es unidades × costo y el Budget se recalcula."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    _exigir_en_captura(ciclo)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    try:
+        editar_consumo_budget(
+            db,
+            organizacion_id=contexto.organizacion_id,
+            hotel_id=contexto.hotel_id,
+            usuario_id=contexto.principal.usuario_id,
+            ciclo_id=ciclo_id,
+            linea_id=linea_id,
+            cambios={m.periodo: (m.unidades, m.costo_unitario) for m in entrada.meses},
+            visibles=visibles,
+        )
+        hoja = _hoja_de_cuenta(db, contexto, ciclo_id, linea_id, ciclo)
+    except (LookupError, DetalleInvalido, DistribucionInvalida) as e:
+        raise _errores_partidas(e) from None
+    db.commit()
+    return _hoja_cuenta_a_salida(hoja)
+
+
+@router.delete(
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/consumo",
+    status_code=204,
+)
+def quitar_consumo_de_cuenta(
+    contexto: Capturar, ciclo_id: IdRuta, linea_id: IdRuta, db: Session = Depends(get_db)
+) -> None:
+    """Vuelve la cuenta de consumo al Editor mensual; el Budget que tenía queda como detalle fijo."""
+    ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
+    _exigir_en_captura(ciclo)
+    visibles = lineas_visibles_de(db, contexto, ciclo)
+    try:
+        quitar_consumo(
+            db,
+            organizacion_id=contexto.organizacion_id,
+            hotel_id=contexto.hotel_id,
+            usuario_id=contexto.principal.usuario_id,
+            ciclo_id=ciclo_id,
+            linea_id=linea_id,
+            visibles=visibles,
+        )
+    except (LookupError, DetalleInvalido, DistribucionInvalida) as e:
+        raise _errores_partidas(e) from None
+    db.commit()
 
 
 @router.post(

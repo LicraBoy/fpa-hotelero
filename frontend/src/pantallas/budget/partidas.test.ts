@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   controlSuma,
+  sumaCuadra,
   cuerpoPartidas,
   distribucionDe,
   erroresDePartida,
@@ -52,6 +53,16 @@ test('una partida estacional dice si sus meses cuadran con el extendido', () => 
   assert.equal(controlSuma(estacional('4', '10500', { 3: '10500', 4: '10500', 5: '10500' })), -10500n * M) // faltan
   assert.equal(controlSuma(estacional('2', '10500', { 3: '10500', 4: '10500', 5: '10500' })), 10500n * M) // excede
   assert.equal(controlSuma(mensual('12', '4515')), 0n)
+})
+
+test('el ruido del Excel (millonésimos y hasta casi un centavo) cuadra; un centavo o más ya no', () => {
+  assert.equal(sumaCuadra(0n), true)
+  assert.equal(sumaCuadra(2n), true)
+  assert.equal(sumaCuadra(-1n), true)
+  assert.equal(sumaCuadra(8_900n), true)
+  assert.equal(sumaCuadra(9_999n), true)
+  assert.equal(sumaCuadra(10_000n), false)
+  assert.equal(sumaCuadra(-10_000n), false)
 })
 
 test('la distribución suma las partidas mes a mes y es nula si una no se puede calcular', () => {

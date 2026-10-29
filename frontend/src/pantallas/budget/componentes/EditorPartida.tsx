@@ -14,6 +14,7 @@ import {
   partidaCambio,
   partidaNueva,
   repartirMensual,
+  sumaCuadra,
   type MetodoPartida,
   type PartidaEditable,
 } from '../partidas'
@@ -158,11 +159,11 @@ export function EditorPartida(p: Props) {
           {dinero(total)}
         </TarjetaIndicador>
         <TarjetaIndicador
-          tono={control === null || control === 0n ? 'neutro' : 'naranja'}
-          icono={control === null || control === 0n ? 'check' : 'alerta'}
+          tono={control === null || sumaCuadra(control) ? 'neutro' : 'naranja'}
+          icono={control === null || sumaCuadra(control) ? 'check' : 'alerta'}
           etiqueta="Control de la distribución"
         >
-          {control === null ? '—' : control === 0n ? 'Cuadra' : control < 0n ? `Falta ${dinero(-control)}` : `Excede ${dinero(control)}`}
+          {control === null ? '—' : sumaCuadra(control) ? 'Cuadra' : control < 0n ? `Falta ${dinero(-control)}` : `Excede ${dinero(control)}`}
         </TarjetaIndicador>
       </div>
 

@@ -657,3 +657,18 @@
   .ep-campos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ep-concepto { grid-column: 1 / -1; }
 }
+
+/* Consumo mensual de una cuenta de consumo (Diesel, Gas, Electricity, Water): 4 bloques × (unidades, costo, total) */
+.hc-tarjeta { margin-bottom: 16px; }
+.hc-ayuda { margin: 0; color: var(--ref-texto-suave); font-size: 0.85rem; }
+.hc-region { max-height: none; overflow-x: auto; }
+.hc-tabla { width: max-content; min-width: 100%; table-layout: auto; }
+.hc-tabla th,
+.hc-tabla td { white-space: nowrap; padding: 0 10px; }
+.hc-tabla thead th.hc-grupo { text-align: center; border-bottom: 1px solid var(--ref-borde); color: var(--ref-texto); }
+.hc-tabla thead th.hc-grupo-budget { background: var(--ref-azul-suave); color: var(--ref-azul); }
+.hc-tabla td.hc-celda-budget { background: var(--ref-azul-suave); }
+.hc-tabla .ec-entrada { width: 7.5rem; text-align: right; }
+.hc-tabla tfoot th,
+.hc-tabla tfoot td { font-weight: 700; border-top: 2px solid var(--ref-borde); }
+.hc-tabla tr.hc-fila-cambiada th.ec-col-mes { box-shadow: inset 3px 0 0 var(--ref-naranja); }

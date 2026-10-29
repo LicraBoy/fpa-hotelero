@@ -21,6 +21,8 @@ import {
 } from '../hojaSeccion'
 import { GraficoComparativo } from './GraficoComparativo'
 import { AyudaTooltip, TarjetaIndicador } from './HojaUi'
+import { microsDe, sumaDe } from '../consumo'
+import { HojaConsumo } from './HojaConsumo'
 import { TablaInflacion, type EstadoInflacion } from './TablaInflacion'
 import { TablaInflacionPorMes } from './TablaInflacionPorMes'
 import { EditorPartida } from './EditorPartida'
@@ -111,9 +113,14 @@ export function HojaSeccion(p: Props) {
   }
 
   async function quitarPartidas() {
-    if (!window.confirm('¿Volver esta cuenta al Editor mensual? Se borran sus partidas y el Budget actual queda como importes fijos.')) return
+    const soloConsumo = datosCuenta?.consumo != null && (datosCuenta?.partidas.length ?? 0) === 0
+    const que = soloConsumo ? 'su consumo' : 'sus partidas'
+    if (!window.confirm(`¿Volver esta cuenta al Editor mensual? Se borra ${que} y el Budget actual queda como importes fijos.`)) return
     try {
-      await enviarJson('DELETE', `/api/v1/hoteles/${p.hotelId}/presupuesto/ciclos/${p.cicloId}/lineas/${p.lineaId}/partidas`)
+      await enviarJson(
+        'DELETE',
+        `/api/v1/hoteles/${p.hotelId}/presupuesto/ciclos/${p.cicloId}/lineas/${p.lineaId}/${soloConsumo ? 'consumo' : 'partidas'}`,
+      )
       p.alCambiarCiclo()
       p.alQuitarPartidasListo?.()
     } catch (e) {
@@ -250,6 +257,9 @@ function Cuerpo({
   partidas: readonly PartidaEditable[]
 }) {
   const esCuenta = p.modo === 'cuenta'
+  // Cuenta de consumo (Diesel, Gas, Electricity, Water): trae su consumo mensual; sin partidas es solo consumo
+  const consumo = esCuenta ? ((hoja as HojaCuenta).consumo ?? null) : null
+  const soloConsumo = consumo !== null && partidas.length === 0
   const [inflacion, setInflacion] = useState<string[]>(() => hoja.inflacion.map(fraccionAPorcentaje))
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -265,7 +275,9 @@ function Cuerpo({
   const invalida = inflPantalla.some((v) => v === null)
   const sucio = inflacion.some((t, i) => t !== fraccionAPorcentaje(hoja.inflacion[i]))
   const acum = acumulada(inflPantalla)
-  const conInflacion = totalConInflacion(totales, inflPantalla)
+  // Con partidas Y consumo (Water & Sewer) el Budget suma las partidas con inflación y el consumo sin ella
+  const consumoMixto = consumo !== null && partidas.length > 0 ? consumo.budget.map((m) => microsDe(m.total) ?? 0n) : null
+  const conInflacion = totalConInflacion(totales, inflPantalla).map((v, i) => v + (consumoMixto?.[i] ?? 0n))
   const estAct = hoja.est_act.map(micros)
   const previo = hoja.budget_previo.map(micros)
   const variacion = hoja.variacion.map(micros)
@@ -450,9 +462,24 @@ function Cuerpo({
         descripcion={
           esCuenta ? (
             <>
-              La cuenta <strong>{hoja.seccion}</strong> se captura por partidas (cantidad × costo, repartidas por mes). Haz clic
-              en una partida para editarla. El Budget de cada mes es la distribución × (1 + inflación): la inflación{' '}
-              <strong>sí entra al Budget</strong>.
+              {soloConsumo ? (
+                <>
+                  La cuenta <strong>{hoja.seccion}</strong> se captura por consumo: cada mes son unidades ({consumo?.unidad}) × costo
+                  unitario. Aquí ves los cuatro bloques de su hoja del Excel; el Budget es el consumo de {p.anoFiscal} y
+                  no lleva inflación (el costo unitario ya es la tarifa del año).
+                </>
+              ) : consumo !== null ? (
+                <>
+                  La cuenta <strong>{hoja.seccion}</strong> suma su consumo ({consumo.unidad} × costo unitario, sin inflación)
+                  y sus partidas (cantidad × costo, con inflación). Haz clic en una partida para editarla.
+                </>
+              ) : (
+                <>
+                  La cuenta <strong>{hoja.seccion}</strong> se captura por partidas (cantidad × costo, repartidas por mes). Haz clic
+                  en una partida para editarla. El Budget de cada mes es la distribución × (1 + inflación): la inflación{' '}
+                  <strong>sí entra al Budget</strong>.
+                </>
+              )}
             </>
           ) : (
             <>
@@ -488,9 +515,11 @@ function Cuerpo({
                   onClick={() => {
                     if (
                       esCuenta &&
-                      hoja.cuentas.length > 0 &&
+                      (hoja.cuentas.length > 0 || consumo !== null) &&
                       !window.confirm(
-                        `Se reemplazarán las ${hoja.cuentas.length} partidas actuales de ${hoja.seccion} con las de la hoja del Excel. ¿Continuar?`,
+                        consumo !== null
+                          ? `Se reemplazará el consumo actual de ${hoja.seccion}${hoja.cuentas.length > 0 ? ' y sus partidas' : ''} con el de la hoja del Excel. ¿Continuar?`
+                          : `Se reemplazarán las ${hoja.cuentas.length} partidas actuales de ${hoja.seccion} con las de la hoja del Excel. ¿Continuar?`,
                       )
                     ) {
                       return
@@ -503,7 +532,7 @@ function Cuerpo({
                       : `Llena las cuentas y los comparativos de ${hoja.seccion} desde el Excel del Budget`
                   }
                 >
-                  <Icono nombre="subir" tamano={14} /> {esCuenta ? 'Importar partidas del Excel' : 'Importar del Excel'}
+                  <Icono nombre="subir" tamano={14} /> {esCuenta ? (consumo !== null ? 'Importar consumo del Excel' : 'Importar partidas del Excel') : 'Importar del Excel'}
                 </button>
               </>
             )}
@@ -514,7 +543,7 @@ function Cuerpo({
                 onClick={alQuitarPartidas}
                 title="Vuelve la cuenta al Editor mensual; el Budget actual queda como importes fijos"
               >
-                Quitar partidas
+                {soloConsumo ? 'Quitar consumo' : 'Quitar partidas'}
               </button>
             )}
           </>
@@ -541,24 +570,54 @@ function Cuerpo({
             NO_DISPONIBLE
           )}
         </TarjetaIndicador>
-        <TarjetaIndicador tono="celeste" icono="cuentas" etiqueta={esCuenta ? 'Partidas' : 'Cuentas con importe'}>
-          {esCuenta ? hoja.cuentas.length : `${conDatos} de ${hoja.cuentas.length}`}
+        <TarjetaIndicador
+          tono="celeste"
+          icono="cuentas"
+          etiqueta={soloConsumo ? `Consumo anual (${consumo?.unidad})` : esCuenta ? 'Partidas' : 'Cuentas con importe'}
+        >
+          {soloConsumo && consumo
+            ? formatoMicros(sumaDe(consumo.budget.map((m) => microsDe(m.unidades))) ?? 0n)
+            : esCuenta
+              ? hoja.cuentas.length
+              : `${conDatos} de ${hoja.cuentas.length}`}
         </TarjetaIndicador>
       </div>
 
       {mensajes}
 
-      <HojaCuentas
-        hoja={hoja}
-        totales={totales}
-        totalAnual={totalAnual}
-        alAbrirCuenta={setCuentaAbierta}
-        alComparacion={() => irAComparacion(false)}
-        esCuenta={esCuenta}
-        alAgregar={esCuenta && p.puedeEditar ? () => setCuentaAbierta(-1) : undefined}
-        partidas={esCuenta ? partidas : undefined}
-      />
+      {consumo !== null && (
+        <HojaConsumo
+          // Cada guardado (o importación) vuelve a armar el borrador desde lo que dice la API
+          key={consumo.budget.map((m) => `${m.unidades}-${m.costo_unitario}-${m.total}`).join('|')}
+          hotelId={p.hotelId}
+          cicloId={p.cicloId}
+          lineaId={p.lineaId ?? 0}
+          consumo={consumo}
+          periodos={periodos}
+          puedeEditar={p.puedeEditar}
+          alGuardado={(texto, h) => {
+            setMensaje(texto)
+            if (h) p.alGuardarCuenta(h.linea_id, h.periodos.map((per, i) => ({ periodo: per, importe: h.total_con_inflacion[i] })))
+            p.alCambiarCiclo()
+            recargar()
+          }}
+        />
+      )}
 
+      {!soloConsumo && (
+        <HojaCuentas
+          hoja={hoja}
+          totales={totales}
+          totalAnual={totalAnual}
+          alAbrirCuenta={setCuentaAbierta}
+          alComparacion={() => irAComparacion(false)}
+          esCuenta={esCuenta}
+          alAgregar={esCuenta && p.puedeEditar ? () => setCuentaAbierta(-1) : undefined}
+          partidas={esCuenta ? partidas : undefined}
+        />
+      )}
+
+      {!soloConsumo && (
       <section className="hoja-tarjeta hoja-inflacion-tarjeta" aria-labelledby="hoja-inflacion-titulo">
         <div className="hoja-inflacion-cabecera">
           <div>
@@ -602,6 +661,7 @@ function Cuerpo({
         </div>
         <TablaInflacion e={estado} />
       </section>
+      )}
     </>
   )
 }

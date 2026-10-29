@@ -763,7 +763,7 @@ function VistaEditor(p: PropsVista) {
         }}
         alGuardarCuenta={(id, valores) => rellenarMeses(id, valores)}
         alCambiarCiclo={p.recargarCiclo}
-        usaPartidas={new Set(p.lineasCiclo.filter((l) => l.usa_partidas).map((l) => l.linea_id))}
+        usaPartidas={new Set(p.lineasCiclo.filter((l) => l.usa_partidas || l.usa_consumo).map((l) => l.linea_id))}
       />
     )
   }

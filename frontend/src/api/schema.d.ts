@@ -967,6 +967,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/consumo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Guardar Consumo De Cuenta
+         * @description Cambia unidades y costo unitario de los meses indicados del Budget de una cuenta de consumo
+         *     (Diesel, Gas, Electricity, Water); el total del mes es unidades × costo y el Budget se recalcula.
+         */
+        put: operations["guardar_consumo_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__consumo_put"];
+        post?: never;
+        /**
+         * Quitar Consumo De Cuenta
+         * @description Vuelve la cuenta de consumo al Editor mensual; el Budget que tenía queda como detalle fijo.
+         */
+        delete: operations["quitar_consumo_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__consumo_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/detalle": {
         parameters: {
             query?: never;
@@ -2014,6 +2039,45 @@ export interface components {
             /** Periodo */
             periodo: string;
         };
+        /** ConsumoCambio */
+        ConsumoCambio: {
+            /** Costo Unitario */
+            costo_unitario: number | string;
+            /** Periodo */
+            periodo: string;
+            /** Unidades */
+            unidades: number | string;
+        };
+        /** ConsumoEntrada */
+        ConsumoEntrada: {
+            /** Meses */
+            meses: components["schemas"]["ConsumoCambio"][];
+        };
+        /** ConsumoMesSalida */
+        ConsumoMesSalida: {
+            /** Costo Unitario */
+            costo_unitario: string | null;
+            /** Total */
+            total: string | null;
+            /** Unidades */
+            unidades: string | null;
+        };
+        /**
+         * ConsumoSalida
+         * @description Consumo mensual de una cuenta de consumo: 4 bloques × 12 meses de (unidades, costo, total).
+         */
+        ConsumoSalida: {
+            /** Budget */
+            budget: components["schemas"]["ConsumoMesSalida"][];
+            /** Budget Prev */
+            budget_prev: components["schemas"]["ConsumoMesSalida"][];
+            /** Est Act */
+            est_act: components["schemas"]["ConsumoMesSalida"][];
+            /** Real Prev */
+            real_prev: components["schemas"]["ConsumoMesSalida"][];
+            /** Unidad */
+            unidad: string;
+        };
         /** ConteoLinea */
         ConteoLinea: {
             /** Pendientes */
@@ -2305,6 +2369,7 @@ export interface components {
             budget_previo: (string | null)[];
             /** Codigo Cuenta */
             codigo_cuenta: string | null;
+            consumo?: components["schemas"]["ConsumoSalida"] | null;
             /** Cuentas */
             cuentas: components["schemas"]["CuentaHojaSalida"][];
             /** Est Act */
@@ -2439,6 +2504,11 @@ export interface components {
             responsable_id: number | null;
             /** Seccion */
             seccion: string | null;
+            /**
+             * Usa Consumo
+             * @default false
+             */
+            usa_consumo: boolean;
             /**
              * Usa Partidas
              * @default false
@@ -6370,6 +6440,116 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LineaCapturaSalida"];
                 };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guardar_consumo_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__consumo_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsumoEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HojaCuentaSalida"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sin permiso para esta acción en el hotel */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hotel o recurso no encontrado (o sin acceso) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    quitar_consumo_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__consumo_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ciclo_id: number;
+                linea_id: number;
+                hotel_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description No autenticado */
             401: {
