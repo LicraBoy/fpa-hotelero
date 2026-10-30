@@ -13,11 +13,12 @@ Plataforma SaaS de FP&A para hoteles, independiente de PMS/ERP/POS. Primer hotel
 4. `docs/Blueprint_Funcional_FPA_Hotelero_Torres_Mazatlan.docx` — requisitos funcionales aprobados por Contraloría.
 5. `docs/Especificacion_Redisenio_Budget_Studio.md` y `docs/Correccion_Visual_Budget_Studio.md` — especificación y corrección visual del rediseño de Budget Studio (referencia SaaS de alta fidelidad).
 6. `docs/contexto.md` — requerimientos originales. Decisiones técnicas en `docs/adr/`.
+7. **Si vas a tocar Presupuesto/Budget:** `docs/CONTEXTO_PRESUPUESTO_PARA_CLAUDE.md` — flujo, modelo de datos, cómo se calcula cada cuenta, patrón de importación del Excel, mapa de código, pruebas, pendientes y trampas (más reciente que la sección «Progreso» de este archivo).
 
 ## Cómo correrlo
 - Levantar todo: `iniciar_servidores.bat` (backend **8100**, frontend **5180**; no usar 8000/5173, son de otro sistema).
 - Pruebas backend: `cd backend` y `.venv\Scripts\python -m pytest`. Calidad: `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .` y `.venv\Scripts\mypy fpa` (deben quedar sin errores).
-- Pruebas frontend: `cd frontend` y `npm.cmd run test:unit` (**86 pruebas unitarias**). Calidad y CSP: `npm.cmd run lint` (oxlint + `node scripts/verificar_seguridad.mjs`). Compilación: `npm.cmd run build` (tsc + vite).
+- Pruebas frontend: `cd frontend` y `npm.cmd run test:unit` (**149 pruebas unitarias**; backend: 953 pruebas). Calidad y CSP: `npm.cmd run lint` (oxlint + `node scripts/verificar_seguridad.mjs`). Compilación: `npm.cmd run build` (tsc + vite).
 - Pruebas de navegador / E2E: `cd frontend` y `npm.cmd run e2e` (Playwright; corre contra el build de producción con su CSP estricta). Siempre correrlas al tocar pantallas. Si cambias la API: `npm run api:tipos` y commitea `src/api/openapi.json` y `schema.d.ts` (una prueba del backend lo exige).
 - Base de datos: `.venv\Scripts\alembic upgrade head` (migraciones) y `.venv\Scripts\python -m fpa.semilla` (datos de desarrollo). Si cambias un modelo, genera la migración con `alembic revision --autogenerate`.
 - Identidad de desarrollo: `FPA_ENTORNO=desarrollo` y cabecera `X-Usuario-Dev: analista@torres.local` (por defecto el entorno es `produccion` y nadie entra).
@@ -89,4 +90,5 @@ Carpeta: `C:\Users\mzamora\Desktop\PLATAFORMA FP&A E INTELIGENCIA HOTELERA\`. No
 - **Etapa 2** (Cabecera y ciclo presupuestario): **Completada**.
 - **Etapa 3** (Dashboard analítico y gráficos avanzados): **Completada y auditada** (validada en 1440px, 1280px, 768px, 390px y tema oscuro).
 - **Etapa 4** (Versiones, auditoría y pulido): **Completada** — Timeline solo-lectura, comparador de versiones con diff financiero exacto en BigInt, skeletons anti-CLS, accesibilidad WCAG 2.1 AA (teclado, ARIA, roles semánticos, sin info solo por color). **86/86 tests unitarios pasando, 0 errores linter/CSP, 0 errores TypeScript, build exitoso** (warning preexistente de bundle Plotly > 500KB, no es defecto nuevo). Sin commit ni push — árbol local listo para revisión.
+- **Después de la Etapa 4** (partidas, consumo, Hoja de sección / Hoja de cuenta, importación del Excel por sección): ver `docs/CONTEXTO_PRESUPUESTO_PARA_CLAUDE.md`, que es más reciente que esta sección. Importar una sección sin pantalla: `backend/scripts/importar_budget_seccion.py`.
 - **Próxima etapa pendiente**: Etapa 5 — integración de datos reales de Torres, pruebas E2E con Playwright y pase a producción.
