@@ -1,4 +1,6 @@
-"""Budget por cuenta: importar una sección sin hoja propia (*Mgmt & Check In*) desde el Excel del Budget."""
+"""Budget por cuenta: importar una sección sin hoja propia (*Mgmt & Check In*) desde el Excel del
+Budget.
+"""
 
 from decimal import Decimal
 from io import BytesIO
@@ -13,16 +15,20 @@ from test_budget_other_income import CONTRALOR, PERIODOS, XLSX, _url
 
 from fpa.ingesta.budget_seccion import leer_seccion, leer_seccion_filas
 from fpa.modelos import LineaReporte, VersionEstructuraReporte
-from fpa.servicios.presupuesto_detalle import ESTRICTAS, _linea_de_hoja
 from fpa.servicios.presupuesto_ciclo import crear_ano_fiscal, crear_ciclo, crear_periodo_fiscal
+from fpa.servicios.presupuesto_detalle import ESTRICTAS, _linea_de_hoja
 
 D = Decimal
 SECCION = "mgmtcheckin"
 NOMBRE = "Mgmt & Check In"
-EXCEL_REAL = Path(__file__).resolve().parents[2] / "docs" / "-1% - MZT Budget 26-27 TC 18.00 Final.xlsx"
+EXCEL_REAL = (
+    Path(__file__).resolve().parents[2] / "docs" / "-1% - MZT Budget 26-27 TC 18.00 Final.xlsx"
+)
 
 
-def _fila(codigo: object, descripcion: object, meses: list[object] | None = None) -> tuple[object, ...]:
+def _fila(
+    codigo: object, descripcion: object, meses: list[object] | None = None
+) -> tuple[object, ...]:
     return (None, codigo, descripcion, *(meses or []))
 
 
@@ -52,7 +58,9 @@ def _hoja_previa(base: float) -> list[tuple[object, ...]]:
 
 
 def test_el_lector_toma_las_cuentas_con_importes_y_avisa_las_que_traen_ref() -> None:
-    leido = leer_seccion_filas(_hoja_budget(), _hoja_previa(10.0), _hoja_previa(7.0), SECCION, NOMBRE)
+    leido = leer_seccion_filas(
+        _hoja_budget(), _hoja_previa(10.0), _hoja_previa(7.0), SECCION, NOMBRE
+    )
     assert [f.concepto for f in leido.filas] == [
         "Telephone", "Airfare", "T & E Local", "Bank Commissions", "Dues, Subscriptions, etc."
     ]  # fmt: skip
@@ -87,14 +95,25 @@ def test_la_referencia_con_ref_no_se_guarda_y_se_avisa() -> None:
 
 def _estructura_mgmt(db: Session, hotel_id: int) -> dict[str, int]:
     version = VersionEstructuraReporte(
-        hotel_id=hotel_id, nombre_archivo="e.xlsx", sha256="1" * 64, estado="vigente", n_lineas=7, n_detalle=6
+        hotel_id=hotel_id,
+        nombre_archivo="e.xlsx",
+        sha256="1" * 64,
+        estado="vigente",
+        n_lineas=7,
+        n_detalle=6,
     )
     db.add(version)
     db.flush()
     seccion = LineaReporte(
-        version_id=version.id, hotel_id=hotel_id, orden=1, tipo="seccion", nivel=0,
-        descripcion=NOMBRE, clave="mgmt", fila_origen=10,
-    )  # fmt: skip
+        version_id=version.id,
+        hotel_id=hotel_id,
+        orden=1,
+        tipo="seccion",
+        nivel=0,
+        descripcion=NOMBRE,
+        clave="mgmt",
+        fila_origen=10,
+    )
     db.add(seccion)
     db.flush()
     ids = {"seccion": seccion.id}
@@ -102,15 +121,22 @@ def _estructura_mgmt(db: Session, hotel_id: int) -> dict[str, int]:
         "Telephone",
         "Airfare",
         "Bank Commissions",  # mismo nombre que en el Excel: se alinea por nombre exacto
-        "Local Consumes",  # en el Excel se llama «T & E Local» (alias de la versión anterior del reporte)
+        "Local Consumes",  # en el Excel: «T & E Local» (alias del reporte anterior)
         "Life Insurance",  # NO debe recibir «Insurance»
         "Salaries",
     ]
     for orden, nombre in enumerate(nombres, start=2):
         linea = LineaReporte(
-            version_id=version.id, hotel_id=hotel_id, orden=orden, tipo="detalle", nivel=1,
-            seccion_id=seccion.id, descripcion=nombre, clave=nombre.lower(), fila_origen=10 + orden,
-        )  # fmt: skip
+            version_id=version.id,
+            hotel_id=hotel_id,
+            orden=orden,
+            tipo="detalle",
+            nivel=1,
+            seccion_id=seccion.id,
+            descripcion=nombre,
+            clave=nombre.lower(),
+            fila_origen=10 + orden,
+        )
         db.add(linea)
         db.flush()
         ids[nombre] = linea.id
@@ -124,7 +150,11 @@ def _ciclo(db: Session, mundo: Mundo) -> tuple[int, dict[str, int]]:
     for periodo in PERIODOS:
         crear_periodo_fiscal(db, ano_fiscal_id=ano.id, periodo=periodo)
     ciclo = crear_ciclo(
-        db, organizacion_id=mundo.org1, hotel_id=mundo.hotel_a, usuario_id=None, ano_fiscal_id=ano.id
+        db,
+        organizacion_id=mundo.org1,
+        hotel_id=mundo.hotel_a,
+        usuario_id=None,
+        ano_fiscal_id=ano.id,
     )
     db.commit()
     return ciclo.id, ids
@@ -146,7 +176,9 @@ def _libro() -> bytes:
     return salida.getvalue()
 
 
-def test_importa_mgmt_por_alias_y_no_confunde_lineas(cliente: TestClient, db: Session, mundo: Mundo) -> None:
+def test_importa_mgmt_por_alias_y_no_confunde_lineas(
+    cliente: TestClient, db: Session, mundo: Mundo
+) -> None:
     ciclo_id, ids = _ciclo(db, mundo)
     r = cliente.post(
         _url(mundo, ciclo_id, f"detalle/importar-other-income?seccion_id={ids['seccion']}"),
@@ -170,11 +202,19 @@ def test_importa_mgmt_por_alias_y_no_confunde_lineas(cliente: TestClient, db: Se
         _url(mundo, ciclo_id, f"lineas/{ids['Life Insurance']}/detalle"), headers=como(CONTRALOR)
     ).json()
     assert vacio == []
-    hoja = cliente.get(_url(mundo, ciclo_id, f"hojas/{ids['seccion']}"), headers=como(CONTRALOR)).json()
-    assert hoja["seccion"] == NOMBRE and D(hoja["est_act"][0]) == D(20) and D(hoja["budget_previo"][0]) == D(14)
+    hoja = cliente.get(
+        _url(mundo, ciclo_id, f"hojas/{ids['seccion']}"), headers=como(CONTRALOR)
+    ).json()
+    assert (
+        hoja["seccion"] == NOMBRE
+        and D(hoja["est_act"][0]) == D(20)
+        and D(hoja["budget_previo"][0]) == D(14)
+    )
 
 
-def test_una_seccion_que_no_se_importa_se_rechaza(cliente: TestClient, db: Session, mundo: Mundo) -> None:
+def test_una_seccion_que_no_se_importa_se_rechaza(
+    cliente: TestClient, db: Session, mundo: Mundo
+) -> None:
     ciclo_id, ids = _ciclo(db, mundo)
     seccion = db.get(LineaReporte, ids["seccion"])
     assert seccion is not None
@@ -206,9 +246,16 @@ def _hoja_accounting() -> list[tuple[object, ...]]:
 
 def _linea(codigo: str, descripcion: str) -> LineaReporte:
     return LineaReporte(
-        version_id=1, hotel_id=1, orden=1, tipo="detalle", nivel=1,
-        descripcion=descripcion, clave=descripcion.lower(), fila_origen=1, codigo_corporativo=codigo,
-    )  # fmt: skip
+        version_id=1,
+        hotel_id=1,
+        orden=1,
+        tipo="detalle",
+        nivel=1,
+        descripcion=descripcion,
+        clave=descripcion.lower(),
+        fila_origen=1,
+        codigo_corporativo=codigo,
+    )
 
 
 def test_accounting_se_lee_hasta_su_total_y_allocated_queda_para_captura() -> None:
@@ -227,12 +274,19 @@ def test_las_hojas_de_accounting_emparejan_por_alias_y_no_por_codigo_solo() -> N
     # «Contrac Serv Other» (la hoja) no es «Computer Services», aunque compartan la cuenta 60455
     assert _linea_de_hoja(lineas, "0115", "60455", "Contrac Serv Other", alias) is lineas[0]
     assert _linea_de_hoja(lineas, "0115", "61790", "Non Deductable", alias) is lineas[2]
-    # el alias no le quita a una hoja su propia línea: en Mgmt «T & E Local» (alias → «Local Consumes»)
+    # el alias no le quita a una hoja su propia línea: en Mgmt «T & E Local» (alias → «Local
+    # Consumes»)
     # sigue emparejando con la línea «T & E Local» cuando el reporte la llama así
-    mgmt = [_linea("028-0111-61630-000", "Meals & Entertain"), _linea("028-0111-61630-000", "T & E Local")]
+    mgmt = [
+        _linea("028-0111-61630-000", "Meals & Entertain"),
+        _linea("028-0111-61630-000", "T & E Local"),
+    ]
     assert _linea_de_hoja(mgmt, "0111", "61630", "T & E Local", ESTRICTAS["mgmtcheckin"]) is mgmt[1]
     consumes = [_linea("028-0111-61630-000", "Local Consumes")]
-    assert _linea_de_hoja(consumes, "0111", "61630", "T & E Local", ESTRICTAS["mgmtcheckin"]) is consumes[0]
+    assert (
+        _linea_de_hoja(consumes, "0111", "61630", "T & E Local", ESTRICTAS["mgmtcheckin"])
+        is consumes[0]
+    )
     # sin alias no se unen: no se adivina por parecido
     assert _linea_de_hoja(lineas, "0115", "61790", "Non Deductable") is None
 
@@ -252,13 +306,16 @@ def test_el_excel_real_trae_las_cuentas_de_gasto_y_avisa_la_nomina() -> None:
 
 def test_las_hojas_y_filas_de_maid_linen_emparejan_por_alias() -> None:
     alias = ESTRICTAS["maidlinen"]
-    lineas = [_linea("028-0114-61790-000", "Non-Deductible"), _linea("028-0114-61365-000", "Linens-Replacement")]
+    lineas = [
+        _linea("028-0114-61790-000", "Non-Deductible"),
+        _linea("028-0114-61365-000", "Linens-Replacement"),
+    ]
     assert _linea_de_hoja(lineas, "0114", "61790", "Non Deductable", alias) is lineas[0]
     assert _linea_de_hoja(lineas, "0114", "61365", "Linens-Replacement", alias) is lineas[1]
     # la nómina del Excel en plural se alinea con el reporte solo por alias confirmado
-    assert {alias[k] for k in ("compensations", "incentives", "mealallowances", "miscellaneousexp")} == {
-        "compensation", "incentive", "mealallowance", "miscellaneous"
-    }  # fmt: skip
+    assert {
+        alias[k] for k in ("compensations", "incentives", "mealallowances", "miscellaneousexp")
+    } == {"compensation", "incentive", "mealallowance", "miscellaneous"}
 
 
 # --- Apartment Interior (depto 0118): líneas «PH» -----------------------------------------------
@@ -290,7 +347,9 @@ def test_la_fila_de_totales_mezclada_con_la_ultima_partida_no_se_importa() -> No
     filas = [
         (),
         fila("Item", None, "Qty of Items", "Unit of Measure", "Cost", "Extended Cost", "Monthly"),
-        fila("TOASTERS", None, 2, "PIECE", 100, 200, "X", None, None, None, None, *([200 / 12] * 12)),
+        fila(
+            "TOASTERS", None, 2, "PIECE", 100, 200, "X", None, None, None, None, *([200 / 12] * 12)
+        ),
         fila("SPECIAL PACKAGING", None, 1, "PIECE", 10220, 200, "Total Distribution"),
         (),
         (None, None, None, None, None, None, None, None, None, "Mthly", *([0.05] * 12)),
@@ -300,7 +359,8 @@ def test_la_fila_de_totales_mezclada_con_la_ultima_partida_no_se_importa() -> No
     assert any("SPECIAL PACKAGING" in a and "mezclada" in a for a in h.avisos)
 
 
-# --- Common Area (depto 0106): alias de nómina -----------------------------------------------------
+# --- Common Area (depto 0106): alias de nómina
+# -----------------------------------------------------
 
 
 def test_common_area_alias_de_nomina() -> None:
@@ -322,10 +382,15 @@ def test_other_taxes_acepta_el_cierre_total_other_taxes_y_sus_alias() -> None:
         _fila("028-0000-61790-000", "Non- Deductble", [None] * 12),
         _fila(None, "T o t a l   O t h e r   T a x e s", ["#REF!"] * 12),
     ]
-    leido = leer_seccion_filas(filas, None, None, "othertaxesfeesandinsurance", "Other Taxes,Fees and Insurance")
+    leido = leer_seccion_filas(
+        filas, None, None, "othertaxesfeesandinsurance", "Other Taxes,Fees and Insurance"
+    )
     assert [f.concepto for f in leido.filas] == ["Fees Trustee"]
     alias = ESTRICTAS["othertaxesfeesandinsurance"]
-    assert alias["nondeductble"] == "nondeductible" and alias["senioritypremiumacrued"] == "senioritypremium"
+    assert (
+        alias["nondeductble"] == "nondeductible"
+        and alias["senioritypremiumacrued"] == "senioritypremium"
+    )
     assert alias["admfee4"] == "admfee6"
 
 
@@ -334,13 +399,19 @@ def test_una_hoja_que_no_cuadra_con_su_total_no_se_importa_por_partidas() -> Non
     from fpa.servicios.presupuesto_detalle import _cuadra_con_su_total
 
     def hoja(partidas: list[PartidaLeida], total: Decimal | None) -> PartidasLeidas:
-        return PartidasLeidas("0000-61520 IVA", "0000", "61520", "IVA", partidas=partidas, total_expense=total)
+        return PartidasLeidas(
+            "0000-61520 IVA", "0000", "61520", "IVA", partidas=partidas, total_expense=total
+        )
 
     buena = PartidaLeida("A", D(2), "pz", D(50), "mensual", [D(100) / 12] * 12, 10)
     assert _cuadra_con_su_total(hoja([buena], D(100)))[0] is True
-    assert _cuadra_con_su_total(hoja([buena], None))[0] is True  # sin Total Expense no hay con qué comparar
+    assert (
+        _cuadra_con_su_total(hoja([buena], None))[0] is True
+    )  # sin Total Expense no hay con qué comparar
     # hoja de cálculo: cantidad × costo enorme contra un Total Expense de cero
-    cuenta_de_calculo = PartidaLeida("Other Income", D(1_000_000), None, D("1.5"), "estacional", [D(0)] * 12, 11)
+    cuenta_de_calculo = PartidaLeida(
+        "Other Income", D(1_000_000), None, D("1.5"), "estacional", [D(0)] * 12, 11
+    )
     assert _cuadra_con_su_total(hoja([cuenta_de_calculo], D(0)))[0] is False
     # calendario: sus meses suman mucho más que el Total Expense de la hoja
     calendario = PartidaLeida("Activo", D(1), None, D(613_848), "estacional", [D(148_681)] * 12, 12)
@@ -370,7 +441,9 @@ def test_vds_lee_sus_dos_lineas_negativas_y_el_cierre_cortado_del_total() -> Non
         _fila("028-0000-61520-000", "Collection IVA Taxes 16%", [-3214.97] * 12),
         _fila(None, "T o t a l   V D S   A l l o c a t i o n   C", [-23308.53] * 12),
     ]
-    leido = leer_seccion_filas(filas, None, None, "vdsallocationcollections", "VDS Allocation Collections")
+    leido = leer_seccion_filas(
+        filas, None, None, "vdsallocationcollections", "VDS Allocation Collections"
+    )
     assert [(f.concepto, f.celdas[0].importe) for f in leido.filas] == [
         ("VDS Allocation Collections", D("-20093.56")),
         ("Collection IVA Taxes 16%", D("-3214.97")),
@@ -394,7 +467,8 @@ def test_purchasing_distingue_airfare_lodging_y_meals_que_comparten_la_cuenta_61
     assert _linea_de_hoja(lineas, "0122", "61790", "Non Deductable", alias) is lineas[4]
 
 
-# --- Commercial Services: secciones repetidas por ordinal, renglones calculados, hoja «Cafeteria …» ------
+# --- Commercial Services: secciones repetidas por ordinal, renglones calculados, hoja «Cafeteria …»
+# ------
 
 
 def _hoja_comercial() -> list[tuple[object, ...]]:
@@ -417,7 +491,11 @@ def _hoja_comercial() -> list[tuple[object, ...]]:
 
 def test_las_secciones_repetidas_se_leen_por_ordinal_y_sin_renglones_calculados() -> None:
     ventas = leer_seccion_filas(_hoja_comercial(), None, None, "store", "Store")
-    assert [f.concepto for f in ventas.filas] == ["Store Gross Sales", "Less Discount", "Cost of Sales"]
+    assert [f.concepto for f in ventas.filas] == [
+        "Store Gross Sales",
+        "Less Discount",
+        "Cost of Sales",
+    ]
     gastos = leer_seccion_filas(_hoja_comercial(), None, None, "store#2", "Store")
     assert [f.concepto for f in gastos.filas] == ["Telephone", "Non Deductable"]
     assert any("Allocated Expenses" in a for a in gastos.avisos)  # sin importes: queda para captura
@@ -425,16 +503,22 @@ def test_las_secciones_repetidas_se_leen_por_ordinal_y_sin_renglones_calculados(
         leer_seccion_filas(_hoja_comercial(), None, None, "store#3", "Store")
 
 
-def test_las_hojas_de_cafeteria_no_llevan_codigo_y_la_promotion_de_restaurant_cambia_de_cuenta() -> None:
+def test_hojas_de_cafeteria_sin_codigo_y_promotion_de_restaurant_cambia_de_cuenta() -> None:
     from fpa.ingesta.budget_partidas import datos_de_hoja
 
     assert datos_de_hoja("Cafeteria Materials-Supplies") == ("5036", "", "Materials-Supplies")
     assert datos_de_hoja("0124-60160 Promotion") == ("0124", "60160", "Promotion")
-    cafe = [_linea("028-5036-61480-000", "Materials/Supplies"), _linea("028-5036-61410-000", "Equipment")]
+    cafe = [
+        _linea("028-5036-61480-000", "Materials/Supplies"),
+        _linea("028-5036-61410-000", "Equipment"),
+    ]
     assert _linea_de_hoja(cafe, "5036", "", "Materials-Supplies") is cafe[0]
     restaurante = [_linea("028-0124-60170-000", "Promotion")]
     assert _linea_de_hoja(restaurante, "0124", "60160", "Promotion") is restaurante[0]
-    agencia = [_linea("028-0120-60310-000", "Bank Commissions"), _linea("028-0120-61781-000", "Miscellaneous/non deductibles")]
+    agencia = [
+        _linea("028-0120-60310-000", "Bank Commissions"),
+        _linea("028-0120-61781-000", "Miscellaneous/non deductibles"),
+    ]
     alias = ESTRICTAS["travelagency"]
     assert _linea_de_hoja(agencia, "0120", "60310", "Bank Commisions", alias) is agencia[0]
     assert _linea_de_hoja(agencia, "0120", "61781", "Miscellaneous No Ded", alias) is agencia[1]

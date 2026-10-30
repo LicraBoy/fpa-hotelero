@@ -1,4 +1,5 @@
-"""Vincula a las secciones de gastos de Commercial Services las cuentas que Contraloría les asigna y faltaban
+"""Vincula a las secciones de gastos de Commercial Services las cuentas que Contraloría les asigna y
+faltaban
 (solo DESARROLLO).
 
 Uso (desde backend/, con la base ya migrada):
@@ -6,10 +7,14 @@ Uso (desde backend/, con la base ya migrada):
     set FPA_ENTORNO=desarrollo
     .venv\\Scripts\\python -m fpa.mapeo_comerciales
 
-Mismo trámite que `mapeo_accounting`: el mapeo de Contraloría (hoja `PESO COMPARATIVO MZT` de «Mapeo de Cuentas
-Mazatlan (1).xlsx») comparado con el aprobado. En cada negocio solo faltaban Seniority Premium y Education
-Bonus (el Excel escribe `….01` para la prima de antigüedad: es `….010` en el catálogo y llama «Severance Pay» a
-Education Bonus). Crea una versión del mapeo por sección y es seguro repetirlo. Se usa `Sección#2` porque cada
+Mismo trámite que `mapeo_accounting`: el mapeo de Contraloría (hoja `PESO COMPARATIVO MZT` de «Mapeo
+de Cuentas
+Mazatlan (1).xlsx») comparado con el aprobado. En cada negocio solo faltaban Seniority Premium y
+Education
+Bonus (el Excel escribe `….01` para la prima de antigüedad: es `….010` en el catálogo y llama
+«Severance Pay» a
+Education Bonus). Crea una versión del mapeo por sección y es seguro repetirlo. Se usa `Sección#2`
+porque cada
 negocio tiene dos secciones con el mismo nombre (ventas y gastos); las cuentas van a la segunda.
 """
 
@@ -66,7 +71,9 @@ def main() -> None:
             if r.version_numero is None:
                 print(f"{seccion}: nada que hacer ({len(r.ya_estaban)} vínculos ya estaban).")
                 continue
-            print(f"{seccion}: mapeo v{r.version_numero} aprobado, {len(r.agregados)} vínculos nuevos.")
+            print(
+                f"{seccion}: mapeo v{r.version_numero} aprobado, {len(r.agregados)} vínculos nuevos."
+            )
             for texto in r.agregados:
                 print(f"  + {texto}".replace("→", "->"))
 

@@ -88,9 +88,9 @@ def test_no_se_duplica_un_ano_fiscal(db: Session, mundo: Mundo) -> None:
 def test_generar_periodos_fiscales_es_idempotente(db: Session, mundo: Mundo) -> None:
     ano = _ano(db, mundo)
     primero = generar_periodos_fiscales(db, ano_fiscal_id=ano.id)
-    assert [p.periodo for p in primero] == [
-        f"2026-{m:02d}" for m in range(7, 13)
-    ] + [f"2027-{m:02d}" for m in range(1, 7)]
+    assert [p.periodo for p in primero] == [f"2026-{m:02d}" for m in range(7, 13)] + [
+        f"2027-{m:02d}" for m in range(1, 7)
+    ]
     segundo = generar_periodos_fiscales(db, ano_fiscal_id=ano.id)
     assert [p.id for p in primero] == [p.id for p in segundo]
 
@@ -179,7 +179,12 @@ def test_devolver_pide_nota(db: Session, mundo: Mundo) -> None:
     with pytest.raises(CicloInvalido):
         transicionar(db, ciclo_id=ciclo.id, hacia="borrador", nota="   ", puede=PUEDE_TODO, **kw)  # type: ignore[arg-type]
     ciclo = transicionar(
-        db, ciclo_id=ciclo.id, hacia="borrador", nota="Falta un dato", puede=PUEDE_TODO, **kw  # type: ignore[arg-type]
+        db,
+        ciclo_id=ciclo.id,
+        hacia="borrador",
+        nota="Falta un dato",
+        puede=PUEDE_TODO,
+        **kw,  # type: ignore[arg-type]
     )
     assert ciclo.estado == "borrador"
 

@@ -1,4 +1,5 @@
-"""Lector de las hojas de detalle por cuenta del Budget de Mazatlán (p. ej. `0111-60055 Other Fringe`).
+"""Lector de las hojas de detalle por cuenta del Budget de Mazatlán (p. ej. `0111-60055 Other
+Fringe`).
 
 Cada hoja es una tabla de **partidas** (de la fila 9 hasta `Total Expense`):
 
@@ -10,8 +11,10 @@ y, abajo, la fila `Mthly` (columna J) con la **inflación mensual** (M..X), que 
 Budget del mes = distribución × (1 + inflación). La fórmula nunca se evalúa: se leen los valores
 guardados.
 
-El método se decide por los datos, no solo por la «X»: una partida con 12 meses iguales a extendido ÷ 12
-es `mensual`; si trae otra forma es `estacional` (y se avisa si la hoja decía Monthly); las que marcan
+El método se decide por los datos, no solo por la «X»: una partida con 12 meses iguales a extendido
+÷ 12
+es `mensual`; si trae otra forma es `estacional` (y se avisa si la hoja decía Monthly); las que
+marcan
 Md Turn / Md Pts / Rm Night se importan como `importada` (de solo lectura: no se reimplementa la
 estadística de camarista).
 """
@@ -32,7 +35,8 @@ MESES = 12
 _COLS = COL_PRIMER_MES + MESES + 1
 _TOLERANCIA = Decimal("0.01")
 _RE_HOJA = re.compile(r"^(\d{4})-(\d{5})\s+(.+)$")
-# Las hojas de Cafeteria se llaman «Cafeteria Equipment», sin código: su departamento es el 5036 y no traen
+# Las hojas de Cafeteria se llaman «Cafeteria Equipment», sin código: su departamento es el 5036 y
+# no traen
 # número de cuenta (se emparejan por nombre con las líneas de su departamento).
 _RE_HOJA_CAFETERIA = re.compile(r"^Cafeteria\s+(.+)$")
 DEPARTAMENTO_CAFETERIA = "5036"
@@ -52,7 +56,8 @@ class PartidaLeida:
 
 @dataclass
 class ConsumoLeido:
-    """Hoja de consumo mensual: por bloque (`real_prev`, `budget_prev`, `est_act`, `budget`), 12 meses
+    """Hoja de consumo mensual: por bloque (`real_prev`, `budget_prev`, `est_act`, `budget`), 12
+    meses
     de (unidades, costo unitario, total)."""
 
     unidad: str  # Lts / Kwh / M3
@@ -77,7 +82,9 @@ class PartidasLeidas:
 
 
 def datos_de_hoja(titulo: str) -> tuple[str, str, str] | None:
-    """`0111-60055 Other Fringe` -> (`0111`, `60055`, `Other Fringe`); `None` si no es una hoja de cuenta."""
+    """`0111-60055 Other Fringe` -> (`0111`, `60055`, `Other Fringe`); `None` si no es una hoja de
+    cuenta.
+    """
     m = _RE_HOJA.match(titulo.strip())
     if m:
         return m.group(1), m.group(2), m.group(3).strip()
@@ -119,7 +126,8 @@ def leer_hoja_partidas(titulo: str, filas: Sequence[Sequence[object]]) -> Partid
             res.total_expense = _dec(c[COL_EXTENDIDO])
             if str(c[COL_ITEM] or "").strip():
                 res.avisos.append(
-                    f"«{titulo}»: la fila «{str(c[COL_ITEM]).strip()[:40]}» (fila {n + 1}) trae mezclada la "
+                    f"«{titulo}»: la fila «{str(c[COL_ITEM]).strip()[:40]}» (fila {n + 1}) "
+                    "trae mezclada la "
                     "fila de totales; no se importa como partida, queda para captura"
                 )
             fin = n
@@ -138,22 +146,38 @@ def leer_hoja_partidas(titulo: str, filas: Sequence[Sequence[object]]) -> Partid
         suma = sum((p.meses[i] for p in res.partidas for i in range(MESES)), CERO)
         if abs(suma - res.total_expense) > _TOLERANCIA:
             res.avisos.append(
-                f"«{titulo}»: las partidas suman {suma:,.2f} y el Total Expense dice {res.total_expense:,.2f}"
+                f"«{titulo}»: las partidas suman {suma:,.2f} y el Total Expense dice "
+                f"{res.total_expense:,.2f}"
             )
     return res
 
 
-_MESES_CONSUMO = ("jul", "aug", "sep", "oct", "nov", "dec", "jan", "feb", "mar", "apr", "may", "jun")
-# (bloque, desplazamiento de su primera columna respecto a «Budget 26/27»): cada bloque son 3 columnas
-# (unidades, costo unitario, total), en el orden en que las trae la hoja
+_MESES_CONSUMO = (
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+)
+# (bloque, desplazamiento de su primera columna respecto a «Budget 26/27»): cada bloque son 3
+# columnas (unidades, costo unitario, total), en el orden en que las trae la hoja
 _BLOQUES_CONSUMO = (("real_prev", -9), ("budget_prev", -6), ("est_act", -3), ("budget", 0))
 
 
 def _leer_hoja_consumo(res: PartidasLeidas, filas: Sequence[Sequence[object]]) -> bool:
     """Hoja de consumo mensual (*Diesel*, *Gas*, *Electricity*, *Water & Sewer 1-2*): sin encabezado
-    «Item»; una fila por mes (Jul…Jun) con unidades (Lts/Kwh/M3), costo unitario y total de cuatro bloques:
+    «Item»; una fila por mes (Jul…Jun) con unidades (Lts/Kwh/M3), costo unitario y total de cuatro
+    bloques:
     Real del año previo, Budget previo, Est-Act y Budget 26/27. Se guardan los 4 completos
-    (`res.consumo`); el Budget de la cuenta es el total del bloque «budget» (la inflación de la hoja no
+    (`res.consumo`); el Budget de la cuenta es el total del bloque «budget» (la inflación de la hoja
+    no
     se aplica: el costo unitario ya es la tarifa del año).
 
     `False` si la hoja no tiene ese formato (el llamador avisa que no se puede leer).
@@ -171,12 +195,10 @@ def _leer_hoja_consumo(res: PartidasLeidas, filas: Sequence[Sequence[object]]) -
     coincidencia = re.search(r"\(([^)]+)\)", str(cabecera[col]))
     unidad = (coincidencia.group(1).strip() if coincidencia else "")[:10] or "Un"
     meses: list[list[object]] = []
-    cabeza = 0
-    for n, f in enumerate(filas):
+    for f in filas:
         c = list(f) + [None] * (col + 3)
         if len(meses) < MESES and normalizar(c[0])[:3] == _MESES_CONSUMO[len(meses)]:
             meses.append(c)
-            cabeza = n
     if len(meses) != MESES:
         return False
     bloques: dict[str, list[tuple[Decimal | None, Decimal | None, Decimal | None]]] = {}
@@ -197,7 +219,9 @@ def _leer_partida(res: PartidasLeidas, c: list[object], fila: int) -> None:
     con_importe = any(m for m in meses if m) or bool(extendido)
     if not concepto:
         if con_importe:
-            res.avisos.append(f"«{res.hoja}» fila {fila}: trae importes sin nombre de partida; se ignora")
+            res.avisos.append(
+                f"«{res.hoja}» fila {fila}: trae importes sin nombre de partida; se ignora"
+            )
         return
     if not con_importe:
         return  # renglón vacío de la hoja
@@ -214,7 +238,8 @@ def _leer_partida(res: PartidasLeidas, c: list[object], fila: int) -> None:
     ext = extendido if extendido is not None else cantidad * costo
     if abs(cantidad * costo - ext) > _TOLERANCIA:
         res.avisos.append(
-            f"«{res.hoja}» «{concepto[:30]}»: Qty × Cost ({cantidad * costo:,.2f}) no es el Extended Cost ({ext:,.2f})"
+            f"«{res.hoja}» «{concepto[:30]}»: Qty × Cost ({cantidad * costo:,.2f}) no es el "
+            f"Extended Cost ({ext:,.2f})"
         )
     marcada_mensual = _marca(c[COL_MENSUAL])
     if any(_marca(c[i]) for i in COL_ESTADISTICAS):
@@ -229,7 +254,8 @@ def _leer_partida(res: PartidasLeidas, c: list[object], fila: int) -> None:
             metodo = "estacional"
             if marcada_mensual:
                 res.avisos.append(
-                    f"«{res.hoja}» «{concepto[:30]}»: decía Monthly pero sus meses no son iguales; se importa estacional"
+                    f"«{res.hoja}» «{concepto[:30]}»: decía Monthly pero sus meses no son "
+                    "iguales; se importa estacional"
                 )
     res.partidas.append(
         PartidaLeida(

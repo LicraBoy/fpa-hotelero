@@ -1,4 +1,5 @@
-"""Cuentas de consumo (Diesel, Gas, Electricity, Water & Sewer): 4 bloques mensuales, Budget editable."""
+"""Cuentas de consumo (Diesel, Gas, Electricity, Water & Sewer): 4 bloques mensuales, Budget
+editable."""
 
 from decimal import Decimal
 from pathlib import Path
@@ -12,12 +13,19 @@ from test_budget_other_income import CONTRALOR, PERIODOS, _url
 
 from fpa.ingesta.budget_partidas import leer_hoja_partidas
 from fpa.ingesta.budget_seccion import leer_seccion
-from fpa.modelos import ConsumoLineaMes, LineaPresupuestoCaptura, LineaReporte, VersionEstructuraReporte
+from fpa.modelos import (
+    ConsumoLineaMes,
+    LineaPresupuestoCaptura,
+    LineaReporte,
+    VersionEstructuraReporte,
+)
 from fpa.servicios.presupuesto_ciclo import crear_ano_fiscal, crear_ciclo, crear_periodo_fiscal
 from fpa.servicios.presupuesto_consumo import guardar_consumo_importado
 
 D = Decimal
-EXCEL_REAL = Path(__file__).resolve().parents[2] / "docs" / "-1% - MZT Budget 26-27 TC 18.00 Final.xlsx"
+EXCEL_REAL = (
+    Path(__file__).resolve().parents[2] / "docs" / "-1% - MZT Budget 26-27 TC 18.00 Final.xlsx"
+)
 MESES = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"]
 
 
@@ -25,16 +33,31 @@ def _hoja_consumo() -> list[tuple[object, ...]]:
     """Una hoja de consumo sintética: 4 bloques de (unidades, costo, total) por mes."""
     filas: list[tuple[object, ...]] = [(), (), (), (), (), (), ()]
     filas.append(
-        (None, "Real 24/25\n(Lts)", "Unit Cost", "Total", "Budget 25/26\n(Lts)", "Unit Cost", "Total",
-         " Est-Actuals 25-26\n(Lts)", "Unit Cost", "Total", "Budget 26/27\n(Lts)", "Cost", "Extended Cost")
-    )  # fmt: skip
+        (
+            None,
+            "Real 24/25\n(Lts)",
+            "Unit Cost",
+            "Total",
+            "Budget 25/26\n(Lts)",
+            "Unit Cost",
+            "Total",
+            " Est-Actuals 25-26\n(Lts)",
+            "Unit Cost",
+            "Total",
+            "Budget 26/27\n(Lts)",
+            "Cost",
+            "Extended Cost",
+        )
+    )
     for i, m in enumerate(MESES):
         u = 100 + i
         filas.append(
             (m, u, 10, u * 10, u, 11, u * 11, u + 1, 12, (u + 1) * 12, u + 2, 13, (u + 2) * 13)
         )
     filas.append(())
-    filas.append((None, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 13, sum((100 + i + 2) * 13 for i in range(12))))
+    filas.append(
+        (None, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 13, sum((100 + i + 2) * 13 for i in range(12)))
+    )
     return filas
 
 
@@ -45,7 +68,9 @@ def test_la_hoja_de_consumo_se_lee_con_sus_cuatro_bloques() -> None:
     assert h.consumo.bloques["real_prev"][0] == (D(100), D(10), D(1000))
     assert h.consumo.bloques["est_act"][11] == (D(112), D(12), D(1344))
     assert h.consumo.bloques["budget"][5] == (D(107), D(13), D(1391))
-    assert h.total_expense == sum((t for _, _, t in h.consumo.bloques["budget"] if t is not None), D(0))
+    assert h.total_expense == sum(
+        (t for _, _, t in h.consumo.bloques["budget"] if t is not None), D(0)
+    )
 
 
 # --- Servicio y API ------------------------------------------------------------------------
@@ -53,14 +78,25 @@ def test_la_hoja_de_consumo_se_lee_con_sus_cuatro_bloques() -> None:
 
 def _ciclo(db: Session, mundo: Mundo) -> tuple[int, dict[str, int]]:
     version = VersionEstructuraReporte(
-        hotel_id=mundo.hotel_a, nombre_archivo="e.xlsx", sha256="3" * 64, estado="vigente", n_lineas=4, n_detalle=2
+        hotel_id=mundo.hotel_a,
+        nombre_archivo="e.xlsx",
+        sha256="3" * 64,
+        estado="vigente",
+        n_lineas=4,
+        n_detalle=2,
     )
     db.add(version)
     db.flush()
     seccion = LineaReporte(
-        version_id=version.id, hotel_id=mundo.hotel_a, orden=1, tipo="seccion", nivel=0,
-        descripcion="Utilities", clave="util", fila_origen=10,
-    )  # fmt: skip
+        version_id=version.id,
+        hotel_id=mundo.hotel_a,
+        orden=1,
+        tipo="seccion",
+        nivel=0,
+        descripcion="Utilities",
+        clave="util",
+        fila_origen=10,
+    )
     db.add(seccion)
     db.flush()
     ids = {"seccion": seccion.id}
@@ -68,10 +104,17 @@ def _ciclo(db: Session, mundo: Mundo) -> tuple[int, dict[str, int]]:
         [("Gas", "028-0000-61670-000"), ("Water & Sewer", "028-0000-61675-000")], start=2
     ):
         linea = LineaReporte(
-            version_id=version.id, hotel_id=mundo.hotel_a, orden=orden, tipo="detalle", nivel=1,
-            seccion_id=seccion.id, codigo_corporativo=codigo, descripcion=nombre,
-            clave=nombre.lower(), fila_origen=10 + orden,
-        )  # fmt: skip
+            version_id=version.id,
+            hotel_id=mundo.hotel_a,
+            orden=orden,
+            tipo="detalle",
+            nivel=1,
+            seccion_id=seccion.id,
+            codigo_corporativo=codigo,
+            descripcion=nombre,
+            clave=nombre.lower(),
+            fila_origen=10 + orden,
+        )
         db.add(linea)
         db.flush()
         ids[nombre] = linea.id
@@ -79,7 +122,11 @@ def _ciclo(db: Session, mundo: Mundo) -> tuple[int, dict[str, int]]:
     for periodo in PERIODOS:
         crear_periodo_fiscal(db, ano_fiscal_id=ano.id, periodo=periodo)
     ciclo = crear_ciclo(
-        db, organizacion_id=mundo.org1, hotel_id=mundo.hotel_a, usuario_id=None, ano_fiscal_id=ano.id
+        db,
+        organizacion_id=mundo.org1,
+        hotel_id=mundo.hotel_a,
+        usuario_id=None,
+        ano_fiscal_id=ano.id,
     )
     db.commit()
     return ciclo.id, ids
@@ -107,13 +154,17 @@ def test_importar_el_consumo_deja_el_budget_de_la_cuenta_y_la_hoja_lo_muestra_to
 ) -> None:
     ciclo_id, ids = _ciclo(db, mundo)
     _importar(db, mundo, ciclo_id, ids["Gas"])
-    h = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Gas']}/hoja"), headers=como(CONTRALOR)).json()
+    h = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Gas']}/hoja"), headers=como(CONTRALOR)
+    ).json()
     assert h["partidas"] == [] and h["consumo"]["unidad"] == "Lts"
     assert len(h["consumo"]["budget"]) == 12 and D(h["consumo"]["budget"][0]["total"]) == D(1326)
     assert D(h["consumo"]["real_prev"][0]["costo_unitario"]) == D(10)
     esperado = sum((100 + i + 2) * 13 for i in range(12))
     assert sum(D(x) for x in h["total_con_inflacion"]) == D(esperado)
-    detalle = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Gas']}/detalle"), headers=como(CONTRALOR)).json()
+    detalle = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Gas']}/detalle"), headers=como(CONTRALOR)
+    ).json()
     assert [D(c["monto_fijo"]) for c in detalle][:2] == [D(1326), D(1339)]
 
 
@@ -129,7 +180,9 @@ def test_editar_un_mes_recalcula_su_total_y_el_budget_sin_tocar_los_demas(
     )
     assert r.status_code == 200, r.text
     h = r.json()
-    assert D(h["consumo"]["budget"][0]["total"]) == D(3100) and D(h["consumo"]["budget"][1]["total"]) == D(1339)
+    assert D(h["consumo"]["budget"][0]["total"]) == D(3100) and D(
+        h["consumo"]["budget"][1]["total"]
+    ) == D(1339)
     assert D(h["total_con_inflacion"][0]) == D(3100)
     # los otros tres bloques son del Excel y no se editan
     assert D(h["consumo"]["est_act"][0]["total"]) == D(1212)
@@ -166,12 +219,21 @@ def test_quitar_el_consumo_vuelve_al_editor_mensual_y_conserva_el_budget(
 ) -> None:
     ciclo_id, ids = _ciclo(db, mundo)
     _importar(db, mundo, ciclo_id, ids["Gas"])
-    assert cliente.delete(_url(mundo, ciclo_id, f"lineas/{ids['Gas']}/consumo"), headers=como(CONTRALOR)).status_code == 204
-    captura = db.scalar(select(LineaPresupuestoCaptura).where(LineaPresupuestoCaptura.linea_id == ids["Gas"]))
+    assert (
+        cliente.delete(
+            _url(mundo, ciclo_id, f"lineas/{ids['Gas']}/consumo"), headers=como(CONTRALOR)
+        ).status_code
+        == 204
+    )
+    captura = db.scalar(
+        select(LineaPresupuestoCaptura).where(LineaPresupuestoCaptura.linea_id == ids["Gas"])
+    )
     db.refresh(captura)
     assert captura is not None and not captura.usa_consumo
     assert db.scalars(select(ConsumoLineaMes)).first() is None
-    detalle = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Gas']}/detalle"), headers=como(CONTRALOR)).json()
+    detalle = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Gas']}/detalle"), headers=como(CONTRALOR)
+    ).json()
     assert D(detalle[0]["monto_fijo"]) == D(1326)  # el Budget sigue como importe fijo
 
 
@@ -184,11 +246,20 @@ def test_water_lleva_consumo_y_partidas_a_la_vez_sin_pisarse(
     estacional = ["100"] + ["0"] * 11
     cuerpo = {
         "partidas": [
-            {"concepto": "CONTRATO", "cantidad": "1", "unidad": None, "costo": "100", "metodo": "estacional", "meses": estacional}
+            {
+                "concepto": "CONTRATO",
+                "cantidad": "1",
+                "unidad": None,
+                "costo": "100",
+                "metodo": "estacional",
+                "meses": estacional,
+            }
         ],
-        "inflacion": {p: "0.05" for p in PERIODOS},
+        "inflacion": dict.fromkeys(PERIODOS, "0.05"),
     }
-    r = cliente.put(_url(mundo, ciclo_id, f"lineas/{agua}/partidas"), json=cuerpo, headers=como(CONTRALOR))
+    r = cliente.put(
+        _url(mundo, ciclo_id, f"lineas/{agua}/partidas"), json=cuerpo, headers=como(CONTRALOR)
+    )
     assert r.status_code == 200, r.text
     h = r.json()
     assert len(h["partidas"]) == 1 and h["consumo"] is not None
@@ -196,11 +267,20 @@ def test_water_lleva_consumo_y_partidas_a_la_vez_sin_pisarse(
     assert D(h["total_con_inflacion"][0]) == D(1326) + D("105")
     assert D(h["total_con_inflacion"][1]) == D(1339)
     # quitar las partidas deja el Budget solo con el consumo
-    assert cliente.delete(_url(mundo, ciclo_id, f"lineas/{agua}/partidas"), headers=como(CONTRALOR)).status_code == 204
-    detalle = cliente.get(_url(mundo, ciclo_id, f"lineas/{agua}/detalle"), headers=como(CONTRALOR)).json()
+    assert (
+        cliente.delete(
+            _url(mundo, ciclo_id, f"lineas/{agua}/partidas"), headers=como(CONTRALOR)
+        ).status_code
+        == 204
+    )
+    detalle = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{agua}/detalle"), headers=como(CONTRALOR)
+    ).json()
     assert D(detalle[0]["monto_fijo"]) == D(1326)
     # y editar el consumo con partidas presentes tampoco pierde la parte de partidas
-    cliente.put(_url(mundo, ciclo_id, f"lineas/{agua}/partidas"), json=cuerpo, headers=como(CONTRALOR))
+    cliente.put(
+        _url(mundo, ciclo_id, f"lineas/{agua}/partidas"), json=cuerpo, headers=como(CONTRALOR)
+    )
     e = cliente.put(
         _url(mundo, ciclo_id, f"lineas/{agua}/consumo"),
         json={"meses": [{"periodo": PERIODOS[0], "unidades": "10", "costo_unitario": "10"}]},

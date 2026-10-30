@@ -91,7 +91,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     for tabla, indice in (
-        ("linea_presupuesto_referencia_mes", "ix_linea_presupuesto_referencia_mes_linea_captura_id"),
+        (
+            "linea_presupuesto_referencia_mes",
+            "ix_linea_presupuesto_referencia_mes_linea_captura_id",
+        ),
         ("linea_presupuesto_inflacion_mes", "ix_linea_presupuesto_inflacion_mes_linea_captura_id"),
         ("linea_presupuesto_partida_mes", "ix_linea_presupuesto_partida_mes_partida_id"),
         ("linea_presupuesto_partida", "ix_linea_presupuesto_partida_linea_captura_id"),

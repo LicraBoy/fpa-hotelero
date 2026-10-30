@@ -1,4 +1,7 @@
-"""Budget por cuenta, entrega B: cuentas por PARTIDAS (Cant. × Costo, reparto mensual, inflación en el Budget)."""
+"""Budget por cuenta, entrega B: cuentas por PARTIDAS (Cant. × Costo, reparto mensual, inflación en
+el
+Budget).
+"""
 
 from decimal import Decimal
 from io import BytesIO
@@ -23,7 +26,9 @@ from fpa.servicios.presupuesto_partidas import (
 )
 
 D = Decimal
-EXCEL_REAL = Path(__file__).resolve().parents[2] / "docs" / "-1% - MZT Budget 26-27 TC 18.00 Final.xlsx"
+EXCEL_REAL = (
+    Path(__file__).resolve().parents[2] / "docs" / "-1% - MZT Budget 26-27 TC 18.00 Final.xlsx"
+)
 CUENTAS = [
     ("Other Fringe", "028-0111-60055-000"),
     ("Telephone", "028-0111-61560-000"),
@@ -53,9 +58,13 @@ def test_una_partida_estacional_dice_si_sus_meses_cuadran_con_el_extendido() -> 
     meses[3] = meses[4] = meses[5] = D("10500")
     ok = calcular_partida(PartidaEntrada("Regalos", D(3), None, D("10500"), "estacional", meses), 1)
     assert ok.extendido == D("31500") and ok.diferencia == D(0)
-    falta = calcular_partida(PartidaEntrada("Regalos", D(4), None, D("10500"), "estacional", meses), 1)
+    falta = calcular_partida(
+        PartidaEntrada("Regalos", D(4), None, D("10500"), "estacional", meses), 1
+    )
     assert falta.diferencia == D("-10500")  # faltan 10,500 por distribuir
-    suma = distribucion_de([ok, calcular_partida(PartidaEntrada("Tel", D(12), "mos", D(5), "mensual"), 2)])
+    suma = distribucion_de(
+        [ok, calcular_partida(PartidaEntrada("Tel", D(12), "mos", D(5), "mensual"), 2)]
+    )
     assert suma[0] == D(5) and suma[3] == D("10505")
 
 
@@ -63,7 +72,15 @@ def test_una_partida_estacional_dice_si_sus_meses_cuadran_con_el_extendido() -> 
 
 
 def _hoja_detalle() -> list[tuple[object, ...]]:
-    def fila(item: object, qty: object, unidad: object, costo: object, ext: object, marca: dict[int, str], meses: list[object]) -> tuple[object, ...]:
+    def fila(
+        item: object,
+        qty: object,
+        unidad: object,
+        costo: object,
+        ext: object,
+        marca: dict[int, str],
+        meses: list[object],
+    ) -> tuple[object, ...]:
         celdas: list[object] = [None] * 26
         celdas[1], celdas[3], celdas[4], celdas[5], celdas[6] = item, qty, unidad, costo, ext
         for col, valor in marca.items():
@@ -98,7 +115,10 @@ def _hoja_detalle() -> list[tuple[object, ...]]:
 
 def test_el_lector_decide_mensual_o_estacional_por_los_datos_y_lee_la_inflacion() -> None:
     leida = leer_hoja_partidas("0111-61560 Telephone", _hoja_detalle())
-    assert [(p.concepto, p.metodo) for p in leida.partidas] == [("LLAMADAS", "mensual"), ("BRINDIS", "estacional")]
+    assert [(p.concepto, p.metodo) for p in leida.partidas] == [
+        ("LLAMADAS", "mensual"),
+        ("BRINDIS", "estacional"),
+    ]
     assert leida.partidas[0].cantidad == D(12) and leida.partidas[0].unidad == "mos"
     assert sum(leida.distribucion, D(0)) == D(4200) and leida.total_expense == D(4200)
     assert leida.inflacion == [D("0.05")] * 12 and leida.avisos == []
@@ -119,7 +139,12 @@ def test_si_las_partidas_no_suman_el_total_expense_se_avisa() -> None:
 
 def _ciclo(db: Session, mundo: Mundo) -> tuple[int, dict[str, int]]:
     version = VersionEstructuraReporte(
-        hotel_id=mundo.hotel_a, nombre_archivo="e.xlsx", sha256="2" * 64, estado="vigente", n_lineas=6, n_detalle=4
+        hotel_id=mundo.hotel_a,
+        nombre_archivo="e.xlsx",
+        sha256="2" * 64,
+        estado="vigente",
+        n_lineas=6,
+        n_detalle=4,
     )
     db.add(version)
     db.flush()
@@ -143,7 +168,11 @@ def _ciclo(db: Session, mundo: Mundo) -> tuple[int, dict[str, int]]:
     for periodo in PERIODOS:
         crear_periodo_fiscal(db, ano_fiscal_id=ano.id, periodo=periodo)
     ciclo = crear_ciclo(
-        db, organizacion_id=mundo.org1, hotel_id=mundo.hotel_a, usuario_id=None, ano_fiscal_id=ano.id
+        db,
+        organizacion_id=mundo.org1,
+        hotel_id=mundo.hotel_a,
+        usuario_id=None,
+        ano_fiscal_id=ano.id,
     )
     db.commit()
     return ciclo.id, ids
@@ -154,8 +183,21 @@ def _cuerpo(inflacion_julio: str = "0.05") -> dict[str, object]:
     estacional[3] = estacional[4] = estacional[5] = "10500"
     return {
         "partidas": [
-            {"concepto": "LLAMADAS", "cantidad": "12", "unidad": "mos", "costo": "4515", "metodo": "mensual"},
-            {"concepto": "REGALOS", "cantidad": "3", "unidad": None, "costo": "10500", "metodo": "estacional", "meses": estacional},
+            {
+                "concepto": "LLAMADAS",
+                "cantidad": "12",
+                "unidad": "mos",
+                "costo": "4515",
+                "metodo": "mensual",
+            },
+            {
+                "concepto": "REGALOS",
+                "cantidad": "3",
+                "unidad": None,
+                "costo": "10500",
+                "metodo": "estacional",
+                "meses": estacional,
+            },
         ],
         "inflacion": {p: (inflacion_julio if i == 0 else "0") for i, p in enumerate(PERIODOS)},
     }
@@ -166,49 +208,81 @@ def test_guardar_partidas_mensualiza_la_cuenta_con_inflacion_en_el_budget(
 ) -> None:
     ciclo_id, ids = _ciclo(db, mundo)
     r = cliente.put(
-        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/partidas"), json=_cuerpo(), headers=como(CONTRALOR)
+        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/partidas"),
+        json=_cuerpo(),
+        headers=como(CONTRALOR),
     )
     assert r.status_code == 200, r.text
     h = r.json()
-    assert h["seccion"] == "Telephone" and h["padre"] == "Mgmt & Check In" and h["linea_id"] == ids["Telephone"]
+    assert (
+        h["seccion"] == "Telephone"
+        and h["padre"] == "Mgmt & Check In"
+        and h["linea_id"] == ids["Telephone"]
+    )
     assert [p["concepto"] for p in h["partidas"]] == ["LLAMADAS", "REGALOS"]
-    assert D(h["partidas"][0]["extendido"]) == D(54180) and D(h["partidas"][1]["extendido"]) == D(31500)
+    assert D(h["partidas"][0]["extendido"]) == D(54180) and D(h["partidas"][1]["extendido"]) == D(
+        31500
+    )
     assert all(D(p["diferencia"]) == 0 for p in h["partidas"])
     totales = [D(x) for x in h["totales"]]
     assert totales[0] == D(4515) and totales[3] == D(4515 + 10500)  # distribución sin inflación
     # Budget = distribución × (1 + inflación): julio 4515 × 1.05
-    assert D(h["total_con_inflacion"][0]) == D("4740.75") and D(h["total_con_inflacion"][1]) == D(4515)
+    assert D(h["total_con_inflacion"][0]) == D("4740.75") and D(h["total_con_inflacion"][1]) == D(
+        4515
+    )
     # la cuenta quedó mensualizada: lo ve la hoja de la sección y el detalle fijo
-    detalle = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/detalle"), headers=como(CONTRALOR)).json()
+    detalle = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/detalle"), headers=como(CONTRALOR)
+    ).json()
     assert detalle[0]["metodo"] == "fijo" and D(detalle[0]["monto_fijo"]) == D("4740.75")
-    seccion = cliente.get(_url(mundo, ciclo_id, f"hojas/{ids['seccion']}"), headers=como(CONTRALOR)).json()
+    seccion = cliente.get(
+        _url(mundo, ciclo_id, f"hojas/{ids['seccion']}"), headers=como(CONTRALOR)
+    ).json()
     cuenta = next(c for c in seccion["cuentas"] if c["descripcion"] == "Telephone")
     assert D(cuenta["meses"][0]) == D("4740.75")
     # y se vuelve a leer igual
-    g = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/hoja"), headers=como(CONTRALOR)).json()
+    g = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/hoja"), headers=como(CONTRALOR)
+    ).json()
     assert g["partidas"] == h["partidas"] and g["total_con_inflacion"] == h["total_con_inflacion"]
     captura = next(
-        c for c in cliente.get(_url(mundo, ciclo_id, "lineas"), headers=como(CONTRALOR)).json() if c["linea_id"] == ids["Telephone"]
+        c
+        for c in cliente.get(_url(mundo, ciclo_id, "lineas"), headers=como(CONTRALOR)).json()
+        if c["linea_id"] == ids["Telephone"]
     )
     assert captura["usa_partidas"] is True
 
 
-def test_con_partidas_no_se_puede_editar_mes_a_mes(cliente: TestClient, db: Session, mundo: Mundo) -> None:
+def test_con_partidas_no_se_puede_editar_mes_a_mes(
+    cliente: TestClient, db: Session, mundo: Mundo
+) -> None:
     ciclo_id, ids = _ciclo(db, mundo)
-    cliente.put(_url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/partidas"), json=_cuerpo(), headers=como(CONTRALOR))
+    cliente.put(
+        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/partidas"),
+        json=_cuerpo(),
+        headers=como(CONTRALOR),
+    )
     celdas = [{"periodo": p, "metodo": "fijo", "monto_fijo": "1"} for p in PERIODOS]
     r = cliente.put(
-        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/detalle"), json={"celdas": celdas}, headers=como(CONTRALOR)
+        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/detalle"),
+        json={"celdas": celdas},
+        headers=como(CONTRALOR),
     )
     assert r.status_code == 409 and "partidas" in r.json()["detail"]
 
 
-def test_cambiar_solo_la_inflacion_recalcula_el_budget(cliente: TestClient, db: Session, mundo: Mundo) -> None:
+def test_cambiar_solo_la_inflacion_recalcula_el_budget(
+    cliente: TestClient, db: Session, mundo: Mundo
+) -> None:
     ciclo_id, ids = _ciclo(db, mundo)
-    cliente.put(_url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/partidas"), json=_cuerpo(), headers=como(CONTRALOR))
+    cliente.put(
+        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/partidas"),
+        json=_cuerpo(),
+        headers=como(CONTRALOR),
+    )
     r = cliente.put(
         _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/hoja/inflacion"),
-        json={"inflacion": {p: "0.10" for p in PERIODOS}},
+        json={"inflacion": dict.fromkeys(PERIODOS, "0.10")},
         headers=como(CONTRALOR),
     )
     assert r.status_code == 200, r.text
@@ -220,15 +294,28 @@ def test_validaciones_de_las_partidas(cliente: TestClient, db: Session, mundo: M
     ciclo_id, ids = _ciclo(db, mundo)
     url = _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/partidas")
     base = _cuerpo()
-    negativo = {**base, "partidas": [{"concepto": "X", "cantidad": "1", "costo": "-5", "metodo": "mensual"}]}
+    negativo = {
+        **base,
+        "partidas": [{"concepto": "X", "cantidad": "1", "costo": "-5", "metodo": "mensual"}],
+    }
     assert cliente.put(url, json=negativo, headers=como(CONTRALOR)).status_code == 422
-    sin_meses = {**base, "partidas": [{"concepto": "X", "cantidad": "1", "costo": "5", "metodo": "estacional"}]}
+    sin_meses = {
+        **base,
+        "partidas": [{"concepto": "X", "cantidad": "1", "costo": "5", "metodo": "estacional"}],
+    }
     r = cliente.put(url, json=sin_meses, headers=como(CONTRALOR))
     assert r.status_code == 422 and "12 meses" in r.text
-    assert cliente.put(url, json={**base, "partidas": []}, headers=como(CONTRALOR)).status_code == 422
+    assert (
+        cliente.put(url, json={**base, "partidas": []}, headers=como(CONTRALOR)).status_code == 422
+    )
     incompleta = {**base, "inflacion": {PERIODOS[0]: "0.05"}}
     assert cliente.put(url, json=incompleta, headers=como(CONTRALOR)).status_code == 422
-    assert cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/hoja"), headers=como(CONTRALOR)).status_code == 409
+    assert (
+        cliente.get(
+            _url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/hoja"), headers=como(CONTRALOR)
+        ).status_code
+        == 409
+    )
 
 
 def test_activar_conserva_lo_que_ya_tenia_y_quitar_vuelve_al_editor_mensual(
@@ -236,16 +323,37 @@ def test_activar_conserva_lo_que_ya_tenia_y_quitar_vuelve_al_editor_mensual(
 ) -> None:
     ciclo_id, ids = _ciclo(db, mundo)
     celdas = [{"periodo": p, "metodo": "fijo", "monto_fijo": "200"} for p in PERIODOS]
-    cliente.put(_url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/detalle"), json={"celdas": celdas}, headers=como(CONTRALOR))
-    r = cliente.post(_url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/partidas/activar"), headers=como(CONTRALOR))
+    cliente.put(
+        _url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/detalle"),
+        json={"celdas": celdas},
+        headers=como(CONTRALOR),
+    )
+    r = cliente.post(
+        _url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/partidas/activar"),
+        headers=como(CONTRALOR),
+    )
     assert r.status_code == 200, r.text
     h = r.json()
-    assert [p["concepto"] for p in h["partidas"]] == ["Importe actual"] and D(h["partidas"][0]["extendido"]) == D(2400)
+    assert [p["concepto"] for p in h["partidas"]] == ["Importe actual"] and D(
+        h["partidas"][0]["extendido"]
+    ) == D(2400)
     assert [D(x) for x in h["total_con_inflacion"]] == [D(200)] * 12  # nada se perdió
-    assert cliente.delete(_url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/partidas"), headers=como(CONTRALOR)).status_code == 204
-    detalle = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/detalle"), headers=como(CONTRALOR)).json()
+    assert (
+        cliente.delete(
+            _url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/partidas"), headers=como(CONTRALOR)
+        ).status_code
+        == 204
+    )
+    detalle = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/detalle"), headers=como(CONTRALOR)
+    ).json()
     assert [D(c["monto_fijo"]) for c in detalle] == [D(200)] * 12
-    assert cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/hoja"), headers=como(CONTRALOR)).status_code == 409
+    assert (
+        cliente.get(
+            _url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/hoja"), headers=como(CONTRALOR)
+        ).status_code
+        == 409
+    )
 
 
 # --- Importación desde el libro del Budget ------------------------------------------------------
@@ -269,7 +377,8 @@ def _libro_con_detalle() -> bytes:
     detalle = wb.create_sheet("0111-61560 Telephone")
     for fila in _hoja_detalle():
         detalle.append(list(fila))
-    # el detalle de la hoja: 12 × 100 + 3,000 estacional; con inflación 5 % no cuadra con la hoja Budget
+    # el detalle de la hoja: 12 × 100 + 3,000 estacional; con inflación 5 % no cuadra con la hoja
+    # Budget
     salida = BytesIO()
     wb.save(salida)
     return salida.getvalue()
@@ -287,16 +396,24 @@ def test_importar_mgmt_trae_las_partidas_y_las_referencias_por_cuenta(
     assert r.status_code == 200, r.text
     cuerpo = r.json()
     assert cuerpo["importadas"] == 2  # Telephone por partidas e Insurance como monto fijo
-    h = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/hoja"), headers=como(CONTRALOR)).json()
+    h = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/hoja"), headers=como(CONTRALOR)
+    ).json()
     assert [p["concepto"] for p in h["partidas"]] == ["LLAMADAS", "BRINDIS"]
     assert D(h["total_con_inflacion"][5]) == D("3255")  # diciembre: (100 + 3,000) × 1.05
-    assert [D(x) for x in h["est_act"]] == [D(4000)] * 12 and [D(x) for x in h["budget_previo"]] == [D(3900)] * 12
+    assert [D(x) for x in h["est_act"]] == [D(4000)] * 12 and [
+        D(x) for x in h["budget_previo"]
+    ] == [D(3900)] * 12
     assert h["origen"] == "excel"
-    # avisa que las partidas no dan lo mismo que la hoja principal del Budget (se importan las partidas)
+    # avisa que las partidas no dan lo mismo que la hoja principal del Budget (se importan las
+    # partidas)
     assert any("Telephone" in a and "hoja Budget" in a for a in cuerpo["avisos"])
-    # una cuenta importada por partidas no se avisa como «sin línea» aunque su fila del Budget exista
+    # una cuenta importada por partidas no se avisa como «sin línea» aunque su fila del Budget
+    # exista
     assert not any("«Telephone»" in a and "no tiene línea" in a for a in cuerpo["avisos"])
-    ins =cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/detalle"), headers=como(CONTRALOR)).json()
+    ins = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/detalle"), headers=como(CONTRALOR)
+    ).json()
     assert [D(c["monto_fijo"]) for c in ins] == [D(200)] * 12
 
 
@@ -306,22 +423,38 @@ def test_importar_las_partidas_de_una_sola_cuenta_no_toca_las_demas(
     ciclo_id, ids = _ciclo(db, mundo)
     base = f"detalle/importar-other-income?seccion_id={ids['seccion']}"
     libro = {"archivo": ("budget.xlsx", _libro_con_detalle(), XLSX)}
-    r = cliente.post(_url(mundo, ciclo_id, f"{base}&linea_id={ids['Telephone']}"), files=libro, headers=como(CONTRALOR))
+    r = cliente.post(
+        _url(mundo, ciclo_id, f"{base}&linea_id={ids['Telephone']}"),
+        files=libro,
+        headers=como(CONTRALOR),
+    )
     assert r.status_code == 200, r.text
     assert r.json()["importadas"] == 1  # solo las partidas de Telephone
-    h = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/hoja"), headers=como(CONTRALOR)).json()
+    h = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/hoja"), headers=como(CONTRALOR)
+    ).json()
     assert [p["concepto"] for p in h["partidas"]] == ["LLAMADAS", "BRINDIS"]
     assert all(x is not None for x in h["est_act"])
     # Insurance (que el libro trae como monto fijo) quedó sin importar
-    ins = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/detalle"), headers=como(CONTRALOR)).json()
+    ins = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Insurance']}/detalle"), headers=como(CONTRALOR)
+    ).json()
     assert all(c["monto_fijo"] in (None, "0", "0.000000") or D(c["monto_fijo"]) == 0 for c in ins)
     # una cuenta sin hoja de detalle en el libro: no cambia nada y lo dice
-    r = cliente.post(_url(mundo, ciclo_id, f"{base}&linea_id={ids['Insurance']}"), files=libro, headers=como(CONTRALOR))
+    r = cliente.post(
+        _url(mundo, ciclo_id, f"{base}&linea_id={ids['Insurance']}"),
+        files=libro,
+        headers=como(CONTRALOR),
+    )
     assert r.status_code == 200, r.text
     assert r.json()["importadas"] == 0
     assert any("no tiene partidas en el Excel" in a for a in r.json()["avisos"])
     # una línea que no es de la sección se rechaza
-    r = cliente.post(_url(mundo, ciclo_id, f"{base}&linea_id={ids['seccion']}"), files=libro, headers=como(CONTRALOR))
+    r = cliente.post(
+        _url(mundo, ciclo_id, f"{base}&linea_id={ids['seccion']}"),
+        files=libro,
+        headers=como(CONTRALOR),
+    )
     assert r.status_code == 404, r.text
 
 
@@ -336,11 +469,19 @@ def test_el_excel_real_importa_las_cuentas_por_partidas_con_los_totales_de_cada_
         headers=como(CONTRALOR),
     )
     assert r.status_code == 200, r.text
-    fringe = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Other Fringe']}/hoja"), headers=como(CONTRALOR)).json()
+    fringe = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Other Fringe']}/hoja"), headers=como(CONTRALOR)
+    ).json()
     assert len(fringe["partidas"]) == 16
     assert sum((D(x) for x in fringe["totales"]), D(0)) == D(358050)  # Total Expense de la hoja
-    assert D(fringe["total_con_inflacion"][0]) == D("3087") and D(fringe["total_con_inflacion"][2]) == D("26239.5")
+    assert D(fringe["total_con_inflacion"][0]) == D("3087") and D(
+        fringe["total_con_inflacion"][2]
+    ) == D("26239.5")
     assert sum((D(x) for x in fringe["total_con_inflacion"]), D(0)) == D("375952.5")
-    telefono = cliente.get(_url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/hoja"), headers=como(CONTRALOR)).json()
-    assert [D(x) for x in telefono["total_con_inflacion"]] == [D(4515)] * 12  # su hoja trae 0 % de inflación
+    telefono = cliente.get(
+        _url(mundo, ciclo_id, f"lineas/{ids['Telephone']}/hoja"), headers=como(CONTRALOR)
+    ).json()
+    assert [D(x) for x in telefono["total_con_inflacion"]] == [
+        D(4515)
+    ] * 12  # su hoja trae 0 % de inflación
     assert any(x is not None for x in fringe["est_act"])  # trae el Est-Act del año previo

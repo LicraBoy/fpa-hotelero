@@ -45,7 +45,7 @@ def _clave() -> Fernet:
     if not clave:
         raise RespaldoError(
             "Falta FPA_RESPALDO_CLAVE: no se guarda un respaldo sin cifrar. "
-            "Genera una con: python -c \"from cryptography.fernet import Fernet; "
+            'Genera una con: python -c "from cryptography.fernet import Fernet; '
             'print(Fernet.generate_key().decode())"'
         )
     try:

@@ -978,13 +978,16 @@ export interface paths {
         /**
          * Guardar Consumo De Cuenta
          * @description Cambia unidades y costo unitario de los meses indicados del Budget de una cuenta de consumo
-         *     (Diesel, Gas, Electricity, Water); el total del mes es unidades × costo y el Budget se recalcula.
+         *     (Diesel, Gas, Electricity, Water); el total del mes es unidades × costo y el Budget se
+         *     recalcula.
          */
         put: operations["guardar_consumo_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__consumo_put"];
         post?: never;
         /**
          * Quitar Consumo De Cuenta
-         * @description Vuelve la cuenta de consumo al Editor mensual; el Budget que tenía queda como detalle fijo.
+         * @description Vuelve la cuenta de consumo al Editor mensual.
+         *
+         *     El Budget que tenía queda como detalle fijo.
          */
         delete: operations["quitar_consumo_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__consumo_delete"];
         options?: never;
@@ -1022,7 +1025,8 @@ export interface paths {
         };
         /**
          * Ver Hoja De Cuenta
-         * @description La hoja de una cuenta por partidas: partidas × 12 meses y el bloque inferior (inflación, total
+         * @description La hoja de una cuenta por partidas: partidas × 12 meses y el bloque inferior (inflación,
+         *     total
          *     con inflación —que ES el Budget—, Est Act y Budget del año previo, variación).
          */
         get: operations["ver_hoja_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__hoja_get"];
@@ -1044,7 +1048,9 @@ export interface paths {
         get?: never;
         /**
          * Guardar Inflacion De Cuenta
-         * @description Cambia la inflación mensual (12 periodos) conservando las partidas; el Budget se recalcula.
+         * @description Cambia la inflación mensual (12 periodos) conservando las partidas.
+         *
+         *     El Budget se recalcula.
          */
         put: operations["guardar_inflacion_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__hoja_inflacion_put"];
         post?: never;
@@ -1124,7 +1130,9 @@ export interface paths {
         put?: never;
         /**
          * Activar Partidas De Cuenta
-         * @description Pasa la cuenta a partidas (conserva sus importes actuales como la partida «Importe actual»).
+         * @description Pasa la cuenta a partidas.
+         *
+         *     Conserva sus importes actuales como la partida «Importe actual».
          */
         post: operations["activar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_activar_post"];
         delete?: never;
@@ -2064,7 +2072,9 @@ export interface components {
         };
         /**
          * ConsumoSalida
-         * @description Consumo mensual de una cuenta de consumo: 4 bloques × 12 meses de (unidades, costo, total).
+         * @description Consumo mensual de una cuenta de consumo.
+         *
+         *     4 bloques × 12 meses de (unidades, costo, total).
          */
         ConsumoSalida: {
             /** Budget */

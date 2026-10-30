@@ -309,7 +309,8 @@ def reporte_other_income() -> bytes:
     poner(6, "028-0101-45010-000", "Laundry Coins", 20.0, 25.0, "=-'4001005.001'!L5")
     poner(7, "028-0101-45010-000", "Beauty Services", 30.0, 30.0, "=-'4001006.001'!L5")
     poner(8, None, "T o t a l   O t h e r   I n c o m e", 150.0, 145.0, "=SUM(S5:S7)")
-    # Mgmt & Check In (cuentas por partidas): Other Fringe y Telephone con hoja de detalle; Insurance sin ella
+    # Mgmt & Check In (cuentas por partidas): Other Fringe y Telephone con hoja de detalle;
+    # Insurance sin ella
     poner(10, "M g m t   &   C h e c k   I n")
     poner(11, "028-0111-60055-000", "Other Fringe", 10.0, 10.0, "=-'6009010.004'!L5")
     poner(12, "028-0111-61560-000", "Telephone", 5.0, 5.0, "=-'6009015.001'!L5")
@@ -343,7 +344,8 @@ def budget_other_income() -> bytes:
 
 
 def budget_mgmt() -> bytes:
-    """Excel de Budget mínimo de *Mgmt & Check In*: la hoja `Budget 26-27 MZT` (sección con importes),
+    """Excel de Budget mínimo de *Mgmt & Check In*: la hoja `Budget 26-27 MZT` (sección con
+    importes),
     las hojas del año previo y dos hojas de detalle por cuenta (`0111-60055 Other Fringe`, partidas
     mensual y estacional con 5 % de inflación; `0111-61560 Telephone`, sin inflación)."""
     wb = Workbook()
@@ -400,7 +402,11 @@ def budget_mgmt() -> bytes:
         ],
         0.05,
     )
-    detalle("0111-61560 Telephone", [("LOCAL CALLS", 12, "ANNUAL", 4515.0, "mensual", [4515.0] * 12)], 0.0)
+    detalle(
+        "0111-61560 Telephone",
+        [("LOCAL CALLS", 12, "ANNUAL", 4515.0, "mensual", [4515.0] * 12)],
+        0.0,
+    )
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()

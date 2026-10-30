@@ -1641,7 +1641,7 @@
         "type": "object"
       },
       "ConsumoSalida": {
-        "description": "Consumo mensual de una cuenta de consumo: 4 bloques × 12 meses de (unidades, costo, total).",
+        "description": "Consumo mensual de una cuenta de consumo.\n\n4 bloques × 12 meses de (unidades, costo, total).",
         "properties": {
           "budget": {
             "items": {
@@ -9613,7 +9613,7 @@
     },
     "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/consumo": {
       "delete": {
-        "description": "Vuelve la cuenta de consumo al Editor mensual; el Budget que tenía queda como detalle fijo.",
+        "description": "Vuelve la cuenta de consumo al Editor mensual.\n\nEl Budget que tenía queda como detalle fijo.",
         "operationId": "quitar_consumo_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__consumo_delete",
         "parameters": [
           {
@@ -9680,7 +9680,7 @@
         ]
       },
       "put": {
-        "description": "Cambia unidades y costo unitario de los meses indicados del Budget de una cuenta de consumo\n(Diesel, Gas, Electricity, Water); el total del mes es unidades × costo y el Budget se recalcula.",
+        "description": "Cambia unidades y costo unitario de los meses indicados del Budget de una cuenta de consumo\n(Diesel, Gas, Electricity, Water); el total del mes es unidades × costo y el Budget se\nrecalcula.",
         "operationId": "guardar_consumo_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__consumo_put",
         "parameters": [
           {
@@ -9933,7 +9933,7 @@
     },
     "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/hoja": {
       "get": {
-        "description": "La hoja de una cuenta por partidas: partidas × 12 meses y el bloque inferior (inflación, total\ncon inflación —que ES el Budget—, Est Act y Budget del año previo, variación).",
+        "description": "La hoja de una cuenta por partidas: partidas × 12 meses y el bloque inferior (inflación,\ntotal\ncon inflación —que ES el Budget—, Est Act y Budget del año previo, variación).",
         "operationId": "ver_hoja_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__hoja_get",
         "parameters": [
           {
@@ -10009,7 +10009,7 @@
     },
     "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/hoja/inflacion": {
       "put": {
-        "description": "Cambia la inflación mensual (12 periodos) conservando las partidas; el Budget se recalcula.",
+        "description": "Cambia la inflación mensual (12 periodos) conservando las partidas.\n\nEl Budget se recalcula.",
         "operationId": "guardar_inflacion_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__hoja_inflacion_put",
         "parameters": [
           {
@@ -10422,7 +10422,7 @@
     },
     "/api/v1/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas/activar": {
       "post": {
-        "description": "Pasa la cuenta a partidas (conserva sus importes actuales como la partida «Importe actual»).",
+        "description": "Pasa la cuenta a partidas.\n\nConserva sus importes actuales como la partida «Importe actual».",
         "operationId": "activar_partidas_de_cuenta_api_v1_hoteles__hotel_id__presupuesto_ciclos__ciclo_id__lineas__linea_id__partidas_activar_post",
         "parameters": [
           {

@@ -152,11 +152,12 @@ class LineaPresupuestoCaptura(Base):
     )
     estado: Mapped[str] = mapped_column(String(12), default="pendiente")
     nota: Mapped[str | None] = mapped_column(Text, nullable=True)
-    # La cuenta se captura por PARTIDAS (Cant. × Costo + reparto mensual + inflación): su Budget sale
-    # de `PartidaLinea` (`fpa.servicios.presupuesto_partidas`) y no se edita mes a mes.
+    # La cuenta se captura por PARTIDAS (Cant. × Costo + reparto mensual + inflación): su Budget
+    # sale de `PartidaLinea` (`fpa.servicios.presupuesto_partidas`) y no se edita mes a mes.
     usa_partidas: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     # La cuenta es de CONSUMO (Diesel, Gas, Electricity, Water): su Budget sale de unidades × costo
-    # unitario por mes (`ConsumoLineaMes`, `fpa.servicios.presupuesto_consumo`); `unidad_consumo` es Lts/Kwh/M3.
+    # unitario por mes (`ConsumoLineaMes`, `fpa.servicios.presupuesto_consumo`); `unidad_consumo` es
+    # Lts/Kwh/M3.
     usa_consumo: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     unidad_consumo: Mapped[str | None] = mapped_column(String(10), nullable=True)
 
@@ -243,7 +244,8 @@ METODOS_PARTIDA = ("mensual", "estacional", "importada")
 
 
 class PartidaLinea(Base):
-    """Una partida de la tabla de una cuenta (p. ej. *Other Fringe*: «PARTY ROOM», qty 1, costo 162,750).
+    """Una partida de la tabla de una cuenta (p. ej. *Other Fringe*: «PARTY ROOM», qty 1, costo
+    162,750).
 
     **Costo extendido = cantidad × costo** (derivado, nunca se guarda). `metodo`: `mensual` (el
     extendido entre 12), `estacional` (los meses que se capturan en `PartidaMes`) o `importada`
@@ -295,10 +297,14 @@ BLOQUES_CONSUMO = ("real_prev", "budget_prev", "est_act", "budget")
 
 
 class ConsumoLineaMes(Base):
-    """Consumo mensual de una cuenta de consumo (Diesel, Gas, Electricity, Water), en 4 bloques como la
-    hoja del Excel: Real del año previo, Budget previo, Est-Act y **Budget** (el único editable). Cada
-    mes trae unidades (Lts/Kwh/M3), costo unitario y total. El `total` se guarda tal cual del Excel y solo
-    se recalcula (unidades × costo) en los meses que se editan. El Budget del mes = total (sin inflación:
+    """Consumo mensual de una cuenta de consumo (Diesel, Gas, Electricity, Water), en 4 bloques como
+    la
+    hoja del Excel: Real del año previo, Budget previo, Est-Act y **Budget** (el único editable).
+    Cada
+    mes trae unidades (Lts/Kwh/M3), costo unitario y total. El `total` se guarda tal cual del Excel
+    y solo
+    se recalcula (unidades × costo) en los meses que se editan. El Budget del mes = total (sin
+    inflación:
     el costo unitario ya es la tarifa del año)."""
 
     __tablename__ = "linea_presupuesto_consumo_mes"

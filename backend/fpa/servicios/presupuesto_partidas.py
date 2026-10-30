@@ -3,13 +3,15 @@
 Una cuenta con partidas se captura como en las hojas de detalle del Excel:
 
 - cada **partida** tiene cantidad, unidad y costo; su **costo extendido = cantidad × costo**;
-- se **reparte** por mes: `mensual` (el extendido entre 12; el residuo de micros va a los primeros meses
+- se **reparte** por mes: `mensual` (el extendido entre 12; el residuo de micros va a los primeros
+  meses
   para que la suma cierre exacto), `estacional` (meses capturados) o `importada` (meses del Excel);
 - la **distribución** del mes es la suma de las partidas y el **Budget del mes = distribución × (1 +
   inflación del mes)**: la inflación SÍ entra al Budget (igual que en el Excel).
 
 Guardar las partidas es mensualizar la cuenta: el Budget calculado se escribe como detalle `fijo`
-(`guardar_detalle`), así que la hoja de sección, la comparación anual, Variance y la generación del plan
+(`guardar_detalle`), así que la hoja de sección, la comparación anual, Variance y la generación del
+plan
 leen lo mismo que con cualquier otra cuenta. La edición mes a mes (Editor mensual) queda bloqueada
 mientras la cuenta use partidas (ver `_reemplazar_lineas_mensuales`).
 """
@@ -26,7 +28,6 @@ from sqlalchemy.orm import Session
 from fpa.modelos.presupuesto import (
     METODOS_PARTIDA,
     InflacionLineaMes,
-    LineaPresupuestoCaptura,
     LineaPresupuestoMensual,
     PartidaLinea,
     PartidaMes,
@@ -36,14 +37,20 @@ from fpa.modelos.tipos import MICRO
 from fpa.repositorios.reporte import RepositorioReporte
 from fpa.servicios.auditoria import auditar
 from fpa.servicios.presupuesto_consumo import ConsumoHoja, consumo_budget, leer_consumo
-from fpa.servicios.presupuesto_detalle import CeldaDetalle, DetalleInvalido, _captura_de, guardar_detalle
+from fpa.servicios.presupuesto_detalle import (
+    CeldaDetalle,
+    DetalleInvalido,
+    _captura_de,
+    guardar_detalle,
+)
 from fpa.servicios.presupuesto_distribucion import periodos_de_ano_fiscal
 from fpa.servicios.presupuesto_hoja import BloqueInferior, calcular_bloque
 
 _CERO = Decimal(0)
-# El Excel guarda sus meses con ruido de coma flotante y costos unitarios con más decimales de los que
-# guarda el sistema (Diesel: 56,700 litros × 24.98329984 → 0.009 de diferencia): por debajo de un centavo
-# la suma «cuadra» con el costo extendido y no se avisa.
+# El Excel guarda sus meses con ruido de coma flotante y costos unitarios con más decimales de los
+# que
+# guarda el sistema (Diesel: 56,700 litros × 24.98329984 → 0.009 de diferencia): por debajo de un
+# centavo la suma «cuadra» con el costo extendido y no se avisa.
 TOLERANCIA_SUMA = Decimal("0.01")
 MAX_PARTIDAS = 200
 MAX_IMPORTE = Decimal("1000000000000")  # 1 billón: tope de cordura, no de negocio
@@ -79,7 +86,10 @@ def costo_extendido(cantidad: Decimal, costo: Decimal) -> Decimal:
 
 
 def repartir_mensual(extendido: Decimal, n: int = 12) -> list[Decimal]:
-    """El extendido entre `n` meses; el residuo (en micros) va a los primeros meses: la suma cierra."""
+    """El extendido entre `n` meses.
+
+    El residuo (en micros) va a los primeros meses: la suma cierra.
+    """
     base = (extendido / n).quantize(MICRO, rounding=ROUND_DOWN)
     resto = int((extendido - base * n) / MICRO)
     return [base + (MICRO if i < resto else _CERO) for i in range(n)]
@@ -137,7 +147,9 @@ def distribucion_de(partidas: Sequence[PartidaCalculada]) -> list[Decimal]:
     return [sum((p.meses[i] for p in partidas), _CERO) for i in range(12)]
 
 
-def budget_mensual(distribucion: Sequence[Decimal], tasas: Sequence[Decimal | None]) -> list[Decimal]:
+def budget_mensual(
+    distribucion: Sequence[Decimal], tasas: Sequence[Decimal | None]
+) -> list[Decimal]:
     """Budget del mes = distribución × (1 + inflación del mes)."""
     return calcular_bloque(distribucion, tasas, [None] * 12, [None] * 12).total_con_inflacion
 
@@ -175,7 +187,9 @@ def guardar_partidas(
     calculadas = [calcular_partida(e, i) for i, e in enumerate(partidas, start=1)]
     budget = budget_mensual(distribucion_de(calculadas), tasas)
     if captura.usa_consumo:  # Water & Sewer: consumo + partidas (el consumo no lleva inflación)
-        budget = [a + b for a, b in zip(budget, consumo_budget(db, captura.id, periodos), strict=True)]
+        budget = [
+            a + b for a, b in zip(budget, consumo_budget(db, captura.id, periodos), strict=True)
+        ]
     # El Budget calculado mensualiza la línea (y revisa que no haya otro camino que la edite)
     guardar_detalle(
         db,
@@ -212,9 +226,18 @@ def guardar_partidas(
             )
         guardadas.append(
             PartidaCalculada(
-                fila.id, c.orden, c.concepto, c.cantidad, c.unidad, c.costo, c.metodo,
-                c.extendido, c.meses, c.suma, c.diferencia,
-            )  # fmt: skip
+                fila.id,
+                c.orden,
+                c.concepto,
+                c.cantidad,
+                c.unidad,
+                c.costo,
+                c.metodo,
+                c.extendido,
+                c.meses,
+                c.suma,
+                c.diferencia,
+            )
         )
     db.add_all(
         InflacionLineaMes(linea_captura_id=captura.id, periodo=p, tasa=t)
@@ -327,7 +350,8 @@ def leer_hoja_de_cuenta(
     totales = distribucion_de(partidas)
     bloque = calcular_bloque(totales, inflacion, est_act, previo)
     if consumo is not None:
-        # el consumo es parte del Budget de la cuenta (sin inflación); sin partidas, es toda la distribución
+        # el consumo es parte del Budget de la cuenta (sin inflación); sin partidas, es toda la
+        # distribución
         extra = consumo_budget(db, captura.id, periodos)
         if not partidas:
             totales = extra
@@ -408,7 +432,8 @@ def activar_partidas(
     visibles: set[int] | None,
 ) -> None:
     """Pasa la cuenta a partidas. Si ya tenía importes mensuales, se conservan como una partida
-    «Importe actual» (estacional) para no perder cifras; si no, queda lista para agregar partidas."""
+    «Importe actual» (estacional) para no perder cifras; si no, queda lista para agregar partidas.
+    """
     captura, ciclo = _captura_de(
         db, hotel_id=hotel_id, ciclo_id=ciclo_id, linea_id=linea_id, visibles=visibles
     )
@@ -439,7 +464,7 @@ def activar_partidas(
                     "Importe actual", Decimal(1), None, sum(meses, _CERO), "estacional", meses
                 )
             ],
-            inflacion={p: _CERO for p in periodos},
+            inflacion=dict.fromkeys(periodos, _CERO),
             visibles=visibles,
         )
         return
@@ -516,7 +541,10 @@ def guardar_referencias_cuenta(
     est_act: Sequence[Decimal | None] | None,
     budget_previo: Sequence[Decimal | None] | None,
 ) -> None:
-    """Est-Act y Budget del año previo de una cuenta (12 meses; lo que no venga queda como estaba)."""
+    """Est-Act y Budget del año previo de una cuenta.
+
+    12 meses; lo que no venga queda como estaba.
+    """
     if est_act is None and budget_previo is None:
         return
     existentes = {

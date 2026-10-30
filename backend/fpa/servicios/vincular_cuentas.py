@@ -75,7 +75,11 @@ def vincular_cuentas(
     # «Store#2» = la segunda sección con ese nombre del reporte (ventas y gastos comparten título)
     nombre_seccion, _, n = seccion.partition("#")
     secciones = sorted(
-        (x for x in lineas if x.tipo == "seccion" and _norma(x.descripcion) == _norma(nombre_seccion)),
+        (
+            x
+            for x in lineas
+            if x.tipo == "seccion" and _norma(x.descripcion) == _norma(nombre_seccion)
+        ),
         key=lambda x: x.orden,
     )
     if n.isdigit():

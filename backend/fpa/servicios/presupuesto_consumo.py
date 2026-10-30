@@ -1,15 +1,20 @@
 """Cuentas de consumo del Budget: Diesel, Gas, Electricity y Water & Sewer.
 
-La hoja de detalle de estas cuentas no lista partidas: trae, mes a mes, **unidades** (litros, kWh, m³),
-**costo unitario** y **total** de cuatro bloques (`BLOQUES_CONSUMO`): Real del año previo, Budget previo,
-Est-Act y Budget. Aquí se guardan los cuatro completos (`ConsumoLineaMes`); solo el bloque `budget` se
+La hoja de detalle de estas cuentas no lista partidas: trae, mes a mes, **unidades** (litros, kWh,
+m³),
+**costo unitario** y **total** de cuatro bloques (`BLOQUES_CONSUMO`): Real del año previo, Budget
+previo,
+Est-Act y Budget. Aquí se guardan los cuatro completos (`ConsumoLineaMes`); solo el bloque `budget`
+se
 edita (unidades y costo unitario de cada mes) y es el que sustenta el Budget de la cuenta:
 
     Budget del mes = total de consumo del mes  (+ distribución de partidas × (1 + inflación), si la
                                                  cuenta también tiene partidas: *Water & Sewer*)
 
-La inflación de la hoja de consumo del Excel no se aplica al consumo (el costo unitario ya es la tarifa
-del año): así cuadran los totales del libro. Igual que con partidas, el Budget calculado se escribe como
+La inflación de la hoja de consumo del Excel no se aplica al consumo (el costo unitario ya es la
+tarifa
+del año): así cuadran los totales del libro. Igual que con partidas, el Budget calculado se escribe
+como
 detalle `fijo` (`guardar_detalle(..., desde_partidas=True)`) y la edición mes a mes queda bloqueada.
 """
 
@@ -30,7 +35,12 @@ from fpa.modelos.presupuesto import (
 )
 from fpa.modelos.tipos import MICRO
 from fpa.servicios.auditoria import auditar
-from fpa.servicios.presupuesto_detalle import CeldaDetalle, DetalleInvalido, _captura_de, guardar_detalle
+from fpa.servicios.presupuesto_detalle import (
+    CeldaDetalle,
+    DetalleInvalido,
+    _captura_de,
+    guardar_detalle,
+)
 from fpa.servicios.presupuesto_distribucion import periodos_de_ano_fiscal
 
 _CERO = Decimal(0)
@@ -59,7 +69,9 @@ def consumo_budget(db: Session, captura_id: int, periodos: Sequence[str]) -> lis
     return [filas.get(p) or _CERO for p in periodos]
 
 
-def leer_consumo(db: Session, captura: LineaPresupuestoCaptura, periodos: Sequence[str]) -> ConsumoHoja | None:
+def leer_consumo(
+    db: Session, captura: LineaPresupuestoCaptura, periodos: Sequence[str]
+) -> ConsumoHoja | None:
     if not captura.usa_consumo:
         return None
     por: dict[tuple[str, str], ConsumoLineaMes] = {
@@ -91,7 +103,7 @@ def _recalcular_budget(
     visibles: set[int] | None,
 ) -> None:
     """Escribe el Budget de la cuenta: consumo + (partidas × (1 + inflación)) si las hay."""
-    from fpa.servicios.presupuesto_partidas import (  # noqa: PLC0415 (evita el ciclo de imports)
+    from fpa.servicios.presupuesto_partidas import (
         _partidas_guardadas,
         budget_mensual,
         distribucion_de,
@@ -110,7 +122,9 @@ def _recalcular_budget(
         )
     else:
         partidas = [_CERO] * len(periodos)
-    consumo = consumo_budget(db, captura.id, periodos) if captura.usa_consumo else [_CERO] * len(periodos)
+    consumo = (
+        consumo_budget(db, captura.id, periodos) if captura.usa_consumo else [_CERO] * len(periodos)
+    )
     guardar_detalle(
         db,
         organizacion_id=organizacion_id,
@@ -139,7 +153,8 @@ def guardar_consumo_importado(
     bloques: Mapping[str, Sequence[Mes]],
     visibles: set[int] | None,
 ) -> None:
-    """Guarda los 4 bloques de la hoja de consumo del Excel (reemplaza los que había) y deja la cuenta
+    """Guarda los 4 bloques de la hoja de consumo del Excel (reemplaza los que había) y deja la
+    cuenta
     mensualizada con su Budget."""
     captura, ciclo = _captura_de(
         db, hotel_id=hotel_id, ciclo_id=ciclo_id, linea_id=linea_id, visibles=visibles
@@ -147,14 +162,21 @@ def guardar_consumo_importado(
     if ciclo.estado != "borrador":
         raise DetalleInvalido(409, "El ciclo no está en captura")
     periodos = periodos_de_ano_fiscal(db, ciclo.ano_fiscal_id)
-    if set(bloques) != set(BLOQUES_CONSUMO) or any(len(m) != len(periodos) for m in bloques.values()):
+    if set(bloques) != set(BLOQUES_CONSUMO) or any(
+        len(m) != len(periodos) for m in bloques.values()
+    ):
         raise DetalleInvalido(422, "El consumo debe traer los 4 bloques de 12 meses")
     db.execute(delete(ConsumoLineaMes).where(ConsumoLineaMes.linea_captura_id == captura.id))
     for b in BLOQUES_CONSUMO:
         for p, (u, c, t) in zip(periodos, bloques[b], strict=True):
             db.add(
                 ConsumoLineaMes(
-                    linea_captura_id=captura.id, periodo=p, bloque=b, unidades=u, costo_unitario=c, total=t
+                    linea_captura_id=captura.id,
+                    periodo=p,
+                    bloque=b,
+                    unidades=u,
+                    costo_unitario=c,
+                    total=t,
                 )
             )
     captura.usa_consumo = True
@@ -194,7 +216,8 @@ def editar_consumo_budget(
     cambios: Mapping[str, tuple[Decimal, Decimal]],
     visibles: set[int] | None,
 ) -> None:
-    """Cambia unidades y costo unitario de los meses indicados del bloque Budget (`periodo` → (unidades,
+    """Cambia unidades y costo unitario de los meses indicados del bloque Budget (`periodo` →
+    (unidades,
     costo)); el total de cada uno es unidades × costo y los demás meses no se tocan."""
     captura, ciclo = _captura_de(
         db, hotel_id=hotel_id, ciclo_id=ciclo_id, linea_id=linea_id, visibles=visibles
@@ -245,7 +268,11 @@ def editar_consumo_budget(
         accion="presupuesto.consumo_editado",
         entidad="linea_presupuesto_captura",
         entidad_id=captura.id,
-        detalle={"linea_id": linea_id, "meses": sorted(cambios), "propuesta_anual": str(captura.propuesta_anual)},
+        detalle={
+            "linea_id": linea_id,
+            "meses": sorted(cambios),
+            "propuesta_anual": str(captura.propuesta_anual),
+        },
     )
 
 
@@ -259,7 +286,8 @@ def quitar_consumo(
     linea_id: int,
     visibles: set[int] | None,
 ) -> None:
-    """Vuelve la cuenta al Editor mensual: se borra el consumo y el Budget que tenía queda como detalle
+    """Vuelve la cuenta al Editor mensual: se borra el consumo y el Budget que tenía queda como
+    detalle
     `fijo` (si también tiene partidas, el Budget pasa a ser solo el de las partidas)."""
     captura, ciclo = _captura_de(
         db, hotel_id=hotel_id, ciclo_id=ciclo_id, linea_id=linea_id, visibles=visibles

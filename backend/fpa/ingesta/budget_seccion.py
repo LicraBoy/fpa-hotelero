@@ -1,13 +1,17 @@
 """Lector de una sección del Budget de Mazatlán que NO tiene hoja propia (p. ej. *Mgmt & Check In*).
 
-A diferencia de *Other Income* (hoja `Other Income` con fórmulas base × factor), estas secciones viven
+A diferencia de *Other Income* (hoja `Other Income` con fórmulas base × factor), estas secciones
+viven
 dentro de la hoja `Budget 26-27 MZT`: un título con las letras separadas (`M g m t   &   C h e c k
 I n`), una fila por cuenta (código en la columna B, descripción en la C, JUL … JUN en D..O) y un
-renglón `Total …` al final. La fórmula nunca se evalúa: se leen los valores que Excel dejó guardados.
+renglón `Total …` al final. La fórmula nunca se evalúa: se leen los valores que Excel dejó
+guardados.
 
-- Una cuenta con `#REF!` (p. ej. la nómina, cuyos salarios se borraron del libro) o con celdas vacías
+- Una cuenta con `#REF!` (p. ej. la nómina, cuyos salarios se borraron del libro) o con celdas
+  vacías
   **no se importa**: se avisa y queda para captura.
-- Los importes del Budget se importan como monto fijo (son el resultado ya calculado, con inflación).
+- Los importes del Budget se importan como monto fijo (son el resultado ya calculado, con
+  inflación).
 - El bloque inferior de la hoja (Est-Act y Budget del año previo) sale del renglón `Total …` de las
   hojas `EstAct 25-26 MZT` y `MZT Budget 25-26`, que tienen la misma distribución de filas.
 """
@@ -21,7 +25,6 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
-from fpa.ingesta.budget_partidas import datos_de_hoja, leer_hoja_partidas
 from fpa.ingesta.budget_other_income import (
     HOJA_BUDGET,
     CeldaLeida,
@@ -30,6 +33,7 @@ from fpa.ingesta.budget_other_income import (
     _dec,
     normalizar,
 )
+from fpa.ingesta.budget_partidas import datos_de_hoja, leer_hoja_partidas
 
 HOJA_EST_ACT_PREVIO = "EstAct 25-26 MZT"
 HOJA_BUDGET_PREVIO = "MZT Budget 25-26"
@@ -58,8 +62,10 @@ DEPARTAMENTO_POR_SECCION = {
     "legal": "0130",
     "itsystems": "1136|0000",  # varios departamentos separados por «|»
 }
-# Commercial Services: cada negocio trae un bloque de ventas y otro de gastos con el MISMO título. La clave de la
-# sección lleva el ordinal del bloque (`store`, `store#2`) y cada bloque termina donde empieza el siguiente título.
+# Commercial Services: cada negocio trae un bloque de ventas y otro de gastos con el MISMO título.
+# La clave de la
+# sección lleva el ordinal del bloque (`store`, `store#2`) y cada bloque termina donde empieza el
+# siguiente título.
 BLOQUES_COMERCIALES = {
     "telephones", "travelagency", "store", "cafeteria", "bar", "moneyexchange", "restaurant",
 }  # fmt: skip
@@ -79,7 +85,10 @@ Fila = Sequence[object]
 
 
 def _limpiar(texto: object) -> str:
-    """`A l l o c a t e d   E x p e n s e s` -> `Allocated Expenses` (el Excel separa las letras)."""
+    """`A l l o c a t e d   E x p e n s e s` -> `Allocated Expenses`.
+
+    El Excel separa las letras.
+    """
     t = str(texto or "").strip()
     if re.match(r"^(\S ){5,}", t):
         return t.replace("   ", "|").replace(" ", "").replace("|", " ")
@@ -116,8 +125,10 @@ def _es_calculado(concepto: str, base: str) -> bool:
 
 
 def _limites_seccion(filas: Sequence[Fila], seccion: str) -> tuple[int, int] | None:
-    """(índice de la primera cuenta, índice del renglón de cierre) o `None` si no hay la sección. En las
-    secciones comerciales el cierre es el título del bloque siguiente; en las demás, el renglón `Total …`."""
+    """(índice de la primera cuenta, índice del renglón de cierre) o `None` si no hay la sección. En
+    las
+    secciones comerciales el cierre es el título del bloque siguiente; en las demás, el renglón
+    `Total …`."""
     base, ordinal = separar_clave(seccion)
     titulos = [i for i, f in enumerate(filas) if normalizar(_celdas_de(f)[COL_CODIGO]) == base]
     if len(titulos) < ordinal:
@@ -141,7 +152,8 @@ def _total_de_seccion(filas: Sequence[Fila], seccion: str) -> list[Decimal] | No
         return None
     base, _ = separar_clave(seccion)
     if base in BLOQUES_COMERCIALES:
-        # no hay renglón de total: es la suma de las cuentas del bloque (las que traen sus 12 importes)
+        # no hay renglón de total: es la suma de las cuentas del bloque (las que traen sus 12
+        # importes)
         cuentas = [
             _meses_de(filas[n])
             for n in range(limites[0], limites[1])
@@ -154,7 +166,8 @@ def _total_de_seccion(filas: Sequence[Fila], seccion: str) -> list[Decimal] | No
         return [sum((c[i] or Decimal(0) for c in validas), Decimal(0)) for i in range(MESES)]
     meses = _meses_de(filas[limites[1]])
     if any(m is None for m in meses):
-        # el renglón de total trae #REF! (p. ej. Legal): se usa la suma de las cuentas que sí traen sus 12 importes
+        # el renglón de total trae #REF! (p. ej. Legal): se usa la suma de las cuentas que sí traen
+        # sus 12 importes
         cuentas = [
             _meses_de(filas[n])
             for n in range(limites[0], limites[1])
@@ -169,7 +182,9 @@ def _total_de_seccion(filas: Sequence[Fila], seccion: str) -> list[Decimal] | No
 
 
 def _meses_por_cuenta(filas: Sequence[Fila], seccion: str) -> dict[str, list[Decimal | None]]:
-    """Por cuenta (nombre normalizado), sus 12 importes de la hoja del año previo (`None` si no son número)."""
+    """Por cuenta (nombre normalizado), sus 12 importes de la hoja del año previo (`None` si no son
+    número).
+    """
     limites = _limites_seccion(filas, seccion)
     if limites is None:
         return {}
@@ -189,7 +204,8 @@ def leer_seccion_filas(
     seccion: str,
     nombre: str,
 ) -> OtherIncomeLeido:
-    """Lee la sección (`seccion` = nombre normalizado, p. ej. `mgmtcheckin`) de las hojas ya cargadas."""
+    """Lee la sección (`seccion` = nombre normalizado, p. ej. `mgmtcheckin`) de las hojas ya
+    cargadas."""
     res = OtherIncomeLeido()
     limites = _limites_seccion(budget, seccion)
     if limites is None:
@@ -254,13 +270,18 @@ def leer_seccion(ruta: str | Path, seccion: str, nombre: str) -> OtherIncomeLeid
             leido = leer_seccion_filas(
                 budget, hoja(wb, HOJA_EST_ACT_PREVIO), hoja(wb, HOJA_BUDGET_PREVIO), seccion, nombre
             )
-            departamentos = set((DEPARTAMENTO_POR_SECCION.get(separar_clave(seccion)[0]) or '').split('|')) - {''}
+            departamentos = set(
+                (DEPARTAMENTO_POR_SECCION.get(separar_clave(seccion)[0]) or "").split("|")
+            ) - {""}
             for titulo in wb.sheetnames if departamentos else []:
                 datos = datos_de_hoja(titulo)
                 if datos is None or datos[0] not in departamentos:
                     continue
                 filas = [
-                    tuple(r) for r in wb[titulo].iter_rows(max_row=_MAX_FILAS_HOJA, max_col=32, values_only=True)
+                    tuple(r)
+                    for r in wb[titulo].iter_rows(
+                        max_row=_MAX_FILAS_HOJA, max_col=32, values_only=True
+                    )
                 ]
                 try:
                     leida = leer_hoja_partidas(titulo, filas)

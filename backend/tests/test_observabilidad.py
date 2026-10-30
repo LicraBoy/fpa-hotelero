@@ -36,8 +36,13 @@ def test_formateador_json_incluye_request_id_cuando_hay_uno(
     fijar_id_de_peticion("abc123")
     try:
         registro = logging.LogRecord(
-            name="prueba", level=logging.INFO, pathname="", lineno=0,
-            msg="hola", args=(), exc_info=None,
+            name="prueba",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="hola",
+            args=(),
+            exc_info=None,
         )
         import json
 

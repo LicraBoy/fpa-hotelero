@@ -7,8 +7,7 @@ Uso (desde backend/, con la base ya migrada):
 
 Es el mismo trámite que `mapeo_accounting`, con el mapeo que Contraloría entregó (hoja
 `PESO COMPARATIVO MZT` de «Mapeo de Cuentas Mazatlan (1).xlsx») comparado con el aprobado: solo
-faltaban dos líneas. Crea y aprueba una versión nueva del mapeo (la anterior se conserva) y es seguro
-repetirlo. Las demás cuentas 6013 con movimientos que ninguna línea recoge (6013001.013, 6013005,
+faltaban dos líneas. Crea y aprueba una versión nueva del mapeo (la anterior se conserva) y es seguro repetirlo. Las demás cuentas 6013 con movimientos que ninguna línea recoge (6013001.013, 6013005,
 6013xxx) quedan sin vincular hasta que Contraloría las asigne.
 """
 

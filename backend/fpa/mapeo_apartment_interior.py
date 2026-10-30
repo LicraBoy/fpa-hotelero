@@ -1,12 +1,15 @@
-"""Vincula a «Apartment Interior» las cuentas de Departamentos (6012) que le faltaban (solo DESARROLLO).
+"""Vincula a «Apartment Interior» las cuentas de Departamentos (6012) que le faltaban (solo
+DESARROLLO).
 
 Uso (desde backend/, con la base ya migrada):
 
     set FPA_ENTORNO=desarrollo
     .venv\\Scripts\\python -m fpa.mapeo_apartment_interior
 
-Mismo trámite que `mapeo_accounting`, con el mapeo que Contraloría entregó (hoja `PESO COMPARATIVO MZT`
-de «Mapeo de Cuentas Mazatlan (1).xlsx») comparado con el aprobado: falta Education Bonus y la cuenta
+Mismo trámite que `mapeo_accounting`, con el mapeo que Contraloría entregó (hoja `PESO COMPARATIVO
+MZT`
+de «Mapeo de Cuentas Mazatlan (1).xlsx») comparado con el aprobado: falta Education Bonus y la
+cuenta
 6012106 (Equipment/Supplies) estaba en la línea «PH» junto a 6012107, cuando Contraloría las separa:
 6012106 → «Equipment/Supplies» y 6012107 → «Equip/Supplies PH». Crea y aprueba una versión nueva del
 mapeo (la anterior se conserva) y es seguro repetirlo.
@@ -24,7 +27,8 @@ from fpa.servicios.vincular_cuentas import VinculoPedido, vincular_cuentas
 
 SECCION = "Apartment Interior"
 
-# La línea que el mapeo de Contraloría llama «Severance Pay» es «Education Bonus» en el reporte (misma
+# La línea que el mapeo de Contraloría llama «Severance Pay» es «Education Bonus» en el reporte
+# (misma
 # posición y código corporativo 028-0118-60010-000).
 PEDIDOS: tuple[VinculoPedido, ...] = (
     VinculoPedido("Education Bonus", "6012001.011"),

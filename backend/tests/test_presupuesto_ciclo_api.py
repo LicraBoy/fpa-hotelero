@@ -71,9 +71,7 @@ def test_contralor_crea_ano_y_genera_periodos(cliente: TestClient, mundo: Mundo)
     assert r3.status_code == 200 and len(r3.json()) == 12
 
 
-def test_flujo_completo_hasta_aprobado(
-    cliente: TestClient, db: Session, mundo: Mundo
-) -> None:
+def test_flujo_completo_hasta_aprobado(cliente: TestClient, db: Session, mundo: Mundo) -> None:
     linea_id = _estructura_una_linea(db, mundo.hotel_a)
 
     r = cliente.post(
@@ -84,9 +82,7 @@ def test_flujo_completo_hasta_aprobado(
     ano_id = r.json()["id"]
     cliente.post(_url(mundo, f"anos-fiscales/{ano_id}/periodos/generar"), headers=como(CONTRALOR))
 
-    r = cliente.post(
-        _url(mundo, "ciclos"), json={"ano_fiscal_id": ano_id}, headers=como(CONTRALOR)
-    )
+    r = cliente.post(_url(mundo, "ciclos"), json={"ano_fiscal_id": ano_id}, headers=como(CONTRALOR))
     assert r.status_code == 201, r.text
     ciclo = r.json()
     ciclo_id = ciclo["id"]

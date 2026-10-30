@@ -179,7 +179,9 @@ def test_mover_una_cuenta_la_quita_de_una_linea_y_la_pone_en_otra(esc: Escenario
     repo = RepositorioMapeo(esc.db, esc.mundo.hotel_a)
     nueva = repo.aprobada()
     assert nueva is not None
-    lineas_de_6009020 = [v.linea_id for v in repo.vinculos(nueva.id) if v.cuenta_codigo == "6009020"]
+    lineas_de_6009020 = [
+        v.linea_id for v in repo.vinculos(nueva.id) if v.cuenta_codigo == "6009020"
+    ]
     assert lineas_de_6009020 == [esc.linea("Postage")]  # ya no está en Equipment
     # repetirlo no hace nada (la cuenta ya se movió)
     otra = vincular_cuentas(
@@ -196,7 +198,8 @@ def test_mover_una_cuenta_la_quita_de_una_linea_y_la_pone_en_otra(esc: Escenario
 
 
 def test_los_pedidos_de_apartment_interior_mueven_6012106() -> None:
-    from fpa.mapeo_apartment_interior import PEDIDOS as AI, QUITAR
+    from fpa.mapeo_apartment_interior import PEDIDOS as AI
+    from fpa.mapeo_apartment_interior import QUITAR
 
     assert [(p.linea, p.cuenta) for p in AI] == [
         ("Education Bonus", "6012001.011"),
@@ -244,7 +247,13 @@ def test_los_pedidos_de_purchasing_son_dos_lineas_con_su_cuenta() -> None:
 def test_los_pedidos_de_los_negocios_comerciales_van_a_la_segunda_seccion() -> None:
     from fpa.mapeo_comerciales import NEGOCIOS, pedidos_de
 
-    assert [s for s, _ in NEGOCIOS] == ["Travel Agency#2", "Store#2", "Cafeteria#2", "Bar#2", "Restaurant#2"]
+    assert [s for s, _ in NEGOCIOS] == [
+        "Travel Agency#2",
+        "Store#2",
+        "Cafeteria#2",
+        "Bar#2",
+        "Restaurant#2",
+    ]
     assert [(p.linea, p.cuenta) for p in pedidos_de("6016001")] == [
         ("Seniority Premium", "6016001.010"),
         ("Education Bonus", "6016001.011"),
@@ -253,7 +262,9 @@ def test_los_pedidos_de_los_negocios_comerciales_van_a_la_segunda_seccion() -> N
 
 def test_una_seccion_repetida_se_elige_por_su_ordinal(esc: Escenario) -> None:
     # «Mgmt & Check In» existe una sola vez: con ordinal 1 se resuelve igual; con 2 no existe
-    r = _vincular(esc, [VinculoPedido("Postage", "6009028", NO_SE_UTILIZA)], seccion="Mgmt & Check In#1")
+    r = _vincular(
+        esc, [VinculoPedido("Postage", "6009028", NO_SE_UTILIZA)], seccion="Mgmt & Check In#1"
+    )
     assert r.version_numero is not None
     with pytest.raises(LookupError):
         _vincular(esc, [VinculoPedido("Postage", "6009028")], seccion="Mgmt & Check In#2")

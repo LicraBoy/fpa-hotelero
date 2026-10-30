@@ -1,4 +1,5 @@
-"""Levanta un backend sobre una COPIA de la base de desarrollo, para tomar capturas con datos reales.
+"""Levanta un backend sobre una COPIA de la base de desarrollo, para tomar capturas con datos
+reales.
 
 Copia `fpa_dev.db` a `.captura/captura.db` (la base real no se toca), aplica las migraciones y
 arranca la API en el puerto 8102. Es solo para las capturas de `frontend/capturas/`.

@@ -69,18 +69,7 @@ from fpa.servicios.presupuesto_consumo import (
     editar_consumo_budget,
     quitar_consumo,
 )
-from fpa.servicios.presupuesto_partidas import (
-    PartidaEntrada,
-    activar_partidas,
-    guardar_inflacion_cuenta,
-    guardar_partidas,
-    leer_hoja_de_cuenta,
-    quitar_partidas,
-)
 from fpa.servicios.presupuesto_detalle import (
-    CeldaDetalle,
-    DetalleInvalido,
-    guardar_detalle,
     SECCION_ACCOUNTING,
     SECCION_APARTMENT_INTERIOR,
     SECCION_COMMON_AREA,
@@ -92,6 +81,9 @@ from fpa.servicios.presupuesto_detalle import (
     SECCION_PURCHASING,
     SECCION_UTILITIES,
     SECCION_VDS,
+    CeldaDetalle,
+    DetalleInvalido,
+    guardar_detalle,
     importar_seccion,
     leer_detalle,
     leer_detalle_de_version,
@@ -106,6 +98,14 @@ from fpa.servicios.presupuesto_hoja import (
     HojaInvalida,
     guardar_inflacion,
     leer_hoja,
+)
+from fpa.servicios.presupuesto_partidas import (
+    PartidaEntrada,
+    activar_partidas,
+    guardar_inflacion_cuenta,
+    guardar_partidas,
+    leer_hoja_de_cuenta,
+    quitar_partidas,
 )
 
 router = APIRouter(tags=["presupuesto"], responses=RESPUESTAS_HOTEL)
@@ -1259,7 +1259,10 @@ class ConsumoMesSalida(BaseModel):
 
 
 class ConsumoSalida(BaseModel):
-    """Consumo mensual de una cuenta de consumo: 4 bloques × 12 meses de (unidades, costo, total)."""
+    """Consumo mensual de una cuenta de consumo.
+
+    4 bloques × 12 meses de (unidades, costo, total).
+    """
 
     unidad: str
     real_prev: list[ConsumoMesSalida]
@@ -1290,7 +1293,9 @@ def _hoja_cuenta_a_salida(h) -> HojaCuentaSalida:  # type: ignore[no-untyped-def
             CuentaHojaSalida(
                 linea_id=p.id or 0,
                 descripcion=p.concepto,
-                codigo=f"{p.cantidad.normalize():f} {p.unidad or ''} × {p.costo.normalize():f}".replace("  ", " "),
+                codigo=" ".join(
+                    f"{p.cantidad.normalize():f} {p.unidad or ''} × {p.costo.normalize():f}".split()
+                ),
                 estado=p.metodo,
                 meses=list(p.meses),
             )
@@ -1311,17 +1316,28 @@ def _hoja_cuenta_a_salida(h) -> HojaCuentaSalida:  # type: ignore[no-untyped-def
         codigo_cuenta=h.codigo,
         partidas=[
             PartidaSalida(
-                id=p.id, orden=p.orden, concepto=p.concepto, cantidad=p.cantidad, unidad=p.unidad,
-                costo=p.costo, metodo=p.metodo, extendido=p.extendido, meses=list(p.meses),
-                suma=p.suma, diferencia=p.diferencia,
-            )  # fmt: skip
+                id=p.id,
+                orden=p.orden,
+                concepto=p.concepto,
+                cantidad=p.cantidad,
+                unidad=p.unidad,
+                costo=p.costo,
+                metodo=p.metodo,
+                extendido=p.extendido,
+                meses=list(p.meses),
+                suma=p.suma,
+                diferencia=p.diferencia,
+            )
             for p in h.partidas
         ],
         consumo=(
             ConsumoSalida(
                 unidad=h.consumo.unidad,
                 **{
-                    b: [ConsumoMesSalida(unidades=m[0], costo_unitario=m[1], total=m[2]) for m in meses]
+                    b: [
+                        ConsumoMesSalida(unidades=m[0], costo_unitario=m[1], total=m[2])
+                        for m in meses
+                    ]
                     for b, meses in h.consumo.bloques.items()
                 },
             )
@@ -1351,7 +1367,8 @@ def _errores_partidas(e: Exception) -> HTTPException:
 def ver_hoja_de_cuenta(
     contexto: Leer, ciclo_id: IdRuta, linea_id: IdRuta, db: Session = Depends(get_db)
 ) -> HojaCuentaSalida:
-    """La hoja de una cuenta por partidas: partidas × 12 meses y el bloque inferior (inflación, total
+    """La hoja de una cuenta por partidas: partidas × 12 meses y el bloque inferior (inflación,
+    total
     con inflación —que ES el Budget—, Est Act y Budget del año previo, variación)."""
     ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
     try:
@@ -1386,9 +1403,13 @@ def guardar_partidas_de_cuenta(
             linea_id=linea_id,
             partidas=[
                 PartidaEntrada(
-                    concepto=p.concepto, cantidad=p.cantidad, unidad=p.unidad, costo=p.costo,
-                    metodo=p.metodo, meses=p.meses,
-                )  # fmt: skip
+                    concepto=p.concepto,
+                    cantidad=p.cantidad,
+                    unidad=p.unidad,
+                    costo=p.costo,
+                    metodo=p.metodo,
+                    meses=p.meses,
+                )
                 for p in entrada.partidas
             ],
             inflacion=entrada.inflacion,
@@ -1412,7 +1433,10 @@ def guardar_inflacion_de_cuenta(
     entrada: InflacionEntrada,
     db: Session = Depends(get_db),
 ) -> HojaCuentaSalida:
-    """Cambia la inflación mensual (12 periodos) conservando las partidas; el Budget se recalcula."""
+    """Cambia la inflación mensual (12 periodos) conservando las partidas.
+
+    El Budget se recalcula.
+    """
     ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
     _exigir_en_captura(ciclo)
     visibles = lineas_visibles_de(db, contexto, ciclo)
@@ -1437,7 +1461,9 @@ def guardar_inflacion_de_cuenta(
 class ConsumoCambio(BaseModel):
     periodo: Annotated[str, Field(pattern=PATRON_PERIODO)]
     unidades: Annotated[Decimal, Field(allow_inf_nan=False, ge=0, max_digits=18, decimal_places=6)]
-    costo_unitario: Annotated[Decimal, Field(allow_inf_nan=False, ge=0, max_digits=18, decimal_places=6)]
+    costo_unitario: Annotated[
+        Decimal, Field(allow_inf_nan=False, ge=0, max_digits=18, decimal_places=6)
+    ]
 
 
 class ConsumoEntrada(BaseModel):
@@ -1456,7 +1482,8 @@ def guardar_consumo_de_cuenta(
     db: Session = Depends(get_db),
 ) -> HojaCuentaSalida:
     """Cambia unidades y costo unitario de los meses indicados del Budget de una cuenta de consumo
-    (Diesel, Gas, Electricity, Water); el total del mes es unidades × costo y el Budget se recalcula."""
+    (Diesel, Gas, Electricity, Water); el total del mes es unidades × costo y el Budget se
+    recalcula."""
     ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
     _exigir_en_captura(ciclo)
     visibles = lineas_visibles_de(db, contexto, ciclo)
@@ -1485,7 +1512,10 @@ def guardar_consumo_de_cuenta(
 def quitar_consumo_de_cuenta(
     contexto: Capturar, ciclo_id: IdRuta, linea_id: IdRuta, db: Session = Depends(get_db)
 ) -> None:
-    """Vuelve la cuenta de consumo al Editor mensual; el Budget que tenía queda como detalle fijo."""
+    """Vuelve la cuenta de consumo al Editor mensual.
+
+    El Budget que tenía queda como detalle fijo.
+    """
     ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
     _exigir_en_captura(ciclo)
     visibles = lineas_visibles_de(db, contexto, ciclo)
@@ -1511,7 +1541,10 @@ def quitar_consumo_de_cuenta(
 def activar_partidas_de_cuenta(
     contexto: Capturar, ciclo_id: IdRuta, linea_id: IdRuta, db: Session = Depends(get_db)
 ) -> HojaCuentaSalida:
-    """Pasa la cuenta a partidas (conserva sus importes actuales como la partida «Importe actual»)."""
+    """Pasa la cuenta a partidas.
+
+    Conserva sus importes actuales como la partida «Importe actual».
+    """
     ciclo = _ciclo_o_404(db, contexto.hotel_id, ciclo_id)
     _exigir_en_captura(ciclo)
     visibles = lineas_visibles_de(db, contexto, ciclo)

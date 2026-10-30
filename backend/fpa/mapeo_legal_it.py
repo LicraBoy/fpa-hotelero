@@ -1,12 +1,15 @@
-"""Vincula a «Legal» e «IT Systems» las cuentas que Contraloría les asigna y faltaban (solo DESARROLLO).
+"""Vincula a «Legal» e «IT Systems» las cuentas que Contraloría les asigna y faltaban (solo
+DESARROLLO).
 
 Uso (desde backend/, con la base ya migrada):
 
     set FPA_ENTORNO=desarrollo
     .venv\\Scripts\\python -m fpa.mapeo_legal_it
 
-Mismo trámite que `mapeo_accounting`: en las dos secciones solo faltaban Seniority Premium (el Excel escribe
-`….01`, que en el catálogo es `….010`) y Education Bonus (que el mapeo de Contraloría llama «Severance Pay»).
+Mismo trámite que `mapeo_accounting`: en las dos secciones solo faltaban Seniority Premium (el Excel
+escribe
+`….01`, que en el catálogo es `….010`) y Education Bonus (que el mapeo de Contraloría llama
+«Severance Pay»).
 Crea una versión del mapeo por sección y es seguro repetirlo.
 """
 
@@ -56,7 +59,9 @@ def main() -> None:
             if r.version_numero is None:
                 print(f"{seccion}: nada que hacer ({len(r.ya_estaban)} vínculos ya estaban).")
                 continue
-            print(f"{seccion}: mapeo v{r.version_numero} aprobado, {len(r.agregados)} vínculos nuevos.")
+            print(
+                f"{seccion}: mapeo v{r.version_numero} aprobado, {len(r.agregados)} vínculos nuevos."
+            )
             for texto in r.agregados:
                 print(f"  + {texto}".replace("→", "->"))
 
