@@ -1,6 +1,8 @@
 # Estado del proyecto
 
-Última actualización: 02-oct-2026
+Última actualización: 30-oct-2026
+
+> **Fase 7 — Budget (en curso, rama `feat/budget-studio-redesign`, PR #1):** Budget Studio (Resumen · Captura · Versiones) con ciclo `borrador → enviado → revisión → aprobado → bloqueado`, captura por cuenta (detalle mensual, partidas o consumo) e importación del Excel de Contraloría por sección. **Todas las secciones con cuentas capturables están importadas** en la base de desarrollo; las de resumen calculado (Commercial Services Summary / Net Income / Expenses / Allocations) no se importan. Quedan pendientes del Contralor (alias, inflación de Bank Commissions y Airfare, inflación en consumo, Est-Act de Electricity, hojas de cálculo de Depreciation/IVA/Income Tax). Detalle completo, mapa de código y trampas en `docs/CONTEXTO_PRESUPUESTO_PARA_CLAUDE.md`. Importar una sección sin pantalla: `backend/scripts/importar_budget_seccion.py` (ensayo por omisión, `--aplicar` respalda y confirma). Calidad: ruff, ruff format y mypy en cero errores; backend 953 pruebas, frontend 149 unitarias.
 
 > **Vista «Por departamento» (rama `fase-departamentos`):** `servicios/departamentos.py`, `api/v1/departamentos.py` (`GET /variance/departamentos?periodo=`), `src/pantallas/departamentos/`. Agrupa el Actual de las cuentas vinculadas por el `depto_ef` y el tipo (`grupo_ef`) del catálogo de Novohit; las cuentas sin departamento o sin tipo se muestran aparte. No hay Budget ni variación por departamento. Con la base de desarrollo (septiembre): de 574 cuentas vinculadas, 354 no traen departamento ni tipo (incluye el ingreso principal).
 
@@ -93,7 +95,7 @@
 - `npm run build` y `npm run lint` sin errores. **Desde la 4.3:** `npm run test:unit` (42 pruebas con `node --test`, sin dependencias), `npm run api:tipos` (regenera los tipos del OpenAPI) y **48 pruebas de Playwright** que corren contra el **build de producción** servido con su CSP.
 
 ## Cómo verificar
-- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **590 pasan y 2 se saltan** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
+- **Pruebas:** `cd backend` y `.venv\Scripts\python -m pytest` → **953 pasan y 2 se saltan** (la migración en PostgreSQL, hasta definir `FPA_TEST_POSTGRES_URL`).
 - **Calidad:** `.venv\Scripts\ruff check .`, `.venv\Scripts\ruff format --check .`, `.venv\Scripts\mypy fpa` → sin errores.
 - **Migraciones:** `.venv\Scripts\alembic upgrade head` y `downgrade base` (la prueba automática también verifica que modelos y migraciones no se desvíen).
 - **Datos de desarrollo:** `.venv\Scripts\python -m fpa.semilla` crea la organización Torres, el hotel y 5 usuarios `@torres.local`. `iniciar_servidores.bat` hace migrar + sembrar + arrancar con `FPA_ENTORNO=desarrollo`.

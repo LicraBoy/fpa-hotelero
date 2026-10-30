@@ -1,12 +1,14 @@
 import type { components } from '../../../api/schema'
-import { Cargando, EstadoVacio, MensajeError } from '../../../componentes/Insignia'
-import { BudgetAlertas } from './BudgetAlertas'
-import { BudgetComposicionChart } from './BudgetComposicionChart'
+import { EstadoVacio, MensajeError } from '../../../componentes/Insignia'
+import { BudgetAccionesRapidas } from './BudgetAccionesRapidas'
+import { BudgetComoFunciona } from './BudgetComoFunciona'
 import { BudgetDistribucionMensualChart } from './BudgetDistribucionMensualChart'
 import { BudgetKpiStrip } from './BudgetKpiStrip'
-import { BudgetObjetivoVsPropuestaChart } from './BudgetObjetivoVsPropuestaChart'
 import { BudgetPrincipalesDiferencias } from './BudgetPrincipalesDiferencias'
 import { BudgetResumenCiclo } from './BudgetResumenCiclo'
+import { BudgetKpiSkeleton, BudgetTablaSkeleton } from './BudgetSkeletons'
+import type { PestanaBudget } from './BudgetTabs'
+import { BudgetVariacionSeccionChart } from './BudgetVariacionSeccionChart'
 
 type ResumenCiclo = components['schemas']['ResumenPresupuestoSalida']
 type ResumenMensual = components['schemas']['ResumenMensualCicloSalida']
@@ -21,11 +23,17 @@ interface Props {
   cargando: boolean
   error: string | null
   onIrACaptura: (seccion?: string) => void
+  onNavegarTab?: (pestana: PestanaBudget) => void
 }
 
 /**
- * Pestaña Resumen: KPIs + gráfica + alertas, todo real (nada de cifras de relleno). Si no hay ciclo
- * abierto o no tiene líneas, se explica por qué en vez de mostrar una tira de ceros (spec §4.1/§9).
+ * Dashboard analítico de Budget Studio (spec §3 y referencia visual, simplificado tras
+ * revisión de diseño — ver docs/TRASPASO u opinión de contralor de oct-2026):
+ * 1. Fila de cinco KPIs clave
+ * 2. Fila de análisis en 3 columnas (Variación por sección, Principales diferencias, Resumen del ciclo)
+ * 3. Distribución mensual (ancho completo; "Perfil de temporada" se movió a Captura, es una
+ *    herramienta de configuración, no un resultado del ciclo)
+ * 4. Fila inferior en 2 columnas (Cómo funciona Budget, Acciones rápidas)
  */
 export function BudgetResumen({
   ciclo,
@@ -35,6 +43,7 @@ export function BudgetResumen({
   cargando,
   error,
   onIrACaptura,
+  onNavegarTab,
 }: Props) {
   if (ciclo === null) {
     return (
@@ -44,34 +53,63 @@ export function BudgetResumen({
       </EstadoVacio>
     )
   }
-  if (cargando && !resumen) return <Cargando />
+  if (cargando && !resumen) {
+    return (
+      <div className="budget-resumen" aria-label="Cargando resumen del presupuesto">
+        <BudgetKpiSkeleton />
+        <BudgetTablaSkeleton filas={5} ariaLabel="Cargando métricas del ciclo…" />
+      </div>
+    )
+  }
   if (error) return <MensajeError texto={error} />
   if (!resumen || resumen.total_lineas === 0) {
     return <EstadoVacio>El ciclo todavía no tiene líneas de captura.</EstadoVacio>
   }
 
+  const sinCapturar = resumen.total_lineas - resumen.lineas_capturadas
+
   return (
     <div className="budget-resumen">
+      {/* 1. Primera fila: cinco KPI uniformes */}
       <BudgetKpiStrip
         resumen={resumen}
         tendenciaMensual={resumenMensual?.por_periodo}
         onVerLineasSinCapturar={() => onIrACaptura()}
       />
-      <div className="budget-resumen-fila">
-        <BudgetObjetivoVsPropuestaChart porSeccion={resumen.por_seccion} onSeleccionarSeccion={onIrACaptura} />
-        <BudgetPrincipalesDiferencias lineas={lineasCiclo} onSeleccionarSeccion={onIrACaptura} />
-        <div className="budget-resumen-lateral">
-          <BudgetResumenCiclo ciclo={ciclo} resumen={resumen} />
-          <BudgetAlertas
-            resumen={resumen}
-            resumenMensual={resumenMensual}
-            ciclo={ciclo}
-            onVerLineasSinCapturar={() => onIrACaptura()}
-          />
-        </div>
+
+      {/* 2. Segunda fila: análisis en tres columnas (~48% / ~28% / ~24%) */}
+      <div className="budget-analysis-grid">
+        <BudgetVariacionSeccionChart
+          porSeccion={resumen.por_seccion}
+          onSeleccionarSeccion={onIrACaptura}
+        />
+        <BudgetPrincipalesDiferencias
+          lineas={lineasCiclo}
+          onSeleccionarSeccion={onIrACaptura}
+        />
+        <BudgetResumenCiclo
+          ciclo={ciclo}
+          resumen={resumen}
+          onIrACaptura={() => onIrACaptura()}
+        />
       </div>
-      {resumenMensual && <BudgetDistribucionMensualChart resumenMensual={resumenMensual} />}
-      <BudgetComposicionChart porSeccion={resumen.por_seccion} />
+
+      {/* 3. Tercera fila: distribución mensual, ancho completo */}
+      <div className="budget-trend-grid budget-trend-grid-unica">
+        <BudgetDistribucionMensualChart
+          resumenMensual={resumenMensual ?? { por_periodo: [], por_seccion: [], lineas_sin_mensualizar: 0 }}
+        />
+      </div>
+
+      {/* 4. Cuarta fila: cómo funciona y acciones rápidas */}
+      <div className="budget-bottom-grid">
+        <BudgetComoFunciona onIrACaptura={() => onIrACaptura()} />
+        <BudgetAccionesRapidas
+          lineasSinCapturar={sinCapturar}
+          onIrACaptura={() => onIrACaptura()}
+          onVerVersiones={() => onNavegarTab?.('versiones')}
+        />
+      </div>
     </div>
   )
 }

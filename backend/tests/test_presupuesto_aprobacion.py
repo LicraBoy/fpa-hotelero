@@ -217,13 +217,20 @@ def test_bloquear_tras_aprobar(db: Session, mundo: Mundo) -> None:
     captura = _captura_de(db, ciclo.id, linea.id)
     db.commit()
     capturar_propuesta(
-        db, ciclo_id=ciclo.id, linea_id=linea.id, propuesta_anual=D("100.00"), nota=None,
-        visibles=None, **_kw(mundo),  # type: ignore[arg-type]
+        db,
+        ciclo_id=ciclo.id,
+        linea_id=linea.id,
+        propuesta_anual=D("100.00"),
+        nota=None,
+        visibles=None,
+        **_kw(mundo),  # type: ignore[arg-type]
     )
     perfiles = sembrar_perfiles_sistema(db)
     db.commit()
     prorratear_con_perfil(
-        db, linea_captura_id=captura.id, perfil_distribucion_id=perfiles[NOMBRE_UNIFORME].id,
+        db,
+        linea_captura_id=captura.id,
+        perfil_distribucion_id=perfiles[NOMBRE_UNIFORME].id,
         **_kw(mundo),  # type: ignore[arg-type]
     )
     db.commit()
@@ -249,13 +256,20 @@ def test_reabrir_pide_nota_y_no_toca_la_version_anterior(db: Session, mundo: Mun
     captura = _captura_de(db, ciclo.id, linea.id)
     db.commit()
     capturar_propuesta(
-        db, ciclo_id=ciclo.id, linea_id=linea.id, propuesta_anual=D("100.00"), nota=None,
-        visibles=None, **_kw(mundo),  # type: ignore[arg-type]
+        db,
+        ciclo_id=ciclo.id,
+        linea_id=linea.id,
+        propuesta_anual=D("100.00"),
+        nota=None,
+        visibles=None,
+        **_kw(mundo),  # type: ignore[arg-type]
     )
     perfiles = sembrar_perfiles_sistema(db)
     db.commit()
     prorratear_con_perfil(
-        db, linea_captura_id=captura.id, perfil_distribucion_id=perfiles[NOMBRE_UNIFORME].id,
+        db,
+        linea_captura_id=captura.id,
+        perfil_distribucion_id=perfiles[NOMBRE_UNIFORME].id,
         **_kw(mundo),  # type: ignore[arg-type]
     )
     db.commit()
@@ -267,12 +281,24 @@ def test_reabrir_pide_nota_y_no_toca_la_version_anterior(db: Session, mundo: Mun
     usuario = _usuario_id(db, "contralor_ab@test.local")
     with pytest.raises(CicloInvalido):
         transicionar(
-            db, organizacion_id=mundo.org1, hotel_id=mundo.hotel_a, usuario_id=usuario,
-            puede=PUEDE_TODO, ciclo_id=ciclo.id, hacia="borrador", nota=None,
+            db,
+            organizacion_id=mundo.org1,
+            hotel_id=mundo.hotel_a,
+            usuario_id=usuario,
+            puede=PUEDE_TODO,
+            ciclo_id=ciclo.id,
+            hacia="borrador",
+            nota=None,
         )
     reabierto = transicionar(
-        db, organizacion_id=mundo.org1, hotel_id=mundo.hotel_a, usuario_id=usuario,
-        puede=PUEDE_TODO, ciclo_id=ciclo.id, hacia="borrador", nota="Ajuste pendiente",
+        db,
+        organizacion_id=mundo.org1,
+        hotel_id=mundo.hotel_a,
+        usuario_id=usuario,
+        puede=PUEDE_TODO,
+        ciclo_id=ciclo.id,
+        hacia="borrador",
+        nota="Ajuste pendiente",
     )
     assert reabierto.estado == "borrador"
     version = db.get(VersionPlan, version_id)
@@ -286,11 +312,18 @@ def test_segunda_aprobacion_reemplaza_la_anterior(db: Session, mundo: Mundo) -> 
     perfiles = sembrar_perfiles_sistema(db)
     db.commit()
     capturar_propuesta(
-        db, ciclo_id=ciclo.id, linea_id=linea.id, propuesta_anual=D("100.00"), nota=None,
-        visibles=None, **_kw(mundo),  # type: ignore[arg-type]
+        db,
+        ciclo_id=ciclo.id,
+        linea_id=linea.id,
+        propuesta_anual=D("100.00"),
+        nota=None,
+        visibles=None,
+        **_kw(mundo),  # type: ignore[arg-type]
     )
     prorratear_con_perfil(
-        db, linea_captura_id=captura.id, perfil_distribucion_id=perfiles[NOMBRE_UNIFORME].id,
+        db,
+        linea_captura_id=captura.id,
+        perfil_distribucion_id=perfiles[NOMBRE_UNIFORME].id,
         **_kw(mundo),  # type: ignore[arg-type]
     )
     db.commit()
@@ -302,16 +335,29 @@ def test_segunda_aprobacion_reemplaza_la_anterior(db: Session, mundo: Mundo) -> 
 
     usuario = _usuario_id(db, "contralor_ab@test.local")
     transicionar(
-        db, organizacion_id=mundo.org1, hotel_id=mundo.hotel_a, usuario_id=usuario,
-        puede=PUEDE_TODO, ciclo_id=ciclo.id, hacia="borrador", nota="Corrección",
+        db,
+        organizacion_id=mundo.org1,
+        hotel_id=mundo.hotel_a,
+        usuario_id=usuario,
+        puede=PUEDE_TODO,
+        ciclo_id=ciclo.id,
+        hacia="borrador",
+        nota="Corrección",
     )
     db.commit()
     capturar_propuesta(
-        db, ciclo_id=ciclo.id, linea_id=linea.id, propuesta_anual=D("200.00"), nota=None,
-        visibles=None, **_kw(mundo),  # type: ignore[arg-type]
+        db,
+        ciclo_id=ciclo.id,
+        linea_id=linea.id,
+        propuesta_anual=D("200.00"),
+        nota=None,
+        visibles=None,
+        **_kw(mundo),  # type: ignore[arg-type]
     )
     prorratear_con_perfil(
-        db, linea_captura_id=captura.id, perfil_distribucion_id=perfiles[NOMBRE_UNIFORME].id,
+        db,
+        linea_captura_id=captura.id,
+        perfil_distribucion_id=perfiles[NOMBRE_UNIFORME].id,
         **_kw(mundo),  # type: ignore[arg-type]
     )
     db.commit()

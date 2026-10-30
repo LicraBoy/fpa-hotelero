@@ -8,6 +8,8 @@ type Perfil = components['schemas']['PerfilSalida']
 type LineaMensual = components['schemas']['LineaMensualSalida']
 
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+/** «0.083333» (fracción del año) -> «8.33 %». Solo para mostrar: el reparto se calcula en micros. */
+const porcentaje = (peso: string) => `${(Number(peso) * 100).toFixed(2)} %`
 const etiquetaMes = (periodo: string) => `${MESES[Number(periodo.slice(5, 7)) - 1]} ${periodo.slice(2, 4)}`
 
 interface Props {
@@ -102,6 +104,7 @@ export function SelectorPerfilDistribucion({ hotelId, cicloId, linea, anual, per
         </button>
       </span>
 
+      {!perfil && <p className="cajon-subtitulo">Elige un perfil para ver cómo se reparte el año mes por mes.</p>}
       {perfil && previsto && (
         <div className="vista-previa-perfil" role="group" aria-label={`Vista previa de ${perfil.nombre}`}>
           <svg
@@ -125,27 +128,19 @@ export function SelectorPerfilDistribucion({ hotelId, cicloId, linea, anual, per
               )
             })}
           </svg>
-          <table className="tabla-simple tabla-previa-perfil">
-            <caption className="solo-lectores">Reparto previsto del perfil {perfil.nombre}, por mes.</caption>
-            <thead>
-              <tr>
-                {periodos.map((p) => (
-                  <th key={p} scope="col">
-                    {etiquetaMes(p)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                {previsto.map((v, i) => (
-                  <td key={periodos[i]} className="num">
-                    {formatoMicros(v)}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
+          <ul className="previa-meses" aria-label={`Reparto previsto del perfil ${perfil.nombre}, por mes`}>
+            {previsto.map((v, i) => (
+              <li key={periodos[i]}>
+                <span className="previa-mes">{etiquetaMes(periodos[i])}</span>
+                <span className="previa-importe">{formatoMicros(v)}</span>
+                <span className="previa-peso">{porcentaje(perfil.pesos[i])}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="previa-total">
+            <span>Total del año</span>
+            <strong>{formatoMicros(previsto.reduce((acc, x) => acc + x, 0n))}</strong>
+          </p>
         </div>
       )}
       {error && <MensajeError texto={error} />}

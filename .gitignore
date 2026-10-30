@@ -38,3 +38,32 @@ Thumbs.db
 # Pruebas e2e: backend temporal
 .e2e/
 frontend/e2e/archivos/golden_real.json
+
+# Capturas con datos reales: copia de la base de desarrollo
+.captura/
+
+# Capturas de pantalla con cifras reales de Torres (repo público): no se versionan
+docs/imagenes/comparacion-v2/
+docs/imagenes/comparacion-v3/
+docs/imagenes/editor-cuenta/
+docs/imagenes/editor-pulido/
+docs/imagenes/hoja-seccion/
+docs/imagenes/mgmt/
+docs/imagenes/accounting/
+docs/imagenes/maid_linen/
+docs/imagenes/apartment_interior/
+docs/imagenes/common_area/
+docs/imagenes/utilities/
+docs/imagenes/owner_activities/
+docs/imagenes/other_taxes/
+docs/imagenes/owner_services/
+docs/imagenes/vds/
+docs/imagenes/purchasing/
+docs/imagenes/comerciales/
+docs/imagenes/legal_it/
+docs/imagenes/partidas_excel/
+docs/imagenes/rediseno-3-pantallas/
+docs/imagenes/rediseno/captura-*.png
+docs/imagenes/rediseno/comparacion-*.png
+docs/imagenes/rediseno/r2-*.png
+docs/imagenes/rediseno/r3-*.png

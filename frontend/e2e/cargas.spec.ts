@@ -22,7 +22,7 @@ const pestana = (page: Page, nombre: string) =>
 
 test('la app abre, se conecta a la API y el contralor ve todas las secciones', async ({ page }) => {
   await page.goto('/#/cargas')
-  await expect(page.getByRole('heading', { name: 'Plataforma FP&A Hotelera', level: 1 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'FPA Hotelero', level: 1 })).toBeVisible()
   await expect(page.getByText('API conectada')).toBeVisible()
   for (const nombre of ['Cargas', 'Catálogo', 'Saldos', 'Auditoría']) {
     await expect(pestana(page, nombre)).toBeVisible()

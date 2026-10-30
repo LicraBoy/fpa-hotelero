@@ -436,3 +436,107 @@ export function compararVersiones(
   }
   return salida
 }
+
+/**
+ * Calcula la variación porcentual entre dos importes en micros: (comparar - base) / |base| * 100.
+ * `null` si alguno es null, o si la base es 0n (evita división por cero y ambigüedad de denominador nulo).
+ */
+export function variacionPorcentual(base: bigint | null, comparar: bigint | null): number | null {
+  if (base === null || comparar === null || base === 0n) return null
+  const diferencia = comparar - base
+  const absBase = base < 0n ? -base : base
+  return Number((diferencia * 10_000n) / absBase) / 100
+}
+
+export type TipoCambioVersion = 'nueva' | 'eliminada' | 'modificada' | 'sin_cambio' | 'incompleta'
+
+/**
+ * Clasifica la naturaleza del cambio entre dos versiones de Budget para una línea.
+ */
+export function clasificarCambioVersion(anualA: bigint | null, anualB: bigint | null): TipoCambioVersion {
+  if (anualA === null && anualB !== null) return 'nueva'
+  if (anualA !== null && anualB === null) return 'eliminada'
+  if (anualA === null && anualB === null) return 'incompleta'
+  return anualA === anualB ? 'sin_cambio' : 'modificada'
+}
+
+export interface DiferenciaVersionDetallada extends DiferenciaVersion {
+  tipo: TipoCambioVersion
+  diferenciaPct: number | null
+}
+
+/**
+ * Comparación enriquecida entre dos versiones con clasificación de cambio y porcentaje de variación.
+ */
+export function compararVersionesDetallado(
+  base: readonly { linea_id: number; anual: string | null }[],
+  comparar: readonly { linea_id: number; anual: string | null }[],
+): DiferenciaVersionDetallada[] {
+  const basicas = compararVersiones(base, comparar)
+  return basicas.map((d) => ({
+    ...d,
+    tipo: clasificarCambioVersion(d.anualA, d.anualB),
+    diferenciaPct: variacionPorcentual(d.anualA, d.anualB),
+  }))
+}
+
+export interface TotalesControlComparacion {
+  totalA: bigint | null
+  totalB: bigint | null
+  diferenciaNeta: bigint | null
+  diferenciaPct: number | null
+  conteoTotal: number
+  conteoNuevas: number
+  conteoEliminadas: number
+  conteoModificadas: number
+  conteoSinCambio: number
+}
+
+/**
+ * Totales consolidados de control para facilitar la conciliación entre versiones.
+ */
+export function calcularTotalesComparacion(
+  filas: readonly { anualA: bigint | null; anualB: bigint | null; tipo?: TipoCambioVersion }[],
+): TotalesControlComparacion {
+  let conA = 0
+  let conB = 0
+  let totalA = 0n
+  let totalB = 0n
+  let conteoNuevas = 0
+  let conteoEliminadas = 0
+  let conteoModificadas = 0
+  let conteoSinCambio = 0
+
+  for (const f of filas) {
+    if (f.anualA !== null) {
+      totalA += f.anualA
+      conA++
+    }
+    if (f.anualB !== null) {
+      totalB += f.anualB
+      conB++
+    }
+    const tipo = f.tipo ?? clasificarCambioVersion(f.anualA, f.anualB)
+    if (tipo === 'nueva') conteoNuevas++
+    else if (tipo === 'eliminada') conteoEliminadas++
+    else if (tipo === 'modificada') conteoModificadas++
+    else if (tipo === 'sin_cambio') conteoSinCambio++
+  }
+
+  const finalTotalA = conA > 0 ? totalA : null
+  const finalTotalB = conB > 0 ? totalB : null
+  const diferenciaNeta = finalTotalA !== null && finalTotalB !== null ? finalTotalB - finalTotalA : null
+  const diferenciaPct = variacionPorcentual(finalTotalA, finalTotalB)
+
+  return {
+    totalA: finalTotalA,
+    totalB: finalTotalB,
+    diferenciaNeta,
+    diferenciaPct,
+    conteoTotal: filas.length,
+    conteoNuevas,
+    conteoEliminadas,
+    conteoModificadas,
+    conteoSinCambio,
+  }
+}

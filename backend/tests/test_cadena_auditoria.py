@@ -179,6 +179,18 @@ def test_toda_la_actividad_de_la_aplicacion_deja_una_cadena_integra(
 
 # Rutas cuyo manejador no llama a `auditar` directamente: delegan en un servicio que sí lo hace.
 DELEGAN_EN_SERVICIO = {
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas": (
+        "servicios.presupuesto_partidas (guardar_partidas / quitar_partidas)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/consumo": (
+        "servicios.presupuesto_consumo (editar_consumo_budget / quitar_consumo)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/partidas/activar": (
+        "servicios.presupuesto_partidas (activar_partidas)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/hoja/inflacion": (
+        "servicios.presupuesto_partidas (guardar_inflacion_cuenta -> guardar_partidas)"
+    ),
     "/hoteles/{hotel_id}/budget/versiones": "servicios.budget (budget.importado/editado)",
     "/hoteles/{hotel_id}/budget/capturados": "servicios.valores_capturados (actual.capturado)",
     "/hoteles/{hotel_id}/cierres/{periodo}/transiciones": "servicios.cierre (cierre.*)",
@@ -199,6 +211,15 @@ DELEGAN_EN_SERVICIO = {
     ),
     "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/objetivo": (
         "servicios.presupuesto_captura (presupuesto.linea_objetivo)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/lineas/{linea_id}/detalle": (
+        "servicios.presupuesto_detalle (presupuesto.detalle_guardado)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/detalle/importar-other-income": (
+        "servicios.presupuesto_detalle (presupuesto.detalle_guardado, una por línea)"
+    ),
+    "/hoteles/{hotel_id}/presupuesto/ciclos/{ciclo_id}/hojas/{seccion_id}/inflacion": (
+        "servicios.presupuesto_hoja (presupuesto.hoja_inflacion)"
     ),
     "/hoteles/{hotel_id}/presupuesto/anos-fiscales": (
         "calendario fiscal, sin bitácora (no mueve dinero)"

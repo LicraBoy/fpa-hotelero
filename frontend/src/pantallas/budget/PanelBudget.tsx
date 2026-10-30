@@ -13,17 +13,15 @@ import type { LineaEdicionBudget, RespuestaBudget, VistaEdicionBudget } from '..
 import { Icono } from '../../componentes/Iconos'
 import { Cargando, EstadoVacio, MensajeError } from '../../componentes/Insignia'
 import { puede } from '../../permisos'
-import { ArbolLineas } from './componentes/ArbolLineas'
 import { BudgetHeader } from './componentes/BudgetHeader'
 import { BudgetResumen } from './componentes/BudgetResumen'
-import { BudgetTabs, type PestanaBudget } from './componentes/BudgetTabs'
+import type { PestanaBudget } from './componentes/BudgetTabs'
 import { BudgetVersionesTab } from './componentes/BudgetVersionesTab'
 import { DetalleCapturaLinea } from './componentes/DetalleCapturaLinea'
-import { SelectorPerfilDistribucion } from './componentes/SelectorPerfilDistribucion'
+import { HojaSeccion } from './componentes/HojaSeccion'
 import { CicloPresupuesto } from './CicloPresupuesto'
 import {
   agruparPorSeccionId,
-  ajustarPorcentaje,
   aMicros,
   anosFiscalesConocidos,
   cambiosActualPendientes,
@@ -36,6 +34,7 @@ import {
   sumarMicros,
   textoDeMicros,
 } from './calculo'
+import { seccionTieneTablaInterna } from './detalleCuenta'
 
 type AnoFiscal = components['schemas']['AnoFiscalSalida']
 type Ciclo = components['schemas']['CicloSalida']
@@ -47,6 +46,8 @@ type VersionBudget = components['schemas']['VersionPlanSalida']
 interface Props {
   hotelId: number
   rol: string | undefined
+  pestana: PestanaBudget
+  onCambiarPestana: (p: PestanaBudget) => void
 }
 
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
@@ -64,7 +65,7 @@ type Mensaje = { tono: 'ok' | 'aviso' | 'error'; texto: string }
  * pantalla "Presupuesto" separada. Según el permiso y si hay un ciclo abierto, "Guardar" crea una
  * versión de Budget nueva de una vez, o alimenta el ciclo de captura (línea por línea).
  */
-export function PanelBudget({ hotelId, rol }: Props) {
+export function PanelBudget({ hotelId, rol, pestana, onCambiarPestana }: Props) {
   // El año fiscal por omisión sale del último mes cargado; el Budget vigente puede ser de otro.
   // Un responsable de departamento no tiene por qué poder leer Cargas: sin ese permiso no se
   // consulta (no es un dato que necesite para capturar su presupuesto).
@@ -110,6 +111,8 @@ export function PanelBudget({ hotelId, rol }: Props) {
       versiones={versiones.datos ?? []}
       alElegirAno={setElegido}
       alCambiarVersiones={versiones.recargar}
+      pestana={pestana}
+      onCambiarPestana={onCambiarPestana}
     />
   )
 }
@@ -122,9 +125,21 @@ interface PropsEditor {
   versiones: VersionBudget[]
   alElegirAno: (ano: string) => void
   alCambiarVersiones: () => void
+  pestana: PestanaBudget
+  onCambiarPestana: (p: PestanaBudget) => void
 }
 
-function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, alCambiarVersiones }: PropsEditor) {
+function EditorBudget({
+  hotelId,
+  anoFiscal,
+  anos,
+  rol,
+  versiones,
+  alElegirAno,
+  alCambiarVersiones,
+  pestana,
+  onCambiarPestana: setPestana,
+}: PropsEditor) {
   const vista = useDatos(
     () =>
       obtenerTipado('/api/v1/hoteles/{hotel_id}/budget/edicion', {
@@ -240,8 +255,6 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
     [hotelId, cicloId, versionCiclo],
   )
 
-  const [pestana, setPestana] = useState<PestanaBudget>('captura')
-
   const [abriendoCiclo, setAbriendoCiclo] = useState(false)
   const [errorCiclo, setErrorCiclo] = useState<string | null>(null)
 
@@ -265,11 +278,17 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
   const [seccion, setSeccion] = useState<string>('')
   const [texto, setTexto] = useState('')
   const [soloEditables, setSoloEditables] = useState(false)
-  const [porcentaje, setPorcentaje] = useState('')
-  const [soloVacios, setSoloVacios] = useState(true)
+  // La hoja de sección (y, dentro de ella, la comparación anual o el editor mensual) está abierta: el encabezado
+  // de Captura y el flujo del ciclo solo se ven en la pantalla principal de Captura.
+  const [enPantallaInterna, setEnPantallaInterna] = useState(false)
+  const [estadoCaptura, setEstadoCaptura] = useState<'todos' | 'pendiente' | 'capturada'>('todos')
   const [confirmando, setConfirmando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState<Mensaje | null>(null)
+  // La línea elegida sobrevive a recargar (guardar vuelve a montar la vista)
+  const [lineaSeleccionada, setLineaSeleccionada] = useState<number | null>(null)
+  // «Panel de línea» arranca cerrado y se conserva al guardar (la pantalla se vuelve a armar)
+  const [panelOculto, setPanelOculto] = useState(true)
   const descripcionPorLinea = useMemo(
     () => new Map((vista.datos?.lineas ?? []).map((l) => [l.linea_id, l.descripcion])),
     [vista.datos],
@@ -296,21 +315,40 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
     if (encontrada) setSeccion(String(encontrada.id))
   }
 
+  const periodos = vista.datos.periodos
+  const rangoFiscal =
+    periodos && periodos.length >= 12
+      ? `${etiquetaMes(periodos[0])} – ${etiquetaMes(periodos[periodos.length - 1])}`
+      : undefined
+
+  const ocultarMarco = pestana === 'captura' && enPantallaInterna
   return (
     <>
+      {!ocultarMarco && (
       <BudgetHeader
         anoFiscal={anoFiscal}
+        rangoFiscal={rangoFiscal}
         version={vista.datos.version}
         puedeAdministrarCiclo={puedeAdministrarCiclo}
         cicloAbierto={cicloAbierto !== null || anoFiscalPresupuestoId === null}
         abriendoCiclo={abriendoCiclo}
         errorCiclo={errorCiclo}
         onAbrirCiclo={() => void abrirCiclo()}
+        estadoCiclo={cicloDetalle.datos?.estado ?? null}
+        cobertura={
+          resumenCiclo.datos
+            ? { capturadas: resumenCiclo.datos.lineas_capturadas, total: resumenCiclo.datos.total_lineas }
+            : null
+        }
       />
-      {cicloId !== null && (
+      )}
+      {/* El flujo del ciclo (etapas, enviar a revisión, actividad) va en una barra pequeña en Resumen
+          y en Captura, y no en Versiones, para no saturar la pantalla. */}
+      {cicloId !== null && pestana !== 'versiones' && !ocultarMarco && (
         <CicloPresupuesto
           hotelId={hotelId}
           cicloId={cicloId}
+          onVerVersiones={() => setPestana('versiones')}
           alCambiar={() => {
             recargarCiclo()
             alCambiarVersiones()
@@ -318,7 +356,9 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
           }}
         />
       )}
-      <BudgetTabs activa={pestana} onCambiar={setPestana} />
+      {/* La navegación Resumen/Captura/Versiones vive en el sidebar global (App.tsx), como
+         sub-navegación del bloque "Budget Studio" — ya no se repite aquí. Los paneles siguen
+         señalando sus botones por id (role="tab" en el sidebar) para la relación aria-labelledby. */}
 
       <div role="tabpanel" id="budget-panel-resumen" aria-labelledby="budget-tab-resumen" hidden={pestana !== 'resumen'}>
         <BudgetResumen
@@ -329,6 +369,7 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
           cargando={resumenCiclo.cargando}
           error={resumenCiclo.error}
           onIrACaptura={irACaptura}
+          onNavegarTab={setPestana}
         />
       </div>
 
@@ -352,16 +393,18 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
         setTexto={setTexto}
         soloEditables={soloEditables}
         setSoloEditables={setSoloEditables}
-        porcentaje={porcentaje}
-        setPorcentaje={setPorcentaje}
-        soloVacios={soloVacios}
-        setSoloVacios={setSoloVacios}
+        estadoCaptura={estadoCaptura}
+        setEstadoCaptura={setEstadoCaptura}
         confirmando={confirmando}
         setConfirmando={setConfirmando}
         guardando={guardando}
         setGuardando={setGuardando}
         mensaje={mensaje}
         setMensaje={setMensaje}
+        lineaSeleccionada={lineaSeleccionada}
+        setLineaSeleccionada={setLineaSeleccionada}
+        panelOculto={panelOculto}
+        setPanelOculto={setPanelOculto}
         recargar={() => {
           setEdiciones(new Map())
           setConfirmando(false)
@@ -369,11 +412,17 @@ function EditorBudget({ hotelId, anoFiscal, anos, rol, versiones, alElegirAno, a
           alCambiarVersiones()
         }}
         recargarCiclo={recargarCiclo}
+        alCambiarPantallaInterna={setEnPantallaInterna}
         />
       </div>
 
       <div role="tabpanel" id="budget-panel-versiones" aria-labelledby="budget-tab-versiones" hidden={pestana !== 'versiones'}>
-        <BudgetVersionesTab hotelId={hotelId} versiones={versiones} descripcionPorLinea={descripcionPorLinea} />
+        <BudgetVersionesTab
+          hotelId={hotelId}
+          versiones={versiones}
+          descripcionPorLinea={descripcionPorLinea}
+          cargando={false}
+        />
       </div>
     </>
   )
@@ -398,18 +447,22 @@ interface PropsVista {
   setTexto: (t: string) => void
   soloEditables: boolean
   setSoloEditables: (b: boolean) => void
-  porcentaje: string
-  setPorcentaje: (t: string) => void
-  soloVacios: boolean
-  setSoloVacios: (b: boolean) => void
+  estadoCaptura: 'todos' | 'pendiente' | 'capturada'
+  setEstadoCaptura: (e: 'todos' | 'pendiente' | 'capturada') => void
   confirmando: boolean
   setConfirmando: (b: boolean) => void
   guardando: boolean
   setGuardando: (b: boolean) => void
   mensaje: Mensaje | null
   setMensaje: (m: Mensaje | null) => void
+  lineaSeleccionada: number | null
+  setLineaSeleccionada: (id: number | null) => void
+  panelOculto: boolean
+  setPanelOculto: (oculto: boolean) => void
   recargar: () => void
   recargarCiclo: () => void
+  /** Avisa si una pantalla interna (hoja de sección) está abierta, para ocultar el marco de Captura. */
+  alCambiarPantallaInterna: (abierta: boolean) => void
 }
 
 function VistaEditor(p: PropsVista) {
@@ -494,12 +547,19 @@ function VistaEditor(p: PropsVista) {
     return datos.lineas.filter((l) => {
       if (p.seccion !== '' && p.seccion !== TODAS && String(l.seccion_id) !== p.seccion) return false
       if (p.soloEditables && !l.editable) return false
-      return buscado === '' || l.descripcion.toLowerCase().includes(buscado)
+      if (p.estadoCaptura !== 'todos' && (objetivoPorLinea.get(l.linea_id)?.estado ?? 'pendiente') !== p.estadoCaptura) {
+        return false
+      }
+      if (buscado === '') return true
+      return (
+        l.descripcion.toLowerCase().includes(buscado) ||
+        (l.codigo_corporativo ?? '').toLowerCase().includes(buscado)
+      )
     })
-  }, [datos.lineas, p.seccion, p.texto, p.soloEditables])
+  }, [datos.lineas, p.seccion, p.texto, p.soloEditables, p.estadoCaptura, objetivoPorLinea])
 
-  // Por omisión se muestra una sección a la vez: el reporte tiene cientos de líneas por 12 meses
-  const seccionActiva = p.seccion === '' ? String(secciones[0]?.id ?? TODAS) : p.seccion
+  // Con una sola celda editable a la vez (el resto es texto), ver todas las secciones ya no pesa.
+  const seccionActiva = p.seccion === '' ? TODAS : p.seccion
   const lineasMostradas = useMemo(
     () =>
       visibles.filter((l) => seccionActiva === TODAS || String(l.seccion_id) === seccionActiva),
@@ -507,9 +567,42 @@ function VistaEditor(p: PropsVista) {
   )
   const nombreSeccion = new Map(secciones.map((s) => [s.id, s.descripcion]))
 
-  const [vistaCaptura, setVistaCaptura] = useState<'tabla' | 'arbol'>('tabla')
-  const [lineaSeleccionada, setLineaSeleccionada] = useState<number | null>(null)
-  const lineaDetalle = datos.lineas.find((l) => l.linea_id === lineaSeleccionada) ?? null
+  const [modo, setModo] = useState<'tabla' | 'arbol'>('tabla')
+  const { lineaSeleccionada, setLineaSeleccionada, panelOculto, setPanelOculto } = p
+  // Sección cuya hoja completa está abierta (página completa, como el Excel de Contraloría)
+  // La cuenta con la que se abrió la hoja (si se entró por una cuenta, no por la sección)
+  const [cuentaInicial, setCuentaInicial] = useState<number | null>(null)
+  const [seccionHoja, setSeccionHoja] = useState<number | null>(null)
+  const [celdaActiva, setCeldaActiva] = useState<{ linea: number; periodo: string } | null>(null)
+  const [seccionesColapsadas, setSeccionesColapsadas] = useState<ReadonlySet<string>>(new Set())
+  // El panel de detalle siempre muestra una línea: la elegida o, si no hay, la primera de detalle.
+  const primeraDetalle = lineasMostradas.find((l) => l.tipo === 'detalle') ?? null
+  const lineaDetalle = panelOculto
+    ? null
+    : (lineasMostradas.find((l) => l.linea_id === lineaSeleccionada) ?? primeraDetalle)
+  function seleccionar(id: number) {
+    setLineaSeleccionada(id)
+    setPanelOculto(false)
+  }
+  function alternarSeccion(clave: string) {
+    const siguiente = new Set(seccionesColapsadas)
+    if (siguiente.has(clave)) siguiente.delete(clave)
+    else siguiente.add(clave)
+    setSeccionesColapsadas(siguiente)
+  }
+  // Líneas por las que se puede moverse con el teclado (editables y visibles)
+  const navegables = lineasMostradas.filter(
+    (l) => !seccionesColapsadas.has(String(l.seccion_id)) && puedeEditarBudget(l),
+  )
+  function moverCelda(linea: number, periodo: string, dLinea: number, dMes: number) {
+    const i = navegables.findIndex((l) => l.linea_id === linea)
+    const m = periodos.indexOf(periodo)
+    if (i < 0 || m < 0) return
+    const ni = Math.min(Math.max(i + dLinea, 0), navegables.length - 1)
+    const nm = Math.min(Math.max(m + dMes, 0), periodos.length - 1)
+    setCeldaActiva({ linea: navegables[ni].linea_id, periodo: periodos[nm] })
+    setLineaSeleccionada(navegables[ni].linea_id)
+  }
 
   function editar(linea: number, periodo: string, valor: string) {
     const siguiente = new Map(ediciones)
@@ -534,40 +627,6 @@ function VistaEditor(p: PropsVista) {
     p.setEdiciones(siguiente)
     p.setMensaje(null)
     p.setConfirmando(false)
-  }
-
-  function copiarActual() {
-    const ajuste = p.porcentaje.trim()
-    if (ajuste !== '' && ajustarPorcentaje(1_000_000n, ajuste) === null) {
-      p.setMensaje({ tono: 'error', texto: 'El porcentaje de ajuste no es un número válido' })
-      return
-    }
-    const siguiente = new Map(ediciones)
-    let copiadas = 0
-    for (const l of lineasMostradas) {
-      // el tipo de cambio (informativa) tiene su propio Budget: no se copia de su Actual
-      if (!puedeEditarBudget(l) || l.tipo === 'informativa') continue
-      for (const c of l.meses) {
-        if (c.actual === null) continue
-        const clave = claveCelda(l.linea_id, c.periodo)
-        const tieneBudget = (actuales.get(clave) ?? null) !== null || ediciones.has(clave)
-        if (p.soloVacios && tieneBudget) continue
-        const base = aMicros(c.actual)
-        const nuevo = base === null ? null : ajustarPorcentaje(base, ajuste)
-        if (nuevo === null) continue
-        siguiente.set(clave, textoDeMicros(nuevo))
-        copiadas += 1
-      }
-    }
-    p.setEdiciones(siguiente)
-    p.setConfirmando(false)
-    p.setMensaje({
-      tono: copiadas > 0 ? 'ok' : 'aviso',
-      texto:
-        copiadas > 0
-          ? `Se copió el Actual en ${plural(copiadas, 'celda', 'celdas')} (sin guardar todavía).`
-          : 'No había celdas a las que copiar el Actual (sin movimientos, o ya tenían Budget).',
-    })
   }
 
   async function guardarEnCiclo() {
@@ -662,232 +721,268 @@ function VistaEditor(p: PropsVista) {
     ...cambiosActual.map((c) => c.linea_id),
   ]).size
   const grupos = agruparPorSeccionId(lineasMostradas)
-
+  // Las cuentas con tabla interna (hoy, las de Other Income) y solo con un ciclo abierto: ahí vive el detalle
+  const tieneTabla = (l: LineaEdicionBudget) =>
+    p.cicloId !== null &&
+    l.tipo === 'detalle' &&
+    l.seccion_id !== null &&
+    seccionTieneTablaInterna(nombreSeccion.get(l.seccion_id))
+  const tieneHoja = (seccionId: number | null) =>
+    p.cicloId !== null &&
+    seccionId !== null &&
+    seccionTieneTablaInterna(nombreSeccion.get(seccionId)) &&
+    datos.lineas.some((l) => l.seccion_id === seccionId && lineasPermitidas.has(l.linea_id))
+  // Entrar por una cuenta lleva a la hoja de su sección, con esa cuenta ya abierta
+  function abrirHojaDeCuenta(lineaId: number) {
+    const linea = datos.lineas.find((l) => l.linea_id === lineaId)
+    if (!linea || linea.seccion_id === null) return
+    setCuentaInicial(lineaId)
+    setSeccionHoja(linea.seccion_id)
+  }
+  const hojaAbierta = seccionHoja !== null && p.cicloId !== null && tieneHoja(seccionHoja)
+  const { alCambiarPantallaInterna } = p
+  useEffect(() => {
+    alCambiarPantallaInterna(hojaAbierta)
+    return () => alCambiarPantallaInterna(false)
+  }, [hojaAbierta, alCambiarPantallaInterna])
+  if (seccionHoja !== null && p.cicloId !== null && hojaAbierta) {
+    return (
+      <HojaSeccion
+        key={seccionHoja}
+        hotelId={p.hotelId}
+        cicloId={p.cicloId}
+        seccionId={seccionHoja}
+        anoFiscal={p.anoFiscal}
+        cuentaInicial={cuentaInicial}
+        periodos={periodos}
+        cuentas={datos.lineas.filter((l) => l.seccion_id === seccionHoja && tieneTabla(l))}
+        puedeEditar={usaCaptura}
+        alVolver={() => {
+          setSeccionHoja(null)
+          setCuentaInicial(null)
+        }}
+        alGuardarCuenta={(id, valores) => rellenarMeses(id, valores)}
+        alCambiarCiclo={p.recargarCiclo}
+        usaPartidas={new Set(p.lineasCiclo.filter((l) => l.usa_partidas || l.usa_consumo).map((l) => l.linea_id))}
+      />
+    )
+  }
   return (
-    <section aria-labelledby="titulo-budget">
-      <details className="notas-reporte" open={!datos.version}>
-        <summary>Cómo funciona</summary>
-        <p className="suave nota-pie">
-          Escribe el Budget de cada mes; el <strong>Actual</strong> aparece al lado como referencia.
-          Los totales se calculan solos.{' '}
-          {usaCaptura ? (
-            <>
-              Hay un <strong>ciclo de presupuesto abierto</strong>: Guardar manda tu propuesta a ese
-              ciclo (por línea); el Budget oficial se crea cuando el ciclo se aprueba.
-            </>
-          ) : (
-            <>
-              Guardar crea una <strong>versión nueva</strong>: la anterior se conserva.
-            </>
-          )}{' '}
-          Las líneas sin cuentas (como el <strong>Exchange Rate</strong>) también dejan escribir su
-          Actual de cada mes.
-        </p>
-      </details>
+    <section className="captura-area" aria-labelledby="titulo-budget">
       {datos.advertencias.map((a) => (
         <p key={a} className="mensaje mensaje-aviso" role="status">
           {a}
         </p>
       ))}
 
-      {puedeImportar && <ImportarExcel hotelId={p.hotelId} alImportar={p.recargar} hayCambios={totalCambios > 0} />}
-
-      <form className="barra-filtros" role="search" onSubmit={(e) => e.preventDefault()}>
-        <div className="filtro-campo">
-          <span className="filtro-etiqueta">Año fiscal</span>
-          <select aria-label="Año fiscal" value={p.anoFiscal} onChange={(e) => p.alElegirAno(e.target.value)}>
-            {p.anos.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="filtro-campo">
-          <span className="filtro-etiqueta">Sección</span>
-          <select aria-label="Sección" value={seccionActiva} onChange={(e) => p.setSeccion(e.target.value)}>
-            <option value={TODAS}>Todas (más lento)</option>
-            {secciones.map((s) => (
-              <option key={s.id} value={String(s.id)}>
-                {s.descripcion}
-              </option>
-            ))}
-          </select>
-        </div>
-        <label className="filtro-campo filtro-busqueda">
-          <span className="filtro-etiqueta">Buscar línea</span>
-          <span className="campo-busqueda">
-            <Icono nombre="buscar" tamano={16} />
-            <input
-              type="search"
-              aria-label="Buscar línea"
-              value={p.texto}
-              onChange={(e) => p.setTexto(e.target.value)}
-            />
-          </span>
-        </label>
-        <div className="filtro-interruptores">
-          <label className="interruptor">
-            <input
-              type="checkbox"
-              checked={p.soloEditables}
-              onChange={(e) => p.setSoloEditables(e.target.checked)}
-            />
-            <span className="interruptor-pista" aria-hidden="true" />
-            Solo líneas editables
-          </label>
-        </div>
-      </form>
-
-      <div className="selector-bloque" role="group" aria-label="Vista de Captura">
-        <button
-          type="button"
-          className={vistaCaptura === 'tabla' ? 'chip chip-activo' : 'chip'}
-          aria-pressed={vistaCaptura === 'tabla'}
-          onClick={() => setVistaCaptura('tabla')}
-        >
-          Tabla
-        </button>
-        <button
-          type="button"
-          className={vistaCaptura === 'arbol' ? 'chip chip-activo' : 'chip'}
-          aria-pressed={vistaCaptura === 'arbol'}
-          onClick={() => setVistaCaptura('arbol')}
-        >
-          Árbol
-        </button>
-      </div>
-
-      {puedeImportar && (
-        <div className="barra-filtros herramienta-copiar" role="group" aria-label="Copiar el Actual">
-          <div className="filtro-campo">
-            <span className="filtro-etiqueta">Ajuste sobre el Actual (%)</span>
-            <input
-              type="text"
-              inputMode="decimal"
-              aria-label="Ajuste sobre el Actual (%)"
-              placeholder="0"
-              value={p.porcentaje}
-              onChange={(e) => p.setPorcentaje(e.target.value)}
-            />
-          </div>
-          <div className="filtro-interruptores">
-            <label className="interruptor">
+      <div className="captura-trabajo captura-trabajo-sin-panel">
+        <section className="tarjeta-tabla" aria-label="Líneas del presupuesto">
+          <form className="barra-captura" role="search" onSubmit={(e) => e.preventDefault()}>
+            <label className="campo-buscar">
+              <span className="solo-lectores">Buscar línea o código</span>
+              <Icono nombre="buscar" tamano={16} />
+              <input
+                type="search"
+                aria-label="Buscar línea o código"
+                placeholder="Buscar línea o código…"
+                value={p.texto}
+                onChange={(e) => p.setTexto(e.target.value)}
+              />
+            </label>
+            <label className="campo-filtro">
+              <span>Sección</span>
+              <select aria-label="Sección" value={seccionActiva} onChange={(e) => p.setSeccion(e.target.value)}>
+                <option value={TODAS}>Todas</option>
+                {secciones.map((s) => (
+                  <option key={s.id} value={String(s.id)}>
+                    {s.descripcion}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="campo-filtro">
+              <span>Estado</span>
+              <select
+                aria-label="Estado de captura"
+                value={p.estadoCaptura}
+                onChange={(e) => p.setEstadoCaptura(e.target.value as 'todos' | 'pendiente' | 'capturada')}
+              >
+                <option value="todos">Todos</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="capturada">Capturadas</option>
+              </select>
+            </label>
+            <label className="interruptor toolbar-interruptor">
               <input
                 type="checkbox"
-                checked={p.soloVacios}
-                onChange={(e) => p.setSoloVacios(e.target.checked)}
+                checked={p.soloEditables}
+                onChange={(e) => p.setSoloEditables(e.target.checked)}
               />
               <span className="interruptor-pista" aria-hidden="true" />
-              Solo meses sin Budget
+              Solo editables
             </label>
+
+            <div className="barra-captura-acciones">
+              <div className="control-segmentado" role="group" aria-label="Vista de Captura">
+                <button
+                  type="button"
+                  className={modo === 'tabla' ? 'activo' : ''}
+                  aria-pressed={modo === 'tabla'}
+                  onClick={() => {
+                    setModo('tabla')
+                    setSeccionesColapsadas(new Set())
+                  }}
+                >
+                  Tabla
+                </button>
+                <button
+                  type="button"
+                  className={modo === 'arbol' ? 'activo' : ''}
+                  aria-pressed={modo === 'arbol'}
+                  onClick={() => {
+                    setModo('arbol')
+                    setSeccionesColapsadas(new Set(grupos.map((g) => String(g.seccionId))))
+                  }}
+                >
+                  Árbol
+                </button>
+              </div>
+              <details className="menu-flotante">
+                <summary className="boton boton-secundario boton-chico">
+                  <span>Herramientas</span>
+                  <Icono nombre="chevron" tamano={12} />
+                </summary>
+                <div className="menu-flotante-panel menu-herramientas">
+                  <button type="button" className="boton boton-secundario" onClick={() => setSeccionesColapsadas(new Set())}>
+                    Expandir todas las secciones
+                  </button>
+                  <button
+                    type="button"
+                    className="boton boton-secundario"
+                    onClick={() => setSeccionesColapsadas(new Set(grupos.map((g) => String(g.seccionId))))}
+                  >
+                    Contraer todas las secciones
+                  </button>
+                  <button
+                    type="button"
+                    className="boton boton-secundario"
+                    onClick={() => {
+                      p.setTexto('')
+                      p.setSeccion(TODAS)
+                      p.setEstadoCaptura('todos')
+                      p.setSoloEditables(false)
+                    }}
+                  >
+                    Limpiar filtros
+                  </button>
+                </div>
+              </details>
+              {puedeImportar && (
+                <details className="menu-flotante menu-importar">
+                  <summary className="boton boton-secundario boton-chico">
+                    <Icono nombre="subir" tamano={14} />
+                    <span>Importar Excel</span>
+                  </summary>
+                  <div className="menu-flotante-panel">
+                    <ImportarExcel hotelId={p.hotelId} alImportar={p.recargar} hayCambios={totalCambios > 0} />
+                  </div>
+                </details>
+              )}
+            </div>
+          </form>
+
+          {p.mensaje && (
+            <p
+              className={`mensaje mensaje-${p.mensaje.tono === 'ok' ? 'ok' : p.mensaje.tono === 'error' ? 'error' : 'aviso'}`}
+              role={p.mensaje.tono === 'error' ? 'alert' : 'status'}
+            >
+              {p.mensaje.texto}
+            </p>
+          )}
+
+          {lineasMostradas.length === 0 && visibles.length === 0 && datos.lineas.length === 0 && (
+            <EstadoVacio>No hay líneas que mostrar.</EstadoVacio>
+          )}
+
+          <div className="tabla-variance-contenedor" role="region" aria-label="Captura de Budget" tabIndex={0}>
+            <table className={`tabla-variance tabla-budget tabla-budget-unificada${modo === 'arbol' ? ' modo-arbol' : ''}`}>
+              <caption className="solo-lectores">
+                Budget por mes. Haz clic en una celda de una línea de detalle para editarla; los totales se
+                calculan solos y el Actual se ve al pasar el cursor. Selecciona una línea para ver su detalle.
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="col-linea">
+                    Línea / Código
+                  </th>
+                  <th scope="col" className="col-anual">
+                    Anual
+                  </th>
+                  {periodos.map((per) => (
+                    <th key={per} scope="col" className="col-mes">
+                      {etiquetaMes(per)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {grupos.map((g) => {
+                  const claveSeccion = String(g.seccionId)
+                  return (
+                    <GrupoFilas
+                      key={`${g.seccionId}-${g.lineas[0].linea_id}`}
+                      seccionId={g.seccionId}
+                      titulo={g.seccionId === null ? null : (nombreSeccion.get(g.seccionId) ?? null)}
+                      lineas={g.lineas}
+                      periodos={periodos}
+                      ediciones={ediciones}
+                      budget={budgetEnPantalla}
+                      objetivoPorLinea={objetivoPorLinea}
+                      alEditar={editar}
+                      puedeEditarBudget={puedeEditarBudget}
+                      colapsada={seccionesColapsadas.has(claveSeccion)}
+                      onAlternar={() => alternarSeccion(claveSeccion)}
+                      seleccionada={lineaDetalle?.linea_id ?? null}
+                      onSeleccionar={seleccionar}
+                      celdaActiva={celdaActiva}
+                      onActivar={(linea, periodo) => {
+                        // Editar una celda no abre el panel; solo recuerda la línea por si lo abres
+                        setCeldaActiva({ linea, periodo })
+                        setLineaSeleccionada(linea)
+                      }}
+                      onDesactivar={(linea, periodo) =>
+                        setCeldaActiva((a) => (a && a.linea === linea && a.periodo === periodo ? null : a))
+                      }
+                      onMover={moverCelda}
+                      tieneTabla={tieneTabla}
+                      tieneHoja={tieneHoja}
+                      onAbrirHoja={(id) => {
+                        setCuentaInicial(null)
+                        setSeccionHoja(id)
+                      }}
+                      onAbrirTabla={(id) => {
+                        setLineaSeleccionada(id)
+                        abrirHojaDeCuenta(id)
+                      }}
+                    />
+                  )
+                })}
+                {lineasMostradas.length === 0 && datos.lineas.length > 0 && (
+                  <tr>
+                    <td colSpan={periodos.length + 2}>Ninguna línea coincide con el filtro.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-          <button type="button" className="boton boton-secundario" onClick={copiarActual}>
-            Copiar el Actual a las líneas que se ven
-          </button>
-        </div>
-      )}
+        </section>
 
-      {p.mensaje && (
-        <p
-          className={`mensaje mensaje-${p.mensaje.tono === 'ok' ? 'ok' : p.mensaje.tono === 'error' ? 'error' : 'aviso'}`}
-          role={p.mensaje.tono === 'error' ? 'alert' : 'status'}
-        >
-          {p.mensaje.texto}
-        </p>
-      )}
-
-      {lineasMostradas.length === 0 && visibles.length === 0 && datos.lineas.length === 0 && (
-        <EstadoVacio>No hay líneas que mostrar.</EstadoVacio>
-      )}
-      {vistaCaptura === 'tabla' ? (
-      <div className="tabla-variance-contenedor" role="region" aria-label="Tabla de Budget" tabIndex={0}>
-        <table className="tabla-variance tabla-budget">
-          <caption className="solo-lectores">
-            Budget por mes con el Actual de referencia. Las celdas de Budget de las líneas de detalle
-            se pueden editar; los totales se calculan solos.
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col" rowSpan={2} className="col-linea">
-                Línea
-              </th>
-              {periodos.map((per) => (
-                <th key={per} scope="colgroup" colSpan={2} className="grupo-bloque">
-                  {etiquetaMes(per)}
-                </th>
-              ))}
-              <th scope="colgroup" colSpan={2} className="grupo-bloque">
-                Año
-              </th>
-              {puedeObjetivo || objetivoPorLinea.size > 0 ? (
-                <th scope="col" rowSpan={2}>
-                  Objetivo
-                </th>
-              ) : null}
-            </tr>
-            <tr>
-              {[...periodos, 'año'].flatMap((per) => [
-                <th key={`${per}-b`} scope="col" className={per === periodos[0] ? '' : 'inicio-mes'}>
-                  Budget
-                </th>,
-                <th key={`${per}-a`} scope="col">
-                  Actual
-                </th>,
-              ])}
-            </tr>
-          </thead>
-          <tbody>
-            {grupos.map((g) => (
-              <GrupoFilas
-                key={`${g.seccionId}-${g.lineas[0].linea_id}`}
-                titulo={g.seccionId === null ? null : (nombreSeccion.get(g.seccionId) ?? null)}
-                lineas={g.lineas}
-                periodos={periodos}
-                ediciones={ediciones}
-                budget={budgetEnPantalla}
-                alEditar={editar}
-                alEditarActual={editarActual}
-                puedeEditarBudget={puedeEditarBudget}
-                puedeEditarActual={(l) => l.actual_editable && puedeImportar}
-                mostrarObjetivo={puedeObjetivo || objetivoPorLinea.size > 0}
-                objetivoPorLinea={objetivoPorLinea}
-                puedeObjetivo={puedeObjetivo && cicloBorrador}
-                hotelId={p.hotelId}
-                cicloId={p.cicloId}
-                perfiles={p.perfiles}
-                puedeRellenarConPerfil={usaCaptura}
-                lineasPermitidas={lineasPermitidas}
-                alRellenarMeses={rellenarMeses}
-                alCambiarCiclo={p.recargarCiclo}
-              />
-            ))}
-            {lineasMostradas.length === 0 && datos.lineas.length > 0 && (
-              <tr>
-                <td colSpan={periodos.length * 2 + 3}>Ninguna línea coincide con el filtro.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-      ) : (
-      <div className="captura-split">
-        <ArbolLineas
-          grupos={grupos}
-          nombreSeccion={nombreSeccion}
-          periodos={periodos}
-          budget={budgetEnPantalla}
-          objetivoPorLinea={objetivoPorLinea}
-          seleccionada={lineaSeleccionada}
-          onSeleccionar={setLineaSeleccionada}
-        />
-        {lineaDetalle ? (
+        {lineaDetalle && (
           <DetalleCapturaLinea
             linea={lineaDetalle}
             periodos={periodos}
             ediciones={ediciones}
             budget={budgetEnPantalla}
-            alEditar={editar}
             alEditarActual={editarActual}
             puedeEditarBudget={puedeEditarBudget(lineaDetalle)}
             puedeEditarActual={lineaDetalle.actual_editable && puedeImportar}
@@ -899,12 +994,11 @@ function VistaEditor(p: PropsVista) {
             puedeRellenarConPerfil={usaCaptura && lineasPermitidas.has(lineaDetalle.linea_id)}
             alRellenarMeses={rellenarMeses}
             alCambiarCiclo={p.recargarCiclo}
+            alAbrirTabla={tieneTabla(lineaDetalle) ? () => abrirHojaDeCuenta(lineaDetalle.linea_id) : null}
+            onCerrar={() => setPanelOculto(true)}
           />
-        ) : (
-          <EstadoVacio>Elige una línea del árbol para capturarla.</EstadoVacio>
         )}
       </div>
-      )}
 
       {p.confirmando && (
         <div className="mensaje mensaje-aviso" role="status">
@@ -935,74 +1029,160 @@ function VistaEditor(p: PropsVista) {
           </button>
         </div>
       )}
-      <div className="acciones-budget acciones-fijas">
-        <span className="suave" role="status">
-          {totalCambios === 0
-            ? 'Sin cambios.'
-            : `${plural(totalCambios, 'cambio', 'cambios')} en ${plural(lineasConCambio, 'línea', 'líneas')} sin guardar.`}
-          {invalidas.length > 0 && ` ${plural(invalidas.length, 'celda', 'celdas')} con un importe no válido.`}
-        </span>
-        <button
-          type="button"
-          className="boton boton-secundario"
-          disabled={ediciones.size === 0 || p.guardando}
-          onClick={() => {
-            p.setEdiciones(new Map())
-            p.setConfirmando(false)
-            p.setMensaje(null)
-          }}
-        >
-          Descartar cambios
-        </button>
-        <button
-          type="button"
-          className="boton"
-          disabled={totalCambios === 0 || invalidas.length > 0 || p.guardando}
-          onClick={() => p.setConfirmando(true)}
-        >
-          {usaCaptura ? 'Guardar en el ciclo de presupuesto' : 'Guardar como versión nueva'}
-        </button>
-      </div>
 
+      {(totalCambios > 0 || invalidas.length > 0) && (
+        <div className="barra-cambios" role="status">
+          <span className="barra-cambios-info" aria-hidden="true">
+            i
+          </span>
+          <div className="barra-cambios-texto">
+            <strong>
+              {plural(totalCambios, 'cambio', 'cambios')} en {plural(lineasConCambio, 'línea', 'líneas')}
+            </strong>
+            <span className="suave">{plural(invalidas.length, 'celda inválida', 'celdas inválidas')}</span>
+          </div>
+          <ul className="barra-cambios-leyenda" aria-label="Leyenda de estados de celda">
+            <li>
+              <span className="punto punto-editado" aria-hidden="true" />
+              Editado
+            </li>
+            <li>
+              <span className="punto punto-invalido" aria-hidden="true" />
+              Inválido
+            </li>
+            <li>
+              <span className="punto punto-calculado" aria-hidden="true" />
+              Calculado
+            </li>
+            <li>
+              <Icono nombre="alerta" tamano={11} />
+              Solo lectura
+            </li>
+          </ul>
+          <div className="barra-cambios-acciones">
+            <button
+              type="button"
+              className="boton boton-secundario"
+              disabled={ediciones.size === 0 || p.guardando}
+              onClick={() => {
+                p.setEdiciones(new Map())
+                p.setConfirmando(false)
+                p.setMensaje(null)
+              }}
+            >
+              Descartar cambios
+            </button>
+            <button
+              type="button"
+              className="boton"
+              disabled={totalCambios === 0 || invalidas.length > 0 || p.guardando}
+              onClick={() => p.setConfirmando(true)}
+              title={usaCaptura ? 'Guarda la propuesta en el ciclo de presupuesto' : 'Crea una versión nueva del Budget'}
+            >
+              <Icono nombre="check" tamano={15} />
+              Guardar cambios
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
 
 interface PropsGrupo {
+  seccionId: number | null
   titulo: string | null
   lineas: LineaEdicionBudget[]
   periodos: string[]
   ediciones: ReadonlyMap<string, string>
   budget: ReadonlyMap<string, bigint | null>
-  alEditar: (linea: number, periodo: string, valor: string) => void
-  alEditarActual: (linea: number, periodo: string, valor: string) => void
-  puedeEditarBudget: (linea: LineaEdicionBudget) => boolean
-  puedeEditarActual: (linea: LineaEdicionBudget) => boolean
-  mostrarObjetivo: boolean
   objetivoPorLinea: ReadonlyMap<number, LineaCaptura>
-  puedeObjetivo: boolean
-  hotelId: number
-  cicloId: number | null
-  perfiles: Perfil[]
-  puedeRellenarConPerfil: boolean
-  lineasPermitidas: ReadonlySet<number>
-  alRellenarMeses: (linea: number, valores: LineaMensual[]) => void
-  alCambiarCiclo: () => void
+  alEditar: (linea: number, periodo: string, valor: string) => void
+  puedeEditarBudget: (linea: LineaEdicionBudget) => boolean
+  colapsada: boolean
+  onAlternar: () => void
+  seleccionada: number | null
+  onSeleccionar: (linea: number) => void
+  celdaActiva: { linea: number; periodo: string } | null
+  onActivar: (linea: number, periodo: string) => void
+  onDesactivar: (linea: number, periodo: string) => void
+  onMover: (linea: number, periodo: string, dLinea: number, dMes: number) => void
+  tieneTabla: (linea: LineaEdicionBudget) => boolean
+  tieneHoja: (seccionId: number | null) => boolean
+  onAbrirHoja: (seccionId: number) => void
+  onAbrirTabla: (linea: number) => void
 }
 
-function GrupoFilas({ titulo, lineas, periodos, ...resto }: PropsGrupo) {
+/** Importe con prefijo $ (columna Anual y totales de sección). */
+const dinero = (micros: bigint | null) => (micros === null ? '—' : `$ ${formatoMicros(micros)}`)
+
+/** Fila(s) de una sección: encabezado colapsable con totales (anual y por mes) y, si no está
+ * colapsada, una fila por línea. Los totales se calculan solo sobre líneas de detalle (los
+ * subtotales y totales del reporte ya agregan a esas mismas líneas: sumarlos duplicaría). */
+function GrupoFilas({
+  titulo,
+  lineas,
+  periodos,
+  budget,
+  objetivoPorLinea,
+  colapsada,
+  onAlternar,
+  tieneHoja,
+  onAbrirHoja,
+  seccionId,
+  ...resto
+}: PropsGrupo) {
+  const detalle = lineas.filter((l) => l.tipo === 'detalle')
+  const totalMes = (periodo: string) =>
+    sumarMicros(detalle.map((l) => budget.get(claveCelda(l.linea_id, periodo)) ?? null))
+  const totalSeccion = sumarMicros(periodos.map((per) => totalMes(per)))
+  const capturadas = lineas.filter((l) => objetivoPorLinea.get(l.linea_id)?.estado === 'capturada').length
+
   return (
     <>
       {titulo !== null && (
         <tr className="fila-seccion">
-          <th scope="rowgroup" colSpan={periodos.length * 2 + (resto.mostrarObjetivo ? 4 : 3)} className="col-linea">
-            {titulo}
+          <th scope="rowgroup" className="col-linea fila-seccion-celda">
+            <button
+              type="button"
+              className="fila-seccion-boton"
+              onClick={onAlternar}
+              aria-expanded={!colapsada}
+              title={`${capturadas}/${lineas.length} líneas capturadas`}
+            >
+              <Icono nombre="chevron" tamano={13} />
+              <span>{titulo}</span>
+            </button>
+            {seccionId !== null && tieneHoja(seccionId) && (
+              <button
+                type="button"
+                className="fila-seccion-hoja"
+                onClick={() => onAbrirHoja(seccionId)}
+                aria-label={`Abrir la hoja de ${titulo}`}
+                title="Abrir la hoja completa de esta sección, como en el Excel"
+              >
+                <Icono nombre="informe" tamano={13} />
+              </button>
+            )}
           </th>
+          <td className="num col-anual fila-seccion-anual">{dinero(totalSeccion)}</td>
+          {periodos.map((per) => (
+            <td key={per} className="num fila-seccion-mes">
+              {formatoMicros(totalMes(per))}
+            </td>
+          ))}
         </tr>
       )}
-      {lineas.map((l) => (
-        <FilaBudget key={l.linea_id} linea={l} {...resto} />
-      ))}
+      {!colapsada &&
+        lineas.map((l) => (
+          <FilaBudget
+            key={l.linea_id}
+            linea={l}
+            periodos={periodos}
+            budget={budget}
+            {...resto}
+          />
+        ))}
     </>
   )
 }
@@ -1012,193 +1192,125 @@ function FilaBudget({
   ediciones,
   budget,
   alEditar,
-  alEditarActual,
   puedeEditarBudget,
-  puedeEditarActual,
-  mostrarObjetivo,
-  objetivoPorLinea,
-  puedeObjetivo,
-  hotelId,
-  cicloId,
-  perfiles,
-  puedeRellenarConPerfil,
-  lineasPermitidas,
-  alRellenarMeses,
-  alCambiarCiclo,
-}: Omit<PropsGrupo, 'titulo' | 'lineas' | 'periodos'> & { linea: LineaEdicionBudget }) {
+  seleccionada,
+  onSeleccionar,
+  celdaActiva,
+  onActivar,
+  onDesactivar,
+  onMover,
+  tieneTabla,
+  onAbrirTabla,
+}: Omit<PropsGrupo, 'titulo' | 'lineas' | 'seccionId' | 'objetivoPorLinea' | 'colapsada' | 'onAlternar' | 'tieneHoja' | 'onAbrirHoja'> & {
+  linea: LineaEdicionBudget
+}) {
   const informativa = linea.tipo === 'informativa'
   const calculados = linea.meses.map((c) => budget.get(claveCelda(linea.linea_id, c.periodo)) ?? null)
-  const actuales = linea.meses.map((c) => (c.actual === null ? null : aMicros(c.actual)))
   const editableBudget = puedeEditarBudget(linea)
-  const editableActual = puedeEditarActual(linea)
-  const anualActual = sumarMicros(calculados)
-  const puedeRellenar =
-    puedeRellenarConPerfil &&
-    linea.tipo === 'detalle' &&
-    cicloId !== null &&
-    lineasPermitidas.has(linea.linea_id) &&
-    perfiles.length > 0 &&
-    anualActual !== null
-  const captura = objetivoPorLinea.get(linea.linea_id)
+  const anual = sumarMicros(calculados)
+  const activa = seleccionada === linea.linea_id
 
   return (
-    <tr className={`fila-${linea.tipo}`}>
+    <tr className={`fila-${linea.tipo}${activa ? ' fila-activa' : ''}`}>
       <th scope="row" className="col-linea">
-        <span className="descripcion">{linea.descripcion}</span>
-        {linea.codigo_corporativo && <span className="codigo suave"> {linea.codigo_corporativo}</span>}
-        {puedeRellenar && cicloId !== null && anualActual !== null && (
-          <SelectorPerfilDistribucion
-            hotelId={hotelId}
-            cicloId={cicloId}
-            linea={linea.linea_id}
-            anual={textoDeMicros(anualActual)}
-            perfiles={perfiles}
-            periodos={linea.meses.map((c) => c.periodo)}
-            alAplicar={(valores) => alRellenarMeses(linea.linea_id, valores)}
-          />
-        )}
+        <button
+          type="button"
+          className="fila-linea-boton"
+          // El nombre abre las tablas de la cuenta (hoja); sin tablas, el detalle de la línea
+          onClick={() => (tieneTabla(linea) ? onAbrirTabla(linea.linea_id) : onSeleccionar(linea.linea_id))}
+          aria-current={activa ? 'true' : undefined}
+          title={
+            tieneTabla(linea)
+              ? 'Abrir las tablas de esta cuenta'
+              : 'Ver detalle, objetivo, nota y perfil de esta línea'
+          }
+        >
+          <span className="linea-icono" aria-hidden="true">
+            <Icono nombre={linea.editable ? 'presupuesto' : 'informe'} tamano={14} />
+          </span>
+          <span className="linea-textos">
+            <span className="descripcion">{linea.descripcion}</span>
+            {linea.codigo_corporativo && <span className="codigo">{linea.codigo_corporativo}</span>}
+          </span>
+        </button>
+        <button
+          type="button"
+          className="fila-tabla-interna"
+          onClick={() => onSeleccionar(linea.linea_id)}
+          aria-label={`Ver el panel de línea de ${linea.descripcion}`}
+          title="Ver detalle, objetivo, nota y perfil de esta línea"
+        >
+          <Icono nombre="info" tamano={14} />
+        </button>
       </th>
-      {linea.meses.flatMap((c, i) => {
+      {/* un tipo de cambio no se suma: su "año" queda en blanco */}
+      <td className="num col-anual celda-anual">{informativa ? '—' : dinero(anual)}</td>
+      {linea.meses.map((c, i) => {
         const clave = claveCelda(linea.linea_id, c.periodo)
         const calculado = calculados[i]
         const editado = ediciones.get(clave)
-        const invalido = editado !== undefined && editado.trim() !== '' && aMicros(editado) === null
-        const inicio = i === 0 ? '' : ' inicio-mes'
-        const celdaBudget = editableBudget ? (
-          <td key={`${c.periodo}-b`} className={`num${inicio}${editado !== undefined ? ' editada' : ''}`}>
-            <input
-              type="text"
-              inputMode="decimal"
-              className={invalido ? 'entrada-budget entrada-invalida' : 'entrada-budget'}
-              aria-label={`Budget de ${linea.descripcion}, ${etiquetaMes(c.periodo)}`}
-              aria-invalid={invalido || undefined}
-              placeholder="—"
-              value={editado ?? (calculado === null ? '' : textoDeMicros(calculado))}
-              onChange={(e) => alEditar(linea.linea_id, c.periodo, e.target.value)}
-            />
-          </td>
-        ) : (
-          <td key={`${c.periodo}-b`} className={`num${inicio}`}>
-            {formatoMicros(calculado)}
+        const hayEdicion = editado !== undefined
+        const invalido = hayEdicion && editado.trim() !== '' && aMicros(editado) === null
+        const microsEditado = hayEdicion && editado.trim() !== '' ? aMicros(editado) : null
+        const mostrado = invalido ? editado : formatoMicros(hayEdicion && microsEditado !== null ? microsEditado : calculado)
+        const actualMicros = c.actual === null ? null : aMicros(c.actual)
+        const origen =
+          c.actual_origen === 'manual'
+            ? 'capturado a mano'
+            : c.actual_origen === 'excel'
+              ? 'del Excel de Contraloría'
+              : 'sin capturar'
+        const activaCelda = celdaActiva?.linea === linea.linea_id && celdaActiva.periodo === c.periodo
+        const nombre = `Budget de ${linea.descripcion}, ${etiquetaMes(c.periodo)}`
+        const clases = [
+          'celda-mes',
+          hayEdicion ? 'celda-editada' : '',
+          invalido ? 'celda-invalida' : '',
+          !editableBudget ? (linea.editable ? 'celda-solo-lectura' : 'celda-calculada') : '',
+        ]
+          .filter(Boolean)
+          .join(' ')
+        return (
+          <td key={c.periodo} className={clases} title={`Actual: ${formatoMicros(actualMicros)} (${origen})`}>
+            {editableBudget && activaCelda ? (
+              <input
+                type="text"
+                inputMode="decimal"
+                className="entrada-celda"
+                aria-label={nombre}
+                aria-invalid={invalido || undefined}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+                value={editado ?? (calculado === null ? '' : textoDeMicros(calculado))}
+                onChange={(e) => alEditar(linea.linea_id, c.periodo, e.target.value)}
+                onBlur={() => onDesactivar(linea.linea_id, c.periodo)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault()
+                    onDesactivar(linea.linea_id, c.periodo)
+                  } else if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    onMover(linea.linea_id, c.periodo, 1, 0)
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault()
+                    onMover(linea.linea_id, c.periodo, -1, 0)
+                  } else if (e.key === 'Tab') {
+                    e.preventDefault()
+                    onMover(linea.linea_id, c.periodo, 0, e.shiftKey ? -1 : 1)
+                  }
+                }}
+              />
+            ) : editableBudget ? (
+              <button type="button" className="celda-valor" aria-label={nombre} onClick={() => onActivar(linea.linea_id, c.periodo)}>
+                {mostrado}
+              </button>
+            ) : (
+              <span className="celda-valor">{mostrado}</span>
+            )}
           </td>
         )
-        const claveA = claveActual(linea.linea_id, c.periodo)
-        const editadoA = ediciones.get(claveA)
-        const invalidoA = editadoA !== undefined && editadoA.trim() !== '' && aMicros(editadoA) === null
-        const celdaActual = editableActual ? (
-          <td
-            key={`${c.periodo}-a`}
-            className={`num${editadoA !== undefined ? ' editada' : ''}`}
-            title={
-              c.actual_origen === 'manual'
-                ? 'Capturado a mano'
-                : c.actual_origen === 'excel'
-                  ? 'Viene del Excel de Contraloría'
-                  : 'Sin capturar'
-            }
-          >
-            <input
-              type="text"
-              inputMode="decimal"
-              className={invalidoA ? 'entrada-budget entrada-invalida' : 'entrada-budget'}
-              aria-label={`Actual de ${linea.descripcion}, ${etiquetaMes(c.periodo)}`}
-              aria-invalid={invalidoA || undefined}
-              placeholder="—"
-              value={editadoA ?? (actuales[i] === null ? '' : textoDeMicros(actuales[i]))}
-              onChange={(e) => alEditarActual(linea.linea_id, c.periodo, e.target.value)}
-            />
-          </td>
-        ) : (
-          <td key={`${c.periodo}-a`} className="num suave">
-            {formatoMicros(actuales[i])}
-          </td>
-        )
-        return [celdaBudget, celdaActual]
       })}
-      {/* un tipo de cambio no se suma: su "año" queda en blanco */}
-      <td className="num inicio-mes">{informativa ? '—' : formatoMicros(sumarMicros(calculados))}</td>
-      <td className="num suave">{informativa ? '—' : formatoMicros(sumarMicros(actuales))}</td>
-      {mostrarObjetivo && (
-        <td>
-          {cicloId !== null && captura ? (
-            <ObjetivoCelda
-              hotelId={hotelId}
-              cicloId={cicloId}
-              linea={linea.linea_id}
-              descripcion={linea.descripcion}
-              objetivoInicial={captura.objetivo}
-              puedeEditar={puedeObjetivo && lineasPermitidas.has(linea.linea_id)}
-              alGuardar={alCambiarCiclo}
-            />
-          ) : (
-            <span className="suave">—</span>
-          )}
-        </td>
-      )}
     </tr>
-  )
-}
-
-export function ObjetivoCelda({
-  hotelId,
-  cicloId,
-  linea,
-  descripcion,
-  objetivoInicial,
-  puedeEditar,
-  alGuardar,
-}: {
-  hotelId: number
-  cicloId: number
-  linea: number
-  descripcion: string
-  objetivoInicial: string | null
-  puedeEditar: boolean
-  alGuardar: () => void
-}) {
-  const [valor, setValor] = useState(objetivoInicial ?? '')
-  const [guardando, setGuardando] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const cambio = valor !== (objetivoInicial ?? '')
-
-  if (!puedeEditar) return <span>{objetivoInicial ?? '—'}</span>
-
-  async function guardar() {
-    setGuardando(true)
-    setError(null)
-    try {
-      await enviarJson(
-        'PUT',
-        `/api/v1/hoteles/${hotelId}/presupuesto/ciclos/${cicloId}/lineas/${linea}/objetivo`,
-        { objetivo: valor.trim() === '' ? null : valor },
-      )
-      alGuardar()
-    } catch (e) {
-      setError(e instanceof ErrorApi ? e.detalle : 'No se pudo guardar el objetivo')
-    } finally {
-      setGuardando(false)
-    }
-  }
-
-  return (
-    <div className="campo-con-boton">
-      <input
-        type="text"
-        inputMode="decimal"
-        aria-label={`Objetivo de ${descripcion}`}
-        value={valor}
-        onChange={(e) => setValor(e.target.value)}
-      />
-      <button
-        type="button"
-        className="boton boton-secundario"
-        disabled={!cambio || guardando}
-        onClick={() => void guardar()}
-      >
-        Guardar
-      </button>
-      {error && <MensajeError texto={error} />}
-    </div>
   )
 }
 

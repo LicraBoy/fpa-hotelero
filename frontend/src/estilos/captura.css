@@ -1,0 +1,371 @@
+/* =====================================================================================================
+   EDITOR MENSUAL (los 12 meses de una cuenta de la hoja de sección)
+   Estilo de la referencia «diseño 1»: tarjetas sobre fondo claro, azul primario, tablas densas.
+   Colores solo con tokens `--ref-*` (budget.css, claro y oscuro). Radios por jerarquía: tarjetas
+   `--radio-grande`, controles `--radio`, chips y puntos en pastilla. La única sombra es la de la barra
+   inferior. El movimiento va solo en `prefers-reduced-motion: no-preference`.
+   Se importa al final de la cascada.
+   ===================================================================================================== */
+
+.editor-cuenta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 72px;
+  color: var(--ref-texto);
+}
+
+/* Nombre de la pantalla (Hoja de sección / Comparación anual / Editor mensual), como píldora */
+.etiqueta-pantalla {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  margin-left: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--ref-azul-borde);
+  border-radius: 999px;
+  background: var(--ref-azul-suave);
+  color: var(--ref-azul-texto);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------- Cabecera: todo en una sola línea ---------- */
+.ec-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--ref-tarjeta);
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio-grande);
+}
+.ec-migas { display: flex; align-items: center; gap: 8px; flex: none; }
+.ec-migas .etiqueta-pantalla { margin-left: 0; }
+.ec-titulos { display: flex; align-items: baseline; gap: 4px 14px; flex: 1 1 0; min-width: 0; }
+.ec-titulos h2 {
+  flex: 0 1 auto;
+  margin: 0;
+  min-width: 7ch;
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ec-meta { display: flex; flex: 0 100 auto; gap: 4px 12px; min-width: 0; margin: 0; overflow: hidden; font-size: 12.5px; color: var(--ref-texto-suave); white-space: nowrap; text-overflow: ellipsis; }
+.ec-meta span + span { padding-left: 12px; border-left: 1px solid var(--ref-borde); }
+
+.ec-navegacion { display: flex; align-items: center; gap: 8px; flex: none; margin-left: auto; }
+.ec-selector { position: relative; display: inline-flex; align-items: center; }
+.ec-selector select {
+  appearance: none;
+  height: 34px;
+  max-width: 170px;
+  padding: 0 30px 0 12px;
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio);
+  background: var(--ref-tarjeta);
+  color: var(--ref-texto);
+  font: inherit;
+  font-size: 13px;
+}
+.ec-selector .icono {
+  position: absolute;
+  right: 10px;
+  transform: rotate(90deg);
+  color: var(--ref-texto-suave);
+  pointer-events: none;
+}
+.ec-contador { font-size: 12.5px; color: var(--ref-texto-suave); white-space: nowrap; }
+
+/* Botones: misma altura (34 px) */
+.ec-boton-nav,
+.ec-boton-secundario,
+.ec-boton-neutro,
+.ec-boton-primario {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--radio);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ec-boton-nav,
+.ec-boton-neutro { border: 1px solid var(--ref-borde); background: var(--ref-tarjeta); color: var(--ref-texto); }
+.ec-boton-neutro { color: var(--ref-texto-suave); font-weight: 500; }
+.ec-boton-secundario { border: 1px solid var(--ref-azul-borde); background: var(--ref-azul-suave); color: var(--ref-azul-texto); }
+.ec-boton-primario { border: 1px solid var(--ref-azul); background: var(--ref-azul); color: var(--ref-sobre-azul); }
+.ec-boton-nav:hover:not(:disabled),
+.ec-boton-neutro:hover:not(:disabled),
+.ec-boton-primario:hover:not(:disabled) { background: var(--ref-azul-hover); }
+.editor-cuenta button:disabled { opacity: 0.45; cursor: not-allowed; }
+.editor-cuenta button:focus-visible,
+.editor-cuenta select:focus-visible,
+.editor-cuenta input:focus-visible,
+.ec-tabla-tarjeta:focus-visible { outline: 2px solid var(--ref-azul); outline-offset: 1px; }
+
+/* ---------- Indicadores ---------- */
+.ec-indicadores { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.ec-indicadores .hi-tarjeta {
+  padding: 12px 16px;
+  gap: 12px;
+  background: var(--hi-tinte, var(--ref-azul-fondo));
+  border: 1px solid var(--hi-borde, var(--ref-borde));
+  border-radius: var(--radio-grande);
+  box-shadow: none;
+}
+.ec-indicadores .hi-icono {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radio);
+  background: var(--ref-tarjeta);
+}
+.ec-indicadores .hi-etiqueta { font-size: 12.5px; }
+.ec-indicadores .hi-valor {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.hi-neutro { --hi-color: var(--ref-texto-suave); --hi-tinte: var(--ref-encabezado-tabla); --hi-borde: var(--ref-borde); }
+.ec-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.ec-chip-pos { background: var(--ref-verde-fondo); color: var(--ref-verde-texto); }
+.ec-chip-neg { background: var(--ref-rojo-fondo); color: var(--ref-rojo); }
+.ec-chip-cero { background: var(--ref-encabezado-tabla); color: var(--ref-texto-suave); }
+
+/* ---------- Herramientas ---------- */
+.ec-herramientas {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--ref-tarjeta);
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio-grande);
+}
+.ec-factor { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ref-texto-suave); }
+.ec-factor input {
+  width: 72px;
+  height: 34px;
+  padding: 0 8px;
+  text-align: right;
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio);
+  background: var(--ref-tarjeta);
+  color: var(--ref-texto);
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.ec-divisor { width: 1px; height: 22px; background: var(--ref-borde); }
+.ec-separador { flex: 1; }
+
+/* ---------- Tabla ---------- */
+.ec-tabla-tarjeta {
+  overflow: auto;
+  background: var(--ref-tarjeta);
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio-grande);
+}
+.ec-tabla {
+  width: 100%;
+  min-width: 860px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.ec-tabla th,
+.ec-tabla td {
+  height: 32px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ref-borde-suave);
+  text-align: left;
+  background: var(--ref-tarjeta);
+}
+.ec-tabla .num { text-align: right; }
+.ec-col-mes { width: 88px; position: sticky; left: 0; z-index: 1; }
+.ec-col-base { width: 176px; }
+.ec-col-param { width: 190px; }
+.ec-tabla thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 34px;
+  background: var(--ref-encabezado-tabla);
+  border-bottom: 1px solid var(--ref-borde);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ref-texto-suave);
+  white-space: nowrap;
+}
+.ec-tabla thead .ec-col-mes { z-index: 3; }
+.ec-tabla tbody th { font-weight: 600; border-left: 3px solid transparent; }
+.ec-tabla tbody tr:hover > * { background: var(--ref-fila-seccion); }
+.ec-tabla tbody tr:focus-within > * { background: var(--ref-azul-suave); }
+.ec-tabla tfoot th,
+.ec-tabla tfoot td {
+  position: sticky;
+  bottom: 0;
+  background: var(--ref-fila-seccion);
+  border-top: 2px solid var(--ref-azul-borde);
+  border-bottom: 0;
+  font-weight: 600;
+}
+.ec-tabla tfoot .ec-col-mes { z-index: 3; }
+.ec-budget { font-weight: 600; }
+
+/* Fila con cambios pendientes: borde izquierdo naranja y punto */
+.ec-tabla tbody .ec-fila-modificada th { border-left-color: var(--ref-naranja); }
+.ec-fila-modificada th .ec-punto { margin-right: 6px; }
+
+.ec-campo { position: relative; display: inline-block; }
+.ec-entrada {
+  width: 126px;
+  height: 26px;
+  padding: 0 8px;
+  text-align: right;
+  border: 1px solid var(--ref-borde);
+  border-radius: var(--radio);
+  background: var(--ref-tarjeta);
+  color: var(--ref-texto);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.ec-col-param .ec-entrada { width: 106px; }
+.ec-entrada:disabled { background: var(--ref-encabezado-tabla); color: var(--ref-texto-tenue); border-style: dashed; cursor: not-allowed; }
+.ec-entrada:hover:not(:disabled) { border-color: var(--ref-azul-borde); }
+.ec-entrada:focus { border-color: var(--ref-azul); }
+.ec-invalida,
+.ec-invalida:hover,
+.ec-invalida:focus { border-color: var(--ref-rojo); background: var(--ref-rojo-fondo); color: var(--ref-rojo); padding-left: 24px; }
+.ec-campo > .icono {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ref-rojo);
+  pointer-events: none;
+}
+
+/* Mes que viene como monto fijo (importado del Excel): solo lectura, con salida a Base × factor */
+.ec-fijo { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; color: var(--ref-texto-suave); }
+.ec-fijo-etiqueta {
+  padding: 1px 8px;
+  border: 1px solid var(--ref-borde);
+  border-radius: 999px;
+  background: var(--ref-encabezado-tabla);
+  font-size: 11px;
+  font-weight: 600;
+}
+.ec-fijo-pasar {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--ref-azul-borde);
+  border-radius: 999px;
+  background: var(--ref-azul-suave);
+  color: var(--ref-azul-texto);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ec-fijo-pasar:hover { border-color: var(--ref-azul-texto); }
+
+.ec-signo-pos { color: var(--ref-verde-texto); }
+.ec-signo-neg { color: var(--ref-rojo); }
+.ec-signo-cero { color: var(--ref-texto-tenue); }
+
+.ec-punto { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.ec-punto-naranja { background: var(--ref-naranja); }
+.ec-punto-rojo { background: var(--ref-rojo); }
+
+/* ---------- Barra inferior flotante (la única elevación de la pantalla) ---------- */
+.ec-barra {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--ref-tarjeta);
+  border: 1px solid var(--ref-azul-borde);
+  border-radius: var(--radio-grande);
+  box-shadow: 0 6px 20px rgba(15, 32, 54, 0.16);
+}
+.ec-barra-estado { display: inline-flex; align-items: flex-start; gap: 8px; font-size: 13px; }
+.ec-barra-estado > .ec-punto { margin-top: 5px; flex: none; }
+.ec-barra-errores { color: var(--ref-verde-texto); }
+.ec-errores { color: var(--ref-rojo); }
+.ec-errores summary { cursor: pointer; font-weight: 600; }
+.ec-errores ul { margin: 6px 0 0; padding-left: 18px; max-height: 160px; overflow: auto; }
+.ec-errores ul:focus-visible { outline: 2px solid var(--ref-azul); }
+
+/* ---------- Movimiento: solo como respuesta a una acción del usuario ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .ec-barra { animation: ec-entra 180ms ease-out; }
+  .ec-entrada,
+  .ec-boton-nav,
+  .ec-boton-neutro,
+  .ec-boton-secundario,
+  .ec-boton-primario,
+  .ec-flecha,
+  .ec-tabla tbody tr > * { transition: background-color 120ms, border-color 120ms, color 120ms; }
+}
+@keyframes ec-entra {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1400px) {
+  .ec-meta { display: none; }
+  .ec-indicadores .hi-tarjeta { padding: 12px; gap: 10px; }
+  .ec-indicadores .hi-icono { width: 34px; height: 34px; }
+}
+@media (max-width: 1100px) {
+  .ec-indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 699px) {
+  .ec-indicadores { grid-template-columns: minmax(0, 1fr); }
+  .ec-herramientas { align-items: stretch; }
+  .ec-herramientas .ec-divisor,
+  .ec-herramientas .ec-separador { display: none; }
+  .ec-herramientas .ec-boton-primario { flex: 1 0 100%; justify-content: center; }
+  .ec-entrada { width: 100px; }
+}
+@media (max-height: 940px) {
+  .ec-tabla th,
+  .ec-tabla td { height: 28px; }
+  .ec-tabla thead th { height: 30px; }
+  .ec-entrada { height: 24px; }
+}
+@media (max-height: 800px) {
+  .ec-tabla-tarjeta { max-height: calc(100vh - 280px); }
+}

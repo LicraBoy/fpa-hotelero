@@ -19,6 +19,10 @@ import {
   sumaImportes,
   sumarMicros,
   textoDeMicros,
+  variacionPorcentual,
+  clasificarCambioVersion,
+  compararVersionesDetallado,
+  calcularTotalesComparacion,
 } from './calculo.ts'
 
 test('los años fiscales conocidos vienen de las cargas vigentes y las versiones de Budget', () => {
@@ -334,4 +338,85 @@ test('principalesDiferencias: ordena por desviación absoluta y excluye líneas 
     [2, 1],
   )
   assert.equal(r[0].diferenciaMicros, -60_000_000n)
+})
+
+test('variacionPorcentual: calcula variaciones positivas, negativas y protege división por cero', () => {
+  // Base 100, Comparada 120 -> +20.00%
+  assert.equal(variacionPorcentual(100_000_000n, 120_000_000n), 20)
+  // Base 100, Comparada 75 -> -25.00%
+  assert.equal(variacionPorcentual(100_000_000n, 75_000_000n), -25)
+  // Base 0 -> null (no divide por cero)
+  assert.equal(variacionPorcentual(0n, 50_000_000n), null)
+  // Valores nulos -> null
+  assert.equal(variacionPorcentual(null, 50_000_000n), null)
+  assert.equal(variacionPorcentual(50_000_000n, null), null)
+  assert.equal(variacionPorcentual(null, null), null)
+  // Mismo valor -> 0%
+  assert.equal(variacionPorcentual(80_000_000n, 80_000_000n), 0)
+})
+
+test('clasificarCambioVersion: identifica nueva, eliminada, modificada o sin cambio', () => {
+  assert.equal(clasificarCambioVersion(null, 10_000_000n), 'nueva')
+  assert.equal(clasificarCambioVersion(10_000_000n, null), 'eliminada')
+  assert.equal(clasificarCambioVersion(10_000_000n, 20_000_000n), 'modificada')
+  assert.equal(clasificarCambioVersion(15_000_000n, 15_000_000n), 'sin_cambio')
+  assert.equal(clasificarCambioVersion(null, null), 'incompleta')
+})
+
+test('compararVersionesDetallado: combina líneas con su tipo y porcentaje de variación', () => {
+  const vA = [
+    { linea_id: 1, anual: '100.00' }, // Modificada
+    { linea_id: 2, anual: '50.00' },  // Eliminada
+    { linea_id: 3, anual: '30.00' },  // Sin cambio
+  ]
+  const vB = [
+    { linea_id: 1, anual: '150.00' }, // +50%
+    { linea_id: 3, anual: '30.00' },  // 0%
+    { linea_id: 4, anual: '80.00' },  // Nueva
+  ]
+  const res = compararVersionesDetallado(vA, vB)
+  assert.equal(res.length, 4)
+
+  const l1 = res.find((r) => r.linea_id === 1)!
+  assert.equal(l1.tipo, 'modificada')
+  assert.equal(l1.diferenciaMicros, 50_000_000n)
+  assert.equal(l1.diferenciaPct, 50)
+
+  const l2 = res.find((r) => r.linea_id === 2)!
+  assert.equal(l2.tipo, 'eliminada')
+  assert.equal(l2.anualB, null)
+  assert.equal(l2.diferenciaPct, null)
+
+  const l3 = res.find((r) => r.linea_id === 3)!
+  assert.equal(l3.tipo, 'sin_cambio')
+  assert.equal(l3.diferenciaMicros, 0n)
+  assert.equal(l3.diferenciaPct, 0)
+
+  const l4 = res.find((r) => r.linea_id === 4)!
+  assert.equal(l4.tipo, 'nueva')
+  assert.equal(l4.anualA, null)
+  assert.equal(l4.diferenciaPct, null)
+})
+
+test('calcularTotalesComparacion: concilia sumas, diferencia neta y conteos', () => {
+  const filas = [
+    { anualA: 100_000_000n, anualB: 150_000_000n }, // mod
+    { anualA: 50_000_000n, anualB: null },          // elim
+    { anualA: 30_000_000n, anualB: 30_000_000n },   // sin cambio
+    { anualA: null, anualB: 20_000_000n },          // nueva
+  ]
+  const totales = calcularTotalesComparacion(filas)
+  // Total A = 100 + 50 + 30 = 180M micros
+  assert.equal(totales.totalA, 180_000_000n)
+  // Total B = 150 + 30 + 20 = 200M micros
+  assert.equal(totales.totalB, 200_000_000n)
+  // Diferencia neta = +20M micros
+  assert.equal(totales.diferenciaNeta, 20_000_000n)
+  // Variación pct = 20 / 180 * 100 = 11.11%
+  assert.equal(totales.diferenciaPct, 11.11)
+  assert.equal(totales.conteoTotal, 4)
+  assert.equal(totales.conteoNuevas, 1)
+  assert.equal(totales.conteoEliminadas, 1)
+  assert.equal(totales.conteoModificadas, 1)
+  assert.equal(totales.conteoSinCambio, 1)
 })

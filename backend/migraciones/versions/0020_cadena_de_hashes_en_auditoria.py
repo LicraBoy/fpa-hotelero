@@ -43,7 +43,9 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column("hash_previo", sa.String(length=64), server_default="", nullable=False)
         )
-        batch_op.add_column(sa.Column("hash", sa.String(length=64), server_default="", nullable=False))
+        batch_op.add_column(
+            sa.Column("hash", sa.String(length=64), server_default="", nullable=False)
+        )
 
     conexion = op.get_bind()
     previos: dict[int, str] = {}

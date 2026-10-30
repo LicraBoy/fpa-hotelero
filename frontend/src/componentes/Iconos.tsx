@@ -33,6 +33,16 @@ const TRAZOS: Record<NombreIcono, string[]> = {
   usuario: ['M12 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8z', 'M4 21a8 8 0 0 1 16 0'],
   info: ['M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z', 'M12 11v6', 'M12 7.5h.01'],
   check: ['M5 12l5 5 9-10'],
+  lapiz: ['M4 20l1-4L16 5l3 3L8 19z', 'M14 7l3 3'],
+  embudo: ['M4 5h16l-6 7v6l-4 2v-8z'],
+  tabla: ['M4 5h16v14H4z', 'M4 10h16', 'M4 15h16', 'M10 5v14'],
+  baseDatos: ['M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3-3.1 3-7 3-7-1.3-7-3z', 'M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6', 'M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6'],
+  flechaArriba: ['M12 19V5', 'M6 11l6-6 6 6'],
+  mas: ['M5 12h.01', 'M12 12h.01', 'M19 12h.01'],
+  ampliar: ['M4 9V4h5', 'M20 9V4h-5', 'M4 15v5h5', 'M20 15v5h-5'],
+  cuentas: ['M4 7h16', 'M4 12h16', 'M4 17h10', 'M18 16v4', 'M16 18h4'],
+  volver: ['M15 6l-6 6 6 6'],
+  guardar: ['M5 4h11l3 3v13H5z', 'M8 4v5h7V4', 'M8 20v-6h8v6'],
 }
 
 export function Icono({ nombre, tamano = 18 }: { nombre: NombreIcono; tamano?: number }) {

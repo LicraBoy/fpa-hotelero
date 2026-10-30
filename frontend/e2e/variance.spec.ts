@@ -89,8 +89,9 @@ test('la pantalla explica la convención de signo y el Budget del corte', async 
 })
 
 test('el encabezado y la columna de la línea quedan fijos al desplazarse', async ({ page }) => {
-  await page.setViewportSize({ width: 700, height: 500 })
   await abrirVariance(page)
+  // Pantalla estrecha: el menú lateral arranca contraído por debajo de 1024 px, por eso se abre antes
+  await page.setViewportSize({ width: 700, height: 500 })
   const contenedor = page.getByRole('region', { name: 'Tabla de Variance' })
   const encabezado = contenedor.getByRole('columnheader', { name: 'Línea' })
   const antes = await encabezado.boundingBox()

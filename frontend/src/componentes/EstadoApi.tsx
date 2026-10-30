@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Insignia } from './Insignia'
 
 const REINTENTO_MS = 2000
 
@@ -31,7 +30,12 @@ export function EstadoApi() {
     }
   }, [])
 
-  if (estado === 'ok') return <Insignia tono="ok">API conectada</Insignia>
-  if (estado === 'error') return <Insignia tono="error">API sin respuesta · reintentando…</Insignia>
-  return <Insignia tono="neutro">Conectando…</Insignia>
+  const texto =
+    estado === 'ok' ? 'API conectada' : estado === 'error' ? 'API sin respuesta · reintentando…' : 'Conectando…'
+  return (
+    <span className={`estado-api estado-api-${estado}`} title={texto}>
+      <span className="estado-api-punto" aria-hidden="true" />
+      <span className="solo-lectores">{texto}</span>
+    </span>
+  )
 }

@@ -41,6 +41,7 @@ from fpa.servicios.budget import importar_budget_mensual
 from fpa.servicios.cargar_archivo import Resolucion
 from fpa.servicios.cargas import DatosArchivo
 from fpa.servicios.presupuesto_captura import inicializar_capturas
+from fpa.servicios.presupuesto_detalle import congelar_detalle
 
 _PATRON_PERIODO = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
@@ -283,9 +284,7 @@ def _generar_version_plan(
             continue
         anual[linea.fila_origen] = c.propuesta_anual
         mensuales = db.scalars(
-            select(LineaPresupuestoMensual).where(
-                LineaPresupuestoMensual.linea_captura_id == c.id
-            )
+            select(LineaPresupuestoMensual).where(LineaPresupuestoMensual.linea_captura_id == c.id)
         )
         for m in mensuales:
             por_periodo.setdefault(m.periodo, {})[linea.fila_origen] = ValoresMes(
@@ -321,6 +320,7 @@ def _generar_version_plan(
         raise CicloInvalido(409, motivo)
     ciclo.version_plan_resultante_id = resultado.version.id
     ciclo.aprobado_en = ahora_utc()
+    congelar_detalle(db, ciclo=ciclo, version=resultado.version)
     return resultado.version
 
 

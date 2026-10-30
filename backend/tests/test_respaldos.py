@@ -16,9 +16,7 @@ from scripts.restaurar_bd import main as restaurar_main
 def _crear_sqlite_de_prueba(ruta: Path) -> None:
     con = sqlite3.connect(ruta)
     con.execute("create table cuenta (codigo text primary key, descripcion text)")
-    con.executemany(
-        "insert into cuenta values (?, ?)", [("4001", "Ingresos"), ("6001", "Nómina")]
-    )
+    con.executemany("insert into cuenta values (?, ?)", [("4001", "Ingresos"), ("6001", "Nómina")])
     con.commit()
     con.close()
 
@@ -43,9 +41,7 @@ def test_respaldo_sin_clave_falla(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
         respaldar(f"sqlite:///{tmp_path / 'x.db'}", carpeta=tmp_path / "backups")
 
 
-def test_restaurar_reproduce_los_mismos_datos_diferencia_cero(
-    tmp_path: Path, clave: str
-) -> None:
+def test_restaurar_reproduce_los_mismos_datos_diferencia_cero(tmp_path: Path, clave: str) -> None:
     origen = tmp_path / "original.db"
     _crear_sqlite_de_prueba(origen)
     huella_original = _huella(origen)

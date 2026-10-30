@@ -49,9 +49,8 @@ function MiniTendencia({ puntos }: { puntos: readonly PuntoMensual[] }) {
 
 /**
  * KPIs del ciclo en curso, a partir de `GET .../ciclos/{id}/resumen` (cobertura, sumas de objetivo
- * y propuesta). "Líneas por revisar" no existe como estado en el modelo: se muestra como "líneas
- * sin capturar" para no inventar un significado. La diferencia vs. objetivo nunca se pinta de
- * verde/rojo automáticamente: no hay una regla de favorable/desfavorable definida para Budget.
+ * y propuesta). Desacoplados de estilos de Variance y con paleta cromática diferenciada e iconografía
+ * personalizada alineada con la referencia visual de Budget Studio.
  */
 export function BudgetKpiStrip({ resumen, tendenciaMensual, onVerLineasSinCapturar }: Props) {
   const sinCapturar = resumen.total_lineas - resumen.lineas_capturadas
@@ -59,7 +58,7 @@ export function BudgetKpiStrip({ resumen, tendenciaMensual, onVerLineasSinCaptur
   const incompletas = seccionesIncompletas(resumen.por_seccion)
 
   return (
-    <section className="kpis kpis-compactas budget-kpis" aria-label="Indicadores del ciclo de presupuesto">
+    <section className="budget-kpi-grid budget-kpis" aria-label="Indicadores del ciclo de presupuesto">
       <TarjetaKpi
         titulo="Cobertura de captura"
         valor={
@@ -67,7 +66,7 @@ export function BudgetKpiStrip({ resumen, tendenciaMensual, onVerLineasSinCaptur
             {resumen.lineas_capturadas} <span className="kpi-de">de {resumen.total_lineas}</span>
           </>
         }
-        detalle={`${resumen.cobertura_pct}%`}
+        detalle={`${resumen.cobertura_pct}% capturado`}
         icono="objetivo"
       />
       <TarjetaKpi
@@ -75,7 +74,11 @@ export function BudgetKpiStrip({ resumen, tendenciaMensual, onVerLineasSinCaptur
         valor={formatoContable(resumen.suma_propuesta)}
         detalle="Suma de las líneas capturadas"
         icono="presupuesto"
-        extra={tendenciaMensual && tendenciaMensual.length >= 2 && <MiniTendencia puntos={tendenciaMensual} />}
+        extra={
+          tendenciaMensual && tendenciaMensual.length >= 2 ? (
+            <MiniTendencia puntos={tendenciaMensual} />
+          ) : undefined
+        }
       />
       <TarjetaKpi
         titulo="Diferencia vs. objetivo"
@@ -89,11 +92,11 @@ export function BudgetKpiStrip({ resumen, tendenciaMensual, onVerLineasSinCaptur
         valor={sinCapturar}
         detalle={sinCapturar > 0 ? 'Pendientes de propuesta' : 'Todas las líneas tienen propuesta'}
         extra={
-          sinCapturar > 0 && (
+          sinCapturar > 0 ? (
             <button type="button" className="boton boton-secundario" onClick={onVerLineasSinCapturar}>
               Ver en Captura
             </button>
-          )
+          ) : undefined
         }
         tono="neutro"
         icono={sinCapturar > 0 ? 'alerta' : 'check'}

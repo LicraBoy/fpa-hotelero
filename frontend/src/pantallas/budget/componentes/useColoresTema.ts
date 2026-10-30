@@ -3,32 +3,33 @@ import { useEffect, useState } from 'react'
 export interface ColoresTema {
   suave: string
   primario: string
-  /** Hasta 6 tonos de marca ya existentes (--primario/--acento/--ok/--aviso/--error/--suave), para
-   * series categóricas (p. ej. un pastel por sección) — nunca la paleta por defecto de Plotly. */
+  texto: string
+  /** Paleta vibrante y diferenciada para series categóricas (donut, barras agrupadas, leyendas).
+   * Diseñada para máximo contraste visual y coherencia con la referencia de Budget Studio. */
   paletaSerie: string[]
+  /** Paleta extendida para gráficos con muchas categorías. */
+  paletaExtendida: string[]
 }
 
 const RESPALDO: ColoresTema = {
   suave: '#64748b',
   primario: '#2563eb',
-  paletaSerie: ['#2563eb', '#0f766e', '#16a34a', '#d97706', '#dc2626', '#64748b'],
+  texto: '#1e293b',
+  paletaSerie: ['#2563eb', '#10b981', '#f97316', '#8b5cf6', '#0284c7', '#64748b'],
+  paletaExtendida: ['#2563eb', '#10b981', '#f97316', '#8b5cf6', '#0284c7', '#ec4899', '#eab308', '#64748b'],
 }
 
 function leer(): ColoresTema {
   if (typeof document === 'undefined') return RESPALDO
   const estilo = getComputedStyle(document.documentElement)
   const token = (nombre: string, respaldo: string) => estilo.getPropertyValue(nombre).trim() || respaldo
+  const esOscuro = document.documentElement.getAttribute('data-tema') === 'oscuro'
   return {
     suave: token('--suave', RESPALDO.suave),
     primario: token('--primario', RESPALDO.primario),
-    paletaSerie: [
-      token('--primario', RESPALDO.paletaSerie[0]),
-      token('--acento', RESPALDO.paletaSerie[1]),
-      token('--ok', RESPALDO.paletaSerie[2]),
-      token('--aviso', RESPALDO.paletaSerie[3]),
-      token('--error', RESPALDO.paletaSerie[4]),
-      token('--suave', RESPALDO.paletaSerie[5]),
-    ],
+    texto: esOscuro ? '#e2e8f0' : '#1e293b',
+    paletaSerie: RESPALDO.paletaSerie,
+    paletaExtendida: RESPALDO.paletaExtendida,
   }
 }
 
